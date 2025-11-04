@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "DispenseItem")
+@Table(name = "dispense_item")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,11 +22,11 @@ public class DispenseItem {
     private Integer priceAtDispense;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventoryLotId")
+    @JoinColumn(name = "inventory_lot_id")
     private InventoryLot inventoryLot;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dispenseOrderId")
+    @JoinColumn(name = "dispense_order_id")
     private DispenseOrder dispenseOrder;
 }
 

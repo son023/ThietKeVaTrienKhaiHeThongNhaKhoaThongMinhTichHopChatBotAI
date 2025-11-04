@@ -1,74 +1,72 @@
--- 1. Bảng Medicine (Thuốc)
-CREATE TABLE Medicine (
+-- 1. Bảng medicine (Thuốc)
+CREATE TABLE medicine (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     unit VARCHAR(100),
     description VARCHAR(255),
-    salePrice INT
+    sale_price INT
 );
 
--- 2. Bảng InventoryLot (Lô thuốc trong kho)
-CREATE TABLE InventoryLot (
+-- 2. Bảng inventory_lot (Lô thuốc trong kho)
+CREATE TABLE inventory_lot (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lotNo VARCHAR(100) UNIQUE NOT NULL,
-    expireDate DATE,
-    quantityOnHand INT DEFAULT 0,
-    costPrice INT,
-    medicineId UUID REFERENCES Medicine(id) -- Khóa ngoại UUID
+    lot_no VARCHAR(100) UNIQUE NOT NULL,
+    expire_date DATE,
+    quantity_on_hand INT DEFAULT 0,
+    cost_price INT,
+    medicine_id UUID REFERENCES medicine(id)
 );
 
--- 3. Bảng StockLedger (Sổ kho)
-CREATE TABLE StockLedger (
+-- 3. Bảng stock_ledger (Sổ kho)
+CREATE TABLE stock_ledger (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lot VARCHAR(255),
     type VARCHAR(255), -- 'IN', 'OUT', 'ADJUST'
     quantity INT,
-    referenceType VARCHAR(255),
-    inventoryLotId UUID REFERENCES InventoryLot(id) -- Khóa ngoại UUID
+    reference_type VARCHAR(255),
+    inventory_lot_id UUID REFERENCES inventory_lot(id)
 );
 
--- 4. Bảng DispenseOrder (Đơn cấp phát)
-CREATE TABLE DispenseOrder (
+-- 4. Bảng dispense_order (Đơn cấp phát)
+CREATE TABLE dispense_order (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pharmacistId INT, -- "pharmacitsId" đã sửa lại
+    pharmacist_id INT,
     prescription VARCHAR(255),
     status VARCHAR(255),
-    createAt TIMESTAMPTZ DEFAULT now(),
-    updateAt TIMESTAMPTZ DEFAULT now()
+    create_at TIMESTAMPTZ DEFAULT now(),
+    update_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 5. Bảng DispenseItem (Chi tiết đơn cấp phát)
-CREATE TABLE DispenseItem (
+-- 5. Bảng dispense_item (Chi tiết đơn cấp phát)
+CREATE TABLE dispense_item (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     quantity INT,
-    priceAtDispense INT,
-    inventoryLotId UUID REFERENCES InventoryLot(id), -- Khóa ngoại UUID
-    dispenseOrderId UUID REFERENCES DispenseOrder(id) -- Khóa ngoại UUID
+    price_at_dispense INT,
+    inventory_lot_id UUID REFERENCES inventory_lot(id),
+    dispense_order_id UUID REFERENCES dispense_order(id)
 );
+
 -- 1. Thêm thuốc
--- Giả sử ID là: 'med_para_uuid'
-INSERT INTO Medicine (id, name, unit, description, salePrice)
-VALUES 
+INSERT INTO medicine (id, name, unit, description, sale_price)
+VALUES
 ('aaaa1111-aaaa-4aaa-8aaa-111111111111', 'Paracetamol 500mg', 'Viên', 'Giảm đau, hạ sốt', 1000);
 
 -- 2. Thêm lô thuốc
--- Giả sử ID là: 'lot_para_A100_uuid'
-INSERT INTO InventoryLot (id, lotNo, expireDate, quantityOnHand, costPrice, medicineId)
-VALUES 
-('bbbb2222-bbbb-4bbb-8bbb-222222222222', 'LOTA100-2025', '2027-10-01', 1000, 700, 'aaaa1111-aaaa-4aaa-8aaa-111111111111'); -- link tới Paracetamol
+INSERT INTO inventory_lot (id, lot_no, expire_date, quantity_on_hand, cost_price, medicine_id)
+VALUES
+('bbbb2222-bbbb-4bbb-8bbb-222222222222', 'LOTA100-2025', '2027-10-01', 1000, 700, 'aaaa1111-aaaa-4aaa-8aaa-111111111111');
 
 -- 3. Ghi sổ kho (Nhập kho)
-INSERT INTO StockLedger (lot, type, quantity, referenceType, inventoryLotId)
-VALUES 
-('LOTA100-2025', 'IN', 1000, 'PURCHASE_ORDER', 'bbbb2222-bbbb-4bbb-8bbb-222222222222'); -- link tới lô A100
+INSERT INTO stock_ledger (lot, type, quantity, reference_type, inventory_lot_id)
+VALUES
+('LOTA100-2025', 'IN', 1000, 'PURCHASE_ORDER', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
 
 -- 4. Tạo đơn cấp phát
--- Giả sử ID là: 'disp_ord_01_uuid'
-INSERT INTO DispenseOrder (id, pharmacistId, prescription, status)
-VALUES 
+INSERT INTO dispense_order (id, pharmacist_id, prescription, status)
+VALUES
 ('cccc3333-cccc-4ccc-8ccc-333333333333', 12, 'PRESCRIPTION-XYZ-789', 'PENDING');
 
--- 5. Thêm chi tiết cấp phát (lấy 20 viên từ lô A100 cho đơn 01)
-INSERT INTO DispenseItem (quantity, priceAtDispense, inventoryLotId, dispenseOrderId)
-VALUES 
-(20, 1000, 'bbbb2222-bbbb-4bbb-8bbb-222222222222', 'cccc3333-cccc-4ccc-8ccc-333333333333'); -- link tới lô A100 và đơn 01
+-- 5. Thêm chi tiết cấp phát
+INSERT INTO dispense_item (quantity, price_at_dispense, inventory_lot_id, dispense_order_id)
+VALUES
+(20, 1000, 'bbbb2222-bbbb-4bbb-8bbb-222222222222', 'cccc3333-cccc-4ccc-8ccc-333333333333');

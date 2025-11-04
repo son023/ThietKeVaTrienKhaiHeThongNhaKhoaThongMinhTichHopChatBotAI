@@ -20,7 +20,6 @@ import java.util.UUID;
 @RequestMapping("/insurance-service/patient-insurances")
 @RequiredArgsConstructor
 @Tag(name = "Patient Insurance", description = "Patient Insurance Management APIs")
-@CrossOrigin(origins = "*")
 public class PatientInsuranceController {
 
     private final IPatientInsuranceService patientInsuranceService;

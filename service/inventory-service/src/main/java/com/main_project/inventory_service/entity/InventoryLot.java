@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "InventoryLot")
+@Table(name = "inventory_lot")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +29,7 @@ public class InventoryLot {
     private Integer costPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medicineId")
+    @JoinColumn(name = "medicine_id")
     private Medicine medicine;
 }
 

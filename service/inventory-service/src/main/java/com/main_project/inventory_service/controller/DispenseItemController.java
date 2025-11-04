@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/dispense-items")
+@RequestMapping("/inventory-service/dispense-items")
 @RequiredArgsConstructor
 public class DispenseItemController {
 

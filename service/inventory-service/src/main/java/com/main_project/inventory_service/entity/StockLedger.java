@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "StockLedger")
+@Table(name = "stock_ledger")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +29,7 @@ public class StockLedger {
     private String referenceType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventoryLotId")
+    @JoinColumn(name = "inventory_lot_id")
     private InventoryLot inventoryLot;
 }
 

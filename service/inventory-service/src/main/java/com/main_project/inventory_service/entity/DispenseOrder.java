@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "DispenseOrder")
+@Table(name = "dispense_order")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,11 +29,11 @@ public class DispenseOrder {
     private String status;
 
     @CreationTimestamp
-    @Column(name = "createAt", updatable = false)
+    @Column(name = "create_at", updatable = false)
     private ZonedDateTime createAt;
 
     @UpdateTimestamp
-    @Column(name = "updateAt")
+    @Column(name = "update_at")
     private ZonedDateTime updateAt;
 }
 

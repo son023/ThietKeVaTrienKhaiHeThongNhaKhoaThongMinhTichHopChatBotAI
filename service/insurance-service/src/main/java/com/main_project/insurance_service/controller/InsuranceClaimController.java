@@ -22,7 +22,6 @@ import java.util.UUID;
 @RequestMapping("/insurance-service/insurance-claims")
 @RequiredArgsConstructor
 @Tag(name = "Insurance Claim", description = "Insurance Claim Management APIs")
-@CrossOrigin(origins = "*")
 public class InsuranceClaimController {
 
     private final IInsuranceClaimService insuranceClaimService;

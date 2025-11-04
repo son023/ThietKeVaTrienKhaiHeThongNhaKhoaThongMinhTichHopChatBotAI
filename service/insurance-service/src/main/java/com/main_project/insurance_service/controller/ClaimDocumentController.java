@@ -20,7 +20,6 @@ import java.util.UUID;
 @RequestMapping("/insurance-service/claim-documents")
 @RequiredArgsConstructor
 @Tag(name = "Claim Document", description = "Claim Document Management APIs")
-@CrossOrigin(origins = "*")
 public class ClaimDocumentController {
 
     private final IClaimDocumentService claimDocumentService;
