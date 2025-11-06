@@ -4,15 +4,18 @@ import com.main_project.appointment_service.entity.MedicalService;
 import com.main_project.appointment_service.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 
 public class AppointmentDTO {
     private UUID id;
@@ -23,6 +26,6 @@ public class AppointmentDTO {
     private AppointmentStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
-    private UUID medicalServiceId;
-    private MedicalServiceDTO medicalService;
+    private List<UUID> MedicalServiceIds;
+    private List<MedicalServiceDTO> medicalServices;
 }

@@ -25,10 +25,9 @@ import java.util.stream.Collectors;
 public class AppointmentService implements IAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceRepository medicalServiceRepository;
-    public final EntityDTOMapper mapper;
+    private final EntityDTOMapper mapper;
 
     @Override
-    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAllAppointments() {
         return appointmentRepository.findAll()
                 .stream()
@@ -37,14 +36,12 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<AppointmentDTO> getAppointmentById(UUID id) {
         return appointmentRepository.findById(id)
                 .map(mapper::toAppointmentDTO);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByDoctorId(UUID doctorId) {
         return appointmentRepository.findByDoctorId(doctorId)
                 .stream()
@@ -53,7 +50,6 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByPatientId(UUID patientId) {
         return appointmentRepository.findByPatientId(patientId)
                 .stream()
@@ -62,17 +58,6 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public List<AppointmentDTO> getAppointmentsByDate(ZonedDateTime date) {
-        return List.of();
-    }
-
-    @Override
-    public List<AppointmentDTO> getAppointmentsBetween(ZonedDateTime start, ZonedDateTime end) {
-        return List.of();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status) {
         return appointmentRepository.findByStatus(status)
                 .stream()
@@ -81,62 +66,111 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public List<AppointmentDTO> getAppointmentsBetween(ZonedDateTime start, ZonedDateTime end) {
+        return appointmentRepository.findByAppointmentStartTimeBetween(start, end)
+                .stream()
+                .map(mapper::toAppointmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AppointmentDTO> getAppointmentsByMedicalService(UUID medicalServiceId) {
+        return appointmentRepository.findByMedicalServiceId(medicalServiceId)
+                .stream()
+                .map(mapper::toAppointmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public long countAppointmentsByDoctorId(UUID doctorId) {
         return appointmentRepository.countByDoctorId(doctorId);
     }
 
     @Override
     public long countAppointmentsByPatientId(UUID patientId) {
-        return 0;
+        return appointmentRepository.countByPatientId(patientId);
     }
 
     @Override
-    public AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO) {
-        MedicalService medicalService = medicalServiceRepository.findById(requestDTO.getMedicalServiceId())
-                .orElseThrow(() -> new RuntimeException("Medical service not found with id: " + requestDTO.getMedicalServiceId()));
+    public long countAppointmentsByMedicalService(UUID medicalServiceId) {
+        return appointmentRepository.countByMedicalServiceId(medicalServiceId);
+    }
 
-        Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalService);
+    // ==============================
+    // 🔹 CREATE
+    // ==============================
+    @Override
+    public AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO) {
+        if (requestDTO.getMedicalServiceIds() == null || requestDTO.getMedicalServiceIds().isEmpty()) {
+            throw new RuntimeException("At least one medical service must be provided");
+        }
+
+        List<MedicalService> medicalServices = medicalServiceRepository
+                .findAllById(requestDTO.getMedicalServiceIds());
+
+        if (medicalServices.size() != requestDTO.getMedicalServiceIds().size()) {
+            throw new RuntimeException("Some medical services not found");
+        }
+
+        Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalServices);
         appointment.setCreatedAt(ZonedDateTime.now());
         appointment.setUpdatedAt(ZonedDateTime.now());
 
-        Appointment saved = appointmentRepository.save(appointment);
-        return mapper.toAppointmentDTO(saved);
+        appointmentRepository.save(appointment);
+        return mapper.toAppointmentDTO(appointment);
     }
 
+    // ==============================
+    // 🔹 UPDATE
+    // ==============================
     @Override
     public AppointmentDTO updateAppointment(UUID id, AppointmentRequestDTO requestDTO) {
         Appointment existing = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        MedicalService medicalService = medicalServiceRepository.findById(requestDTO.getMedicalServiceId())
-                .orElseThrow(() -> new RuntimeException("Medical service not found with id: " + requestDTO.getMedicalServiceId()));
+        List<MedicalService> medicalServices = List.of();
+        if (requestDTO.getMedicalServiceIds() != null && !requestDTO.getMedicalServiceIds().isEmpty()) {
+            medicalServices = medicalServiceRepository.findAllById(requestDTO.getMedicalServiceIds());
+            if (medicalServices.size() != requestDTO.getMedicalServiceIds().size()) {
+                throw new RuntimeException("Some medical services not found");
+            }
+        }
 
-        mapper.updateAppointmentEntity(existing, requestDTO, medicalService);
+        mapper.updateAppointmentEntity(existing, requestDTO, medicalServices);
         existing.setUpdatedAt(ZonedDateTime.now());
 
-        Appointment updated = appointmentRepository.save(existing);
-        return mapper.toAppointmentDTO(updated);
+        appointmentRepository.save(existing);
+        return mapper.toAppointmentDTO(existing);
     }
 
+    // ==============================
+    // 🔹 UPDATE STATUS
+    // ==============================
     @Override
     public AppointmentDTO updateAppointmentStatus(UUID id, AppointmentStatus status) {
-        Appointment existing = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
-
-        existing.setStatus(status);
-        existing.setUpdatedAt(ZonedDateTime.now());
-
-        Appointment updated = appointmentRepository.save(existing);
-        return mapper.toAppointmentDTO(updated);
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        appointment.setStatus(status);
+        appointment.setUpdatedAt(ZonedDateTime.now());
+        appointmentRepository.save(appointment);
+        return mapper.toAppointmentDTO(appointment);
     }
 
+    // ==============================
+    // 🔹 DELETE
+    // ==============================
     @Override
     public void deleteAppointment(UUID id) {
-        if (!appointmentRepository.existsById(id)) {
-            throw new RuntimeException("Appointment not found with id: " + id);
-        }
         appointmentRepository.deleteById(id);
     }
 
+    @Override
+    public void deleteAppointmentsByDoctorId(UUID doctorId) {
+        appointmentRepository.deleteByDoctorId(doctorId);
+    }
+
+    @Override
+    public void deleteAppointmentsByPatientId(UUID patientId) {
+        appointmentRepository.deleteByPatientId(patientId);
+    }
 }

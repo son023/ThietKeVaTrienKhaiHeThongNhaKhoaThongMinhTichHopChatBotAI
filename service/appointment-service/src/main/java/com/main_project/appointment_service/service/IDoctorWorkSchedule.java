@@ -10,24 +10,18 @@ import java.util.UUID;
 
 public interface IDoctorWorkSchedule {
     List<DoctorWorkScheduleDTO> getAllDoctorWorkSchedules();
-
     Optional<DoctorWorkScheduleDTO> getDoctorWorkScheduleById(UUID id);
 
     List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByDoctorId(UUID doctorId);
-
-    List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByDate(ZonedDateTime date);
-
-    List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesBetween(ZonedDateTime start, ZonedDateTime end);
-
+    List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByStatus(String status);
     List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByWorkScheduleId(UUID workScheduleId);
 
-    long countDoctorWorkSchedulesByDoctorId(UUID doctorId);
+    List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByDate(ZonedDateTime date);
+    List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesBetween(ZonedDateTime start, ZonedDateTime end);
 
     DoctorWorkScheduleDTO createDoctorWorkSchedule(DoctorWorkScheduleRequestDTO requestDTO);
-
     DoctorWorkScheduleDTO updateDoctorWorkSchedule(UUID id, DoctorWorkScheduleRequestDTO requestDTO);
+    DoctorWorkScheduleDTO updateDoctorWorkScheduleStatus(UUID id, String status);
 
     void deleteDoctorWorkSchedule(UUID id);
-
-    void deleteDoctorWorkSchedulesByDoctorId(UUID doctorId);
 }

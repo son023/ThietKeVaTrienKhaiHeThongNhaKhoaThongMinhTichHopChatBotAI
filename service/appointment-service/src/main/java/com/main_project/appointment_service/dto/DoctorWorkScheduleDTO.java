@@ -1,12 +1,17 @@
 package com.main_project.appointment_service.dto;
 
 import com.main_project.appointment_service.entity.WorkSchedule;
-import lombok.Data;
+import lombok.*;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Data
 public class DoctorWorkScheduleDTO {
     private UUID id;

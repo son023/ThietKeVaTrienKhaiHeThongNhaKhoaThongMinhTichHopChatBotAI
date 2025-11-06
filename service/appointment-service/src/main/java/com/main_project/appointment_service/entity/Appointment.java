@@ -4,6 +4,7 @@ import com.main_project.appointment_service.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -41,7 +42,6 @@ public class Appointment {
     @Column(nullable = false, name = "updated_at")
     private ZonedDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medical_service_id", nullable = false)
-    private MedicalService medicalService;
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MedicalService> medicalService;
 }

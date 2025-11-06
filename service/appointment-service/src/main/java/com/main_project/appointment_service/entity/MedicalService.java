@@ -28,4 +28,8 @@ public class MedicalService {
 
     @Column(nullable = false)
     private Float price;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appointment_id", referencedColumnName = "id")
+    private Appointment appointment;
 }

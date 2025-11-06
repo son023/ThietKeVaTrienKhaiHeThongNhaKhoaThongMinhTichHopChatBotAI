@@ -28,8 +28,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByAppointmentStartTimeBetween(@Param("start") ZonedDateTime start,
                                                         @Param("end") ZonedDateTime end);
 
-    // Lấy lịch hẹn theo loại dịch vụ y tế
-    @Query("SELECT a FROM Appointment a WHERE a.medicalService.id = :medicalServiceId")
+    // Lấy lịch hẹn có chứa dịch vụ y tế cụ thể
+    // Vì Appointment có List<MedicalService>, cần JOIN
+    @Query("SELECT DISTINCT a FROM Appointment a JOIN a.medicalService m WHERE m.id = :medicalServiceId")
     List<Appointment> findByMedicalServiceId(@Param("medicalServiceId") UUID medicalServiceId);
 
     // Đếm số lượng lịch hẹn theo bác sĩ
@@ -40,17 +41,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.patientId = :patientId")
     long countByPatientId(@Param("patientId") UUID patientId);
 
-    // Đếm số lượng lịch hẹn theo dịch vụ y tế
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.medicalService.id = :medicalServiceId")
+    // Đếm số lượng lịch hẹn có chứa dịch vụ y tế cụ thể
+    @Query("SELECT COUNT(DISTINCT a) FROM Appointment a JOIN a.medicalService m WHERE m.id = :medicalServiceId")
     long countByMedicalServiceId(@Param("medicalServiceId") UUID medicalServiceId);
 
-    // Xóa tất cả lịch hẹn theo bác sĩ (nếu cần)
+    // Xóa tất cả lịch hẹn theo bác sĩ
     void deleteByDoctorId(UUID doctorId);
 
-    // Xóa tất cả lịch hẹn theo bệnh nhân (nếu cần)
+    // Xóa tất cả lịch hẹn theo bệnh nhân
     void deleteByPatientId(UUID patientId);
-
-    void updateAppointmentByDoctorId(UUID doctorId, AppointmentStatus status);
-
-    void updateAppointmentByPatientId(UUID patientId, AppointmentStatus status);
 }

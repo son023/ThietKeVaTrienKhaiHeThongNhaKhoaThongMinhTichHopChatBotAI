@@ -14,6 +14,9 @@ public interface DoctorWorkScheduleRepository extends JpaRepository<DoctorWorkSc
     @Query("SELECT dws FROM DoctorWorkSchedule dws WHERE dws.doctorId = :doctorId")
     List<DoctorWorkSchedule> findByDoctorId(@Param("doctorId") UUID doctorId);
 
+    // 🔹 Lấy lịch theo trạng thái
+    List<DoctorWorkSchedule> findByStatus(String status);
+
     // 🔹 Lấy tất cả lịch theo WorkSchedule ID
     List<DoctorWorkSchedule> findByWorkSchedule_Id(UUID workScheduleId);
 

@@ -8,14 +8,15 @@ import com.main_project.appointment_service.entity.WorkSchedule;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Component
 public class EntityDTOMapper {
 
-    // ======================
-    // 🔹 Appointment Mapping
-    // ======================
-
+    // ========================
+    // 🔹 Appointment → DTO
+    // ========================
     public AppointmentDTO toAppointmentDTO(Appointment entity) {
         if (entity == null) return null;
 
@@ -29,14 +30,24 @@ public class EntityDTOMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        if (entity.getMedicalService() != null) {
-            dto.setMedicalServiceId(entity.getMedicalService().getId());
+        // 🔹 mapping danh sách dịch vụ y tế
+        if (entity.getMedicalService() != null && !entity.getMedicalService().isEmpty()) {
+            List<UUID> medicalServiceIds = entity.getMedicalService()
+                    .stream()
+                    .map(MedicalService::getId)
+                    .toList();
+            dto.setMedicalServiceIds(medicalServiceIds);
+        } else {
+            dto.setMedicalServiceIds(List.of());
         }
 
         return dto;
     }
 
-    public Appointment toAppointmentEntity(AppointmentRequestDTO requestDTO, MedicalService medicalService) {
+    // ========================
+    // 🔹 RequestDTO → Appointment Entity
+    // ========================
+    public Appointment toAppointmentEntity(AppointmentRequestDTO requestDTO, List<MedicalService> medicalServices) {
         if (requestDTO == null) return null;
 
         Appointment entity = new Appointment();
@@ -47,11 +58,23 @@ public class EntityDTOMapper {
         entity.setStatus(requestDTO.getStatus());
         entity.setCreatedAt(ZonedDateTime.now());
         entity.setUpdatedAt(ZonedDateTime.now());
-        entity.setMedicalService(medicalService);
+
+        // 🔹 gán danh sách MedicalService
+        if (medicalServices != null && !medicalServices.isEmpty()) {
+            // set ngược quan hệ 2 chiều
+            medicalServices.forEach(ms -> ms.setAppointment(entity));
+            entity.setMedicalService(medicalServices);
+        } else {
+            entity.setMedicalService(List.of());
+        }
+
         return entity;
     }
 
-    public void updateAppointmentEntity(Appointment entity, AppointmentRequestDTO requestDTO, MedicalService medicalService) {
+    // ========================
+    // 🔹 Update Entity từ RequestDTO
+    // ========================
+    public void updateAppointmentEntity(Appointment entity, AppointmentRequestDTO requestDTO, List<MedicalService> medicalServices) {
         if (entity == null || requestDTO == null) return;
 
         entity.setDoctorId(requestDTO.getDoctorId());
@@ -60,7 +83,12 @@ public class EntityDTOMapper {
         entity.setAppointmentEndTime(requestDTO.getAppointmentEndTime());
         entity.setStatus(requestDTO.getStatus());
         entity.setUpdatedAt(ZonedDateTime.now());
-        entity.setMedicalService(medicalService);
+
+        // 🔹 cập nhật danh sách MedicalService
+        if (medicalServices != null && !medicalServices.isEmpty()) {
+            medicalServices.forEach(ms -> ms.setAppointment(entity));
+            entity.setMedicalService(medicalServices);
+        }
     }
 
     // ======================

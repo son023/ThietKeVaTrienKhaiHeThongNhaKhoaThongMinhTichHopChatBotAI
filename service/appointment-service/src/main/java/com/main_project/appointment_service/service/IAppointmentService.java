@@ -15,16 +15,19 @@ public interface IAppointmentService {
     Optional<AppointmentDTO> getAppointmentById(UUID id);
     List<AppointmentDTO> getAppointmentsByDoctorId(UUID doctorId);
     List<AppointmentDTO> getAppointmentsByPatientId(UUID patientId);
-    List<AppointmentDTO> getAppointmentsByDate(ZonedDateTime date);
     List<AppointmentDTO> getAppointmentsBetween(ZonedDateTime start, ZonedDateTime end);
-
     List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status);
+    List<AppointmentDTO> getAppointmentsByMedicalService(UUID medicalServiceId);
+
     long countAppointmentsByDoctorId(UUID doctorId);
     long countAppointmentsByPatientId(UUID patientId);
+    long countAppointmentsByMedicalService(UUID medicalServiceId);
 
     AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO);
     AppointmentDTO updateAppointment(UUID id, AppointmentRequestDTO requestDTO);
     AppointmentDTO updateAppointmentStatus(UUID id, AppointmentStatus status);
 
     void deleteAppointment(UUID id);
+    void deleteAppointmentsByDoctorId(UUID doctorId);
+    void deleteAppointmentsByPatientId(UUID patientId);
 }

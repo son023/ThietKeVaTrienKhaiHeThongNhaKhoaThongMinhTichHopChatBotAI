@@ -1,11 +1,16 @@
 package com.main_project.appointment_service.dto;
 
 import com.main_project.appointment_service.enums.AppointmentStatus;
-import lombok.Data;
+import lombok.*;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Data
 public class AppointmentRequestDTO {
     private UUID doctorId;
@@ -15,6 +20,6 @@ public class AppointmentRequestDTO {
     private AppointmentStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
-    private UUID medicalServiceId;
-    private MedicalServiceDTO medicalService;
+    private List<UUID> MedicalServiceIds;
+    private List<MedicalServiceDTO> medicalServices;
 }
