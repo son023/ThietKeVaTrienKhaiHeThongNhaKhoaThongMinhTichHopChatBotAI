@@ -13,5 +13,6 @@ public class DoctorWorkScheduleRequestDTO {
     private String status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
+    private UUID workScheduleId;
     private WorkSchedule workSchedule;
 }

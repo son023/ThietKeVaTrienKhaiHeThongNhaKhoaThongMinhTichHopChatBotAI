@@ -11,31 +11,20 @@ import java.util.UUID;
 
 public interface IAppointmentService {
 
-    // CRUD cơ bản
     List<AppointmentDTO> getAllAppointments();
-
     Optional<AppointmentDTO> getAppointmentById(UUID id);
+    List<AppointmentDTO> getAppointmentsByDoctorId(UUID doctorId);
+    List<AppointmentDTO> getAppointmentsByPatientId(UUID patientId);
+    List<AppointmentDTO> getAppointmentsByDate(ZonedDateTime date);
+    List<AppointmentDTO> getAppointmentsBetween(ZonedDateTime start, ZonedDateTime end);
+
+    List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status);
+    long countAppointmentsByDoctorId(UUID doctorId);
+    long countAppointmentsByPatientId(UUID patientId);
 
     AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO);
-
     AppointmentDTO updateAppointment(UUID id, AppointmentRequestDTO requestDTO);
-
     AppointmentDTO updateAppointmentStatus(UUID id, AppointmentStatus status);
 
     void deleteAppointment(UUID id);
-
-    // Truy vấn nâng cao
-    List<AppointmentDTO> getAppointmentsByDoctorId(String doctorId);
-
-    List<AppointmentDTO> getAppointmentsByPatientId(String patientId);
-
-    List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status);
-
-    List<AppointmentDTO> getAppointmentsByDate(ZonedDateTime date);
-
-    List<AppointmentDTO> getAppointmentsBetween(ZonedDateTime start, ZonedDateTime end);
-
-    long countAppointmentsByDoctorId(String doctorId);
-
-    long countAppointmentsByPatientId(String patientId);
 }

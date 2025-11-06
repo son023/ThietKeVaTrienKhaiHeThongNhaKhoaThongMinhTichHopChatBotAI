@@ -19,29 +19,29 @@ public class Appointment {
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, length = 50)
-    private String doctorId;
+    @Column(nullable = false, name = "doctor_id")
+    private UUID doctorId;
 
-    @Column(nullable = false, length = 50)
-    private String patientId;
+    @Column(nullable = false, name = "patient_id")
+    private UUID patientId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "start_time")
     private ZonedDateTime appointmentStartTime;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "end_time")
     private ZonedDateTime appointmentEndTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 255, name = "status")
     private AppointmentStatus status;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "created_at")
     private ZonedDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "updated_at")
     private ZonedDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medical_service_id")
+    @JoinColumn(name = "medical_service_id", nullable = false)
     private MedicalService medicalService;
 }

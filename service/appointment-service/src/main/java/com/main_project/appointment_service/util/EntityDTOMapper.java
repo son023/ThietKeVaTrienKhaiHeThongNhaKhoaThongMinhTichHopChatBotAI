@@ -1,13 +1,103 @@
 package com.main_project.appointment_service.util;
 
-import com.main_project.appointment_service.dto.DoctorWorkScheduleDTO;
-import com.main_project.appointment_service.dto.DoctorWorkScheduleRequestDTO;
-import com.main_project.appointment_service.dto.WorkScheduleDTO;
-import com.main_project.appointment_service.dto.WorkScheduleRequestDTO;
+import com.main_project.appointment_service.dto.*;
+import com.main_project.appointment_service.entity.Appointment;
 import com.main_project.appointment_service.entity.DoctorWorkSchedule;
+import com.main_project.appointment_service.entity.MedicalService;
 import com.main_project.appointment_service.entity.WorkSchedule;
+import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
+
+@Component
 public class EntityDTOMapper {
+
+    // ======================
+    // 🔹 Appointment Mapping
+    // ======================
+
+    public AppointmentDTO toAppointmentDTO(Appointment entity) {
+        if (entity == null) return null;
+
+        AppointmentDTO dto = new AppointmentDTO();
+        dto.setId(entity.getId());
+        dto.setDoctorId(entity.getDoctorId());
+        dto.setPatientId(entity.getPatientId());
+        dto.setAppointmentStartTime(entity.getAppointmentStartTime());
+        dto.setAppointmentEndTime(entity.getAppointmentEndTime());
+        dto.setStatus(entity.getStatus());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+
+        if (entity.getMedicalService() != null) {
+            dto.setMedicalServiceId(entity.getMedicalService().getId());
+        }
+
+        return dto;
+    }
+
+    public Appointment toAppointmentEntity(AppointmentRequestDTO requestDTO, MedicalService medicalService) {
+        if (requestDTO == null) return null;
+
+        Appointment entity = new Appointment();
+        entity.setDoctorId(requestDTO.getDoctorId());
+        entity.setPatientId(requestDTO.getPatientId());
+        entity.setAppointmentStartTime(requestDTO.getAppointmentStartTime());
+        entity.setAppointmentEndTime(requestDTO.getAppointmentEndTime());
+        entity.setStatus(requestDTO.getStatus());
+        entity.setCreatedAt(ZonedDateTime.now());
+        entity.setUpdatedAt(ZonedDateTime.now());
+        entity.setMedicalService(medicalService);
+        return entity;
+    }
+
+    public void updateAppointmentEntity(Appointment entity, AppointmentRequestDTO requestDTO, MedicalService medicalService) {
+        if (entity == null || requestDTO == null) return;
+
+        entity.setDoctorId(requestDTO.getDoctorId());
+        entity.setPatientId(requestDTO.getPatientId());
+        entity.setAppointmentStartTime(requestDTO.getAppointmentStartTime());
+        entity.setAppointmentEndTime(requestDTO.getAppointmentEndTime());
+        entity.setStatus(requestDTO.getStatus());
+        entity.setUpdatedAt(ZonedDateTime.now());
+        entity.setMedicalService(medicalService);
+    }
+
+    // ======================
+    // 🔹 MedicalService Mapping
+    // ======================
+
+    public MedicalServiceDTO toMedicalServiceDTO(MedicalService entity) {
+        if (entity == null) return null;
+
+        MedicalServiceDTO dto = new MedicalServiceDTO();
+        dto.setId(entity.getId());
+        dto.setServiceName(entity.getServiceName());
+        dto.setServiceType(entity.getServiceType());
+        dto.setServiceTime(entity.getServiceTime());
+        dto.setPrice(entity.getPrice());
+        return dto;
+    }
+
+    public MedicalService toMedicalServiceEntity(MedicalServiceRequestDTO requestDTO) {
+        if (requestDTO == null) return null;
+
+        MedicalService entity = new MedicalService();
+        entity.setServiceName(requestDTO.getServiceName());
+        entity.setServiceType(requestDTO.getServiceType());
+        entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setPrice(requestDTO.getPrice());
+        return entity;
+    }
+
+    public void updateMedicalServiceEntity(MedicalService entity, MedicalServiceRequestDTO requestDTO) {
+        if (entity == null || requestDTO == null) return;
+
+        entity.setServiceName(requestDTO.getServiceName());
+        entity.setServiceType(requestDTO.getServiceType());
+        entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setPrice(requestDTO.getPrice());
+    }
     // ======================
     // 🔹 WorkSchedule Mapping
     // ======================
@@ -69,11 +159,9 @@ public class EntityDTOMapper {
 
         DoctorWorkSchedule entity = new DoctorWorkSchedule();
         entity.setDoctorId(requestDTO.getDoctorId());
-        entity.setWorkDate(requestDTO.getWorkDate());
-        entity.setStartTime(requestDTO.getStartTime());
-        entity.setEndTime(requestDTO.getEndTime());
-        entity.setAvailable(requestDTO.isAvailable());
-        entity.setWorkSchedule(workSchedule);
+        entity.setCreatedAt(requestDTO.getCreatedAt());
+        entity.setUpdatedAt(requestDTO.getUpdatedAt());
+        entity.setWorkSchedule(requestDTO.getWorkSchedule());
         return entity;
     }
 
@@ -81,10 +169,10 @@ public class EntityDTOMapper {
         if (entity == null || requestDTO == null) return;
 
         entity.setDoctorId(requestDTO.getDoctorId());
-        entity.setWorkDate(requestDTO.getWorkDate());
-        entity.setStartTime(requestDTO.getStartTime());
-        entity.setEndTime(requestDTO.getEndTime());
-        entity.setAvailable(requestDTO.isAvailable());
-        entity.setWorkSchedule(workSchedule);
+        entity.setCreatedAt(requestDTO.getCreatedAt());
+        entity.setUpdatedAt(requestDTO.getUpdatedAt());
+        entity.setWorkSchedule(requestDTO.getWorkSchedule());
     }
+
+
 }

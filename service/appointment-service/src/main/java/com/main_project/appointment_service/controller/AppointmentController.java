@@ -4,10 +4,7 @@ import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
 import com.main_project.appointment_service.enums.AppointmentStatus;
 import com.main_project.appointment_service.service.IAppointmentService;
-import io.micrometer.core.instrument.config.validate.Validated;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +15,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -48,7 +47,7 @@ public class AppointmentController {
     @GetMapping("/doctor/{doctorId}")
     @Operation(summary = "Get appointments by doctor ID", description = "Retrieve all appointments assigned to a specific doctor")
     public ResponseEntity<List<AppointmentDTO>> getAppointmentsByDoctorId(
-            @Parameter(description = "Doctor ID") @PathVariable String doctorId) {
+            @Parameter(description = "Doctor ID") @PathVariable UUID doctorId) {
         List<AppointmentDTO> appointments = appointmentService.getAppointmentsByDoctorId(doctorId);
         return ResponseEntity.ok(appointments);
     }
@@ -57,7 +56,7 @@ public class AppointmentController {
     @GetMapping("/patient/{patientId}")
     @Operation(summary = "Get appointments by patient ID", description = "Retrieve all appointments for a specific patient")
     public ResponseEntity<List<AppointmentDTO>> getAppointmentsByPatientId(
-            @Parameter(description = "Patient ID") @PathVariable String patientId) {
+            @Parameter(description = "Patient ID") @PathVariable UUID patientId) {
         List<AppointmentDTO> appointments = appointmentService.getAppointmentsByPatientId(patientId);
         return ResponseEntity.ok(appointments);
     }
@@ -94,7 +93,7 @@ public class AppointmentController {
     @GetMapping("/count/doctor/{doctorId}")
     @Operation(summary = "Count appointments by doctor ID", description = "Get total number of appointments for a specific doctor")
     public ResponseEntity<Long> countAppointmentsByDoctorId(
-            @Parameter(description = "Doctor ID") @PathVariable String doctorId) {
+            @Parameter(description = "Doctor ID") @PathVariable UUID doctorId) {
         long count = appointmentService.countAppointmentsByDoctorId(doctorId);
         return ResponseEntity.ok(count);
     }
@@ -103,7 +102,7 @@ public class AppointmentController {
     @GetMapping("/count/patient/{patientId}")
     @Operation(summary = "Count appointments by patient ID", description = "Get total number of appointments for a specific patient")
     public ResponseEntity<Long> countAppointmentsByPatientId(
-            @Parameter(description = "Patient ID") @PathVariable String patientId) {
+            @Parameter(description = "Patient ID") @PathVariable UUID patientId) {
         long count = appointmentService.countAppointmentsByPatientId(patientId);
         return ResponseEntity.ok(count);
     }
@@ -115,7 +114,7 @@ public class AppointmentController {
             @Valid @RequestBody AppointmentRequestDTO requestDTO) {
         try {
             AppointmentDTO created = appointmentService.createAppointment(requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+            return ResponseEntity.status(CREATED).body(created);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }

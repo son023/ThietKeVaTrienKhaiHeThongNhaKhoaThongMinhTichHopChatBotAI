@@ -16,8 +16,8 @@ import java.util.UUID;
 
 public class AppointmentDTO {
     private UUID id;
-    private String doctorId;
-    private String patientId;
+    private UUID doctorId;
+    private UUID patientId;
     private ZonedDateTime appointmentStartTime;
     private ZonedDateTime appointmentEndTime;
     private AppointmentStatus status;

@@ -18,6 +18,7 @@ public class DoctorWorkSchedule {
 
     @Id
     @GeneratedValue
+    @Column(nullable = false, name = "id")
     private UUID id;
 
     @Column(nullable = false, length = 50)
