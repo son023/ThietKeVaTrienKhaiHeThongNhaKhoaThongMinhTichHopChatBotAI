@@ -1,50 +1,55 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.3' // Giảm xuống phiên bản ổn định nhất của Spring Boot 3.x
-	id 'io.spring.dependency-management' version '1.1.4' // Phiên bản tương thích với Spring Boot 3.2.x
+    id "java"
+    id "org.springframework.boot" version "3.5.7"
+    id "io.spring.dependency-management" version "1.1.7"
 }
 
-group = 'com.main-project'
-version = '0.0.1-SNAPSHOT'
+group = "com.do_an"
+version = "0.0.1-SNAPSHOT"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 ext {
-	set('springCloudVersion', "2023.0.0") // Phiên bản Spring Cloud tương thích với Spring Boot 3.2.x
+    set("springCloudVersion", "2025.0.0")
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-	implementation 'com.nimbusds:nimbus-jose-jwt:9.1.1'
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0"
+    implementation "org.mapstruct:mapstruct:1.5.5.Final"
 
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+    compileOnly "org.projectlombok:lombok"
+    annotationProcessor "org.projectlombok:lombok"
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    runtimeOnly "org.postgresql:postgresql"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.security:spring-security-test"
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}"
+    }
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+tasks.named("test") {
+    useJUnitPlatform()
 }
