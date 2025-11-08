@@ -8,6 +8,7 @@ import { ReceptionistPatientDetail } from './components/receptionist/Receptionis
 import { ReceptionistNewAppointment } from './components/receptionist/ReceptionistNewAppointment';
 import { ReceptionistReports } from './components/receptionist/ReceptionistReports';
 import { ReceptionistInvoice } from './components/receptionist/ReceptionistInvoice';
+import { ReceptionistInvoiceList } from './components/receptionist/ReceptionistInvoiceList';
 import { ReceptionistAccountSettings } from './components/receptionist/ReceptionistAccountSettings';
 
 interface ReceptionistAppProps {
@@ -21,6 +22,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (query: string) => {
@@ -46,6 +48,13 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
 
   const handleCreateInvoice = () => {
     setShowInvoice(true);
+    setSelectedInvoiceId(null);
+    setCurrentPage('invoice');
+  };
+
+  const handleViewInvoice = (invoiceId: string) => {
+    setSelectedInvoiceId(invoiceId);
+    setShowInvoice(true);
     setCurrentPage('invoice');
   };
 
@@ -59,6 +68,12 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     setShowNewPatient(false);
     setShowInvoice(false);
     setCurrentPage('dashboard');
+  };
+
+  const handleBackToInvoiceList = () => {
+    setShowInvoice(false);
+    setSelectedInvoiceId(null);
+    setCurrentPage('invoices');
   };
 
   const renderPage = () => {
@@ -79,10 +94,8 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     if (showInvoice) {
       return (
         <ReceptionistInvoice
-          onBack={() => {
-            setShowInvoice(false);
-            setCurrentPage('dashboard');
-          }}
+          invoiceId={selectedInvoiceId || undefined}
+          onBack={handleBackToInvoiceList}
         />
       );
     }
@@ -102,17 +115,17 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     // Main Pages
     switch (currentPage) {
       case 'dashboard':
-        return <ReceptionistDashboard />;
+        return <ReceptionistDashboard onCreateInvoice={handleCreateInvoice} />;
       case 'appointments':
         return <ReceptionistAppointments />;
       case 'patients':
         return <ReceptionistPatients onPatientSelect={handlePatientSelect} />;
       case 'invoices':
         return (
-          <div className="p-8">
-            <h1 className="text-2xl text-[#01304e] mb-4">Thanh toán & Hóa đơn</h1>
-            <p className="text-gray-600">Trang đang được phát triển...</p>
-          </div>
+          <ReceptionistInvoiceList
+            onViewInvoice={handleViewInvoice}
+            onCreateInvoice={handleCreateInvoice}
+          />
         );
       case 'reports':
         return <ReceptionistReports />;

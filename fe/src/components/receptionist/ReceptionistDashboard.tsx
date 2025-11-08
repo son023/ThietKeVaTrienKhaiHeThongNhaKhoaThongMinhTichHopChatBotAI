@@ -14,7 +14,11 @@ interface Appointment {
   service?: string;
 }
 
-export function ReceptionistDashboard() {
+interface ReceptionistDashboardProps {
+  onCreateInvoice?: (appointmentId: string) => void;
+}
+
+export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboardProps = {}) {
   const [appointments] = useState<Appointment[]>([
     { id: '1', patientName: 'Nguyễn Văn A', time: '09:00', doctor: 'BS. Phạm Mai', phone: '0901234567', status: 'waiting_confirm', service: 'Khám tổng quát' },
     { id: '2', patientName: 'Trần Thị B', time: '09:30', doctor: 'BS. Lê Anh', phone: '0902345678', status: 'waiting_confirm', service: 'Trám răng' },
@@ -40,6 +44,10 @@ export function ReceptionistDashboard() {
 
   const handleAction = (appointmentId: string, action: string) => {
     console.log(`Action ${action} on appointment ${appointmentId}`);
+    
+    if (action === 'invoice' && onCreateInvoice) {
+      onCreateInvoice(appointmentId);
+    }
   };
 
   return (
@@ -75,18 +83,18 @@ export function ReceptionistDashboard() {
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
+      <div className="grid grid-cols-6 gap-3 overflow-x-auto pb-4">
         {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((status) => {
           const config = statusConfig[status];
           const statusAppointments = getAppointmentsByStatus(status);
           
           return (
-            <div key={status} className="min-w-[280px]">
+            <div key={status} className="min-w-[240px]">
               {/* Column Header */}
-              <div className="mb-4">
+              <div className="mb-3">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm text-gray-700">{config.label}</h3>
-                  <Badge variant="outline" className={`${config.color} border`}>
+                  <h3 className="text-xs text-gray-700">{config.label}</h3>
+                  <Badge variant="outline" className={`${config.color} border text-xs px-2 py-0`}>
                     {statusAppointments.length}
                   </Badge>
                 </div>
@@ -96,47 +104,45 @@ export function ReceptionistDashboard() {
               </div>
 
               {/* Cards */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {statusAppointments.map((apt) => (
-                  <Card key={apt.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-                    <div className="space-y-3">
-                      {/* Patient Info */}
+                  <Card key={apt.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer border-[#e8e8e8]">
+                    <div className="space-y-2">
+                      {/* Patient Info - Compact */}
                       <div>
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-sm text-[#01304e]">{apt.patientName}</h4>
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-start justify-between mb-1.5">
+                          <h4 className="text-xs text-[#01304e] line-clamp-1 pr-1">{apt.patientName}</h4>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
                             {apt.time}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <User className="w-3 h-3" />
-                          <span>{apt.doctor}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                          <Phone className="w-3 h-3" />
-                          <span>{apt.phone}</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-gray-600">
+                          <User className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{apt.doctor}</span>
                         </div>
                         {apt.service && (
-                          <p className="text-xs text-gray-500 mt-2">{apt.service}</p>
+                          <p className="text-[10px] text-gray-500 mt-1 truncate" title={apt.service}>
+                            {apt.service}
+                          </p>
                         )}
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Action Buttons - Compact */}
                       <div className="pt-2 border-t">
                         {status === 'waiting_confirm' && (
                           <Button
                             size="sm"
-                            className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90"
+                            className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 h-7 text-xs"
                             onClick={() => handleAction(apt.id, 'confirm')}
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Xác nhận lịch
+                            Xác nhận
                           </Button>
                         )}
                         {status === 'waiting_checkin' && (
                           <Button
                             size="sm"
-                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            className="w-full bg-purple-600 hover:bg-purple-700 h-7 text-xs"
                             onClick={() => handleAction(apt.id, 'checkin')}
                           >
                             <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -146,21 +152,21 @@ export function ReceptionistDashboard() {
                         {status === 'waiting_payment' && (
                           <Button
                             size="sm"
-                            className="w-full bg-orange-600 hover:bg-orange-700"
+                            className="w-full bg-orange-600 hover:bg-orange-700 h-7 text-xs"
                             onClick={() => handleAction(apt.id, 'invoice')}
                           >
                             <DollarSign className="w-3 h-3 mr-1" />
-                            Tạo Hóa đơn
+                            Thanh toán
                           </Button>
                         )}
                         {(status === 'checked_in' || status === 'in_treatment' || status === 'completed') && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="w-full text-xs"
+                            className="w-full h-7 text-[10px]"
                             onClick={() => handleAction(apt.id, 'view')}
                           >
-                            Xem chi tiết
+                            Chi tiết
                           </Button>
                         )}
                       </div>
@@ -169,8 +175,8 @@ export function ReceptionistDashboard() {
                 ))}
                 
                 {statusAppointments.length === 0 && (
-                  <div className="text-center py-8 text-sm text-gray-400">
-                    Không có lịch hẹn
+                  <div className="text-center py-6 text-xs text-gray-400">
+                    Không có
                   </div>
                 )}
               </div>

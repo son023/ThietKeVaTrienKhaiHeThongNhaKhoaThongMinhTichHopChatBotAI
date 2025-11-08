@@ -2,10 +2,8 @@ import { useState } from 'react';
 import AdminApp from './AdminApp';
 import PharmacistApp from './PharmacistApp';
 import { ReceptionistApp } from './ReceptionistApp';
-import { Homepage } from './components/Homepage';
-import { LoginPage } from './components/LoginPage';
-import { SignUpPage } from './components/SignUpPage';
-import { DoctorInfoPage } from './components/DoctorInfoPage';
+import PatientApp from './PatientApp';
+import PublicApp from './PublicApp';
 import { Toaster } from './components/ui/sonner';
 
 // Doctor Dashboard
@@ -93,13 +91,10 @@ function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'doctor' | 'admin' | 'pharmacist' | 'receptionist' | null>(null);
+  const [userRole, setUserRole] = useState<'doctor' | 'admin' | 'pharmacist' | 'receptionist' | 'patient' | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
-  const [showSignUp, setShowSignUp] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showDoctorInfo, setShowDoctorInfo] = useState(false);
 
-  const handleLogin = (email: string, role: 'doctor' | 'admin' | 'pharmacist' | 'receptionist') => {
+  const handleLogin = (email: string, role: 'doctor' | 'admin' | 'pharmacist' | 'receptionist' | 'patient') => {
     setUserEmail(email);
     setUserRole(role);
     setIsAuthenticated(true);
@@ -109,90 +104,19 @@ export default function App() {
     setIsAuthenticated(false);
     setUserRole(null);
     setUserEmail('');
-    setShowSignUp(false);
-    setShowLogin(false);
   };
 
   const handleGoHome = () => {
     setIsAuthenticated(false);
     setUserRole(null);
     setUserEmail('');
-    setShowSignUp(false);
-    setShowLogin(false);
-    setShowDoctorInfo(false);
   };
 
   if (!isAuthenticated) {
-    // Show Doctor Info Page
-    if (showDoctorInfo) {
-      return (
-        <>
-          <DoctorInfoPage
-            onNavigateToHome={() => {
-              setShowDoctorInfo(false);
-              setShowLogin(false);
-              setShowSignUp(false);
-            }}
-            onNavigateToLogin={() => {
-              setShowDoctorInfo(false);
-              setShowLogin(true);
-            }}
-            onNavigateToSignUp={() => {
-              setShowDoctorInfo(false);
-              setShowSignUp(true);
-            }}
-          />
-          <Toaster position="top-center" />
-        </>
-      );
-    }
-
-    // Show Sign Up Page
-    if (showSignUp) {
-      return (
-        <>
-          <SignUpPage 
-            onBackToLogin={() => {
-              setShowSignUp(false);
-              setShowLogin(true);
-            }}
-            onNavigateToHome={() => {
-              setShowSignUp(false);
-              setShowLogin(false);
-            }}
-          />
-          <Toaster position="top-center" />
-        </>
-      );
-    }
-    
-    // Show Login Page
-    if (showLogin) {
-      return (
-        <>
-          <LoginPage 
-            onLogin={handleLogin} 
-            onNavigateToSignUp={() => {
-              setShowLogin(false);
-              setShowSignUp(true);
-            }}
-            onNavigateToHome={() => {
-              setShowLogin(false);
-            }}
-          />
-          <Toaster position="top-center" />
-        </>
-      );
-    }
-    
-    // Show Homepage (Landing Page)
+    // Show New Public Website
     return (
       <>
-        <Homepage 
-          onNavigateToLogin={() => setShowLogin(true)}
-          onNavigateToSignUp={() => setShowSignUp(true)}
-          onNavigateToDoctorInfo={() => setShowDoctorInfo(true)}
-        />
+        <PublicApp onLogin={handleLogin} />
         <Toaster position="top-center" />
       </>
     );
@@ -220,6 +144,15 @@ export default function App() {
     return (
       <>
         <ReceptionistApp onLogout={handleLogout} onGoHome={handleGoHome} />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  if (userRole === 'patient') {
+    return (
+      <>
+        <PatientApp onLogout={handleLogout} onGoHome={handleGoHome} />
         <Toaster position="top-center" />
       </>
     );
