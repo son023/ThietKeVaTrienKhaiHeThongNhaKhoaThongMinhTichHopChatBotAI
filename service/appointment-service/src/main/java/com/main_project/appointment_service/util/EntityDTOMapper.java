@@ -189,7 +189,7 @@ public class EntityDTOMapper {
         entity.setDoctorId(requestDTO.getDoctorId());
         entity.setCreatedAt(requestDTO.getCreatedAt());
         entity.setUpdatedAt(requestDTO.getUpdatedAt());
-        entity.setWorkSchedule(requestDTO.getWorkSchedule());
+        entity.setWorkSchedule(workSchedule);
         return entity;
     }
 
@@ -199,7 +199,7 @@ public class EntityDTOMapper {
         entity.setDoctorId(requestDTO.getDoctorId());
         entity.setCreatedAt(requestDTO.getCreatedAt());
         entity.setUpdatedAt(requestDTO.getUpdatedAt());
-        entity.setWorkSchedule(requestDTO.getWorkSchedule());
+        entity.setWorkSchedule(workSchedule);
     }
 
 

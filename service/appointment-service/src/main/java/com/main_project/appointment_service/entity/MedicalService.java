@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "medical_services")
+@Table(name = "medical_service")
 @Getter
 @Setter
 @Builder
@@ -14,7 +14,7 @@ import java.util.UUID;
 public class MedicalService {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false, length = 255)

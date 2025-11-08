@@ -21,10 +21,10 @@ public interface DoctorWorkScheduleRepository extends JpaRepository<DoctorWorkSc
     List<DoctorWorkSchedule> findByWorkSchedule_Id(UUID workScheduleId);
 
     // 🔹 Lấy tất cả lịch theo ngày trong WorkSchedule
-    List<DoctorWorkSchedule> findByWorkSchedule_Date(ZonedDateTime date);
+    List<DoctorWorkSchedule> findByWorkSchedule_WorkDate(ZonedDateTime date);
 
     // 🔹 Lấy tất cả lịch trong khoảng ngày (truy cập WorkSchedule.date)
-    List<DoctorWorkSchedule> findByWorkSchedule_DateBetween(ZonedDateTime start, ZonedDateTime end);
+    List<DoctorWorkSchedule> findByWorkSchedule_WorkDateBetween(ZonedDateTime start, ZonedDateTime end);
 
     // 🔹 Lấy tất cả lịch theo WorkSchedule ID
     @Query("SELECT dws FROM DoctorWorkSchedule dws WHERE dws.workSchedule.id = :workScheduleId")

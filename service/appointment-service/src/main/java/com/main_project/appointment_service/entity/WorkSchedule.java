@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "work_schedules")
+@Table(name = "work_schedule")
 @Getter
 @Setter
 @Builder
@@ -16,7 +16,7 @@ import java.util.UUID;
 public class WorkSchedule {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")

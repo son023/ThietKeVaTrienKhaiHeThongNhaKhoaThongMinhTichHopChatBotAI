@@ -82,13 +82,13 @@ public class DoctorWorkScheduleService implements IDoctorWorkSchedule {
 
     @Override
     public List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesByDate(ZonedDateTime date) {
-        return doctorWorkScheduleRepository.findByWorkSchedule_Date(date)
+        return doctorWorkScheduleRepository.findByWorkSchedule_WorkDate(date)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<DoctorWorkScheduleDTO> getDoctorWorkSchedulesBetween(ZonedDateTime start, ZonedDateTime end) {
-        return doctorWorkScheduleRepository.findByWorkSchedule_DateBetween(start, end)
+        return doctorWorkScheduleRepository.findByWorkSchedule_WorkDateBetween(start, end)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
