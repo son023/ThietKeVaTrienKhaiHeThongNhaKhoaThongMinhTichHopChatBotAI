@@ -100,7 +100,7 @@ export function BookingPage({ onBack, preselectedService, preselectedDoctor }: B
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#ebf6fc] to-[#fcfeff] flex flex-col">
-        {/* Header */}
+        {/* DoctorHeader */}
         <div className="bg-[#fcfeff] border-b border-[#ebf6fc]">
           <div className="max-w-[1400px] mx-auto px-[20px] sm:px-[40px] py-[20px]">
             <button
@@ -164,7 +164,7 @@ export function BookingPage({ onBack, preselectedService, preselectedDoctor }: B
 
   return (
     <div className="min-h-screen bg-[#fcfeff] flex flex-col">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="bg-[#fcfeff] border-b border-[#ebf6fc] sticky top-0 z-10">
         <div className="max-w-[1200px] mx-auto px-[20px] sm:px-[40px] py-[20px]">
           <div className="flex items-center justify-between">
@@ -351,7 +351,7 @@ export function BookingPage({ onBack, preselectedService, preselectedDoctor }: B
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date: Date) => date < new Date()}
                       className="rounded-[16px] border-2 border-[#ebf6fc] p-[16px] bg-[#fcfeff]"
                     />
                   </div>

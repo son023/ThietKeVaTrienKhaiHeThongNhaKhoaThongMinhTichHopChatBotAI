@@ -8,7 +8,7 @@ import { PrescriptionDetail } from './components/pharmacist/PrescriptionDetail';
 import { DrugProfile } from './components/pharmacist/DrugProfile';
 import { PharmacyReports } from './components/pharmacist/PharmacyReports';
 import { ImportExportManagement } from './components/pharmacist/ImportExportManagement';
-import { AccountSettings } from './components/pages/AccountSettings';
+import { AccountSettings } from './components/doctor/AccountSettings';
 
 interface PharmacistAppProps {
   onLogout: () => void;

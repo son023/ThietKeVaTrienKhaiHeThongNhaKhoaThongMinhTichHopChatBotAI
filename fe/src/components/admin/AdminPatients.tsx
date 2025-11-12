@@ -350,7 +350,7 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                       size="sm"
                       variant="outline"
                       className="rounded-[10px]"
-                      onClick={(e) => {
+                      onClick={(e: any) => {
                         e.stopPropagation();
                         onNavigateToPatientDetail(patient.id);
                       }}

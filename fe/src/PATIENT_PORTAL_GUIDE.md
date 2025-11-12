@@ -32,7 +32,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
 - ✅ Thông tin liên hệ nhanh
 
 ### 2. Quản lý Lịch hẹn
-**Đường dẫn**: Sidebar > Lịch hẹn
+**Đường dẫn**: DoctorSidebar > Lịch hẹn
 
 **Tính năng**:
 - ✅ Tab "Lịch hẹn sắp tới":
@@ -50,7 +50,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
   - Đặt lại dịch vụ đã khám
 
 ### 3. Hồ sơ Bệnh án
-**Đường dẫn**: Sidebar > Hồ sơ bệnh án
+**Đường dẫn**: DoctorSidebar > Hồ sơ bệnh án
 
 **Tính năng**:
 - ✅ Tab "Thông tin cá nhân":
@@ -74,7 +74,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
   - Lịch tái khám
 
 ### 4. Thanh toán & Hóa đơn
-**Đường dẫn**: Sidebar > Thanh toán
+**Đường dẫn**: DoctorSidebar > Thanh toán
 
 **Tính năng**:
 - ✅ Thẻ tóm tắt:
@@ -101,7 +101,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
 - ✅ Tìm kiếm hóa đơn theo mã
 
 ### 5. Thông tin Cá nhân
-**Đường dẫn**: Sidebar > Thông tin cá nhân
+**Đường dẫn**: DoctorSidebar > Thông tin cá nhân
 
 **Tính năng**:
 - ✅ Profile header với avatar và badges
@@ -123,7 +123,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
   - Chọn kênh nhận thông báo: SMS / Email
 
 ### 6. Chatbot Hỗ trợ
-**Vị trí**: Button chat ở Header (góc trên bên phải)
+**Vị trí**: Button chat ở DoctorHeader (góc trên bên phải)
 
 **Tính năng**:
 - ✅ Chatbot thông minh với AI responses
@@ -174,7 +174,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
 - **Desktop**: > 1024px
 
 ### Mobile Features:
-- ✅ Sidebar ẩn trên mobile, mở bằng floating button (góc dưới phải)
+- ✅ DoctorSidebar ẩn trên mobile, mở bằng floating button (góc dưới phải)
 - ✅ Hamburger menu
 - ✅ Swipeable tabs
 - ✅ Touch-friendly buttons (min 44px)
@@ -224,7 +224,7 @@ Patient Portal là giao diện dành cho bệnh nhân để quản lý lịch h�
 
 4. **Test Responsive**:
    - Resize browser để test mobile view
-   - Sidebar sẽ ẩn và có floating button
+   - DoctorSidebar sẽ ẩn và có floating button
    - Layouts tự động adjust
 
 ## 📋 Mock Data

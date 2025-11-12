@@ -88,7 +88,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">

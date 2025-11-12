@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function PatientPayment() {
   const [selectedTab, setSelectedTab] = useState('pending');
@@ -120,7 +120,7 @@ export function PatientPayment() {
   return (
     <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
       <div className="max-w-[1440px] mx-auto">
-        {/* Header */}
+        {/* DoctorHeader */}
         <div className="mb-[32px]">
           <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px] mb-[8px]">
             Thanh toán & Hóa đơn

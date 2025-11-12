@@ -20,7 +20,7 @@ export function LoginPage({ onBack, onNavigateToSignup, onLogin }: LoginPageProp
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ebf6fc] to-[#fcfeff] flex flex-col">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="bg-[#fcfeff] border-b border-[#ebf6fc]">
         <div className="max-w-[1400px] mx-auto px-[20px] sm:px-[40px] py-[20px]">
           <button

@@ -147,7 +147,7 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="bg-white border-b border-[#e8e8e8] p-6 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
         <div className="flex items-center gap-4 mb-4">
           <Button variant="outline" size="sm" onClick={onBack} className="rounded-[10px] border-[#e8e8e8]">

@@ -155,7 +155,7 @@ export function PatientChatbot({ isOpen, onClose }: PatientChatbotProps) {
   return (
     <div className="fixed bottom-[20px] right-[20px] z-50 w-[380px] max-w-[calc(100vw-40px)] h-[600px] max-h-[calc(100vh-40px)]">
       <Card className="w-full h-full flex flex-col shadow-[0px_8px_32px_0px_rgba(0,0,0,0.12)] border-[#ebf6fc] overflow-hidden">
-        {/* Header */}
+        {/* DoctorHeader */}
         <div className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] p-[20px] flex items-center justify-between">
           <div className="flex items-center gap-[12px]">
             <div className="w-[40px] h-[40px] bg-white/20 rounded-[10px] flex items-center justify-center">

@@ -5,12 +5,12 @@ interface SidebarProps {
   onNavigate: (page: string) => void;
 }
 
-export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+export function DoctorSidebar({ currentPage, onNavigate }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển', icon: Home },
     { id: 'appointments', label: 'Lịch hẹn của tôi', icon: Calendar },
     { id: 'patients', label: 'Bệnh nhân của tôi', icon: Users },
-    { id: 'treatment-plans', label: 'Kế hoạch điều trị', icon: FileText },
+    // { id: 'treatment-plans', label: 'Kế hoạch điều trị', icon: FileText },
     { id: 'performance', label: 'Hiệu suất cá nhân', icon: TrendingUp },
     { id: 'account', label: 'Tài khoản của tôi', icon: Settings },
   ];

@@ -145,7 +145,7 @@ export function MyAppointments({ onNavigateToPatient }: MyAppointmentsProps) {
         </div>
         
         <div className="flex items-center justify-between">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+          <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v as 'day' | 'week')}>
             <TabsList>
               <TabsTrigger value="day">Ngày</TabsTrigger>
               <TabsTrigger value="week">Tuần</TabsTrigger>
@@ -196,7 +196,7 @@ export function MyAppointments({ onNavigateToPatient }: MyAppointmentsProps) {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <div className="min-w-[800px]">
-                {/* Header */}
+                {/* DoctorHeader */}
                 <div className="grid grid-cols-8 border-b">
                   <div className="p-3 border-r bg-gray-50"></div>
                   {weekDays.map((day, index) => {

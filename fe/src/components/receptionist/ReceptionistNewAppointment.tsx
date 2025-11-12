@@ -62,7 +62,7 @@ export function ReceptionistNewAppointment({ onBack, onComplete }: ReceptionistN
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={onBack}>

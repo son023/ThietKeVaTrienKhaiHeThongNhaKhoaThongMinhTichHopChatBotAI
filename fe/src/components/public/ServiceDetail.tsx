@@ -104,7 +104,7 @@ export function ServiceDetail({ serviceId, onBack, onBooking, onServiceSelect }:
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-[40px]">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-[40px]">
-            {/* Service Header */}
+            {/* Service DoctorHeader */}
             <div className="space-y-[24px]">
               <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[40px] tracking-[0.5px]">
                 {service.name}
@@ -208,7 +208,7 @@ export function ServiceDetail({ serviceId, onBack, onBooking, onServiceSelect }:
             </div>
           </div>
 
-          {/* Right Column - Sidebar */}
+          {/* Right Column - DoctorSidebar */}
           <div className="space-y-[24px]">
             {/* Booking Card */}
             <div className="bg-gradient-to-br from-[#3fb5ff] to-[#1e90c7] rounded-[20px] p-[28px] space-y-[24px] sticky top-[120px]">

@@ -66,7 +66,7 @@ export function DoctorDetail({ doctorId, onBack, onBooking }: DoctorDetailProps)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-[40px]">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-[40px]">
-            {/* Doctor Header */}
+            {/* Doctor DoctorHeader */}
             <div className="bg-gradient-to-r from-[#ebf6fc] to-[#d6edfa] rounded-[24px] p-[40px] flex gap-[30px]">
               <div className="w-[200px] h-[200px] rounded-[20px] overflow-hidden flex-shrink-0">
                 <ImageWithFallback
@@ -172,7 +172,7 @@ export function DoctorDetail({ doctorId, onBack, onBooking }: DoctorDetailProps)
             </div>
           </div>
 
-          {/* Right Column - Sidebar */}
+          {/* Right Column - DoctorSidebar */}
           <div className="space-y-[24px]">
             {/* Booking Card */}
             <div className="bg-gradient-to-br from-[#3fb5ff] to-[#1e90c7] rounded-[20px] p-[28px] space-y-[24px] sticky top-[120px]">

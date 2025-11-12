@@ -146,7 +146,7 @@ export function PatientAppointments() {
   return (
     <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
       <div className="max-w-[1440px] mx-auto">
-        {/* Header */}
+        {/* DoctorHeader */}
         <div className="mb-[32px]">
           <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px] mb-[8px]">
             Quản lý lịch hẹn

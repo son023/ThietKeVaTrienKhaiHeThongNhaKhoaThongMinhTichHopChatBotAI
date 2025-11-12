@@ -5,7 +5,7 @@ import svgPaths from "./svg-rgty3nojwf";
  */
 function Header2({ className }: { className?: string }) {
   return (
-    <div className={className} data-name="Header/2">
+    <div className={className} data-name="DoctorHeader/2">
       <div className="absolute box-border content-stretch flex gap-[15px] h-[64px] items-center justify-end pl-[6px] pr-0 py-[30px] right-[35px] rounded-[15px] top-[20px]" data-name="Button DangNhap">
         <div className="bg-[#ecf8ff] overflow-clip relative rounded-[100px] shrink-0 size-[56px]">
           <div className="absolute aspect-[44/44] bottom-[21.43%] left-1/2 top-[21.43%] translate-x-[-50%]" data-name="Solid/Status/Notification">
@@ -40,7 +40,7 @@ function Header2({ className }: { className?: string }) {
           <p className="leading-[normal]">DentalCareX</p>
         </div>
       </div>
-      <div className="absolute content-stretch flex font-['Fz_Poppins:SemiBold',sans-serif] gap-[30px] h-[64px] items-center justify-center leading-[0] left-1/2 not-italic text-[#01304e] text-[16px] text-center top-[20px] tracking-[0.5px] translate-x-[-50%] w-[734.4px]" data-name="Header">
+      <div className="absolute content-stretch flex font-['Fz_Poppins:SemiBold',sans-serif] gap-[30px] h-[64px] items-center justify-center leading-[0] left-1/2 not-italic text-[#01304e] text-[16px] text-center top-[20px] tracking-[0.5px] translate-x-[-50%] w-[734.4px]" data-name="DoctorHeader">
         <div className="flex flex-col h-full justify-center relative shrink-0 w-[108px]">
           <p className="leading-[normal]">Trang chủ</p>
         </div>

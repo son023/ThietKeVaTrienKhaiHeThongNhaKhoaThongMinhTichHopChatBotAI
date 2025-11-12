@@ -121,7 +121,7 @@ export function NewPatientHeader({ currentPage, onNavigate, onOpenChatbot }: New
   };
 
   return (
-    <div className="bg-[#ecf8ff] h-[104px] relative w-full" data-name="Header/2">
+    <div className="bg-[#ecf8ff] h-[104px] relative w-full" data-name="DoctorHeader/2">
       {/* Right Buttons - Notifications & User */}
       <div className="absolute box-border content-stretch flex gap-[15px] h-[64px] items-center justify-end pl-[6px] pr-0 py-[30px] right-[35px] rounded-[15px] top-[20px] z-50" data-name="Button DangNhap">
         {/* Notification Button */}
@@ -150,7 +150,7 @@ export function NewPatientHeader({ currentPage, onNavigate, onOpenChatbot }: New
           {/* Notifications Dropdown */}
           {showNotifications && (
             <div className="absolute top-[calc(100%+10px)] right-0 w-[420px] bg-white rounded-[16px] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.12)] overflow-hidden">
-              {/* Header */}
+              {/* DoctorHeader */}
               <div className="flex items-center justify-between px-[20px] py-[16px] border-b border-[#ebf6fc]">
                 <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
                   Thông báo
@@ -263,8 +263,8 @@ export function NewPatientHeader({ currentPage, onNavigate, onOpenChatbot }: New
         </div>
       </div>
 
-      {/* Header Menu */}
-      <div className="absolute content-stretch flex font-['Fz_Poppins:SemiBold',sans-serif] gap-[30px] h-[64px] items-center justify-center leading-[0] left-1/2 not-italic text-[#01304e] text-[16px] text-center top-[20px] tracking-[0.5px] translate-x-[-50%] w-[734.4px]" data-name="Header">
+      {/* DoctorHeader Menu */}
+      <div className="absolute content-stretch flex font-['Fz_Poppins:SemiBold',sans-serif] gap-[30px] h-[64px] items-center justify-center leading-[0] left-1/2 not-italic text-[#01304e] text-[16px] text-center top-[20px] tracking-[0.5px] translate-x-[-50%] w-[734.4px]" data-name="DoctorHeader">
         {menuItems.map((item) => (
           <button
             key={item.id}

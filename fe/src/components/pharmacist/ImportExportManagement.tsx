@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Eye, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function ImportExportManagement() {
   const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
@@ -84,7 +84,7 @@ export function ImportExportManagement() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">

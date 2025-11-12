@@ -156,8 +156,8 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Fixed Header */}
+    <div className="p-6 flex flex-col">
+      {/* Fixed DoctorHeader */}
       <div className="bg-white border-b border-[#e8e8e8] p-6 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
         <div className="flex items-center gap-4 mb-4">
           <Button variant="outline" size="sm" onClick={onBack} className="rounded-[10px] border-[#e8e8e8]">
@@ -234,7 +234,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full grid grid-cols-1 lg:grid-cols-4 gap-0">
-          {/* Column 1: History Sidebar */}
+          {/* Column 1: History DoctorSidebar */}
           <div className="border-r border-[#e8e8e8] bg-[#d8f0ff]/30 overflow-hidden flex flex-col">
             <div className="p-4 border-b border-[#e8e8e8] bg-white">
               <h3 className="text-[#01304e]">Lịch sử điều trị</h3>
@@ -258,31 +258,31 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
                   </Card>
                 ))}
 
-                <div className="mt-6">
-                  <h4 className="text-[#01304e] mb-3">Kế hoạch điều trị</h4>
-                  {treatmentPlans.map((plan) => (
-                    <Card
-                      key={plan.id}
-                      className="mb-3 cursor-pointer hover:border-[#3FB5FF] transition-all rounded-[10px] border-[#e8e8e8] shadow-[0px_2px_8px_0px_rgba(159,166,175,0.08)]"
-                      onClick={() => onNavigateToTreatmentPlan(plan.id)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-[#333333]">{plan.name}</p>
-                          <Badge className={plan.status === 'completed' ? 'bg-green-500' : 'bg-[#3FB5FF]'}>
-                            {plan.completed}/{plan.steps}
-                          </Badge>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-[#3FB5FF] h-2 rounded-full transition-all"
-                            style={{ width: `${plan.progress}%` }}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                {/*<div className="mt-6">*/}
+                {/*  <h4 className="text-[#01304e] mb-3">Kế hoạch điều trị</h4>*/}
+                {/*  {treatmentPlans.map((plan) => (*/}
+                {/*    <Card*/}
+                {/*      key={plan.id}*/}
+                {/*      className="mb-3 cursor-pointer hover:border-[#3FB5FF] transition-all rounded-[10px] border-[#e8e8e8] shadow-[0px_2px_8px_0px_rgba(159,166,175,0.08)]"*/}
+                {/*      onClick={() => onNavigateToTreatmentPlan(plan.id)}*/}
+                {/*    >*/}
+                {/*      <CardContent className="p-3">*/}
+                {/*        <div className="flex items-center justify-between mb-2">*/}
+                {/*          <p className="text-sm text-[#333333]">{plan.name}</p>*/}
+                {/*          <Badge className={plan.status === 'completed' ? 'bg-green-500' : 'bg-[#3FB5FF]'}>*/}
+                {/*            {plan.completed}/{plan.steps}*/}
+                {/*          </Badge>*/}
+                {/*        </div>*/}
+                {/*        <div className="w-full bg-gray-200 rounded-full h-2">*/}
+                {/*          <div*/}
+                {/*            className="bg-[#3FB5FF] h-2 rounded-full transition-all"*/}
+                {/*            style={{ width: `${plan.progress}%` }}*/}
+                {/*          />*/}
+                {/*        </div>*/}
+                {/*      </CardContent>*/}
+                {/*    </Card>*/}
+                {/*  ))}*/}
+                {/*</div>*/}
               </div>
             </ScrollArea>
           </div>
@@ -293,7 +293,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
               <div className="border-b bg-white px-4">
                 <TabsList className="w-full justify-start">
                   <TabsTrigger value="notes">Ghi chú lâm sàng</TabsTrigger>
-                  <TabsTrigger value="dental-chart">Sơ đồ răng</TabsTrigger>
+                  {/*<TabsTrigger value="dental-chart">Sơ đồ răng</TabsTrigger>*/}
                   <TabsTrigger value="images">Hình ảnh & X-quang</TabsTrigger>
                 </TabsList>
               </div>
@@ -327,51 +327,51 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
                         />
                       </div>
 
-                      <div>
-                        <Label className="text-[#01304e] mb-2">Dịch vụ chỉ định</Label>
-                        <Card className="rounded-[10px] border-[#e8e8e8]">
-                          <CardContent className="p-4">
-                            <div className="space-y-2 mb-3">
-                              {selectedServices.map((service, index) => (
-                                <div key={index} className="flex items-center justify-between p-2 bg-[#d8f0ff]/30 rounded-[8px]">
-                                  <div className="flex items-center gap-2">
-                                    <FileCheck className="w-4 h-4 text-[#3FB5FF]" />
-                                    <span className="text-sm text-[#333333]">{service}</span>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedServices(selectedServices.filter((_, i) => i !== index));
-                                    }}
-                                  >
-                                    <X className="w-4 h-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                            <Select
-                              value=""
-                              onValueChange={(value) => {
-                                if (value && !selectedServices.includes(value)) {
-                                  setSelectedServices([...selectedServices, value]);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="rounded-[10px]">
-                                <SelectValue placeholder="Chọn dịch vụ để thêm..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableServices.map((service) => (
-                                  <SelectItem key={service} value={service}>
-                                    {service}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </CardContent>
-                        </Card>
-                      </div>
+                      {/*<div>*/}
+                      {/*  <Label className="text-[#01304e] mb-2">Dịch vụ chỉ định</Label>*/}
+                      {/*  <Card className="rounded-[10px] border-[#e8e8e8]">*/}
+                      {/*    <CardContent className="p-4">*/}
+                      {/*      <div className="space-y-2 mb-3">*/}
+                      {/*        {selectedServices.map((service, index) => (*/}
+                      {/*          <div key={index} className="flex items-center justify-between p-2 bg-[#d8f0ff]/30 rounded-[8px]">*/}
+                      {/*            <div className="flex items-center gap-2">*/}
+                      {/*              <FileCheck className="w-4 h-4 text-[#3FB5FF]" />*/}
+                      {/*              <span className="text-sm text-[#333333]">{service}</span>*/}
+                      {/*            </div>*/}
+                      {/*            <Button*/}
+                      {/*              variant="ghost"*/}
+                      {/*              size="sm"*/}
+                      {/*              onClick={() => {*/}
+                      {/*                setSelectedServices(selectedServices.filter((_, i) => i !== index));*/}
+                      {/*              }}*/}
+                      {/*            >*/}
+                      {/*              <X className="w-4 h-4 text-red-500" />*/}
+                      {/*            </Button>*/}
+                      {/*          </div>*/}
+                      {/*        ))}*/}
+                      {/*      </div>*/}
+                      {/*      <Select*/}
+                      {/*        value=""*/}
+                      {/*        onValueChange={(value: any) => {*/}
+                      {/*          if (value && !selectedServices.includes(value)) {*/}
+                      {/*            setSelectedServices([...selectedServices, value]);*/}
+                      {/*          }*/}
+                      {/*        }}*/}
+                      {/*      >*/}
+                      {/*        <SelectTrigger className="rounded-[10px]">*/}
+                      {/*          <SelectValue placeholder="Chọn dịch vụ để thêm..." />*/}
+                      {/*        </SelectTrigger>*/}
+                      {/*        <SelectContent>*/}
+                      {/*          {availableServices.map((service) => (*/}
+                      {/*            <SelectItem key={service} value={service}>*/}
+                      {/*              {service}*/}
+                      {/*            </SelectItem>*/}
+                      {/*          ))}*/}
+                      {/*        </SelectContent>*/}
+                      {/*      </Select>*/}
+                      {/*    </CardContent>*/}
+                      {/*  </Card>*/}
+                      {/*</div>*/}
                     </div>
                   </ScrollArea>
                 </div>
@@ -440,7 +440,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
 
                 <div className="space-y-2">
                   <Button 
-                    className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
+                    className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
                     onClick={handleSaveComplete}
                   >
                     <Save className="w-4 h-4 mr-2" />
@@ -479,7 +479,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
 
       {/* Visit History Dialog */}
       <Dialog open={isVisitDialogOpen} onOpenChange={setIsVisitDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto rounded-[15px]">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto rounded-[10px] bg-white">
           <DialogHeader>
             <DialogTitle className="text-[#01304e]">
               Lịch sử khám - {selectedVisit?.date}
@@ -564,7 +564,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
                   Đóng
                 </Button>
                 <Button
-                  className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
+                  className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
                   onClick={() => {
                     // Could implement print functionality here
                     console.log('In hồ sơ khám');

@@ -76,7 +76,7 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
         </Card>
       </div>
 
-      {/* Header */}
+      {/* DoctorHeader */}
       <div>
         <h1 className="text-2xl text-[#01304e] mb-2">Luồng Bệnh nhân hôm nay</h1>
         <p className="text-gray-600">Thứ Ba, 28 tháng 10, 2025</p>
@@ -90,7 +90,7 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
           
           return (
             <div key={status} className="min-w-[240px]">
-              {/* Column Header */}
+              {/* Column DoctorHeader */}
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xs text-gray-700">{config.label}</h3>

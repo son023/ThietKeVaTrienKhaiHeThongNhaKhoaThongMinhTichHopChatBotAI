@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface DashboardProps {
   onNavigateToPatient: (id: string) => void;
@@ -14,6 +14,15 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
 
+  /* Appointment Status:
+  - Confirmed
+  - Checked-in
+  - In Progress
+  - Completed
+  - No-show
+  - Cancelled
+  */
+
   const todayAppointments = [
     {
       id: '1',
@@ -21,7 +30,7 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
       patientName: 'Nguyễn Văn An',
       patientId: 'BN001',
       service: 'Khám tổng quát',
-      status: 'waiting',
+      status: 'checked-in',
     },
     {
       id: '2',
@@ -45,13 +54,13 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
       patientName: 'Phạm Thị Dung',
       patientId: 'BN004',
       service: 'Tái khám niềng răng',
-      status: 'waiting',
+      status: 'confirmed',
     },
   ];
 
   const pendingRecords = [
     { id: '1', patientName: 'Nguyễn Văn An', type: 'Chưa hoàn tất ghi chú', date: '25/10/2025' },
-    { id: '2', patientName: 'Hoàng Thị E', type: 'Kế hoạch điều trị chưa xong', date: '24/10/2025' },
+    { id: '2', patientName: 'Hoàng Thị E', type: 'Chưa hoàn tất ghi chú', date: '24/10/2025' },
   ];
 
   const quickTasks = [
@@ -92,12 +101,14 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'waiting':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">Chờ khám</Badge>;
+      case 'checked-in':
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600 h-7">Đã check-in</Badge>;
       case 'in-progress':
-        return <Badge className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">Đang khám</Badge>;
+        return <Badge className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 h-7">Đang khám</Badge>;
       case 'completed':
-        return <Badge className="bg-green-500 hover:bg-green-600">Hoàn thành</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600 h-7">Hoàn thành</Badge>;
+        case 'confirmed':
+            return <Badge className="bg-gray-300 hover:bg-gray-400 h-7">Đã xác nhận</Badge>;
       default:
         return null;
     }
@@ -206,7 +217,7 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
                       <p className="text-sm text-[#333333]/60">{appointment.service}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 h-10">
                     {getStatusBadge(appointment.status)}
                     {appointment.status === 'waiting' && (
                       <Button size="sm" className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">

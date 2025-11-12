@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
   Sparkles,
@@ -33,7 +34,7 @@ import imgDoctor31 from "../../assets/imgDoctor2.png";
 import imgDoctor61 from "../../assets/imgDoctor3.png";
 import img1 from "../../assets/img1.png";
 import img4 from "../../assets/img4.png";
-import { img } from "../../imports/svg-mvrzb";
+import img from '../../assets/img1.png';
 import imgPatient1 from "../../assets/imgPatient1.png";
 import imgPatient2 from "../../assets/imgPatient2.png";
 import imgPatient3 from "../../assets/imgPatient3.png";
@@ -159,21 +160,21 @@ const doctorsData = [
     name: "BS. Phạm Minh Quân",
     specialty: "Chuyên gia Chỉnh nha",
     experience: "10+ năm",
-    image: imgDoctor11,
+    image: imgDoctor31,
   },
   {
     id: "5",
     name: "BS. Đỗ Thị Hương",
     specialty: "Chuyên gia Nha chu",
     experience: "14+ năm",
-    image: imgDoctor31,
+    image: imgDoctor61,
   },
   {
     id: "6",
     name: "BS. Vũ Đức Thắng",
     specialty: "Chuyên gia Phục hồi",
     experience: "16+ năm",
-    image: imgDoctor61,
+    image: imgDoctor11,
   },
 ];
 
@@ -571,95 +572,91 @@ export function PublicHomepage({
           </div>
 
           {/* Doctors Carousel */}
-          <div className="relative">
-            <div className="rounded-[24px] bg-[#fcfeff] p-[40px] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.08)]">
-              <div className="flex items-center justify-between mb-[32px]">
-                <div>
-                  <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[24px] mb-[8px]">
-                    Gặp gỡ đội ngũ của chúng tôi
-                  </h3>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px]">
-                    {doctorsData.length} bác sĩ giàu kinh nghiệm
-                  </p>
-                </div>
-                <div className="flex gap-[12px]">
-                  <button
-                    onClick={handlePrevDoctor}
-                    className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
-                  >
-                    <ChevronLeft className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
-                  </button>
-                  <button
-                    onClick={handleNextDoctor}
-                    className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
-                  >
-                    <ChevronRight className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Carousel Track */}
-              <div className="overflow-hidden">
-                <div
-                  className="grid md:grid-cols-3 gap-[24px] transition-all duration-500"
-                  style={{
-                    transform: `translateX(-${currentDoctorIndex * 100}%)`,
-                    display: "grid",
-                  }}
-                >
-                  {getVisibleDoctors().map((doctor) => (
-                    <div
-                      key={doctor.id}
-                      className="transition-all duration-300"
-                    >
-                      <div
-                        onClick={() => setSelectedDoctor(doctor)}
-                        className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
-                          selectedDoctor.id === doctor.id
-                            ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
-                            : "border-[#ebf6fc] hover:border-[#3fb5ff]"
-                        }`}
-                      >
-                        <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
-                          <img
-                            src={doctor.image}
-                            alt={doctor.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
+            <div className="relative">
+                <div className="rounded-[24px] bg-[#fcfeff] p-[40px] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.08)]">
+                    <div className="flex items-center justify-between mb-[32px]">
+                        <div>
+                            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[24px] mb-[8px]">
+                                Gặp gỡ đội ngũ của chúng tôi
+                            </h3>
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px]">
+                                {doctorsData.length} bác sĩ giàu kinh nghiệm
+                            </p>
                         </div>
-                        <div className="p-[24px] text-center">
-                          <h4 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[19px] mb-[6px]">
-                            {doctor.name}
-                          </h4>
-                          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[15px] mb-[8px]">
-                            {doctor.specialty}
-                          </p>
-                          <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#999999] text-[13px]">
-                            {doctor.experience} kinh nghiệm
-                          </p>
+                        <div className="flex gap-[12px]">
+                            <button
+                                onClick={handlePrevDoctor}
+                                className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
+                            >
+                                <ChevronLeft className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
+                            </button>
+                            <button
+                                onClick={handleNextDoctor}
+                                className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
+                            >
+                                <ChevronRight className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
+                            </button>
                         </div>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Pagination Dots */}
-              <div className="flex justify-center gap-[8px] mt-[32px]">
-                {Array.from({ length: totalDoctorPages }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentDoctorIndex(index)}
-                    className={`h-[8px] rounded-full transition-all ${
-                      index === currentDoctorIndex
-                        ? "w-[32px] bg-[#3fb5ff]"
-                        : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
-                    }`}
-                  />
-                ))}
-              </div>
+                    {/* Carousel Track */}
+                    <div className="overflow-hidden">
+                        <div className="grid md:grid-cols-3 gap-[24px]">
+                            {getVisibleDoctors().map((doctor) =>
+                                 (
+                                    <div
+                                        key={doctor.id}
+                                        className="transition-all duration-500 ease-in-out transform hover:scale-[1.02]"
+                                    >
+                                        <div
+                                            onClick={() => setSelectedDoctor(doctor)}
+                                            className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
+                                                selectedDoctor.id === doctor.id
+                                                    ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
+                                                    : "border-[#ebf6fc] hover:border-[#3fb5ff]"
+                                            }`}
+                                        >
+                                            <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
+                                                <img
+                                                    src={doctor.image}
+                                                    alt={doctor.name}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                                                />
+                                            </div>
+                                            <div className="p-[24px] text-center">
+                                                <h4 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[19px] mb-[6px]">
+                                                    {doctor.name}
+                                                </h4>
+                                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[15px] mb-[8px]">
+                                                    {doctor.specialty}
+                                                </p>
+                                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#999999] text-[13px]">
+                                                    {doctor.experience} kinh nghiệm
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Pagination Dots */}
+                    <div className="flex justify-center gap-[8px] mt-[32px]">
+                        {Array.from({ length: totalDoctorPages }).map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentDoctorIndex(index)}
+                                className={`h-[8px] rounded-full transition-all duration-500 ease-in-out ${
+                                    index === currentDoctorIndex
+                                        ? "w-[32px] bg-[#3fb5ff]"
+                                        : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
+                                }`}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
       </section>
 

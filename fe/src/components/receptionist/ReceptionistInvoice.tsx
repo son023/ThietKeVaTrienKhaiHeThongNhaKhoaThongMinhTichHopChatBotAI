@@ -95,7 +95,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={onBack}>
@@ -252,7 +252,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
                 <span className="text-red-600">-{discount.toLocaleString('vi-VN')}đ</span>
               ) : (
                 <>
-                  <Select value={discountType} onValueChange={(v) => setDiscountType(v as 'amount' | 'percent')}>
+                  <Select value={discountType} onValueChange={(v: any) => setDiscountType(v as 'amount' | 'percent')}>
                     <SelectTrigger className="w-24">
                       <SelectValue />
                     </SelectTrigger>

@@ -17,7 +17,7 @@ interface HeaderProps {
   onGoHome?: () => void;
 }
 
-export function Header({ onLogout, onGoHome }: HeaderProps = {}) {
+export function DoctorHeader({ onLogout, onGoHome }: HeaderProps = {}) {
   const [notifications] = useState([
     {
       id: 1,

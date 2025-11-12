@@ -39,7 +39,7 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fcfeff]">
-      {/* Fixed Header */}
+      {/* Fixed DoctorHeader */}
       <NewPatientHeader 
         currentPage={currentPage}
         onNavigate={setCurrentPage}

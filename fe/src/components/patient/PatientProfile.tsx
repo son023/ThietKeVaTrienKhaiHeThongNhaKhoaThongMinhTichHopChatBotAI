@@ -6,7 +6,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function PatientProfile() {
   const [selectedTab, setSelectedTab] = useState('info');
@@ -45,7 +45,7 @@ export function PatientProfile() {
   return (
     <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
       <div className="max-w-[1440px] mx-auto">
-        {/* Header */}
+        {/* DoctorHeader */}
         <div className="mb-[32px]">
           <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px] mb-[8px]">
             Thông tin cá nhân
@@ -55,7 +55,7 @@ export function PatientProfile() {
           </p>
         </div>
 
-        {/* Profile Header Card */}
+        {/* Profile DoctorHeader Card */}
         <Card className="p-[24px] md:p-[32px] border-[#ebf6fc] mb-[24px]">
           <div className="flex flex-col sm:flex-row items-center gap-[24px]">
             <div className="w-[100px] h-[100px] bg-gradient-to-br from-[#3fb5ff] to-[#1e8bc3] rounded-[20px] flex items-center justify-center text-white font-['Fz_Poppins:Bold',sans-serif] text-[40px] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.3)]">
@@ -335,7 +335,7 @@ export function PatientProfile() {
                   </div>
                   <Switch
                     checked={notificationSettings.appointmentReminder}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: any) =>
                       setNotificationSettings({ ...notificationSettings, appointmentReminder: checked })
                     }
                   />
@@ -355,7 +355,7 @@ export function PatientProfile() {
                   </div>
                   <Switch
                     checked={notificationSettings.paymentReminder}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: any) =>
                       setNotificationSettings({ ...notificationSettings, paymentReminder: checked })
                     }
                   />
@@ -377,7 +377,7 @@ export function PatientProfile() {
                   </div>
                   <Switch
                     checked={notificationSettings.healthTips}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: any) =>
                       setNotificationSettings({ ...notificationSettings, healthTips: checked })
                     }
                   />
@@ -399,7 +399,7 @@ export function PatientProfile() {
                   </div>
                   <Switch
                     checked={notificationSettings.promotions}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: any) =>
                       setNotificationSettings({ ...notificationSettings, promotions: checked })
                     }
                   />
@@ -420,7 +420,7 @@ export function PatientProfile() {
                       </div>
                       <Switch
                         checked={notificationSettings.smsNotification}
-                        onCheckedChange={(checked) =>
+                        onCheckedChange={(checked: boolean) =>
                           setNotificationSettings({ ...notificationSettings, smsNotification: checked })
                         }
                       />
@@ -435,7 +435,7 @@ export function PatientProfile() {
                       </div>
                       <Switch
                         checked={notificationSettings.emailNotification}
-                        onCheckedChange={(checked) =>
+                        onCheckedChange={(checked: boolean) =>
                           setNotificationSettings({ ...notificationSettings, emailNotification: checked })
                         }
                       />

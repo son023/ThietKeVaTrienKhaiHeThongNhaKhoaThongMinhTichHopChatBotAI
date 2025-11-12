@@ -134,7 +134,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl text-[#01304e] mb-2">Thanh toán & Hóa đơn</h1>
