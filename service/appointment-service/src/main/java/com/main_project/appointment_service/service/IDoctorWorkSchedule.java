@@ -2,6 +2,7 @@ package com.main_project.appointment_service.service;
 
 import com.main_project.appointment_service.dto.DoctorWorkScheduleDTO;
 import com.main_project.appointment_service.dto.DoctorWorkScheduleRequestDTO;
+import com.main_project.appointment_service.enums.DoctorWorkScheduleStatus;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -21,7 +22,7 @@ public interface IDoctorWorkSchedule {
 
     DoctorWorkScheduleDTO createDoctorWorkSchedule(DoctorWorkScheduleRequestDTO requestDTO);
     DoctorWorkScheduleDTO updateDoctorWorkSchedule(UUID id, DoctorWorkScheduleRequestDTO requestDTO);
-    DoctorWorkScheduleDTO updateDoctorWorkScheduleStatus(UUID id, String status);
+    DoctorWorkScheduleDTO updateDoctorWorkScheduleStatus(UUID id, DoctorWorkScheduleStatus status);
 
     void deleteDoctorWorkSchedule(UUID id);
 }

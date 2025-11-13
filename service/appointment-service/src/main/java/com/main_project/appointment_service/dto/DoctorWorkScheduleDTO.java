@@ -1,6 +1,7 @@
 package com.main_project.appointment_service.dto;
 
 import com.main_project.appointment_service.entity.WorkSchedule;
+import com.main_project.appointment_service.enums.DoctorWorkScheduleStatus;
 import lombok.*;
 
 import java.time.ZonedDateTime;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class DoctorWorkScheduleDTO {
     private UUID id;
     private String doctorId;
-    private String status;
+    private DoctorWorkScheduleStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private UUID workScheduleId;

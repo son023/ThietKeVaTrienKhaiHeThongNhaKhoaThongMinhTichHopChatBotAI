@@ -1,6 +1,6 @@
 package com.main_project.appointment_service.entity;
 
-import com.main_project.appointment_service.enums.AppointmentStatus;
+import com.main_project.appointment_service.enums.DoctorWorkScheduleStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,8 +24,9 @@ public class DoctorWorkSchedule {
     @Column(nullable = false, length = 50)
     private String doctorId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255)
-    private String status;
+    private DoctorWorkScheduleStatus status;
 
     @Column(nullable = false)
     private ZonedDateTime createdAt;

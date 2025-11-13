@@ -2,6 +2,7 @@ package com.main_project.appointment_service.controller;
 
 import com.main_project.appointment_service.dto.DoctorWorkScheduleDTO;
 import com.main_project.appointment_service.dto.DoctorWorkScheduleRequestDTO;
+import com.main_project.appointment_service.enums.DoctorWorkScheduleStatus;
 import com.main_project.appointment_service.service.IDoctorWorkSchedule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +75,7 @@ public class DoctorWorkScheduleController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<DoctorWorkScheduleDTO> updateStatus(
             @PathVariable UUID id,
-            @RequestParam("status") String status
+            @RequestParam("status") DoctorWorkScheduleStatus status
     ) {
         return ResponseEntity.ok(doctorWorkScheduleService.updateDoctorWorkScheduleStatus(id, status));
     }
