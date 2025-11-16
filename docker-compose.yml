@@ -1,0 +1,221 @@
+#version: '3.8'
+#
+#services:
+#  # 1. POSTGRESQL (Dùng chung cho TẤT CẢ service)
+#  postgres:
+#    image: postgres:14-alpine
+#    container_name: postgres-db
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: password
+#      # Tự động chạy init.sql để tạo các database
+#    ports:
+#      - "5432:5432" # Mở cổng 5432 để dev kết nối từ bên ngoài
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # (Bạn cần tạo file này - xem ở dưới)
+#    networks:
+#      - clinic-network
+#
+#  # 2. REDIS (Cho việc giữ chỗ)
+#  redis-db:
+#    image: redis:7-alpine
+#    container_name: redis-db
+#    ports:
+#      - "6379:6379"
+#    networks:
+#      - clinic-network
+#
+#  # 3. EUREKA SERVER (Dịch vụ tìm kiếm)
+#  # (Giả sử bạn có 1 service Eureka ở thư mục ./eureka-server)
+#  eureka-server:
+#    build:
+#      context: ./eureka-server # (Bạn cần cung cấp service này)
+#    container_name: eureka-server
+#    ports:
+#      - "8761:8761"
+#    networks:
+#      - clinic-network
+#
+#  # 4. TEMPORAL SERVER (Bộ não Saga)
+#  temporal-server:
+#    image: temporalio/auto-setup:1.21.5 # Giống project mẫu temporal
+#    container_name: temporal-server
+#    ports:
+#      - "7233:7233" # Cổng SDK
+#    environment:
+#      - DB=postgresql
+#      - DB_PORT=5432
+#      - POSTGRES_USER=postgres # Dùng chung user/pass với postgres ở trên
+#      - POSTGRES_PWD=password
+#      - POSTGRES_SEEDS=postgres # Tên (hostname) của service 'postgres'
+#    depends_on:
+#      - postgres
+#    networks:
+#      - clinic-network
+#
+#  # 5. TEMPORAL WEB UI
+#  temporal-ui:
+#    image: temporalio/ui:latest # Giống project mẫu temporal
+#    container_name: temporal-ui
+#    ports:
+#      - "8088:8080" # Cổng Web UI
+#    environment:
+#      - TEMPORAL_ADDRESS=temporal-server:7233 # Tên (hostname) của 'temporal-server'
+#    depends_on:
+#      - temporal-server
+#    networks:
+#      - clinic-network
+#
+#  # --- CÁC MICROSERVICE (JAVA) ---
+#
+#  # 6. USER-SERVICE (gRPC Server)
+#  user-service:
+#    build:
+#      context: ./user-service # Đường dẫn đến service
+#    container_name: user-service
+#    expose:
+#      - "8085" # Cổng REST (cho Swagger)
+#      - "9095" # Cổng gRPC
+#    environment:
+#      # (Các biến này sẽ ghi đè application.properties)
+#      - SERVER_PORT=8085
+#      - GRPC_SERVER_PORT=9095
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user_db
+#      - SPRING_DATASOURCE_USERNAME=postgres
+#      - SPRING_DATASOURCE_PASSWORD=password
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+#      - EUREKA_INSTANCE_NONSECUREPORT=${GRPC_SERVER_PORT} # Đăng ký cổng gRPC
+#    depends_on:
+#      - postgres
+#      - eureka-server
+#    networks:
+#      - clinic-network
+#
+#  # 7. APPOINTMENT-SERVICE (gRPC Server)
+#  appointment-service:
+#    build:
+#      context: ./appointment-service
+#    container_name: appointment-service
+#    expose:
+#      - "8086" # Cổng REST (Swagger)
+#      - "9096" # Cổng gRPC
+#    environment:
+#      - SERVER_PORT=8086
+#      - GRPC_SERVER_PORT=9096
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appointment_db
+#      - SPRING_DATASOURCE_USERNAME=postgres
+#      - SPRING_DATASOURCE_PASSWORD=password
+#      - SPRING_DATA_REDIS_HOST=redis-db # Kết nối Redis bằng tên (hostname)
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+#      - EUREKA_INSTANCE_NONSECUREPORT=${GRPC_SERVER_PORT}
+#    depends_on:
+#      - postgres
+#      - eureka-server
+#      - redis-db
+#    networks:
+#      - clinic-network
+#
+#  # 8. INSURANCE-SERVICE (gRPC Server)
+#  insurance-service:
+#    build:
+#      context: ./insurance-service # (Giả sử)
+#    container_name: insurance-service
+#    expose:
+#      - "8087"
+#      - "9093"
+#    environment:
+#      - SERVER_PORT=8087
+#      - GRPC_SERVER_PORT=9093
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/insurance_db
+#      - SPRING_DATASOURCE_USERNAME=postgres
+#      - SPRING_DATASOURCE_PASSWORD=password
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+#      - EUREKA_INSTANCE_NONSECUREPORT=${GRPC_SERVER_PORT}
+#    depends_on:
+#      - postgres
+#      - eureka-server
+#    networks:
+#      - clinic-network
+#
+#  # 9. BOOKING-ORCHESTRATION-SERVICE (Temporal Worker & gRPC Client)
+#  booking-orchestration-service:
+#    build:
+#      context: ./booking-orchestration-service
+#    container_name: booking-orchestrator
+#    ports:
+#      - "9000:9000" # Mở cổng 9000 (Swagger) ra bên ngoài
+#    environment:
+#      - SERVER_PORT=9000
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+#      # Báo cho Temporal SDK biết Temporal Server ở đâu
+#      - TEMPORAL_SERVICE_ADDRESS=temporal-server:7233
+#    depends_on:
+#      - eureka-server
+#      - temporal-server
+#      # Phải chờ các service nó gọi khởi động
+#      - user-service
+#      - insurance-service
+#      - appointment-service
+#    networks:
+#      - clinic-network
+#
+#  # 10. API GATEWAY (Giống file mẫu Axon)
+#  # (Giả sử bạn có 1 service Gateway ở thư mục ./gateway-service)
+#  gateway-service:
+#    build:
+#      context: ./gateway-service
+#    container_name: gateway-service
+#    ports:
+#      - "8080:8080" # Cổng chính truy cập hệ thống
+#    environment:
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+#    depends_on:
+#      - eureka-server
+#      - user-service
+#      - appointment-service
+#      - booking-orchestration-service
+#    networks:
+#      - clinic-network
+#
+## Network chung (Giống file mẫu Axon)
+#networks:
+#  clinic-network:
+#    driver: bridge
+#
+## Volumes (Giống file mẫu Axon, nhưng đổi tên)
+#volumes:
+#  pgdata:
+
+version: '3.7'
+
+services:
+  temporal:
+    image: temporalio/auto-setup:1.21.5
+    ports:
+      - "7233:7233"           # SDK connection port
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+    ports:
+      - "5432:5432"
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    ports:
+      - "8088:8080"           # Web UI
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    depends_on:
+      - temporal

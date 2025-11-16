@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package user;
+option java_package = "com.main_project.booking_orchestration_service.grpc.user";
+option java_multiple_files = true;
+
+// Service này sẽ được implement bởi user-service
+service UserService {
+
+  // Hàm 1: Dùng cho Saga Step 1
+  // Kiểm tra xem Patient có tồn tại và hợp lệ để đặt lịch không
+  rpc ValidatePatient (ValidatePatientRequest) returns (ValidatePatientResponse);
+
+  // Hàm 2: Dùng cho Saga Step 4 (hoặc Notification-Service)
+  // Lấy thông tin liên lạc của bác sĩ để gửi thông báo
+  rpc GetDoctorContact (GetDoctorContactRequest) returns (GetDoctorContactResponse);
+}
+
+// --- Các message cho ValidatePatient ---
+
+message ValidatePatientRequest {
+  string patient_id = 1; // UUID của bệnh nhân (gửi dạng string)
+}
+
+message ValidatePatientResponse {
+  string patient_id = 1;
+  string full_name = 2;
+  string phone_number = 3;
+}
+
+
+// --- Các message cho GetDoctorContact ---
+
+message GetDoctorContactRequest {
+  string doctor_id = 1; // UUID của bác sĩ
+}
+
+message GetDoctorContactResponse {
+  string doctor_id = 1;
+  string full_name = 2;
+  string email = 3;
+  string phone_number = 4;
+  // Thêm các trường khác nếu notification-service cần,
+  // ví dụ: push_token
+}
