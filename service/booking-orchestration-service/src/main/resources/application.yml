@@ -1,0 +1,8 @@
+grpc:
+  client:
+    user-service:
+      address: static://localhost:9095
+      negotiationType: plaintext
+    appointment-service:
+      address: static://localhost:9092
+      negotiation-type: plaintext
