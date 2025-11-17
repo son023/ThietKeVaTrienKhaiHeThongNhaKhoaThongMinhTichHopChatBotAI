@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
-    id "com.google.protobuf" version "0.9.4"
 }
 
 group = 'com.main-project'
@@ -32,16 +31,6 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
-    // 1. Thêm gRPC Spring Boot Starter
-    implementation 'net.devh:grpc-spring-boot-starter:2.15.0.RELEASE'
-
-    // 2. Thêm gRPC dependencies cơ bản
-    implementation 'io.grpc:grpc-protobuf:1.58.0'
-    implementation 'io.grpc:grpc-stub:1.58.0'
-
-    // 3. Dependency cho việc generate code
-    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
-
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
@@ -57,23 +46,4 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-// Cấu hình cho plugin protobuf
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.25.3"
-    }
-    plugins {
-        grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.64.0"
-        }
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.plugins {
-                grpc {}
-            }
-        }
-    }
 }
