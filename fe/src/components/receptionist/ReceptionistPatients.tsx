@@ -98,7 +98,7 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl text-[#01304e] mb-1">Quản lý Bệnh nhân</h1>

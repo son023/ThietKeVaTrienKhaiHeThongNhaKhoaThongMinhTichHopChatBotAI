@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Plus, Edit, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface DrugProfileProps {
   drugId: string;
@@ -66,7 +66,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div>
         <button
           onClick={onBack}

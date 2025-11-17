@@ -420,7 +420,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                         size="sm"
                         variant="outline"
                         className="rounded-[10px]"
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                           e.stopPropagation();
                           onNavigateToStaffDetail(person.id);
                         }}
@@ -431,7 +431,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                         size="sm"
                         variant="outline"
                         className="rounded-[10px] text-red-600 border-red-300 hover:bg-red-50"
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                           e.stopPropagation();
                           setStaffToDelete(person.id);
                         }}
