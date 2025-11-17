@@ -39,3 +39,6 @@ public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, 
 
 
 
+
+
+
