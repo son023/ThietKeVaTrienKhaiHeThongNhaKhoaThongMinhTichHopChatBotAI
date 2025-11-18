@@ -35,6 +35,9 @@ dependencies {
     implementation 'org.axonframework:axon-spring-boot-starter:4.10.3'
     implementation 'org.axonframework:axon-server-connector:4.10.3'
 
+    // Core API - Shared Commands & Events
+    implementation project(':service:core-api')
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

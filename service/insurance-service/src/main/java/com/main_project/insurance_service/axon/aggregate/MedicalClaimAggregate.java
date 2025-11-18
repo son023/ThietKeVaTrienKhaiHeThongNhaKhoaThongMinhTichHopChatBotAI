@@ -1,11 +1,11 @@
 package com.main_project.insurance_service.axon.aggregate;
 
-import com.main_project.insurance_service.axon.command.ApproveMedicalClaimCommand;
-import com.main_project.insurance_service.axon.command.CancelMedicalClaimCommand;
-import com.main_project.insurance_service.axon.command.CreateMedicalClaimCommand;
-import com.main_project.insurance_service.axon.event.MedicalClaimApprovedEvent;
-import com.main_project.insurance_service.axon.event.MedicalClaimCancelledEvent;
-import com.main_project.insurance_service.axon.event.MedicalClaimCreatedEvent;
+import com.main_project.coreapi.insurance.commands.ApproveMedicalClaimCommand;
+import com.main_project.coreapi.insurance.commands.CancelMedicalClaimCommand;
+import com.main_project.coreapi.insurance.commands.CreateMedicalClaimCommand;
+import com.main_project.coreapi.insurance.events.MedicalClaimApprovedEvent;
+import com.main_project.coreapi.insurance.events.MedicalClaimCancelledEvent;
+import com.main_project.coreapi.insurance.events.MedicalClaimCreatedEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

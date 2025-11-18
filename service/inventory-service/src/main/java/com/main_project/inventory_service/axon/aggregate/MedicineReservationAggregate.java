@@ -1,12 +1,12 @@
 package com.main_project.inventory_service.axon.aggregate;
 
-import com.main_project.inventory_service.axon.command.CancelMedicineReservationCommand;
-import com.main_project.inventory_service.axon.command.ConfirmMedicineReservationCommand;
-import com.main_project.inventory_service.axon.command.ReserveMedicineCommand;
-import com.main_project.inventory_service.axon.event.MedicineReservationCancelledEvent;
-import com.main_project.inventory_service.axon.event.MedicineReservationConfirmedEvent;
-import com.main_project.inventory_service.axon.event.MedicineReservationFailedEvent;
-import com.main_project.inventory_service.axon.event.MedicineReservedEvent;
+import com.main_project.coreapi.inventory.commands.CancelMedicineReservationCommand;
+import com.main_project.coreapi.inventory.commands.ConfirmMedicineReservationCommand;
+import com.main_project.coreapi.inventory.commands.ReserveMedicineCommand;
+import com.main_project.coreapi.inventory.events.MedicineReservationCancelledEvent;
+import com.main_project.coreapi.inventory.events.MedicineReservationConfirmedEvent;
+import com.main_project.coreapi.inventory.events.MedicineReservationFailedEvent;
+import com.main_project.coreapi.inventory.events.MedicineReservedEvent;
 import com.main_project.inventory_service.repository.MedicineRepository;
 import com.main_project.inventory_service.entity.Medicine;
 import lombok.Data;
@@ -27,7 +27,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @Slf4j
-public class MedicineReservationAggregate {
+public class
+MedicineReservationAggregate {
     
     @AggregateIdentifier
     private String reservationId;

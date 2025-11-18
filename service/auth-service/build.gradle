@@ -29,10 +29,18 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
+	// Axon Framework Dependencies for Saga Orchestration
+	implementation 'org.axonframework:axon-spring-boot-starter:4.10.3'
+	implementation 'org.axonframework:axon-server-connector:4.10.3'
+
+	// Core API - Shared Commands & Events
+	implementation project(':service:core-api')
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.axonframework:axon-test:4.10.3'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
