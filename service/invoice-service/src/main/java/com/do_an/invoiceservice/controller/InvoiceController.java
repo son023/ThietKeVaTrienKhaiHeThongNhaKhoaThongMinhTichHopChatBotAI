@@ -1,0 +1,151 @@
+package com.do_an.invoiceservice.controller;
+
+import com.do_an.invoiceservice.dto.request.CreateInvoiceRequestDTO;
+import com.do_an.invoiceservice.dto.response.InvoiceResponseDTO;
+import com.do_an.invoiceservice.service.InvoiceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/invoices")
+@RequiredArgsConstructor
+@Tag(name = "Invoice Management", description = "API quản lý hóa đơn và chi tiết hóa đơn")
+public class InvoiceController {
+    private final InvoiceService invoiceService;
+    // Inject Mapper để chuyển Entity -> ResponseDTO
+
+    @Operation(
+            summary = "Tạo hóa đơn mới",
+            description = "Tạo một hóa đơn mới với các InvoiceItem. Hóa đơn sẽ được tạo với trạng thái DRAFT."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Hóa đơn được tạo thành công",
+                    content = @Content(schema = @Schema(implementation = InvoiceResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
+            @ApiResponse(responseCode = "500", description = "Lỗi server")
+    })
+    @PostMapping
+    public ResponseEntity<InvoiceResponseDTO> createInvoice(
+            @Parameter(description = "Thông tin hóa đơn cần tạo", required = true)
+            @Valid @RequestBody CreateInvoiceRequestDTO request) {
+        InvoiceResponseDTO newInvoice = invoiceService.createInvoice(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newInvoice);
+    }
+
+    @Operation(
+            summary = "Cập nhật hóa đơn",
+            description = "Cập nhật hóa đơn. Chỉ có thể cập nhật khi hóa đơn ở trạng thái DRAFT."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cập nhật thành công",
+                    content = @Content(schema = @Schema(implementation = InvoiceResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn"),
+            @ApiResponse(responseCode = "409", description = "Hóa đơn không ở trạng thái DRAFT")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<InvoiceResponseDTO> updateInvoice(
+            @Parameter(description = "ID của hóa đơn cần cập nhật", required = true)
+            @PathVariable String id,
+            @Parameter(description = "Thông tin hóa đơn cần cập nhật", required = true)
+            @Valid @RequestBody CreateInvoiceRequestDTO request) {
+        InvoiceResponseDTO updatedInvoice = invoiceService.updateInvoice(id, request);
+        return ResponseEntity.ok(updatedInvoice);
+    }
+
+    @Operation(
+            summary = "Chốt hóa đơn",
+            description = "Chuyển trạng thái hóa đơn từ DRAFT sang PENDING. Sau khi chốt, không thể chỉnh sửa."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Chốt hóa đơn thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn"),
+            @ApiResponse(responseCode = "409", description = "Hóa đơn không ở trạng thái DRAFT")
+    })
+    @PatchMapping("/{id}/finalize")
+    public ResponseEntity<InvoiceResponseDTO> finalizeInvoice(
+            @Parameter(description = "ID của hóa đơn cần chốt", required = true)
+            @PathVariable String id) {
+        InvoiceResponseDTO finalizedInvoice = invoiceService.finalizeInvoice(id);
+        return ResponseEntity.ok(finalizedInvoice);
+    }
+
+    @Operation(
+            summary = "Lấy hóa đơn theo ID",
+            description = "Lấy thông tin chi tiết của một hóa đơn bao gồm các InvoiceItem"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tìm thấy hóa đơn",
+                    content = @Content(schema = @Schema(implementation = InvoiceResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<InvoiceResponseDTO> getInvoiceById(
+            @Parameter(description = "ID của hóa đơn", required = true)
+            @PathVariable String id) {
+        InvoiceResponseDTO invoice = invoiceService.getInvoiceById(id);
+        return ResponseEntity.ok(invoice);
+    }
+
+    @Operation(
+            summary = "Lấy danh sách hóa đơn",
+            description = "Lấy danh sách hóa đơn với filter theo trạng thái (optional)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công")
+    })
+    @GetMapping
+    public ResponseEntity<List<InvoiceResponseDTO>> listInvoices(
+            @Parameter(description = "Trạng thái hóa đơn (DRAFT, PENDING, PAID, CANCELLED)", required = false)
+            @RequestParam(required = false) String status) {
+        List<InvoiceResponseDTO> invoices = invoiceService.listInvoices(status);
+        return ResponseEntity.ok(invoices);
+    }
+
+    @Operation(
+            summary = "Đánh dấu hóa đơn đã thanh toán",
+            description = "Chuyển trạng thái hóa đơn từ PENDING sang PAID. Chỉ có thể thực hiện khi hóa đơn ở trạng thái PENDING."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Đánh dấu thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn"),
+            @ApiResponse(responseCode = "409", description = "Hóa đơn không ở trạng thái PENDING")
+    })
+    @PatchMapping("/{id}/pay")
+    public ResponseEntity<InvoiceResponseDTO> markAsPaid(
+            @Parameter(description = "ID của hóa đơn", required = true)
+            @PathVariable String id) {
+        InvoiceResponseDTO paidInvoice = invoiceService.markAsPaid(id);
+        return ResponseEntity.ok(paidInvoice);
+    }
+
+
+    @Operation(
+            summary = "Hủy hóa đơn",
+            description = "Chuyển trạng thái hóa đơn sang CANCELLED. Chỉ có thể hủy khi hóa đơn ở trạng thái DRAFT hoặc PENDING."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Hủy hóa đơn thành công"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn"),
+            @ApiResponse(responseCode = "409", description = "Không thể hủy hóa đơn ở trạng thái hiện tại")
+    })
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<InvoiceResponseDTO> cancelInvoice(
+            @Parameter(description = "ID của hóa đơn", required = true)
+            @PathVariable String id) {
+        InvoiceResponseDTO cancelledInvoice = invoiceService.cancelInvoice(id);
+        return ResponseEntity.ok(cancelledInvoice);
+    }
+}

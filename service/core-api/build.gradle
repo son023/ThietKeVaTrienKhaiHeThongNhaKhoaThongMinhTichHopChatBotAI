@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.main-project'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+// Core API không phải là executable application
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Chỉ cần Axon Framework API (không cần full starter)
+    implementation 'org.axonframework:axon-messaging:4.10.3'
+    implementation 'org.axonframework:axon-modelling:4.10.3'
+    
+    // Lombok cho annotation
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Không cần Spring Boot starter vì đây chỉ là library
+    // Không cần database, không cần web, chỉ là POJOs
+}
+
