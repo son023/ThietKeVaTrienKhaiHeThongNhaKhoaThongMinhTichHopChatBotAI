@@ -1,18 +1,13 @@
-package com.main_project.inventory_service;
+package com.do_an.invoiceservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class InventoryServiceApplication {
+public class InvoiceServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(InventoryServiceApplication.class, args);
+        SpringApplication.run(InvoiceServiceApplication.class, args);
     }
+
 }
-
-
-
-
-
-
