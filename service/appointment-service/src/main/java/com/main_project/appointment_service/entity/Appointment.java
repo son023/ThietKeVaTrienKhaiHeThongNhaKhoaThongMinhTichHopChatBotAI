@@ -9,16 +9,18 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "appointment")
-@Getter
-@Setter
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+
+    @Column(length = 50, unique = true, nullable = false)
+    private String appointmentId;
 
     @Column(nullable = false, name = "doctor_id")
     private UUID doctorId;
