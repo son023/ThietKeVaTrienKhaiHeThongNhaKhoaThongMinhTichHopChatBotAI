@@ -2,6 +2,8 @@ package com.main_project.appointment_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,7 +31,7 @@ public class MedicalService {
     @Column(nullable = false)
     private Float price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "appointment_id", referencedColumnName = "id")
-    private Appointment appointment;
+    // Many-to-Many với Appointment
+    @ManyToMany(mappedBy = "medicalServices")
+    private List<Appointment> appointments;
 }

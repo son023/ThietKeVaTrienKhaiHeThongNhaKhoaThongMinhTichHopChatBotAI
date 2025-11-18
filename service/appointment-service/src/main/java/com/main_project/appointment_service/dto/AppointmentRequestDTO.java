@@ -21,5 +21,4 @@ public class AppointmentRequestDTO {
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private List<UUID> MedicalServiceIds;
-    private List<MedicalServiceDTO> medicalServices;
 }

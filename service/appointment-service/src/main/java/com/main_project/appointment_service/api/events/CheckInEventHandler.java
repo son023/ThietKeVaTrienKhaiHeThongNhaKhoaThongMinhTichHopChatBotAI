@@ -16,10 +16,10 @@ public class CheckInEventHandler {
 
     @EventHandler
     public void on(AppointmentCheckedInEvent event) {
-        Appointment appointment = appointmentRepository.findByAppointmentId(event.getAppointmentId());
-        if (appointment != null) {
-            appointment.setStatus(AppointmentStatus.CHECKED);
-            appointmentRepository.save(appointment);
-        }
+//        Appointment appointment = appointmentRepository.findByAppointmentId(event.getAppointmentId());
+//        if (appointment != null) {
+//            appointment.setStatus(AppointmentStatus.CHECKED);
+//            appointmentRepository.save(appointment);
+//        }
     }
 }

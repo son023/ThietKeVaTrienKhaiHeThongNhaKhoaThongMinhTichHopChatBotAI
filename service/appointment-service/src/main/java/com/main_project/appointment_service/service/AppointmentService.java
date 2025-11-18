@@ -109,7 +109,7 @@ public class AppointmentService implements IAppointmentService {
                 .findAllById(requestDTO.getMedicalServiceIds());
 
         if (medicalServices.size() != requestDTO.getMedicalServiceIds().size()) {
-            throw new RuntimeException("Some medical services not found");
+            throw new RuntimeException("Some MedicalService IDs are invalid");
         }
 
         Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalServices);

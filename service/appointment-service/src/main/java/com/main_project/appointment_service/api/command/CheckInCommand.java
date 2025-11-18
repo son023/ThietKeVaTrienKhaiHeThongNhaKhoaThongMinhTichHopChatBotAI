@@ -1,18 +1,19 @@
 package com.main_project.appointment_service.api.command;
 
+import com.main_project.appointment_service.enums.AppointmentStatus;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Value;
+import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Value
+@AllArgsConstructor
 public class CheckInCommand {
-    private UUID appointmentId;
-
+    @TargetAggregateIdentifier
+    private String appointmentId;
     private String patientId;
-    private String doctorId;
-    private ZonedDateTime appointmentStartTime;
-    private int durationInMinutes;
-    private String status = "CONFIRMED";
-    private String doctorNotes;
 }

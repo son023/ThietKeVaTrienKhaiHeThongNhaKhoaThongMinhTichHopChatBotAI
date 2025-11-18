@@ -40,6 +40,9 @@ dependencies {
     implementation 'org.axonframework:axon-messaging:4.9.0'
     implementation 'org.axonframework:axon-spring-boot-starter:4.9.0'
     implementation 'org.axonframework:axon-server-connector:4.9.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 }
 
 dependencyManagement {

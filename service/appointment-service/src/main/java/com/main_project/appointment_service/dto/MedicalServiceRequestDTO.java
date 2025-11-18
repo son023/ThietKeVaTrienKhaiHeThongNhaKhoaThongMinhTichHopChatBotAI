@@ -17,6 +17,4 @@ public class MedicalServiceRequestDTO {
     private String serviceType;
     private Integer serviceTime;
     private Float price;
-    private UUID appointmentId;
-    private AppointmentDTO appointment;
 }

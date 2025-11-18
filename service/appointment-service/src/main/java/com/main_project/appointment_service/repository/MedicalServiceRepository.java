@@ -4,13 +4,15 @@ import com.main_project.appointment_service.entity.MedicalService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface MedicalServiceRepository extends JpaRepository<MedicalService, UUID> {
 
-    // 🔹 READ — Tìm dịch vụ theo tên chính xác
+    // 🔹 READ — Tìm dịch vụ theo tên chính xác (case-insensitive)
     @Query("SELECT m FROM MedicalService m WHERE LOWER(m.serviceName) = LOWER(:name)")
     List<MedicalService> findByServiceName(@Param("name") String name);
 
@@ -18,23 +20,19 @@ public interface MedicalServiceRepository extends JpaRepository<MedicalService, 
     @Query("SELECT m FROM MedicalService m WHERE LOWER(m.serviceName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<MedicalService> searchByServiceName(@Param("keyword") String keyword);
 
-    // 🔹 READ — Lấy danh sách theo loại dịch vụ
+    // 🔹 READ — Lấy danh sách theo loại dịch vụ (case-insensitive)
     @Query("SELECT m FROM MedicalService m WHERE LOWER(m.serviceType) = LOWER(:type)")
     List<MedicalService> findByServiceType(@Param("type") String type);
 
     // 🔹 COUNT — Đếm số lượng dịch vụ theo loại
-    @Query("SELECT COUNT(m) FROM MedicalService m WHERE LOWER(m.serviceType) = LOWER(:type)")
-    long countByServiceType(@Param("type") String type);
+    long countByServiceType(String type);
 
     // 🔹 COUNT — Đếm số lượng dịch vụ theo tên
-    @Query("SELECT COUNT(m) FROM MedicalService m WHERE LOWER(m.serviceName) = LOWER(:name)")
-    long countByServiceName(@Param("name") String name);
+    long countByServiceName(String name);
 
     // 🔹 DELETE — Xóa theo loại dịch vụ
-    @Query("DELETE FROM MedicalService m WHERE LOWER(m.serviceType) = LOWER(:type)")
-    void deleteByServiceType(@Param("type") String type);
+    void deleteByServiceType(String type);
 
     // 🔹 DELETE — Xóa theo tên dịch vụ
-    @Query("DELETE FROM MedicalService m WHERE LOWER(m.serviceName) = LOWER(:name)")
-    void deleteByServiceName(@Param("name") String name);
+    void deleteByServiceName(String name);
 }

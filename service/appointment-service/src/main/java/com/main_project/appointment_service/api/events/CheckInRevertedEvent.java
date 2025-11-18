@@ -1,4 +1,4 @@
-package com.main_project.checkin_service.events;
+package com.main_project.appointment_service.api.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.main_project.appointment_service.api.aggregate;
+package com.main_project.appointment_service.aggregate;
 
 import com.main_project.appointment_service.api.command.CheckInCommand;
 import com.main_project.appointment_service.api.events.AppointmentCheckedInEvent;

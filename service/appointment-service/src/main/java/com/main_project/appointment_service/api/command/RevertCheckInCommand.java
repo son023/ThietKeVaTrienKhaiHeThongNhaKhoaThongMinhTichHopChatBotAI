@@ -1,4 +1,4 @@
-package com.main_project.checkin_service.api.command;
+package com.main_project.appointment_service.api.command;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
