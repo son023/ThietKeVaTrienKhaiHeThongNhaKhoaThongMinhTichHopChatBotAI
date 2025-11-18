@@ -64,7 +64,7 @@ export function ReceptionistAppointments() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl text-[#01304e] mb-1">Lịch hẹn (Tổng quan)</h1>
@@ -142,7 +142,7 @@ export function ReceptionistAppointments() {
         <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] gap-4">
           {/* Time Column */}
           <div className="space-y-4">
-            <div className="h-8" /> {/* Header spacer */}
+            <div className="h-8" /> {/* DoctorHeader spacer */}
             {timeSlots.map((time) => (
               <div key={time} className="h-16 flex items-start justify-end pr-2 text-xs text-gray-500">
                 {time}
@@ -155,7 +155,7 @@ export function ReceptionistAppointments() {
             .filter(doctor => selectedDoctors.includes(doctor.id))
             .map((doctor) => (
               <div key={doctor.id} className="space-y-4">
-                {/* Doctor Header */}
+                {/* Doctor DoctorHeader */}
                 <div className="h-8 flex items-center justify-center border-b-2 pb-2" style={{ borderColor: doctor.color }}>
                   <span className="text-sm text-[#01304e]">{doctor.name}</span>
                 </div>

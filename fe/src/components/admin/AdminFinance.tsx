@@ -395,7 +395,7 @@ export function AdminFinance() {
 
           {selectedInvoice && (
             <div className="space-y-6">
-              {/* Header Info */}
+              {/* DoctorHeader Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-[#d8f0ff]/30 rounded-[10px]">
                 <div>
                   <p className="text-sm text-[#333333]/60 mb-1">Mã hóa đơn</p>

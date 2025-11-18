@@ -338,7 +338,7 @@ export function AdminAppointments() {
             </Select>
           </div>
 
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+          <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v as any)}>
             <TabsList>
               <TabsTrigger value="day">Ngày</TabsTrigger>
               <TabsTrigger value="week">Tuần</TabsTrigger>
@@ -386,7 +386,7 @@ export function AdminAppointments() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <div className="min-w-[1000px]">
-                {/* Header */}
+                {/* DoctorHeader */}
                 <div className="grid grid-cols-[200px_1fr] border-b border-[#e8e8e8]">
                   <div className="p-4 bg-gray-50 border-r border-[#e8e8e8]">
                     <p className="text-sm text-[#01304e]">Bác sĩ / Phòng</p>
@@ -455,7 +455,7 @@ export function AdminAppointments() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <div className="min-w-[1200px]">
-                {/* Header with days */}
+                {/* DoctorHeader with days */}
                 <div className="grid grid-cols-8 border-b border-[#e8e8e8] bg-gray-50">
                   <div className="p-4 border-r border-[#e8e8e8]">
                     <p className="text-sm text-[#01304e]">Bác sĩ</p>

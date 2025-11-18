@@ -85,7 +85,7 @@ export function AdminPatientDetail({ patientId, onBack }: AdminPatientDetailProp
 
   return (
     <div className="p-6 bg-[#fcfeff]">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="mb-6">
         <Button variant="outline" size="sm" onClick={onBack} className="mb-4 rounded-[10px] border-[#e8e8e8]">
           <ArrowLeft className="w-4 h-4 mr-2" />

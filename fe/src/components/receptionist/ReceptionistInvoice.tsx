@@ -41,9 +41,12 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
   ]);
 
   const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState<'amount' | 'percent'>('amount');
+  const [discountValue, setDiscountValue] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [amountReceived, setAmountReceived] = useState('');
   const [isPaid, setIsPaid] = useState(false);
+  const [notes, setNotes] = useState('');
 
   const patient = {
     name: 'Nguyễn Văn A',
@@ -92,7 +95,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={onBack}>
@@ -115,10 +118,16 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 rounded-[10px]">
             <Printer className="w-4 h-4" />
             In Hóa đơn
           </Button>
+          {!isPaid && (
+            <Button variant="outline" className="gap-2 rounded-[10px]">
+              <Save className="w-4 h-4" />
+              Lưu nháp
+            </Button>
+          )}
         </div>
       </div>
 
@@ -242,14 +251,35 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
               {isPaid ? (
                 <span className="text-red-600">-{discount.toLocaleString('vi-VN')}đ</span>
               ) : (
-                <Input
-                  type="number"
-                  min="0"
-                  step="10000"
-                  value={discount}
-                  onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
-                  className="w-32 text-right"
-                />
+                <>
+                  <Select value={discountType} onValueChange={(v: any) => setDiscountType(v as 'amount' | 'percent')}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="amount">VNĐ</SelectItem>
+                      <SelectItem value="percent">%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min="0"
+                    step={discountType === 'percent' ? '1' : '10000'}
+                    max={discountType === 'percent' ? '100' : undefined}
+                    value={discountValue}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setDiscountValue(e.target.value);
+                      if (discountType === 'percent') {
+                        setDiscount(Math.round(subtotal * val / 100));
+                      } else {
+                        setDiscount(val);
+                      }
+                    }}
+                    className="w-32 text-right"
+                    placeholder="0"
+                  />
+                </>
               )}
             </div>
           </div>
@@ -273,37 +303,75 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Phương thức thanh toán *</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-[10px]">
                   <SelectValue placeholder="Chọn phương thức" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Tiền mặt</SelectItem>
-                  <SelectItem value="card">Thẻ</SelectItem>
-                  <SelectItem value="transfer">Chuyển khoản</SelectItem>
-                  <SelectItem value="insurance">Bảo hiểm</SelectItem>
+                  <SelectItem value="cash">💵 Tiền mặt</SelectItem>
+                  <SelectItem value="card">💳 Thẻ</SelectItem>
+                  <SelectItem value="transfer">🏦 Chuyển khoản</SelectItem>
+                  <SelectItem value="insurance">🏥 Bảo hiểm</SelectItem>
+                  <SelectItem value="momo">📱 MoMo</SelectItem>
+                  <SelectItem value="zalopay">💰 ZaloPay</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="amountReceived">Số tiền nhận *</Label>
+              <div className="relative">
+                <Input
+                  id="amountReceived"
+                  type="number"
+                  min="0"
+                  step="10000"
+                  value={amountReceived}
+                  onChange={(e) => setAmountReceived(e.target.value)}
+                  placeholder="Nhập số tiền"
+                  className="rounded-[10px]"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => setAmountReceived(total.toString())}
+                  >
+                    Đủ
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="notes">Ghi chú</Label>
               <Input
-                id="amountReceived"
-                type="number"
-                min="0"
-                step="10000"
-                value={amountReceived}
-                onChange={(e) => setAmountReceived(e.target.value)}
-                placeholder="Nhập số tiền"
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Ghi chú về thanh toán..."
+                className="rounded-[10px]"
               />
             </div>
 
             {amountReceived && parseInt(amountReceived) >= total && (
-              <div className="col-span-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="col-span-2 p-4 bg-green-50 border border-green-200 rounded-[10px]">
                 <div className="flex items-center justify-between">
                   <span className="text-green-900">Tiền thừa trả khách</span>
-                  <span className="text-xl text-green-600">
+                  <span className="text-2xl text-green-600">
                     {change.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {amountReceived && parseInt(amountReceived) < total && (
+              <div className="col-span-2 p-4 bg-red-50 border border-red-200 rounded-[10px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-red-900">⚠️ Số tiền chưa đủ</span>
+                  <span className="text-xl text-red-600">
+                    Còn thiếu: {(total - parseInt(amountReceived)).toLocaleString('vi-VN')}đ
                   </span>
                 </div>
               </div>
@@ -313,11 +381,11 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
           {/* Action Buttons */}
           <div className="flex justify-between items-center mt-6 pt-6 border-t">
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 rounded-[10px]">
                 <Save className="w-4 h-4" />
                 Lưu (chờ thanh toán)
               </Button>
-              <Button variant="outline" className="text-red-600 hover:text-red-700 gap-2">
+              <Button variant="outline" className="text-red-600 hover:text-red-700 gap-2 rounded-[10px]">
                 Hủy Hóa đơn
               </Button>
             </div>
@@ -325,11 +393,11 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
             <Button
               size="lg"
               onClick={handleConfirmPayment}
-              className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 gap-2"
+              className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 gap-2 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
               disabled={!paymentMethod || !amountReceived || parseInt(amountReceived) < total}
             >
               <CheckCircle2 className="w-5 h-5" />
-              Xác nhận Thanh toán
+              Xác nhận Thanh toán ({total.toLocaleString('vi-VN')}đ)
             </Button>
           </div>
         </Card>
@@ -337,18 +405,41 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 
       {/* Payment Success */}
       {isPaid && (
-        <Card className="p-6 bg-green-50 border-green-200">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <Card className="p-6 bg-green-50 border-green-200 rounded-[15px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl text-green-900">✅ Thanh toán thành công!</h3>
+                <p className="text-sm text-green-700 mt-2">
+                  Phương thức: <strong>{paymentMethodMap[paymentMethod]}</strong> •
+                  Số tiền nhận: <strong>{parseInt(amountReceived).toLocaleString('vi-VN')}đ</strong>
+                  {change > 0 && ` • Tiền thừa: <strong>${change.toLocaleString('vi-VN')}đ</strong>`}
+                </p>
+                {notes && (
+                  <p className="text-xs text-green-600 mt-1 italic">Ghi chú: {notes}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg text-green-900">Thanh toán thành công!</h3>
-              <p className="text-sm text-green-700 mt-1">
-                Phương thức: <strong>{paymentMethodMap[paymentMethod]}</strong> •
-                Số tiền: <strong>{parseInt(amountReceived).toLocaleString('vi-VN')}đ</strong>
-                {change > 0 && ` • Tiền thừa: ${change.toLocaleString('vi-VN')}đ`}
-              </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="gap-2 rounded-[10px] border-green-300"
+                onClick={() => {
+                  console.log('In hóa đơn');
+                }}
+              >
+                <Printer className="w-4 h-4" />
+                In hóa đơn
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700 gap-2 rounded-[10px]"
+                onClick={onBack}
+              >
+                Hoàn tất
+              </Button>
             </div>
           </div>
         </Card>
@@ -358,8 +449,10 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 }
 
 const paymentMethodMap: Record<string, string> = {
-  cash: 'Tiền mặt',
-  card: 'Thẻ',
-  transfer: 'Chuyển khoản',
-  insurance: 'Bảo hiểm',
+  cash: '💵 Tiền mặt',
+  card: '💳 Thẻ',
+  transfer: '🏦 Chuyển khoản',
+  insurance: '🏥 Bảo hiểm',
+  momo: '📱 MoMo',
+  zalopay: '💰 ZaloPay',
 };

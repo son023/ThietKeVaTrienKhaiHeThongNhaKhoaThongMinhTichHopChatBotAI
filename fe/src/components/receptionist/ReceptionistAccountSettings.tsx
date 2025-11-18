@@ -8,7 +8,7 @@ import { Camera } from 'lucide-react';
 export function ReceptionistAccountSettings() {
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div>
         <h1 className="text-2xl text-[#01304e] mb-1">Tài khoản của tôi</h1>
         <p className="text-gray-600">Quản lý thông tin cá nhân và cài đặt</p>

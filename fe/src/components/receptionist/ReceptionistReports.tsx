@@ -74,7 +74,7 @@ export function ReceptionistReports() {
 
   return (
     <div className="p-8 space-y-6">
-      {/* Header */}
+      {/* DoctorHeader */}
       <div>
         <h1 className="text-2xl text-[#01304e] mb-1">Báo cáo Doanh thu</h1>
         <p className="text-gray-600">Thứ Ba, 28 tháng 10, 2025</p>
