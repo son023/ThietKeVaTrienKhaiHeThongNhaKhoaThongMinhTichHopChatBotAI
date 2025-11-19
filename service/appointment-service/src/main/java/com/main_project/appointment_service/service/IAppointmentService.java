@@ -30,4 +30,5 @@ public interface IAppointmentService {
     void deleteAppointment(UUID id);
     void deleteAppointmentsByDoctorId(UUID doctorId);
     void deleteAppointmentsByPatientId(UUID patientId);
+    void updateCheckIn(String appointmentId, String patientId);
 }

@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.do_an.common.command.UpdateCheckInCommand;
+import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,9 @@ public class AppointmentService implements IAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceRepository medicalServiceRepository;
     private final EntityDTOMapper mapper;
+
+    @Autowired
+    private CommandGateway commandGateway; // Thêm CommandGateway để gửi command
 
     @Override
     public List<AppointmentDTO> getAllAppointments() {
@@ -172,5 +178,11 @@ public class AppointmentService implements IAppointmentService {
     @Override
     public void deleteAppointmentsByPatientId(UUID patientId) {
         appointmentRepository.deleteByPatientId(patientId);
+    }
+
+    // Thêm method mới để update check-in thông qua Axon Command
+    public void updateCheckIn(String appointmentId, String patientId) {
+        // Gửi command thông qua Axon Framework
+        commandGateway.send(new UpdateCheckInCommand(appointmentId, patientId));
     }
 }

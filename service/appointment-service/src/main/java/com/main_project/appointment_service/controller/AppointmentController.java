@@ -81,6 +81,21 @@ public class AppointmentController {
         return ResponseEntity.ok(updated);
     }
 
+    @PutMapping("/check-in/{id}")
+    @Operation(summary = "Cập nhật CheckIn")
+    public ResponseEntity<Void> updateCheckIn(
+            @PathVariable UUID id,
+            @Valid @RequestBody AppointmentRequestDTO requestDTO) {
+
+        appointmentService.updateCheckIn(
+                id.toString(),
+                requestDTO.getPatientId().toString()
+        );
+
+        return ResponseEntity.noContent().build(); // 204 NO CONTENT
+    }
+
+
     @PatchMapping("/{id}/status")
     @Operation(summary = "Cập nhật trạng thái lịch hẹn")
     public ResponseEntity<AppointmentDTO> updateStatus(
