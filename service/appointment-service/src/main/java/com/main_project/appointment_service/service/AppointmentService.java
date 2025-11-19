@@ -8,6 +8,7 @@ import com.main_project.appointment_service.enums.AppointmentStatus;
 import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
 import com.main_project.appointment_service.util.EntityDTOMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ import java.util.stream.Collectors;
 public class AppointmentService implements IAppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceRepository medicalServiceRepository;
+
+    private final SlotService slotService;
+
     private final EntityDTOMapper mapper;
 
     @Override
@@ -112,9 +116,31 @@ public class AppointmentService implements IAppointmentService {
             throw new RuntimeException("Some MedicalService IDs are invalid");
         }
 
+        int totalServiceTime = medicalServices.stream()
+                .mapToInt(MedicalService::getServiceTime)
+                .sum();
+
+        ZonedDateTime start = requestDTO.getAppointmentStartTime();
+        ZonedDateTime end = start.plusMinutes(totalServiceTime);
+
+        requestDTO.setAppointmentEndTime(end);
+
+        // ---- 🧠 CHECK LỊCH ĐÃ BỊ TRÙNG ----
+        List<Appointment> overlapping = appointmentRepository
+                .findOverlappingAppointments(
+                        requestDTO.getDoctorId(),
+                        start,
+                        end
+                );
+
+        if (!overlapping.isEmpty()) {
+            throw new RuntimeException("The selected time slot is not available");
+        }
+
         Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalServices);
         appointment.setCreatedAt(ZonedDateTime.now());
         appointment.setUpdatedAt(ZonedDateTime.now());
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
 
         appointmentRepository.save(appointment);
         return mapper.toAppointmentDTO(appointment);
@@ -135,7 +161,7 @@ public class AppointmentService implements IAppointmentService {
                 throw new RuntimeException("Some medical services not found");
             }
         }
-
+        // TODO: validate slot availability
         mapper.updateAppointmentEntity(existing, requestDTO, medicalServices);
         existing.setUpdatedAt(ZonedDateTime.now());
 
@@ -161,16 +187,11 @@ public class AppointmentService implements IAppointmentService {
     // ==============================
     @Override
     public void deleteAppointment(UUID id) {
-        appointmentRepository.deleteById(id);
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setUpdatedAt(ZonedDateTime.now());
+        appointmentRepository.save(appointment);
     }
 
-    @Override
-    public void deleteAppointmentsByDoctorId(UUID doctorId) {
-        appointmentRepository.deleteByDoctorId(doctorId);
-    }
-
-    @Override
-    public void deleteAppointmentsByPatientId(UUID patientId) {
-        appointmentRepository.deleteByPatientId(patientId);
-    }
 }

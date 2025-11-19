@@ -1,7 +1,9 @@
 package com.main_project.appointment_service.repository;
 
 import com.main_project.appointment_service.entity.MedicalService;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,6 +31,23 @@ public interface MedicalServiceRepository extends JpaRepository<MedicalService, 
 
     // 🔹 COUNT — Đếm số lượng dịch vụ theo tên
     long countByServiceName(String name);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE MedicalService m SET m.status = 'INACTIVE' WHERE m.id = :id")
+    int deactivateMedicalService(@Param("id") UUID id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE MedicalService m SET m.status = 'INACTIVE' WHERE LOWER(m.serviceType) = LOWER(:type)")
+    int deactivateMedicalServiceType(@Param("type") String type);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE MedicalService m SET m.status = 'INACTIVE' WHERE LOWER(m.serviceName) = LOWER(:name)")
+    int deactivateMedicalServiceName(@Param("name") String name);
+
+    void deleteById(UUID id);
 
     // 🔹 DELETE — Xóa theo loại dịch vụ
     void deleteByServiceType(String type);

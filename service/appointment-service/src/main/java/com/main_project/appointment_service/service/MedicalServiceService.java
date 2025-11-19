@@ -3,6 +3,7 @@ package com.main_project.appointment_service.service;
 import com.main_project.appointment_service.dto.MedicalServiceDTO;
 import com.main_project.appointment_service.dto.MedicalServiceRequestDTO;
 import com.main_project.appointment_service.entity.MedicalService;
+import com.main_project.appointment_service.enums.MedicalServiceStatus;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
 import com.main_project.appointment_service.util.EntityDTOMapper;
 import jakarta.transaction.Transactional;
@@ -82,6 +83,44 @@ public class MedicalServiceService implements IMedicalService {
         mapper.updateMedicalServiceEntity(existing, requestDTO);
         existing = repository.save(existing);
         return mapper.toMedicalServiceDTO(existing);
+    }
+
+    @Override
+    public int deactivateMedicalServiceName(String name) {
+        int updatedRows = repository.deactivateMedicalServiceName(name);
+
+        if (updatedRows == 0) {
+            throw new RuntimeException("Không tìm thấy dịch vụ với tên: " + name);
+        }
+
+        return updatedRows;
+    }
+
+    @Override
+    public int deactivateMedicalService(UUID id) {
+        Optional<MedicalService> optional = repository.findById(id);
+
+        if (optional.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy dịch vụ với ID: " + id);
+        }
+
+        MedicalService service = optional.get();
+        service.setStatus(MedicalServiceStatus.INACTIVE);
+
+        repository.save(service);
+
+        return 1;
+    }
+
+    @Override
+    public int deactivateMedicalServiceType(String type) {
+        int updatedRows = repository.deactivateMedicalServiceType(type);
+
+        if (updatedRows == 0) {
+            throw new RuntimeException("Không tìm thấy dịch vụ theo loại: " + type);
+        }
+
+        return updatedRows;
     }
 
     @Override

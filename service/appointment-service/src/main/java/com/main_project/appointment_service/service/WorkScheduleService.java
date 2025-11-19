@@ -4,6 +4,7 @@ import com.main_project.appointment_service.dto.WorkScheduleDTO;
 import com.main_project.appointment_service.dto.WorkScheduleRequestDTO;
 import com.main_project.appointment_service.entity.WorkSchedule;
 import com.main_project.appointment_service.repository.WorkScheduleRepository;
+import com.main_project.appointment_service.util.EntityDTOMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,56 +19,36 @@ import java.util.stream.Collectors;
 public class WorkScheduleService implements IWorkSchedule {
 
     private final WorkScheduleRepository workScheduleRepository;
-
-    // 🟢 Mapper: Entity → DTO
-    private WorkScheduleDTO toDTO(WorkSchedule entity) {
-        if (entity == null) return null;
-        return WorkScheduleDTO.builder()
-                .id(entity.getId())
-                .workDate(entity.getWorkDate())
-                .startTime(entity.getStartTime())
-                .endTime(entity.getEndTime())
-                .build();
-    }
-
-    // 🟢 Mapper: Request → Entity
-    private WorkSchedule toEntity(WorkScheduleRequestDTO dto) {
-        if (dto == null) return null;
-        return WorkSchedule.builder()
-                .workDate(dto.getWorkDate())
-                .startTime(dto.getStartTime())
-                .endTime(dto.getEndTime())
-                .build();
-    }
+    private final EntityDTOMapper mapper;
 
     @Override
     public List<WorkScheduleDTO> getAllWorkSchedules() {
         return workScheduleRepository.findAll()
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(mapper::toWorkScheduleDTO).collect(Collectors.toList());
     }
 
     @Override
     public Optional<WorkScheduleDTO> getWorkScheduleById(UUID id) {
-        return workScheduleRepository.findById(id).map(this::toDTO);
+        return workScheduleRepository.findById(id).map(mapper::toWorkScheduleDTO);
     }
 
     @Override
     public List<WorkScheduleDTO> getWorkSchedulesByDate(ZonedDateTime date) {
         return workScheduleRepository.findByWorkDate(date)
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(mapper::toWorkScheduleDTO).collect(Collectors.toList());
     }
 
     @Override
     public List<WorkScheduleDTO> getWorkSchedulesBetween(ZonedDateTime start, ZonedDateTime end) {
         return workScheduleRepository.findByWorkDateBetween(start, end)
-                .stream().map(this::toDTO).collect(Collectors.toList());
+                .stream().map(mapper::toWorkScheduleDTO).collect(Collectors.toList());
     }
 
     @Override
     public WorkScheduleDTO createWorkSchedule(WorkScheduleRequestDTO requestDTO) {
-        WorkSchedule entity = toEntity(requestDTO);
+        WorkSchedule entity = mapper.toWorkScheduleEntity(requestDTO);
         WorkSchedule saved = workScheduleRepository.save(entity);
-        return toDTO(saved);
+        return mapper.toWorkScheduleDTO(saved);
     }
 
     @Override
@@ -80,7 +61,7 @@ public class WorkScheduleService implements IWorkSchedule {
         existing.setEndTime(requestDTO.getEndTime());
 
         WorkSchedule updated = workScheduleRepository.save(existing);
-        return toDTO(updated);
+        return mapper.toWorkScheduleDTO(updated);
     }
 
     @Override
@@ -89,7 +70,7 @@ public class WorkScheduleService implements IWorkSchedule {
                 .orElseThrow(() -> new RuntimeException("WorkSchedule not found"));
 
         WorkSchedule updated = workScheduleRepository.save(existing);
-        return toDTO(updated);
+        return mapper.toWorkScheduleDTO(updated);
     }
 
     @Override

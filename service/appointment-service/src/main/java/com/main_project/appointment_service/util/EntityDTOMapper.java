@@ -39,6 +39,7 @@ public class EntityDTOMapper {
                         msDTO.setServiceName(ms.getServiceName());
                         msDTO.setServiceType(ms.getServiceType());
                         msDTO.setServiceTime(ms.getServiceTime());
+                        msDTO.setStatus(ms.getStatus());
                         msDTO.setPrice(ms.getPrice());
                         return msDTO;
                     }).toList();
@@ -105,6 +106,7 @@ public class EntityDTOMapper {
         dto.setServiceName(entity.getServiceName());
         dto.setServiceType(entity.getServiceType());
         dto.setServiceTime(entity.getServiceTime());
+        dto.setStatus(entity.getStatus());
         dto.setPrice(entity.getPrice());
         return dto;
     }
@@ -116,6 +118,7 @@ public class EntityDTOMapper {
         entity.setServiceName(requestDTO.getServiceName());
         entity.setServiceType(requestDTO.getServiceType());
         entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
         return entity;
     }
@@ -126,6 +129,7 @@ public class EntityDTOMapper {
         entity.setServiceName(requestDTO.getServiceName());
         entity.setServiceType(requestDTO.getServiceType());
         entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
     }
     // ======================

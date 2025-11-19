@@ -28,6 +28,4 @@ public interface IAppointmentService {
     AppointmentDTO updateAppointmentStatus(UUID id, AppointmentStatus status);
 
     void deleteAppointment(UUID id);
-    void deleteAppointmentsByDoctorId(UUID doctorId);
-    void deleteAppointmentsByPatientId(UUID patientId);
 }

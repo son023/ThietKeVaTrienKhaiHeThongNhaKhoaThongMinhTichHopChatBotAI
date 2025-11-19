@@ -35,6 +35,20 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByAppointmentStartTimeBetween(@Param("start") ZonedDateTime start,
                                                         @Param("end") ZonedDateTime end);
 
+    @Query("SELECT a FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentStartTime BETWEEN :start AND :end")
+    List<Appointment> findByDoctorIdAndStartTimeBetween(
+            @Param("doctorId") UUID doctorId,
+            @Param("start") ZonedDateTime start,
+            @Param("end") ZonedDateTime end
+    );
+
+    @Query(" SELECT a FROM Appointment a WHERE a.doctorId = :doctorId AND a.appointmentStartTime < :end AND a.appointmentEndTime > :start ")
+    List<Appointment> findOverlappingAppointments(
+            @Param("doctorId") UUID doctorId,
+            @Param("start") ZonedDateTime start,
+            @Param("end") ZonedDateTime end
+    );
+
     // 🔹 Lấy lịch hẹn có chứa dịch vụ y tế cụ thể (Many-to-Many)
     @Query("SELECT DISTINCT a FROM Appointment a JOIN a.medicalServices m WHERE m.id = :medicalServiceId")
     List<Appointment> findByMedicalServiceId(@Param("medicalServiceId") UUID medicalServiceId);
@@ -51,9 +65,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     @Query("SELECT COUNT(DISTINCT a) FROM Appointment a JOIN a.medicalServices m WHERE m.id = :medicalServiceId")
     long countByMedicalServiceId(@Param("medicalServiceId") UUID medicalServiceId);
 
-    // 🔹 Xóa tất cả lịch hẹn theo bác sĩ
-    void deleteByDoctorId(UUID doctorId);
+    void deleteById(UUID id);
 
-    // 🔹 Xóa tất cả lịch hẹn theo bệnh nhân
-    void deleteByPatientId(UUID patientId);
 }

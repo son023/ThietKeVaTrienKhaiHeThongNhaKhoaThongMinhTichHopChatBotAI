@@ -1,5 +1,6 @@
 package com.main_project.appointment_service.entity;
 
+import com.main_project.appointment_service.enums.MedicalServiceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,10 @@ public class MedicalService {
 
     @Column(nullable = false)
     private Float price;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 255)
+    private MedicalServiceStatus status;
 
     // Many-to-Many với Appointment
     @ManyToMany(mappedBy = "medicalServices")
