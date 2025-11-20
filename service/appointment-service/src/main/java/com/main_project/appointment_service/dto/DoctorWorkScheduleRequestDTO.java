@@ -22,5 +22,4 @@ public class DoctorWorkScheduleRequestDTO {
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private UUID workScheduleId;
-    private WorkScheduleDTO workSchedule;
 }

@@ -2,6 +2,7 @@ package com.main_project.appointment_service.controller;
 
 import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
+import com.main_project.appointment_service.dto.HoldSlotRequestDTO;
 import com.main_project.appointment_service.dto.WorkScheduleDTO;
 import com.main_project.appointment_service.enums.AppointmentStatus;
 import com.main_project.appointment_service.service.AppointmentService;
@@ -37,19 +38,22 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
     private final SlotService slotService;
 
-    @GetMapping("/slots")
-    @Operation(summary = "Lấy danh sách các khung giờ khả dụng của bác sĩ theo ngày và dịch vụ")
-    public ResponseEntity<List<ZonedDateTime>> getAvailableSlots(
-            @RequestParam("doctorId") UUID doctorId,
-            @RequestParam("serviceId") UUID serviceId,
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        ZonedDateTime dayStart = date.atStartOfDay(ZoneId.systemDefault());
+    @PostMapping("/slots/hold")
+    @Operation(summary = "Giữ slot trong 10 phút trước khi tạo lịch hẹn")
+    public ResponseEntity<?> holdSlot(@RequestBody HoldSlotRequestDTO request) {
 
-        List<ZonedDateTime> availableSlots =
-                slotService.getAvailableSlots(doctorId, serviceId, dayStart);
+        boolean locked = slotService.lockSlot(
+                request.getDoctorId(),
+                request.getPatientId(),
+                request.getAppointmentStartTime()
+        );
 
-        return ResponseEntity.ok(availableSlots);
+        if (!locked) {
+            return ResponseEntity.badRequest().body("Slot đã được giữ bởi người khác, vui lòng chọn slot khác");
+        }
+
+        // Có thể trả thêm expiredAt = now + 10 phút cho FE đếm ngược
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping

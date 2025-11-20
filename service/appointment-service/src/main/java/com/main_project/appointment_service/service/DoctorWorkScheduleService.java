@@ -75,9 +75,15 @@ public class DoctorWorkScheduleService implements IDoctorWorkSchedule {
         WorkSchedule workSchedule = workScheduleRepository.findById(requestDTO.getWorkScheduleId())
                 .orElseThrow(() -> new RuntimeException("WorkSchedule not found"));
 
+
         DoctorWorkSchedule newSchedule = mapper.toDoctorWorkScheduleEntity(requestDTO, workSchedule);
-        DoctorWorkSchedule saved = doctorWorkScheduleRepository.save(newSchedule);
-        return mapper.toDoctorWorkScheduleDTO(saved);
+
+        newSchedule.setCreatedAt(ZonedDateTime.now());
+        newSchedule.setUpdatedAt(ZonedDateTime.now());
+        newSchedule.setStatus(DoctorWorkScheduleStatus.ACTIVE);
+
+        doctorWorkScheduleRepository.save(newSchedule);
+        return mapper.toDoctorWorkScheduleDTO(newSchedule);
     }
 
     @Override

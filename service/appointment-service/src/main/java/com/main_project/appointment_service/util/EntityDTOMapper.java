@@ -178,11 +178,9 @@ public class EntityDTOMapper {
         dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setWorkSchedule(null);
 
         if (entity.getWorkSchedule() != null) {
             dto.setWorkScheduleId(entity.getWorkSchedule().getId());
-            dto.setWorkSchedule(toWorkScheduleDTO(entity.getWorkSchedule()));
         }
 
         return dto;

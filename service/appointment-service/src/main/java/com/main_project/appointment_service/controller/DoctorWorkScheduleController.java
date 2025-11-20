@@ -5,6 +5,7 @@ import com.main_project.appointment_service.dto.DoctorWorkScheduleRequestDTO;
 import com.main_project.appointment_service.enums.DoctorWorkScheduleStatus;
 import com.main_project.appointment_service.service.IDoctorWorkSchedule;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,7 +62,9 @@ public class DoctorWorkScheduleController {
 
     @PostMapping
     public ResponseEntity<DoctorWorkScheduleDTO> create(@RequestBody DoctorWorkScheduleRequestDTO requestDTO) {
-        return ResponseEntity.ok(doctorWorkScheduleService.createDoctorWorkSchedule(requestDTO));
+        DoctorWorkScheduleDTO created =
+                doctorWorkScheduleService.createDoctorWorkSchedule(requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
