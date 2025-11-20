@@ -5,14 +5,16 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "pharmacist")
 @Getter
 @Setter
 public class Pharmacist {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     private String degree;
 

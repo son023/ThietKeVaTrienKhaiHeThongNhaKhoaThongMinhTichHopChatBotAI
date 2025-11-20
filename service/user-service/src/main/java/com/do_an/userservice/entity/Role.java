@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "role")
@@ -13,8 +14,9 @@ import java.util.List;
 @Setter
 public class Role {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
 
     private String roleName;
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)

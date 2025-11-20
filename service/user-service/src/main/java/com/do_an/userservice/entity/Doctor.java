@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "doctor")
@@ -13,8 +14,8 @@ import java.util.Set;
 @Setter
 public class Doctor {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id; // varchar(50)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     private String specializationCode;
 
