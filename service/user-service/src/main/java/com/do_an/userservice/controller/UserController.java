@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.UUID;
 import java.util.List;
 
 @RestController
@@ -63,7 +63,7 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<UserDTO> updateUser(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Parameter(description = "Thông tin cần cập nhật", required = true)
             @Valid @RequestBody UpdateUserRequestDTO request) {
         log.info("Nhận request cập nhật user: {}", userId);
@@ -83,7 +83,7 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId) {
+            @PathVariable UUID userId) {
         log.info("Nhận request xóa user: {}", userId);
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
@@ -102,7 +102,7 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId) {
+            @PathVariable UUID userId) {
         log.info("Nhận request lấy user theo ID: {}", userId);
         UserDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);

@@ -65,7 +65,6 @@ public class PharmacistService {
         
         // Tạo Pharmacist profile
         Pharmacist pharmacist = new Pharmacist();
-        pharmacist.setId(UUID.randomUUID().toString());
         pharmacist.setUser(user);
         pharmacist.setDegree(request.getDegree());
         pharmacist.setCertificate(request.getCertificate());
@@ -80,7 +79,7 @@ public class PharmacistService {
      * CHỨC NĂNG 2: Cập nhật Pharmacist profile
      */
     @Transactional
-    public PharmacistDTO updatePharmacist(String pharmacistId, UpdatePharmacistRequestDTO request) {
+    public PharmacistDTO updatePharmacist(UUID pharmacistId, UpdatePharmacistRequestDTO request) {
         log.info("Cập nhật Pharmacist profile: {}", pharmacistId);
         
         Pharmacist pharmacist = pharmacistRepository.findById(pharmacistId)
@@ -122,7 +121,7 @@ public class PharmacistService {
      * CHỨC NĂNG 3: Xóa Pharmacist profile
      */
     @Transactional
-    public void deletePharmacist(String pharmacistId) {
+    public void deletePharmacist(UUID pharmacistId) {
         log.info("Xóa Pharmacist profile: {}", pharmacistId);
         
         Pharmacist pharmacist = pharmacistRepository.findById(pharmacistId)
@@ -144,7 +143,7 @@ public class PharmacistService {
      * CHỨC NĂNG 4: Xóa Pharmacist profile theo User ID
      */
     @Transactional
-    public void deletePharmacistByUserId(String userId) {
+    public void deletePharmacistByUserId(UUID userId) {
         log.info("Xóa Pharmacist profile theo User ID: {}", userId);
         
         Pharmacist pharmacist = pharmacistRepository.findByUserId(userId)
@@ -157,7 +156,7 @@ public class PharmacistService {
      * CHỨC NĂNG 5: Lấy Pharmacist theo Pharmacist ID
      */
     @Transactional(readOnly = true)
-    public PharmacistDTO getPharmacistById(String pharmacistId) {
+    public PharmacistDTO getPharmacistById(UUID pharmacistId) {
         log.debug("Lấy Pharmacist profile theo ID: {}", pharmacistId);
         
         Pharmacist pharmacist = pharmacistRepository.findById(pharmacistId)
@@ -170,7 +169,7 @@ public class PharmacistService {
      * CHỨC NĂNG 6: Lấy Pharmacist theo User ID
      */
     @Transactional(readOnly = true)
-    public PharmacistDTO getPharmacistByUserId(String userId) {
+    public PharmacistDTO getPharmacistByUserId(UUID userId) {
         log.debug("Lấy Pharmacist profile theo User ID: {}", userId);
         
         Pharmacist pharmacist = pharmacistRepository.findByUserId(userId)
@@ -221,7 +220,7 @@ public class PharmacistService {
     // ==== CÁC PHƯƠNG THỨC CŨ (GIỮ NGUYÊN) ====
 
     @Transactional(readOnly = true)
-    public PharmacistDTO getMyProfile(String userId) {
+    public PharmacistDTO getMyProfile(UUID userId) {
         return pharmacistRepository.findByUserId(userId)
                 .map(pharmacistMapper::toDto)
                 .orElseThrow(() -> new ProfileNotFoundException("Không tìm thấy hồ sơ dược sĩ."));
@@ -231,7 +230,7 @@ public class PharmacistService {
      * Dược sĩ tự CẬP NHẬT hoặc TẠO MỚI hồ sơ.
      */
     @Transactional
-    public PharmacistDTO createOrUpdateMyProfile(String userId, ProfileDTO request) {
+    public PharmacistDTO createOrUpdateMyProfile(UUID userId, ProfileDTO request) {
         // BƯỚC 0: Cập nhật thông tin Bảng User (nếu có)
         userService.updateUserProfile(userId, request.getUserAttributes());
 
@@ -239,7 +238,6 @@ public class PharmacistService {
                 .orElseGet(() -> {
                     // Logic CREATE
                     Pharmacist newPharmacist = new Pharmacist();
-                    newPharmacist.setId(UUID.randomUUID().toString());
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
                     newPharmacist.setUser(user);

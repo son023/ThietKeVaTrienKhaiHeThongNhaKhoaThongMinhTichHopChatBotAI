@@ -6,10 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface PatientRepository extends JpaRepository<Patient, String> {
+public interface PatientRepository extends JpaRepository<Patient, UUID> {
     
-    Optional<Patient> findByUserId(String userId);
+    Optional<Patient> findByUserId(UUID userId);
     
     // Tìm Patients theo gender
     List<Patient> findAllByGender(String gender);

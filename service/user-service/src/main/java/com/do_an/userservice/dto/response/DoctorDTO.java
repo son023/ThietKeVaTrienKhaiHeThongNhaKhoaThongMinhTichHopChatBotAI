@@ -4,10 +4,11 @@ import com.do_an.userservice.dto.DegreeDTO;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class DoctorDTO {
-    private String id; // ID của hồ sơ Doctor
+    private UUID id; // ID của hồ sơ Doctor
 
     // Thông tin từ hồ sơ Doctor
     private String specializationCode;
@@ -22,7 +23,7 @@ public class DoctorDTO {
     // Chúng ta nên thêm các thông tin này để client
     // không phải gọi 2 API (lấy user và lấy doctor)
 
-    private String userId; // ID của User (rất quan trọng)
+    private UUID userId; // ID của User (rất quan trọng)
     private String fullName;
     private String email;
     private String phone;

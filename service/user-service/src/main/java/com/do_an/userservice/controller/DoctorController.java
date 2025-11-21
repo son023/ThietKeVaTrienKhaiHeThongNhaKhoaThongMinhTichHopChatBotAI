@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/user-service/doctors")
@@ -33,7 +34,7 @@ public class DoctorController {
     @PutMapping("/{doctorId}")
     //@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_DOCTOR')")
     public ResponseEntity<DoctorDTO> updateDoctor(
-            @PathVariable String doctorId,
+            @PathVariable UUID doctorId,
             @Valid @RequestBody UpdateDoctorRequestDTO request) {
         log.info("Nhận request cập nhật Doctor profile: {}", doctorId);
         DoctorDTO doctor = doctorService.updateDoctor(doctorId, request);
@@ -42,7 +43,7 @@ public class DoctorController {
 
     @DeleteMapping("/{doctorId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteDoctor(@PathVariable String doctorId) {
+    public ResponseEntity<Void> deleteDoctor(@PathVariable UUID doctorId) {
         log.info("Nhận request xóa Doctor profile: {}", doctorId);
         doctorService.deleteDoctor(doctorId);
         return ResponseEntity.noContent().build();
@@ -50,7 +51,7 @@ public class DoctorController {
 
     @DeleteMapping("/user/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteDoctorByUserId(@PathVariable String userId) {
+    public ResponseEntity<Void> deleteDoctorByUserId(@PathVariable UUID userId) {
         log.info("Nhận request xóa Doctor profile theo User ID: {}", userId);
         doctorService.deleteDoctorByUserId(userId);
         return ResponseEntity.noContent().build();
@@ -58,7 +59,7 @@ public class DoctorController {
 
     @GetMapping("/{doctorId}")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<DoctorDTO> getDoctorById(@PathVariable String doctorId) {
+    public ResponseEntity<DoctorDTO> getDoctorById(@PathVariable UUID doctorId) {
         log.info("Nhận request lấy Doctor profile theo ID: {}", doctorId);
         DoctorDTO doctor = doctorService.getDoctorById(doctorId);
         return ResponseEntity.ok(doctor);
@@ -66,7 +67,7 @@ public class DoctorController {
 
     @GetMapping("/user/{userId}")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable String userId) {
+    public ResponseEntity<DoctorDTO> getDoctorByUserId(@PathVariable UUID userId) {
         log.info("Nhận request lấy Doctor profile theo User ID: {}", userId);
         DoctorDTO doctor = doctorService.getDoctorByUserId(userId);
         return ResponseEntity.ok(doctor);
@@ -96,7 +97,7 @@ public class DoctorController {
     @PutMapping("/me/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_DOCTOR')")
     public ResponseEntity<DoctorDTO> createOrUpdateMyProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody ProfileDTO request) {
         log.info("Nhận request Doctor tự cập nhật profile: {}", userId);
         DoctorDTO updatedProfile = doctorService.createOrUpdateMyProfile(userId, request);
@@ -105,7 +106,7 @@ public class DoctorController {
 
     @GetMapping("/me/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_DOCTOR')")
-    public ResponseEntity<DoctorDTO> getMyProfile(@PathVariable String userId) {
+    public ResponseEntity<DoctorDTO> getMyProfile(@PathVariable UUID userId) {
         log.info("Nhận request Doctor lấy profile của mình: {}", userId);
         DoctorDTO profile = doctorService.getMyProfile(userId);
         return ResponseEntity.ok(profile);

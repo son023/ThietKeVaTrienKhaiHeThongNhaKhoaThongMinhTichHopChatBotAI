@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface LabTechnicianRepository extends JpaRepository<LabTechnician, String> {
+public interface LabTechnicianRepository extends JpaRepository<LabTechnician, UUID> {
     
-    Optional<LabTechnician> findByUserId(String userId);
+    Optional<LabTechnician> findByUserId(UUID userId);
     
     // Tìm LabTechnicians theo field
     List<LabTechnician> findAllByFieldContainingIgnoreCase(String field);

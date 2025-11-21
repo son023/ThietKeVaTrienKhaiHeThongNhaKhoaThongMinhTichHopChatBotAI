@@ -54,7 +54,6 @@ public class InternalService {
 
         // 3. Tạo User cơ bản
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(request.getHashedPassword());
@@ -70,7 +69,6 @@ public class InternalService {
 
         // 5. Tạo hồ sơ Bệnh nhân (PATIENT) mặc định
         Patient patient = new Patient();
-        patient.setId(UUID.randomUUID().toString());
         patient.setUser(user);
 
         patientRepository.save(patient);
