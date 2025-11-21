@@ -1,7 +1,10 @@
 package com.main_project.appointment_service.entity;
 
+import com.main_project.appointment_service.enums.MedicalServiceStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,7 +32,11 @@ public class MedicalService {
     @Column(nullable = false)
     private Float price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "appointment_id", referencedColumnName = "id")
-    private Appointment appointment;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 255)
+    private MedicalServiceStatus status;
+
+    // Many-to-Many với Appointment
+    @ManyToMany(mappedBy = "medicalServices")
+    private List<Appointment> appointments;
 }

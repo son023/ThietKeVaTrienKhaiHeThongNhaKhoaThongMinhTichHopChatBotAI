@@ -4,11 +4,13 @@ import com.main_project.appointment_service.entity.DoctorWorkSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface DoctorWorkScheduleRepository extends JpaRepository<DoctorWorkSchedule, UUID> {
     // 🔹 Lấy tất cả lịch làm việc của 1 bác sĩ
     @Query("SELECT dws FROM DoctorWorkSchedule dws WHERE dws.doctorId = :doctorId")

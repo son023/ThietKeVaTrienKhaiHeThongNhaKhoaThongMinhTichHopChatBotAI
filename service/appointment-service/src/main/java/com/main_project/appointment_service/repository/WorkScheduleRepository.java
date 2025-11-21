@@ -4,11 +4,13 @@ import com.main_project.appointment_service.entity.WorkSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Repository
 public interface WorkScheduleRepository extends JpaRepository<WorkSchedule, UUID> {
     // 🔹 Lấy tất cả lịch làm việc trong một ngày cụ thể
     @Query("SELECT w FROM WorkSchedule w WHERE w.workDate = :date")

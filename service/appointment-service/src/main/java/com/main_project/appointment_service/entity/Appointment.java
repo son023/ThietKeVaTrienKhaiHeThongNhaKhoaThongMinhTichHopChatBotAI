@@ -4,16 +4,16 @@ import com.main_project.appointment_service.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "appointment")
-@Getter
-@Setter
+@Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class Appointment {
 
     @Id
@@ -42,6 +42,11 @@ public class Appointment {
     @Column(nullable = false, name = "updated_at")
     private ZonedDateTime updatedAt;
 
-    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MedicalService> medicalService;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "appointment_medical_service",
+            joinColumns = @JoinColumn(name = "appointment_id"),
+            inverseJoinColumns = @JoinColumn(name = "medical_service_id")
+    )
+    private List<MedicalService> medicalServices = new ArrayList<>();;
 }

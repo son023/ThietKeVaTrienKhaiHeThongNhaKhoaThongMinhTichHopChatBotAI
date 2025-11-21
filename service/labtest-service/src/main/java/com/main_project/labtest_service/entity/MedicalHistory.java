@@ -19,6 +19,9 @@ public class MedicalHistory {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id; // varchar(50)
 
+    @Column(length = 50, unique = true, nullable = false)
+    private String medicalHistoryId;
+
     @Column(length = 50)
     private UUID appointmentId;
 

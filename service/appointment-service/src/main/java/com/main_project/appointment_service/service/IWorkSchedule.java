@@ -16,7 +16,7 @@ public interface IWorkSchedule {
     Optional<WorkScheduleDTO> getWorkScheduleById(UUID id);
 
     // 🔹 Lọc theo ngày cụ thể
-    List<WorkScheduleDTO> getWorkSchedulesByDate(ZonedDateTime date);
+    List<WorkScheduleDTO> getWorkSchedulesByDate(ZonedDateTime dateStr);
 
     // 🔹 Lọc theo khoảng ngày
     List<WorkScheduleDTO> getWorkSchedulesBetween(ZonedDateTime start, ZonedDateTime end);

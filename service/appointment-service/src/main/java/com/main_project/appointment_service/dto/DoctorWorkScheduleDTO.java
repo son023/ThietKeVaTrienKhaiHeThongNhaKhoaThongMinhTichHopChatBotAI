@@ -21,5 +21,4 @@ public class DoctorWorkScheduleDTO {
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private UUID workScheduleId;
-    private WorkScheduleDTO workSchedule;
 }

@@ -30,15 +30,22 @@ public class EntityDTOMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        // 🔹 mapping danh sách dịch vụ y tế
-        if (entity.getMedicalService() != null && !entity.getMedicalService().isEmpty()) {
-            List<UUID> medicalServiceIds = entity.getMedicalService()
-                    .stream()
-                    .map(MedicalService::getId)
-                    .toList();
-            dto.setMedicalServiceIds(medicalServiceIds);
+        // 🔹 mapping danh sách dịch vụ y tế Many-to-Many
+        if (entity.getMedicalServices() != null && !entity.getMedicalServices().isEmpty()) {
+            List<MedicalServiceDTO> serviceDTOs = entity.getMedicalServices().stream()
+                    .map(ms -> {
+                        MedicalServiceDTO msDTO = new MedicalServiceDTO();
+                        msDTO.setId(ms.getId());
+                        msDTO.setServiceName(ms.getServiceName());
+                        msDTO.setServiceType(ms.getServiceType());
+                        msDTO.setServiceTime(ms.getServiceTime());
+                        msDTO.setStatus(ms.getStatus());
+                        msDTO.setPrice(ms.getPrice());
+                        return msDTO;
+                    }).toList();
+            dto.setMedicalServices(serviceDTOs);
         } else {
-            dto.setMedicalServiceIds(List.of());
+            dto.setMedicalServices(List.of());
         }
 
         return dto;
@@ -59,14 +66,9 @@ public class EntityDTOMapper {
         entity.setCreatedAt(ZonedDateTime.now());
         entity.setUpdatedAt(ZonedDateTime.now());
 
-        // 🔹 gán danh sách MedicalService
-        if (medicalServices != null && !medicalServices.isEmpty()) {
-            // set ngược quan hệ 2 chiều
-            medicalServices.forEach(ms -> ms.setAppointment(entity));
-            entity.setMedicalService(medicalServices);
-        } else {
-            entity.setMedicalService(List.of());
-        }
+        // 🔹 gán danh sách MedicalService trực tiếp
+        entity.setMedicalServices(medicalServices);
+
 
         return entity;
     }
@@ -85,9 +87,10 @@ public class EntityDTOMapper {
         entity.setUpdatedAt(ZonedDateTime.now());
 
         // 🔹 cập nhật danh sách MedicalService
-        if (medicalServices != null && !medicalServices.isEmpty()) {
-            medicalServices.forEach(ms -> ms.setAppointment(entity));
-            entity.setMedicalService(medicalServices);
+        if (medicalServices != null) {
+            entity.setMedicalServices(medicalServices);
+        } else {
+            entity.setMedicalServices(List.of());
         }
     }
 
@@ -103,6 +106,7 @@ public class EntityDTOMapper {
         dto.setServiceName(entity.getServiceName());
         dto.setServiceType(entity.getServiceType());
         dto.setServiceTime(entity.getServiceTime());
+        dto.setStatus(entity.getStatus());
         dto.setPrice(entity.getPrice());
         return dto;
     }
@@ -114,6 +118,7 @@ public class EntityDTOMapper {
         entity.setServiceName(requestDTO.getServiceName());
         entity.setServiceType(requestDTO.getServiceType());
         entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
         return entity;
     }
@@ -124,6 +129,7 @@ public class EntityDTOMapper {
         entity.setServiceName(requestDTO.getServiceName());
         entity.setServiceType(requestDTO.getServiceType());
         entity.setServiceTime(requestDTO.getServiceTime());
+        entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
     }
     // ======================
@@ -172,11 +178,9 @@ public class EntityDTOMapper {
         dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setWorkSchedule(null);
 
         if (entity.getWorkSchedule() != null) {
             dto.setWorkScheduleId(entity.getWorkSchedule().getId());
-            dto.setWorkSchedule(toWorkScheduleDTO(entity.getWorkSchedule()));
         }
 
         return dto;

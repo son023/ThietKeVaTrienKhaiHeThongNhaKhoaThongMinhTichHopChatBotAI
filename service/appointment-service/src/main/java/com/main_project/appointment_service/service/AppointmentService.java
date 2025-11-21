@@ -2,17 +2,19 @@ package com.main_project.appointment_service.service;
 
 import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
+import com.main_project.appointment_service.dto.UserDTO;
 import com.main_project.appointment_service.entity.Appointment;
 import com.main_project.appointment_service.entity.MedicalService;
 import com.main_project.appointment_service.enums.AppointmentStatus;
+import com.main_project.appointment_service.feignclient.UserServiceClient;
 import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
 import com.main_project.appointment_service.util.EntityDTOMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +25,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class AppointmentService implements IAppointmentService {
+    private final UserServiceClient userServiceClient;
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceRepository medicalServiceRepository;
+
+    private final SlotService slotService;
+
     private final EntityDTOMapper mapper;
 
     @Override
@@ -105,19 +111,84 @@ public class AppointmentService implements IAppointmentService {
             throw new RuntimeException("At least one medical service must be provided");
         }
 
-        List<MedicalService> medicalServices = medicalServiceRepository
-                .findAllById(requestDTO.getMedicalServiceIds());
+        // ---- VALIDATE BÁC SĨ ----
+        validateDoctor(requestDTO.getDoctorId());
+
+        // ---- VALIDATE BỆNH NHÂN ----
+        validatePatient(requestDTO.getPatientId());
+
+        // ============================================
+        // 🔹 1. LOAD MEDICAL SERVICES
+        // ============================================
+        List<MedicalService> medicalServices =
+                medicalServiceRepository.findAllById(requestDTO.getMedicalServiceIds());
 
         if (medicalServices.size() != requestDTO.getMedicalServiceIds().size()) {
-            throw new RuntimeException("Some medical services not found");
+            throw new RuntimeException("Some MedicalService IDs are invalid");
         }
 
-        Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalServices);
-        appointment.setCreatedAt(ZonedDateTime.now());
-        appointment.setUpdatedAt(ZonedDateTime.now());
+        int totalServiceTime = medicalServices.stream()
+                .mapToInt(MedicalService::getServiceTime)
+                .sum();
 
-        appointmentRepository.save(appointment);
-        return mapper.toAppointmentDTO(appointment);
+        ZonedDateTime start = requestDTO.getAppointmentStartTime();
+        ZonedDateTime end = start.plusMinutes(totalServiceTime);
+
+        requestDTO.setAppointmentEndTime(end);
+
+        // ============================================
+        // 🔹 2. CHECK & LOCK SLOT (Redis)
+        // ============================================
+        // 2. Kiểm tra slot có đang được giữ bởi đúng patient không
+        boolean available = slotService.validateAndUnlockSlot(
+                requestDTO.getDoctorId(),
+                requestDTO.getPatientId(),
+                requestDTO.getAppointmentStartTime()
+        );
+
+        if (!available) {
+            throw new RuntimeException("Slot đã hết hạn hoặc không hợp lệ, vui lòng đặt lại từ đầu");
+        }
+
+        try {
+            // ============================================
+            // 🔹 3. CHECK DB TRÙNG (chống race-condition)
+            // ============================================
+            List<Appointment> overlapping = appointmentRepository
+                    .findOverlappingAppointments(
+                            requestDTO.getDoctorId(),
+                            start,
+                            end
+                    );
+
+            if (!overlapping.isEmpty()) {
+                // nếu DB có trùng -> phải unlock trước khi throw
+                slotService.unlockSlot(requestDTO.getDoctorId(), start);
+                throw new RuntimeException("The selected time slot is not available");
+            }
+
+            // ============================================
+            // 🔹 4. TẠO APPOINTMENT
+            // ============================================
+            Appointment appointment = mapper.toAppointmentEntity(requestDTO, medicalServices);
+            appointment.setCreatedAt(ZonedDateTime.now());
+            appointment.setUpdatedAt(ZonedDateTime.now());
+            appointment.setStatus(AppointmentStatus.CONFIRMED);
+
+            appointmentRepository.save(appointment);
+
+            // Slot đã book thành công → có thể giữ nguyên lock cho đến khi expire,
+            // hoặc xóa luôn key:
+            slotService.unlockSlot(requestDTO.getDoctorId(), start);
+
+            return mapper.toAppointmentDTO(appointment);
+
+        } catch (RuntimeException ex) {
+
+            // Bắt tất cả lỗi và đảm bảo unlock để tránh dead-lock
+            slotService.unlockSlot(requestDTO.getDoctorId(), start);
+            throw ex;
+        }
     }
 
     // ==============================
@@ -135,7 +206,6 @@ public class AppointmentService implements IAppointmentService {
                 throw new RuntimeException("Some medical services not found");
             }
         }
-
         mapper.updateAppointmentEntity(existing, requestDTO, medicalServices);
         existing.setUpdatedAt(ZonedDateTime.now());
 
@@ -161,16 +231,41 @@ public class AppointmentService implements IAppointmentService {
     // ==============================
     @Override
     public void deleteAppointment(UUID id) {
-        appointmentRepository.deleteById(id);
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setUpdatedAt(ZonedDateTime.now());
+        appointmentRepository.save(appointment);
     }
 
-    @Override
-    public void deleteAppointmentsByDoctorId(UUID doctorId) {
-        appointmentRepository.deleteByDoctorId(doctorId);
+    public void validateDoctor(UUID doctorId) {
+        UserDTO doctor;
+        try {
+            doctor = userServiceClient.getUserById(doctorId);
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Doctor with ID " + doctorId + " not found.");
+        }
+        if (doctor == null) {
+            throw new RuntimeException("Doctor not found");
+        }
+        if (!doctor.getRoles().contains("DOCTOR")) {
+            throw new RuntimeException("User không phải bác sĩ");
+        }
+
     }
 
-    @Override
-    public void deleteAppointmentsByPatientId(UUID patientId) {
-        appointmentRepository.deleteByPatientId(patientId);
+    public void validatePatient(UUID patientId) {
+        UserDTO patient;
+        try {
+            patient = userServiceClient.getUserById(patientId);
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Patient with ID " + patientId + " not found.");
+        }
+        if (patient == null) {
+            throw new RuntimeException("Patient not found");
+        }
+
+        if (!patient.getRoles().contains("PATIENT"))
+            throw new RuntimeException("User không phải bệnh nhân");
     }
 }
