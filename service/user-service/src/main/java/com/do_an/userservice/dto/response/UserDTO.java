@@ -23,4 +23,8 @@ public class UserDTO {
 
     // Admin chắc chắn muốn biết user này có những quyền gì
     private Set<String> roles;
+    
+    // Thông tin cho JWT authentication
+    private String primaryRole;
+    private UUID profileId;
 }

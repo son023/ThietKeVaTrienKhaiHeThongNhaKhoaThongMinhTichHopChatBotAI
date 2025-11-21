@@ -16,7 +16,7 @@ public class CreateUserRequestDTO {
     private String email;
     
     @NotEmpty
-    private String hashedPassword; // Password đã được hash từ auth-service
+    private String password; 
     
     @NotEmpty
     private String fullName;

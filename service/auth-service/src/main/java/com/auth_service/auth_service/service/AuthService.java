@@ -42,8 +42,13 @@ public class AuthService {
 
     public ResponseEntity<UserDTO> login(Map<String, String> credentials) {
         try {
-            UserDTO existedUser = userServiceClient.valid(credentials).getBody();
-            log.error(existedUser.getEmail());
+            Map<String, String> validationCredentials = Map.of(
+                    "username", credentials.get("username"),
+                    "password", credentials.get("password") // Plain text password
+            );
+            
+            UserDTO existedUser = userServiceClient.valid(validationCredentials).getBody();
+            log.info("User authenticated successfully: {}", existedUser.getUsername());
             String token = this.generate(existedUser);
 
             return ResponseEntity.ok()
@@ -51,6 +56,7 @@ public class AuthService {
                     .body(existedUser);
 
         } catch (Exception e) {
+            log.error("Login failed for user: {}", credentials.get("username"), e);
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         }
     }
@@ -58,7 +64,8 @@ public class AuthService {
     public String generate(UserDTO user) {
         try {
             JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.RS256);
-            JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+            
+            JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                     .issuer("dev")
                     .issueTime(new Date())
                     .expirationTime(new Date(
@@ -67,10 +74,26 @@ public class AuthService {
                                     .toEpochMilli()
                     ))
                     .subject(user.getUsername())
-                    .claim("CURRENT_USER",
-                            user.getFullName())
-                    .jwtID(UUID.randomUUID().toString())
-                    .build();
+                    .claim("user_id", user.getId().toString())
+                    .claim("full_name", user.getFullName())
+                    .jwtID(UUID.randomUUID().toString());
+            
+            // Thêm primary_role vào claims
+            if (user.getPrimaryRole() != null) {
+                claimsBuilder.claim("primary_role", user.getPrimaryRole());
+            }
+            
+            // Thêm profile_id vào claims
+            if (user.getProfileId() != null) {
+                claimsBuilder.claim("profile_id", user.getProfileId().toString());
+            }
+            
+            // Thêm roles vào claims (nếu cần)
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                claimsBuilder.claim("roles", user.getRoles());
+            }
+            
+            JWTClaimsSet jwtClaimsSet = claimsBuilder.build();
 
             SignedJWT signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
             signedJWT.sign(new RSASSASigner(loadPrivateKey()));

@@ -3,19 +3,48 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { authController } from '../../controllers';
+import { LoginFormData, UserRole } from '../../models';
 
 interface LoginPageProps {
   onBack: () => void;
   onNavigateToSignup: () => void;
-  onLogin: (email: string, password: string) => void;
+  onLoginSuccess: (userRole: UserRole) => void;
 }
 
-export function LoginPage({ onBack, onNavigateToSignup, onLogin }: LoginPageProps) {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
+export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginPageProps) {
+  const [loginData, setLoginData] = useState({ 
+    username: '', 
+    password: '', 
+    rememberMe: false 
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(loginData.email, loginData.password);
+    setIsLoading(true);
+
+    try {
+      const formData: LoginFormData = {
+        username: loginData.username,
+        password: loginData.password,
+        rememberMe: loginData.rememberMe
+      };
+
+      const response = await authController.login(formData);
+      
+      toast.success(response.message || 'Đăng nhập thành công!');
+      
+      // Navigate based on user role
+      const primaryRole = response.user.primaryRole as UserRole;
+      onLoginSuccess(primaryRole);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Đăng nhập thất bại';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -57,15 +86,16 @@ export function LoginPage({ onBack, onNavigateToSignup, onLogin }: LoginPageProp
           <form onSubmit={handleLogin} className="space-y-[24px]">
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Số điện thoại / Email
+                Tên đăng nhập
               </label>
               <Input
                 type="text"
-                value={loginData.email}
-                onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                placeholder="Nhập số điện thoại hoặc email"
+                value={loginData.username}
+                onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                placeholder="Nhập tên đăng nhập"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -80,10 +110,23 @@ export function LoginPage({ onBack, onNavigateToSignup, onLogin }: LoginPageProp
                 placeholder="Nhập mật khẩu"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
+                disabled={isLoading}
               />
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={loginData.rememberMe}
+                  onChange={(e) => setLoginData({ ...loginData, rememberMe: e.target.checked })}
+                  className="rounded border-[#ebf6fc] text-[#3fb5ff] focus:ring-[#3fb5ff]"
+                  disabled={isLoading}
+                />
+                <span className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                  Ghi nhớ đăng nhập
+                </span>
+              </label>
               <button
                 type="button"
                 className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[14px] hover:underline"
@@ -95,9 +138,10 @@ export function LoginPage({ onBack, onNavigateToSignup, onLogin }: LoginPageProp
 
             <Button
               type="submit"
-              className="w-full bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 rounded-[12px] h-[56px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)] transition-all hover:shadow-[0px_6px_20px_0px_rgba(63,181,255,0.5)]"
+              disabled={isLoading}
+              className="w-full bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 rounded-[12px] h-[56px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)] transition-all hover:shadow-[0px_6px_20px_0px_rgba(63,181,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Đăng nhập
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Button>
           </form>
 
