@@ -20,10 +20,10 @@ CREATE TABLE inventory_lot (
 -- 3. Bảng stock_ledger (Sổ kho)
 CREATE TABLE stock_ledger (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lot VARCHAR(255),
     type VARCHAR(255), -- 'IN', 'OUT', 'ADJUST'
     quantity INT,
-    reference_type VARCHAR(255),
+    reference_type VARCHAR(255), -- Ví dụ: 'PURCHASE_ORDER', 'DISPENSE'
+    reference_id VARCHAR(50),    -- ID của phiếu nhập hoặc đơn thuốc liên quan
     inventory_lot_id UUID REFERENCES inventory_lot(id)
 );
 
@@ -33,6 +33,8 @@ CREATE TABLE dispense_order (
     pharmacist_id INT,
     prescription VARCHAR(255),
     status VARCHAR(255),
+    medical_history_id VARCHAR(50), -- Thêm mới theo hình
+    doctor_id VARCHAR(50),          -- Thêm mới theo hình
     create_at TIMESTAMPTZ DEFAULT now(),
     update_at TIMESTAMPTZ DEFAULT now()
 );
@@ -42,10 +44,13 @@ CREATE TABLE dispense_item (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     quantity INT,
     price_at_dispense INT,
+    dosage VARCHAR(100),            -- Thêm mới: Liều lượng (VD: 1 viên)
+    frequency VARCHAR(50),          -- Thêm mới: Tần suất (VD: 2 lần/ngày)
+    duration VARCHAR(50),           -- Thêm mới: Thời gian (VD: 5 ngày)
+    usage_instructions VARCHAR(255),-- Thêm mới: Hướng dẫn (VD: Uống sau ăn)
     inventory_lot_id UUID REFERENCES inventory_lot(id),
     dispense_order_id UUID REFERENCES dispense_order(id)
 );
-
 -- 1. Thêm thuốc
 INSERT INTO medicine (id, name, unit, description, sale_price)
 VALUES
@@ -57,16 +62,28 @@ VALUES
 ('bbbb2222-bbbb-4bbb-8bbb-222222222222', 'LOTA100-2025', '2027-10-01', 1000, 700, 'aaaa1111-aaaa-4aaa-8aaa-111111111111');
 
 -- 3. Ghi sổ kho (Nhập kho)
-INSERT INTO stock_ledger (lot, type, quantity, reference_type, inventory_lot_id)
+-- Cập nhật: Bỏ cột 'lot', thêm 'reference_id' (ví dụ mã phiếu nhập PO-001)
+INSERT INTO stock_ledger (type, quantity, reference_type, reference_id, inventory_lot_id)
 VALUES
-('LOTA100-2025', 'IN', 1000, 'PURCHASE_ORDER', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
+('IN', 1000, 'PURCHASE_ORDER', 'PO-001', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
 
 -- 4. Tạo đơn cấp phát
-INSERT INTO dispense_order (id, pharmacist_id, prescription, status)
+-- Cập nhật: Thêm medical_history_id và doctor_id
+INSERT INTO dispense_order (id, pharmacist_id, prescription, status, medical_history_id, doctor_id)
 VALUES
-('cccc3333-cccc-4ccc-8ccc-333333333333', 12, 'PRESCRIPTION-XYZ-789', 'PENDING');
+('cccc3333-cccc-4ccc-8ccc-333333333333', 12, 'PRESCRIPTION-XYZ-789', 'PENDING', 'HIST-001', 'DOC-007');
 
 -- 5. Thêm chi tiết cấp phát
-INSERT INTO dispense_item (quantity, price_at_dispense, inventory_lot_id, dispense_order_id)
+-- Cập nhật: Thêm dosage, frequency, duration, usage_instructions
+INSERT INTO dispense_item (quantity, price_at_dispense, dosage, frequency, duration, usage_instructions, inventory_lot_id, dispense_order_id)
 VALUES
-(20, 1000, 'bbbb2222-bbbb-4bbb-8bbb-222222222222', 'cccc3333-cccc-4ccc-8ccc-333333333333');
+(
+    20,
+    1000,
+    '1 viên',
+    '2 lần/ngày',
+    '5 ngày',
+    'Uống sau khi ăn no',
+    'bbbb2222-bbbb-4bbb-8bbb-222222222222',
+    'cccc3333-cccc-4ccc-8ccc-333333333333'
+);

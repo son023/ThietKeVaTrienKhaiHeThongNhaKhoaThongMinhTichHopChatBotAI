@@ -11,10 +11,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StockLedgerResponse {
     private UUID id;
-    private String lot;
     private String type;
     private Integer quantity;
     private String referenceType;
+    private String referenceId;
     private UUID inventoryLotId;
 }
 

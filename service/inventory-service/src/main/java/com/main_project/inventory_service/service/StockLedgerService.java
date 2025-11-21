@@ -29,10 +29,10 @@ public class StockLedgerService implements IStockLedgerService {
                 .orElseThrow(() -> new RuntimeException("InventoryLot not found with id: " + request.getInventoryLotId()));
 
         StockLedger stockLedger = new StockLedger();
-        stockLedger.setLot(request.getLot());
         stockLedger.setType(request.getType());
         stockLedger.setQuantity(request.getQuantity());
         stockLedger.setReferenceType(request.getReferenceType());
+        stockLedger.setReferenceId(request.getReferenceId());
         stockLedger.setInventoryLot(inventoryLot);
 
         StockLedger saved = stockLedgerRepository.save(stockLedger);
@@ -48,10 +48,10 @@ public class StockLedgerService implements IStockLedgerService {
         InventoryLot inventoryLot = inventoryLotRepository.findById(request.getInventoryLotId())
                 .orElseThrow(() -> new RuntimeException("InventoryLot not found with id: " + request.getInventoryLotId()));
 
-        stockLedger.setLot(request.getLot());
         stockLedger.setType(request.getType());
         stockLedger.setQuantity(request.getQuantity());
         stockLedger.setReferenceType(request.getReferenceType());
+        stockLedger.setReferenceId(request.getReferenceId());
         stockLedger.setInventoryLot(inventoryLot);
 
         StockLedger updated = stockLedgerRepository.save(stockLedger);
@@ -87,10 +87,10 @@ public class StockLedgerService implements IStockLedgerService {
         InventoryLot inventoryLot = stockLedger.getInventoryLot();
         return new StockLedgerResponse(
                 stockLedger.getId(),
-                stockLedger.getLot(),
                 stockLedger.getType(),
                 stockLedger.getQuantity(),
                 stockLedger.getReferenceType(),
+                stockLedger.getReferenceId(),
                 inventoryLot != null ? inventoryLot.getId() : null
         );
     }

@@ -12,9 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StockLedgerRequest {
-    @NotBlank(message = "Lot is required")
-    private String lot;
-    
     @NotBlank(message = "Type is required")
     private String type; // 'IN', 'OUT', 'ADJUST'
     
@@ -22,6 +19,8 @@ public class StockLedgerRequest {
     private Integer quantity;
     
     private String referenceType;
+    
+    private String referenceId;
     
     @NotNull(message = "Inventory Lot ID is required")
     private UUID inventoryLotId;

@@ -100,9 +100,12 @@ public class EntityDTOMapper {
         
         InsuranceClaimDTO dto = new InsuranceClaimDTO();
         dto.setId(entity.getId());
+        dto.setStatus(entity.getStatus());
         dto.setClaimAmount(entity.getClaimAmount());
         dto.setApprovedAmount(entity.getApprovedAmount());
-        dto.setStatus(entity.getStatus());
+        dto.setPatientPayAmount(entity.getPatientPayAmount());
+        dto.setTotalClaimAmount(entity.getTotalClaimAmount());
+        dto.setTotalInsurancePay(entity.getTotalInsurancePay());
         dto.setClaimDate(entity.getClaimDate());
         dto.setApprovalDate(entity.getApprovalDate());
         dto.setNotes(entity.getNotes());
@@ -121,9 +124,12 @@ public class EntityDTOMapper {
         if (requestDTO == null) return null;
         
         InsuranceClaim entity = new InsuranceClaim();
+        entity.setStatus(requestDTO.getStatus());
         entity.setClaimAmount(requestDTO.getClaimAmount());
         entity.setApprovedAmount(requestDTO.getApprovedAmount());
-        entity.setStatus(requestDTO.getStatus());
+        entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
+        entity.setTotalClaimAmount(requestDTO.getTotalClaimAmount());
+        entity.setTotalInsurancePay(requestDTO.getTotalInsurancePay());
         entity.setClaimDate(requestDTO.getClaimDate());
         entity.setApprovalDate(requestDTO.getApprovalDate());
         entity.setNotes(requestDTO.getNotes());
@@ -134,9 +140,12 @@ public class EntityDTOMapper {
     public void updateInsuranceClaimEntity(InsuranceClaim entity, InsuranceClaimRequestDTO requestDTO, PatientInsurance patientInsurance) {
         if (entity == null || requestDTO == null) return;
         
+        entity.setStatus(requestDTO.getStatus());
         entity.setClaimAmount(requestDTO.getClaimAmount());
         entity.setApprovedAmount(requestDTO.getApprovedAmount());
-        entity.setStatus(requestDTO.getStatus());
+        entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
+        entity.setTotalClaimAmount(requestDTO.getTotalClaimAmount());
+        entity.setTotalInsurancePay(requestDTO.getTotalInsurancePay());
         entity.setClaimDate(requestDTO.getClaimDate());
         entity.setApprovalDate(requestDTO.getApprovalDate());
         entity.setNotes(requestDTO.getNotes());
@@ -182,6 +191,95 @@ public class EntityDTOMapper {
         entity.setStatus(requestDTO.getStatus());
         entity.setUploadAt(requestDTO.getUploadAt());
         entity.setInsuranceClaim(insuranceClaim);
+    }
+
+    // BHYT Catalogue Mappings
+    public BhytCatalogueDTO toBhytCatalogueDTO(BhytCatalogue entity) {
+        if (entity == null) return null;
+        
+        BhytCatalogueDTO dto = new BhytCatalogueDTO();
+        dto.setId(entity.getId());
+        dto.setServiceCode(entity.getServiceCode());
+        dto.setServiceName(entity.getServiceName());
+        dto.setServiceType(entity.getServiceType());
+        dto.setIsCovered(entity.getIsCovered());
+        dto.setMaxCoverageAmount(entity.getMaxCoverageAmount());
+        return dto;
+    }
+
+    public BhytCatalogue toBhytCatalogueEntity(BhytCatalogueRequestDTO requestDTO) {
+        if (requestDTO == null) return null;
+        
+        BhytCatalogue entity = new BhytCatalogue();
+        entity.setServiceCode(requestDTO.getServiceCode());
+        entity.setServiceName(requestDTO.getServiceName());
+        entity.setServiceType(requestDTO.getServiceType());
+        entity.setIsCovered(requestDTO.getIsCovered());
+        entity.setMaxCoverageAmount(requestDTO.getMaxCoverageAmount());
+        return entity;
+    }
+
+    public void updateBhytCatalogueEntity(BhytCatalogue entity, BhytCatalogueRequestDTO requestDTO) {
+        if (entity == null || requestDTO == null) return;
+        
+        entity.setServiceCode(requestDTO.getServiceCode());
+        entity.setServiceName(requestDTO.getServiceName());
+        entity.setServiceType(requestDTO.getServiceType());
+        entity.setIsCovered(requestDTO.getIsCovered());
+        entity.setMaxCoverageAmount(requestDTO.getMaxCoverageAmount());
+    }
+
+    // Claim Item Mappings
+    public ClaimItemDTO toClaimItemDTO(ClaimItem entity) {
+        if (entity == null) return null;
+        
+        ClaimItemDTO dto = new ClaimItemDTO();
+        dto.setId(entity.getId());
+        dto.setQuantity(entity.getQuantity());
+        dto.setUnitPrice(entity.getUnitPrice());
+        dto.setTotalAmount(entity.getTotalAmount());
+        dto.setInsurancePayRatio(entity.getInsurancePayRatio());
+        dto.setInsurancePayAmount(entity.getInsurancePayAmount());
+        dto.setPatientPayAmount(entity.getPatientPayAmount());
+        
+        if (entity.getInsuranceClaim() != null) {
+            dto.setInsuranceClaimId(entity.getInsuranceClaim().getId());
+        }
+        
+        if (entity.getBhytCatalogue() != null) {
+            dto.setBhytCatalogueId(entity.getBhytCatalogue().getId());
+            dto.setBhytCatalogue(toBhytCatalogueDTO(entity.getBhytCatalogue()));
+        }
+        
+        return dto;
+    }
+
+    public ClaimItem toClaimItemEntity(ClaimItemRequestDTO requestDTO, InsuranceClaim insuranceClaim, BhytCatalogue bhytCatalogue) {
+        if (requestDTO == null) return null;
+        
+        ClaimItem entity = new ClaimItem();
+        entity.setQuantity(requestDTO.getQuantity());
+        entity.setUnitPrice(requestDTO.getUnitPrice());
+        entity.setTotalAmount(requestDTO.getTotalAmount());
+        entity.setInsurancePayRatio(requestDTO.getInsurancePayRatio());
+        entity.setInsurancePayAmount(requestDTO.getInsurancePayAmount());
+        entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
+        entity.setInsuranceClaim(insuranceClaim);
+        entity.setBhytCatalogue(bhytCatalogue);
+        return entity;
+    }
+
+    public void updateClaimItemEntity(ClaimItem entity, ClaimItemRequestDTO requestDTO, InsuranceClaim insuranceClaim, BhytCatalogue bhytCatalogue) {
+        if (entity == null || requestDTO == null) return;
+        
+        entity.setQuantity(requestDTO.getQuantity());
+        entity.setUnitPrice(requestDTO.getUnitPrice());
+        entity.setTotalAmount(requestDTO.getTotalAmount());
+        entity.setInsurancePayRatio(requestDTO.getInsurancePayRatio());
+        entity.setInsurancePayAmount(requestDTO.getInsurancePayAmount());
+        entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
+        entity.setInsuranceClaim(insuranceClaim);
+        entity.setBhytCatalogue(bhytCatalogue);
     }
 }
 

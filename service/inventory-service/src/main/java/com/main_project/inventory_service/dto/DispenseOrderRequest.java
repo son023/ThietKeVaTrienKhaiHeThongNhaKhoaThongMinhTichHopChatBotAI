@@ -14,6 +14,8 @@ public class DispenseOrderRequest {
     
     private String prescription;
     private String status;
+    private String medicalHistoryId;
+    private String doctorId;
 }
 
 

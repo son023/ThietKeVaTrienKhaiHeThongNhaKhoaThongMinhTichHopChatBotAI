@@ -28,6 +28,12 @@ public class DispenseOrder {
     @Column(length = 255)
     private String status;
 
+    @Column(name = "medical_history_id", length = 50)
+    private String medicalHistoryId;
+
+    @Column(name = "doctor_id", length = 50)
+    private String doctorId;
+
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
     private ZonedDateTime createAt;
