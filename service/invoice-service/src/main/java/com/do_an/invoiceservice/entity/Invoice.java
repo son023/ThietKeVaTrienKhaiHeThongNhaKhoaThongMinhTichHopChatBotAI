@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "invoice")
@@ -17,8 +18,9 @@ import java.util.Set;
 public class Invoice {
 
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id; // varchar(50)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
 
     private String receptionistId;
     private String appointmentId;

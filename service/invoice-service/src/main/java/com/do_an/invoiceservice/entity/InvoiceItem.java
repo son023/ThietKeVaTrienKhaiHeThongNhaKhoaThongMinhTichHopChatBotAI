@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "invoice_item")
@@ -15,8 +16,8 @@ import java.time.LocalDateTime;
 @Setter
 public class InvoiceItem {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id; // varchar(50)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     private Integer referenceId; // int4 -> Integer
     private String serviceType;

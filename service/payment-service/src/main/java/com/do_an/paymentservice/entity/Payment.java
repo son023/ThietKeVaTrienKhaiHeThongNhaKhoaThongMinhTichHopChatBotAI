@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment")
@@ -17,8 +18,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Payment {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id; // UUID của hệ thống
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(nullable = false)
     private Double totalAmount;

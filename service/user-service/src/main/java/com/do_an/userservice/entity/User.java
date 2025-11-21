@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "`users`")
@@ -17,8 +18,8 @@ import java.util.List;
 
 public class User {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(unique = true)
     private String username;
