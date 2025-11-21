@@ -5,9 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface DegreeRepository extends JpaRepository<Degree, String> {
-    List<Degree> findByDoctorId(String doctorId);
+public interface DegreeRepository extends JpaRepository<Degree, UUID> {
+    List<Degree> findByDoctorId(UUID doctorId);
 
-    Optional<Degree> findByIdAndDoctorId(String id, String doctorId);
+    Optional<Degree> findByIdAndDoctorId(UUID id, UUID doctorId);
 }

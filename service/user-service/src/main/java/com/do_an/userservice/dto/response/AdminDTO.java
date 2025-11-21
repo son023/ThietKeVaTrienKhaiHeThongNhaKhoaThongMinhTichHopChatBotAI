@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminDTO {
-    private String id; // Admin ID
-    private String userId; // User ID
+    private UUID id; // Admin ID
+    private UUID userId; // User ID
     private UserDTO user; // Thông tin User đầy đủ
 }

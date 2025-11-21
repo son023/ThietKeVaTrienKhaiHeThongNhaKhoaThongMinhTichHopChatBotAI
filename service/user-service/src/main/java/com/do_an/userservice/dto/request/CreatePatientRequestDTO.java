@@ -5,12 +5,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class CreatePatientRequestDTO {
     @NotNull
-    @NotEmpty
-    private String userId; // User ID đã tồn tại
+    private UUID userId; // User ID đã tồn tại
     
     private LocalDate dob; // Date of birth
     

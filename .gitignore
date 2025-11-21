@@ -1,2 +1,4 @@
 .idea/
 .gradle/
+fe/node_modules
+fe/package-lock.json

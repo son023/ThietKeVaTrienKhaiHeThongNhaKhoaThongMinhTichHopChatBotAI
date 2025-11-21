@@ -3,11 +3,13 @@ package com.do_an.userservice.dto;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class DegreeDTO {
     // Chúng ta thêm ID để client có thể gửi lại khi muốn CẬP NHẬT
     // Nếu ID null/trống, chúng ta hiểu là TẠO MỚI
-    private String id;
+    private UUID id;
 
     @NotEmpty(message = "Tên bằng cấp không được để trống")
     private String degreeName;

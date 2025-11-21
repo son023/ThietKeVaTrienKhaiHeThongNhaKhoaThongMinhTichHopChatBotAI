@@ -73,7 +73,6 @@ public class PatientService {
         
         // Tạo Patient profile
         Patient patient = new Patient();
-        patient.setId(UUID.randomUUID().toString());
         patient.setUser(user);
         patient.setDob(request.getDob());
         patient.setGender(request.getGender());
@@ -92,7 +91,7 @@ public class PatientService {
      * CHỨC NĂNG 2: Cập nhật Patient profile
      */
     @Transactional
-    public PatientDTO updatePatient(String patientId, UpdatePatientRequestDTO request) {
+    public PatientDTO updatePatient(UUID patientId, UpdatePatientRequestDTO request) {
         log.info("Cập nhật Patient profile: {}", patientId);
         
         Patient patient = patientRepository.findById(patientId)
@@ -153,7 +152,7 @@ public class PatientService {
      * CHỨC NĂNG 3: Xóa Patient profile
      */
     @Transactional
-    public void deletePatient(String patientId) {
+    public void deletePatient(UUID patientId) {
         log.info("Xóa Patient profile: {}", patientId);
         
         Patient patient = patientRepository.findById(patientId)
@@ -175,7 +174,7 @@ public class PatientService {
      * CHỨC NĂNG 4: Xóa Patient profile theo User ID
      */
     @Transactional
-    public void deletePatientByUserId(String userId) {
+    public void deletePatientByUserId(UUID userId) {
         log.info("Xóa Patient profile theo User ID: {}", userId);
         
         Patient patient = patientRepository.findByUserId(userId)
@@ -188,7 +187,7 @@ public class PatientService {
      * CHỨC NĂNG 5: Lấy Patient theo Patient ID
      */
     @Transactional(readOnly = true)
-    public PatientDTO getPatientById(String patientId) {
+    public PatientDTO getPatientById(UUID patientId) {
         log.debug("Lấy Patient profile theo ID: {}", patientId);
         
         Patient patient = patientRepository.findById(patientId)
@@ -201,7 +200,7 @@ public class PatientService {
      * CHỨC NĂNG 6: Lấy Patient theo User ID
      */
     @Transactional(readOnly = true)
-    public PatientDTO getPatientByUserId(String userId) {
+    public PatientDTO getPatientByUserId(UUID userId) {
         log.debug("Lấy Patient profile theo User ID: {}", userId);
         
         Patient patient = patientRepository.findByUserId(userId)
@@ -275,7 +274,7 @@ public class PatientService {
     // ==== CÁC PHƯƠNG THỨC CŨ (GIỮ NGUYÊN) ====
 
     @Transactional(readOnly = true)
-    public PatientDTO getMyProfile(String userId) {
+    public PatientDTO getMyProfile(UUID userId) {
         return patientRepository.findByUserId(userId)
                 .map(patientMapper::toDto)
                 .orElseThrow(() -> new ProfileNotFoundException("Patient profile not found."));
@@ -286,7 +285,7 @@ public class PatientService {
      * Đây là logic UPDATE-ONLY.
      */
     @Transactional
-    public PatientDTO updateMyProfile(String userId, ProfileDTO request) {
+    public PatientDTO updateMyProfile(UUID userId, ProfileDTO request) {
         // BƯỚC 0: Cập nhật thông tin Bảng User (nếu có)
         userService.updateUserProfile(userId, request.getUserAttributes());
 

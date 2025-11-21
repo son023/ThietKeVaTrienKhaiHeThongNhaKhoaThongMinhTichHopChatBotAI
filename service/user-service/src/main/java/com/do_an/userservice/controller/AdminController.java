@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.Map;
 
 @RestController
@@ -26,7 +27,7 @@ public class AdminController {
 
     @PostMapping("/profiles")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<AdminDTO> createAdminProfile(@RequestParam String userId) {
+    public ResponseEntity<AdminDTO> createAdminProfile(@RequestParam UUID userId) {
         log.info("Nhận request tạo Admin profile cho user: {}", userId);
         AdminDTO admin = adminService.createAdminProfile(userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(admin);
@@ -34,7 +35,7 @@ public class AdminController {
 
     @GetMapping("/profiles/{adminId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<AdminDTO> getAdminById(@PathVariable String adminId) {
+    public ResponseEntity<AdminDTO> getAdminById(@PathVariable UUID adminId) {
         log.info("Nhận request lấy Admin profile theo ID: {}", adminId);
         AdminDTO admin = adminService.getAdminById(adminId);
         return ResponseEntity.ok(admin);
@@ -42,7 +43,7 @@ public class AdminController {
 
     @GetMapping("/profiles/user/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<AdminDTO> getAdminByUserId(@PathVariable String userId) {
+    public ResponseEntity<AdminDTO> getAdminByUserId(@PathVariable UUID userId) {
         log.info("Nhận request lấy Admin profile theo User ID: {}", userId);
         AdminDTO admin = adminService.getAdminByUserId(userId);
         return ResponseEntity.ok(admin);
@@ -58,7 +59,7 @@ public class AdminController {
 
     @DeleteMapping("/profiles/{adminId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteAdminProfile(@PathVariable String adminId) {
+    public ResponseEntity<Void> deleteAdminProfile(@PathVariable UUID adminId) {
         log.info("Nhận request xóa Admin profile: {}", adminId);
         adminService.deleteAdminProfile(adminId);
         return ResponseEntity.noContent().build();
@@ -66,7 +67,7 @@ public class AdminController {
 
     @DeleteMapping("/profiles/user/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteAdminProfileByUserId(@PathVariable String userId) {
+    public ResponseEntity<Void> deleteAdminProfileByUserId(@PathVariable UUID userId) {
         log.info("Nhận request xóa Admin profile theo User ID: {}", userId);
         adminService.deleteAdminProfileByUserId(userId);
         return ResponseEntity.noContent().build();
@@ -80,13 +81,13 @@ public class AdminController {
     }
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<FullProfileDTO> getFullUserProfile(@PathVariable String userId) {
+    public ResponseEntity<FullProfileDTO> getFullUserProfile(@PathVariable UUID userId) {
         return ResponseEntity.ok(adminService.getFullUserProfile(userId));
     }
 
     @PatchMapping("/users/{userId}/status")
     public ResponseEntity<Void> toggleUserStatus(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestParam boolean active) {
         adminService.toggleUserStatus(userId, active);
         return ResponseEntity.ok().build();
@@ -96,28 +97,28 @@ public class AdminController {
 
     @PutMapping("/users/{userId}/profile/doctor")
     public ResponseEntity<DoctorDTO> adminUpdateDoctorProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestBody ProfileDTO dto) {
         return ResponseEntity.ok(adminService.adminUpdateDoctorProfile(userId, dto));
     }
 
     @PutMapping("/users/{userId}/profile/patient")
     public ResponseEntity<PatientDTO> adminUpdatePatientProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestBody ProfileDTO dto) {
         return ResponseEntity.ok(adminService.adminUpdatePatientProfile(userId, dto));
     }
 
     @PutMapping("/users/{userId}/profile/pharmacist")
     public ResponseEntity<PharmacistDTO> adminUpdatePharmacistProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestBody ProfileDTO dto) {
         return ResponseEntity.ok(adminService.adminUpdatePharmacistProfile(userId, dto));
     }
 
     @PutMapping("/users/{userId}/profile/lab-technician")
     public ResponseEntity<LabTechnicianDTO> adminUpdateLabTechnicianProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestBody ProfileDTO dto) {
         return ResponseEntity.ok(adminService.adminUpdateLabTechnicianProfile(userId, dto));
     }
@@ -126,7 +127,7 @@ public class AdminController {
 
     @PostMapping("/users/{userId}/assign-role")
     public ResponseEntity<Void> assignRoleToUser(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody RoleDTO request) {
         adminService.assignRoleToUser(userId, request);
         return ResponseEntity.ok().build();
@@ -134,7 +135,7 @@ public class AdminController {
 
     @DeleteMapping("/users/{userId}/remove-role")
     public ResponseEntity<Void> removeRoleFromUser(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @RequestParam String roleName) {
         adminService.removeRoleFromUser(userId, roleName);
         return ResponseEntity.ok().build();
@@ -153,14 +154,14 @@ public class AdminController {
 
     @PutMapping("/roles/{roleId}")
     public ResponseEntity<Role> updateRole(
-            @PathVariable String roleId,
+            @PathVariable UUID roleId,
             @RequestBody Map<String, String> request) {
         String roleName = request.get("roleName");
         return ResponseEntity.ok(adminService.updateRole(roleId, roleName));
     }
 
     @DeleteMapping("/roles/{roleId}")
-    public ResponseEntity<Void> deleteRole(@PathVariable String roleId) {
+    public ResponseEntity<Void> deleteRole(@PathVariable UUID roleId) {
         adminService.deleteRole(roleId);
         return ResponseEntity.noContent().build();
     }

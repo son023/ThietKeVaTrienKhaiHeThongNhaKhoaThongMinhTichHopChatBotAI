@@ -54,7 +54,7 @@ public class AdminService {
      * CHỨC NĂNG 1: Tạo Admin profile cho User
      */
     @Transactional
-    public AdminDTO createAdminProfile(String userId) {
+    public AdminDTO createAdminProfile(UUID userId) {
         log.info("Tạo Admin profile cho user: {}", userId);
         
         // Kiểm tra User tồn tại
@@ -81,7 +81,6 @@ public class AdminService {
         
         // Tạo Admin profile
         Admin admin = new Admin();
-        admin.setId(UUID.randomUUID().toString());
         admin.setUser(user);
         
         Admin savedAdmin = adminRepository.save(admin);
@@ -94,7 +93,7 @@ public class AdminService {
      * CHỨC NĂNG 2: Lấy Admin profile theo Admin ID
      */
     @Transactional(readOnly = true)
-    public AdminDTO getAdminById(String adminId) {
+    public AdminDTO getAdminById(UUID adminId) {
         log.debug("Lấy Admin profile theo ID: {}", adminId);
         
         Admin admin = adminRepository.findById(adminId)
@@ -107,7 +106,7 @@ public class AdminService {
      * CHỨC NĂNG 3: Lấy Admin profile theo User ID
      */
     @Transactional(readOnly = true)
-    public AdminDTO getAdminByUserId(String userId) {
+    public AdminDTO getAdminByUserId(UUID userId) {
         log.debug("Lấy Admin profile theo User ID: {}", userId);
         
         Admin admin = adminRepository.findByUserId(userId)
@@ -131,7 +130,7 @@ public class AdminService {
      * CHỨC NĂNG 5: Xóa Admin profile
      */
     @Transactional
-    public void deleteAdminProfile(String adminId) {
+    public void deleteAdminProfile(UUID adminId) {
         log.info("Xóa Admin profile: {}", adminId);
         
         Admin admin = adminRepository.findById(adminId)
@@ -153,7 +152,7 @@ public class AdminService {
      * CHỨC NĂNG 6: Xóa Admin profile theo User ID
      */
     @Transactional
-    public void deleteAdminProfileByUserId(String userId) {
+    public void deleteAdminProfileByUserId(UUID userId) {
         log.info("Xóa Admin profile theo User ID: {}", userId);
         
         Admin admin = adminRepository.findByUserId(userId)
@@ -180,7 +179,7 @@ public class AdminService {
      * Lấy TOÀN BỘ thông tin chi tiết của 1 user
      */
     @Transactional(readOnly = true)
-    public FullProfileDTO getFullUserProfile(String userId) {
+    public FullProfileDTO getFullUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -219,7 +218,7 @@ public class AdminService {
      * Kích hoạt hoặc Vô hiệu hóa User (Soft Delete)
      */
     @Transactional
-    public void toggleUserStatus(String userId, boolean status) {
+    public void toggleUserStatus(UUID userId, boolean status) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
         user.setActive(status);
@@ -232,7 +231,7 @@ public class AdminService {
      * Admin cập nhật hồ sơ Bác sĩ (gọi logic của DoctorService)
      */
     @Transactional
-    public DoctorDTO adminUpdateDoctorProfile(String userId, ProfileDTO dto) {
+    public DoctorDTO adminUpdateDoctorProfile(UUID userId, ProfileDTO dto) {
         // Tái sử dụng 100% logic "upsert" của DoctorService
         return doctorService.createOrUpdateMyProfile(userId, dto);
     }
@@ -241,7 +240,7 @@ public class AdminService {
      * Admin cập nhật hồ sơ Bệnh nhân (gọi logic của PatientService)
      */
     @Transactional
-    public PatientDTO adminUpdatePatientProfile(String userId, ProfileDTO dto) {
+    public PatientDTO adminUpdatePatientProfile(UUID userId, ProfileDTO dto) {
         // Tái sử dụng 100% logic "update" của PatientService
         return patientService.updateMyProfile(userId, dto);
     }
@@ -250,7 +249,7 @@ public class AdminService {
      * Admin cập nhật hồ sơ Dược sĩ
      */
     @Transactional
-    public PharmacistDTO adminUpdatePharmacistProfile(String userId, ProfileDTO dto) {
+    public PharmacistDTO adminUpdatePharmacistProfile(UUID userId, ProfileDTO dto) {
         return pharmacistService.createOrUpdateMyProfile(userId, dto);
     }
 
@@ -258,14 +257,14 @@ public class AdminService {
      * Admin cập nhật hồ sơ KTV Lab
      */
     @Transactional
-    public LabTechnicianDTO adminUpdateLabTechnicianProfile(String userId, ProfileDTO dto) {
+    public LabTechnicianDTO adminUpdateLabTechnicianProfile(UUID userId, ProfileDTO dto) {
         return labTechnicianService.createOrUpdateMyProfile(userId, dto);
     }
 
     // --- 3. CHỨC NĂNG QUẢN LÝ VAI TRÒ ---
 
     @Transactional
-    public void assignRoleToUser(String userId, RoleDTO request) {
+    public void assignRoleToUser(UUID userId, RoleDTO request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
 
@@ -283,7 +282,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void removeRoleFromUser(String userId, String roleName) {
+    public void removeRoleFromUser(UUID userId, String roleName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
 
@@ -302,13 +301,12 @@ public class AdminService {
             throw new IllegalArgumentException("Tên vai trò đã tồn tại");
         }
         Role newRole = new Role();
-        newRole.setId(UUID.randomUUID().toString());
         newRole.setRoleName(roleName.toUpperCase()); // Luôn viết hoa
         return roleRepository.save(newRole);
     }
 
     @Transactional
-    public Role updateRole(String roleId, String newRoleName) {
+    public Role updateRole(UUID roleId, String newRoleName) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + roleId));
         
@@ -323,7 +321,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void deleteRole(String roleId) {
+    public void deleteRole(UUID roleId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + roleId));
         

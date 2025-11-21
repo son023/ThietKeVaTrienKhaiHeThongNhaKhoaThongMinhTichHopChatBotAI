@@ -65,7 +65,6 @@ public class LabTechnicianService {
         
         // Tạo LabTechnician profile
         LabTechnician labTechnician = new LabTechnician();
-        labTechnician.setId(UUID.randomUUID().toString());
         labTechnician.setUser(user);
         labTechnician.setField(request.getField());
         
@@ -79,7 +78,7 @@ public class LabTechnicianService {
      * CHỨC NĂNG 2: Cập nhật LabTechnician profile
      */
     @Transactional
-    public LabTechnicianDTO updateLabTechnician(String labTechnicianId, UpdateLabTechnicianRequestDTO request) {
+    public LabTechnicianDTO updateLabTechnician(UUID labTechnicianId, UpdateLabTechnicianRequestDTO request) {
         log.info("Cập nhật LabTechnician profile: {}", labTechnicianId);
         
         LabTechnician labTechnician = labTechnicianRepository.findById(labTechnicianId)
@@ -118,7 +117,7 @@ public class LabTechnicianService {
      * CHỨC NĂNG 3: Xóa LabTechnician profile
      */
     @Transactional
-    public void deleteLabTechnician(String labTechnicianId) {
+    public void deleteLabTechnician(UUID labTechnicianId) {
         log.info("Xóa LabTechnician profile: {}", labTechnicianId);
         
         LabTechnician labTechnician = labTechnicianRepository.findById(labTechnicianId)
@@ -140,7 +139,7 @@ public class LabTechnicianService {
      * CHỨC NĂNG 4: Xóa LabTechnician profile theo User ID
      */
     @Transactional
-    public void deleteLabTechnicianByUserId(String userId) {
+    public void deleteLabTechnicianByUserId(UUID userId) {
         log.info("Xóa LabTechnician profile theo User ID: {}", userId);
         
         LabTechnician labTechnician = labTechnicianRepository.findByUserId(userId)
@@ -153,7 +152,7 @@ public class LabTechnicianService {
      * CHỨC NĂNG 5: Lấy LabTechnician theo LabTechnician ID
      */
     @Transactional(readOnly = true)
-    public LabTechnicianDTO getLabTechnicianById(String labTechnicianId) {
+    public LabTechnicianDTO getLabTechnicianById(UUID labTechnicianId) {
         log.debug("Lấy LabTechnician profile theo ID: {}", labTechnicianId);
         
         LabTechnician labTechnician = labTechnicianRepository.findById(labTechnicianId)
@@ -166,7 +165,7 @@ public class LabTechnicianService {
      * CHỨC NĂNG 6: Lấy LabTechnician theo User ID
      */
     @Transactional(readOnly = true)
-    public LabTechnicianDTO getLabTechnicianByUserId(String userId) {
+    public LabTechnicianDTO getLabTechnicianByUserId(UUID userId) {
         log.debug("Lấy LabTechnician profile theo User ID: {}", userId);
         
         LabTechnician labTechnician = labTechnicianRepository.findByUserId(userId)
@@ -213,7 +212,7 @@ public class LabTechnicianService {
     // ==== CÁC PHƯƠNG THỨC CŨ (GIỮ NGUYÊN) ====
 
     @Transactional(readOnly = true)
-    public LabTechnicianDTO getMyProfile(String userId) {
+    public LabTechnicianDTO getMyProfile(UUID userId) {
         return labTechnicianRepository.findByUserId(userId)
                 .map(labTechnicianMapper::toDto)
                 .orElseThrow(() -> new ProfileNotFoundException("LabTechnician profile not found."));
@@ -223,7 +222,7 @@ public class LabTechnicianService {
      * KTV Lab tự CẬP NHẬT hoặc TẠO MỚI hồ sơ.
      */
     @Transactional
-    public LabTechnicianDTO createOrUpdateMyProfile(String userId, ProfileDTO request) {
+    public LabTechnicianDTO createOrUpdateMyProfile(UUID userId, ProfileDTO request) {
         // BƯỚC 0: Cập nhật thông tin Bảng User (nếu có)
         userService.updateUserProfile(userId, request.getUserAttributes());
 
@@ -231,7 +230,6 @@ public class LabTechnicianService {
                 .orElseGet(() -> {
                     // Logic CREATE
                     LabTechnician newLabTech = new LabTechnician();
-                    newLabTech.setId(UUID.randomUUID().toString());
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new UserNotFoundException("User not found."));
                     newLabTech.setUser(user);

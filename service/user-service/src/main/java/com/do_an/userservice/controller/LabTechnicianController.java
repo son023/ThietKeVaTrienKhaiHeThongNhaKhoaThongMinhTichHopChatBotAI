@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/user-service/lab-technicians")
@@ -34,7 +35,7 @@ public class LabTechnicianController {
     @PutMapping("/{labTechnicianId}")
     //@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_LABTECHNICIAN')")
     public ResponseEntity<LabTechnicianDTO> updateLabTechnician(
-            @PathVariable String labTechnicianId,
+            @PathVariable UUID labTechnicianId,
             @Valid @RequestBody UpdateLabTechnicianRequestDTO request) {
         log.info("Nhận request cập nhật LabTechnician profile: {}", labTechnicianId);
         LabTechnicianDTO labTechnician = labTechnicianService.updateLabTechnician(labTechnicianId, request);
@@ -44,7 +45,7 @@ public class LabTechnicianController {
 
     @DeleteMapping("/{labTechnicianId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteLabTechnician(@PathVariable String labTechnicianId) {
+    public ResponseEntity<Void> deleteLabTechnician(@PathVariable UUID labTechnicianId) {
         log.info("Nhận request xóa LabTechnician profile: {}", labTechnicianId);
         labTechnicianService.deleteLabTechnician(labTechnicianId);
         return ResponseEntity.noContent().build();
@@ -52,7 +53,7 @@ public class LabTechnicianController {
 
     @DeleteMapping("/user/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> deleteLabTechnicianByUserId(@PathVariable String userId) {
+    public ResponseEntity<Void> deleteLabTechnicianByUserId(@PathVariable UUID userId) {
         log.info("Nhận request xóa LabTechnician profile theo User ID: {}", userId);
         labTechnicianService.deleteLabTechnicianByUserId(userId);
         return ResponseEntity.noContent().build();
@@ -60,7 +61,7 @@ public class LabTechnicianController {
 
     @GetMapping("/{labTechnicianId}")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<LabTechnicianDTO> getLabTechnicianById(@PathVariable String labTechnicianId) {
+    public ResponseEntity<LabTechnicianDTO> getLabTechnicianById(@PathVariable UUID labTechnicianId) {
         log.info("Nhận request lấy LabTechnician profile theo ID: {}", labTechnicianId);
         LabTechnicianDTO labTechnician = labTechnicianService.getLabTechnicianById(labTechnicianId);
         return ResponseEntity.ok(labTechnician);
@@ -68,7 +69,7 @@ public class LabTechnicianController {
 
     @GetMapping("/user/{userId}")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<LabTechnicianDTO> getLabTechnicianByUserId(@PathVariable String userId) {
+    public ResponseEntity<LabTechnicianDTO> getLabTechnicianByUserId(@PathVariable UUID userId) {
         log.info("Nhận request lấy LabTechnician profile theo User ID: {}", userId);
         LabTechnicianDTO labTechnician = labTechnicianService.getLabTechnicianByUserId(userId);
         return ResponseEntity.ok(labTechnician);
@@ -94,7 +95,7 @@ public class LabTechnicianController {
     @PutMapping("/me/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_LABTECHNICIAN')")
     public ResponseEntity<LabTechnicianDTO> createOrUpdateMyProfile(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody ProfileDTO request) {
         log.info("Nhận request LabTechnician tự cập nhật profile: {}", userId);
         LabTechnicianDTO updatedProfile = labTechnicianService.createOrUpdateMyProfile(userId, request);
@@ -103,7 +104,7 @@ public class LabTechnicianController {
 
     @GetMapping("/me/{userId}")
     //@PreAuthorize("hasAuthority('ROLE_LABTECHNICIAN')")
-    public ResponseEntity<LabTechnicianDTO> getMyProfile(@PathVariable String userId) {
+    public ResponseEntity<LabTechnicianDTO> getMyProfile(@PathVariable UUID userId) {
         log.info("Nhận request LabTechnician lấy profile của mình: {}", userId);
         LabTechnicianDTO profile = labTechnicianService.getMyProfile(userId);
         return ResponseEntity.ok(profile);

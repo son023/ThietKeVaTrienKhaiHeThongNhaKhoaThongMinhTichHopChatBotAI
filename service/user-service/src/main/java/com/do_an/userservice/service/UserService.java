@@ -46,7 +46,6 @@ public class UserService {
         
         // Tạo User mới
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(request.getHashedPassword());
@@ -81,7 +80,7 @@ public class UserService {
      * CHỨC NĂNG 2: Cập nhật User
      */
     @Transactional
-    public UserDTO updateUser(String userId, UpdateUserRequestDTO request) {
+    public UserDTO updateUser(UUID userId, UpdateUserRequestDTO request) {
         log.info("Cập nhật user: {}", userId);
         
         User user = userRepository.findById(userId)
@@ -144,7 +143,7 @@ public class UserService {
      * CHỨC NĂNG 3: Xóa User (soft delete - set isActive = false)
      */
     @Transactional
-    public void deleteUser(String userId) {
+    public void deleteUser(UUID userId) {
         log.info("Xóa user (soft delete): {}", userId);
         
         User user = userRepository.findById(userId)
@@ -161,7 +160,7 @@ public class UserService {
      * CHỨC NĂNG 4: Xóa User vĩnh viễn (hard delete)
      */
     @Transactional
-    public void deleteUserPermanently(String userId) {
+    public void deleteUserPermanently(UUID userId) {
         log.info("Xóa user vĩnh viễn: {}", userId);
         
         User user = userRepository.findById(userId)
@@ -175,7 +174,7 @@ public class UserService {
      * CHỨC NĂNG 5: Lấy User theo ID
      */
     @Transactional(readOnly = true)
-    public UserDTO getUserById(String userId) {
+    public UserDTO getUserById(UUID userId) {
         log.debug("Lấy user theo ID: {}", userId);
         
         User user = userRepository.findById(userId)
@@ -258,7 +257,7 @@ public class UserService {
      * Được gọi bởi DoctorService, PatientService, v.v.
      */
     @Transactional
-    public void updateUserProfile(String userId, Map<String, Object> userAttributes) {
+    public void updateUserProfile(UUID userId, Map<String, Object> userAttributes) {
         if (userAttributes == null || userAttributes.isEmpty()) {
             return;
         }

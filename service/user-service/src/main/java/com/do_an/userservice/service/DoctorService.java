@@ -76,7 +76,6 @@ public class DoctorService {
         
         // Tạo Doctor profile
         Doctor doctor = new Doctor();
-        doctor.setId(UUID.randomUUID().toString());
         doctor.setUser(user);
         doctor.setSpecializationCode(request.getSpecializationCode());
         doctor.setWorkingHospital(request.getWorkingHospital());
@@ -101,7 +100,7 @@ public class DoctorService {
      * CHỨC NĂNG 2: Cập nhật Doctor profile
      */
     @Transactional
-    public DoctorDTO updateDoctor(String doctorId, UpdateDoctorRequestDTO request) {
+    public DoctorDTO updateDoctor(UUID doctorId, UpdateDoctorRequestDTO request) {
         log.info("Cập nhật Doctor profile: {}", doctorId);
         
         Doctor doctor = doctorRepository.findById(doctorId)
@@ -161,7 +160,7 @@ public class DoctorService {
      * CHỨC NĂNG 3: Xóa Doctor profile
      */
     @Transactional
-    public void deleteDoctor(String doctorId) {
+    public void deleteDoctor(UUID doctorId) {
         log.info("Xóa Doctor profile: {}", doctorId);
         
         Doctor doctor = doctorRepository.findById(doctorId)
@@ -190,7 +189,7 @@ public class DoctorService {
      * CHỨC NĂNG 4: Xóa Doctor profile theo User ID
      */
     @Transactional
-    public void deleteDoctorByUserId(String userId) {
+    public void deleteDoctorByUserId(UUID userId) {
         log.info("Xóa Doctor profile theo User ID: {}", userId);
         
         Doctor doctor = doctorRepository.findByUserId(userId)
@@ -203,7 +202,7 @@ public class DoctorService {
      * CHỨC NĂNG 5: Lấy Doctor theo Doctor ID
      */
     @Transactional(readOnly = true)
-    public DoctorDTO getDoctorById(String doctorId) {
+    public DoctorDTO getDoctorById(UUID doctorId) {
         log.debug("Lấy Doctor profile theo ID: {}", doctorId);
         
         Doctor doctor = doctorRepository.findById(doctorId)
@@ -216,7 +215,7 @@ public class DoctorService {
      * CHỨC NĂNG 6: Lấy Doctor theo User ID
      */
     @Transactional(readOnly = true)
-    public DoctorDTO getDoctorByUserId(String userId) {
+    public DoctorDTO getDoctorByUserId(UUID userId) {
         log.debug("Lấy Doctor profile theo User ID: {}", userId);
         
         Doctor doctor = doctorRepository.findByUserId(userId)
@@ -285,7 +284,7 @@ public class DoctorService {
 
 
     @Transactional
-    public DoctorDTO createOrUpdateMyProfile(String userId, ProfileDTO request) {
+    public DoctorDTO createOrUpdateMyProfile(UUID userId, ProfileDTO request) {
         userService.updateUserProfile(userId, request.getUserAttributes());
         Doctor doctor = upsertDoctorProfile(userId, request.getProfileAttributes());
         if (request.getDegrees() != null) {
@@ -297,10 +296,9 @@ public class DoctorService {
     }
 
     @Transactional
-    public Doctor upsertDoctorProfile(String userId, Map<String, Object> attributes) {
+    public Doctor upsertDoctorProfile(UUID userId, Map<String, Object> attributes) {
         Doctor doctor = doctorRepository.findByUserId(userId).orElseGet(() -> {
             Doctor newDoctor = new Doctor();
-            newDoctor.setId(UUID.randomUUID().toString());
             User currentUser = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng , không thể tạo hồ sơ"));
             newDoctor.setUser(currentUser);
@@ -332,7 +330,7 @@ public class DoctorService {
 
     @Transactional
     public Doctor syncDegrees(Doctor doctor, List<DegreeDTO> degreeDtos) {
-        Map<String, DegreeDTO> dtoMap = degreeDtos.stream()
+        Map<UUID, DegreeDTO> dtoMap = degreeDtos.stream()
                 .filter(dto -> dto.getId() != null)
                 .collect(Collectors.toMap(DegreeDTO::getId, Function.identity()));
 
@@ -351,7 +349,6 @@ public class DoctorService {
             Degree degree;
             if (dto.getId() == null) {
                 degree = new Degree();
-                degree.setId(UUID.randomUUID().toString());
                 degree.setDoctor(doctor);
             } else {
                 degree = degreeRepository.findByIdAndDoctorId(dto.getId(), doctor.getId())
@@ -394,7 +391,7 @@ public class DoctorService {
     }
 
     @Transactional(readOnly = true)
-    public DoctorDTO getMyProfile(String userId) {
+    public DoctorDTO getMyProfile(UUID userId) {
         return doctorRepository.findByUserId(userId)
                 .map(doctorMapper::toDto)
                 .orElseThrow(() -> new ProfileNotFoundException("Không tìm thấy hồ sơ bác sĩ. Vui lòng tạo hồ sơ."));

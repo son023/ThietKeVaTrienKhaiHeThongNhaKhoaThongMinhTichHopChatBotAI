@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface PharmacistRepository extends JpaRepository<Pharmacist, String> {
+public interface PharmacistRepository extends JpaRepository<Pharmacist, UUID> {
     
-    Optional<Pharmacist> findByUserId(String userId);
+    Optional<Pharmacist> findByUserId(UUID userId);
     
     // Tìm Pharmacists theo degree
     List<Pharmacist> findAllByDegreeContainingIgnoreCase(String degree);

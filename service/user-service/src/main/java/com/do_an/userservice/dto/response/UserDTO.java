@@ -6,12 +6,13 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Getter
 @Setter
 public class UserDTO {
-    private String id; // ID của User
+    private UUID id; // ID của User
     private String username;
     private String email;
     private String fullName;
