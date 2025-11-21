@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user-service/users")
@@ -145,5 +146,32 @@ public class UserController {
         log.info("Nhận request lấy danh sách users với filters");
         List<UserDTO> users = userService.getAllUsers(isActive, fullName, email);
         return ResponseEntity.ok(users);
+    }
+
+    @Operation(
+            summary = "Xác thực thông tin đăng nhập",
+            description = "Endpoint nội bộ cho Auth Service để xác thực username/password. Trả về thông tin user đầy đủ."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Xác thực thành công",
+                    content = @Content(schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Thông tin đăng nhập không đúng"),
+            @ApiResponse(responseCode = "403", description = "Tài khoản đã bị vô hiệu hóa")
+    })
+    @PostMapping("/valid")
+    public ResponseEntity<UserDTO> validateCredentials(
+            @Parameter(description = "Thông tin đăng nhập (username và password)", required = true)
+            @RequestBody Map<String, String> credentials) {
+        log.info("Nhận request xác thực thông tin đăng nhập");
+        
+        String username = credentials.get("username");
+        String password = credentials.get("password");
+        
+        if (username == null || password == null) {
+            throw new IllegalArgumentException("Username và password không được để trống");
+        }
+        
+        UserDTO user = userService.validateCredentials(username, password);
+        return ResponseEntity.ok(user);
     }
 }

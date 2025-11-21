@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PublicHeader } from "./components/public/PublicHeader";
 import { PublicFooter } from "./components/public/PublicFooter";
 import { PublicHomepage } from "./components/public/PublicHomepage";
@@ -16,6 +16,8 @@ import { ReceptionistApp } from "./ReceptionistApp";
 import PharmacistApp from "./PharmacistApp";
 import AdminApp from "./AdminApp";
 import LabTechnicianApp from "./LabTechnicianApp";
+import { authController } from "./controllers";
+import { UserRole } from "./models";
 
 type Page =
   | "home"
@@ -30,7 +32,6 @@ type Page =
   | "booking";
 
 interface PublicAppProps {
-  //onLogin: (email: string, role: 'doctor' | 'admin' | 'pharmacist' | 'receptionist' | 'patient') => void;
   onLogin?: (
     email: string,
     role:
@@ -95,8 +96,8 @@ function PublicApp({ onLogin }: PublicAppProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleLogin = (email: string, password: string) => {
-    // Determine role based on email
+  const handleLoginSuccess = (userRole: string) => {
+    // Map UserRole enum to app role type
     let role:
       | "doctor"
       | "admin"
@@ -105,27 +106,33 @@ function PublicApp({ onLogin }: PublicAppProps) {
       | "patient"
       | "lab-technician" = "patient";
 
-    if (email === "admin@gmail.com") {
-      role = "admin";
-    } else if (email === "pharmacist@gmail.com") {
-      role = "pharmacist";
-    } else if (email === "receptionist@gmail.com") {
-      role = "receptionist";
-    } else if (email === "doctor@gmail.com") {
-      role = "doctor";
-    } else if (email === "labtechnician@gmail.com") {
-      role = "lab-technician";
-    } else {
-      // Default to patient for all other emails
-      role = "patient";
+    switch (userRole) {
+      case "ADMIN":
+        role = "admin";
+        break;
+      case "DOCTOR":
+        role = "doctor";
+        break;
+      case "PHARMACIST":
+        role = "pharmacist";
+        break;
+      case "RECEPTIONIST":
+        role = "receptionist";
+        break;
+      case "LAB_TECHNICIAN":
+        role = "lab-technician";
+        break;
+      case "PATIENT":
+      default:
+        role = "patient";
+        break;
     }
-
-    // Show success message
-    toast.success("Đăng nhập thành công!");
 
     // Call parent login handler if provided
     if (onLogin) {
-      onLogin(email, role);
+      // Get user from localStorage to get email
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      onLogin(currentUser.email || currentUser.username, role);
     }
   };
 
@@ -141,7 +148,7 @@ function PublicApp({ onLogin }: PublicAppProps) {
           <LoginPage
             onBack={handleBackToHome}
             onNavigateToSignup={handleSignUpClick}
-            onLogin={handleLogin}
+            onLoginSuccess={handleLoginSuccess}
           />
         );
 
@@ -334,29 +341,79 @@ function PublicApp({ onLogin }: PublicAppProps) {
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<
-    "doctor" | "admin" | "pharmacist" | "receptionist" | "patient" | null
+    "doctor" | "admin" | "pharmacist" | "receptionist" | "patient" | "lab-technician" | null
   >(null);
   const [userEmail, setUserEmail] = useState<string>("");
 
+  useEffect(() => {
+    const currentUser = authController.getCurrentUser();
+    if (currentUser) {
+      let role:
+        | "doctor"
+        | "admin" 
+        | "pharmacist"
+        | "receptionist"
+        | "patient"
+        | "lab-technician" = "patient";
+
+      switch (currentUser.primaryRole) {
+        case "ADMIN":
+          role = "admin";
+          break;
+        case "DOCTOR":
+          role = "doctor";
+          break;
+        case "PHARMACIST":
+          role = "pharmacist";
+          break;
+        case "RECEPTIONIST":
+          role = "receptionist";
+          break;
+        case "LAB_TECHNICIAN":
+          role = "lab-technician";
+          break;
+        case "PATIENT":
+        default:
+          role = "patient";
+          break;
+      }
+
+      setUserEmail(currentUser.email || currentUser.username);
+      setUserRole(role);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = (
     email: string,
-    role: "doctor" | "admin" | "pharmacist" | "receptionist" | "patient"
+    role: "doctor" | "admin" | "pharmacist" | "receptionist" | "patient" | "lab-technician"
   ) => {
     setUserEmail(email);
     setUserRole(role);
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserRole(null);
-    setUserEmail("");
+  const handleLogout = async () => {
+    try {
+      await authController.logout();
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setUserEmail("");
+      toast.success("Đăng xuất thành công!");
+    } catch (error) {
+      toast.error("Có lỗi khi đăng xuất");
+    }
   };
 
-  const handleGoHome = () => {
-    setIsAuthenticated(false);
-    setUserRole(null);
-    setUserEmail("");
+  const handleGoHome = async () => {
+    try {
+      await authController.logout();
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setUserEmail("");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   if (userRole === "admin") {

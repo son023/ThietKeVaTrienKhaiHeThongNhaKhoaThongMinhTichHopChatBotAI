@@ -3,6 +3,8 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { authController } from '../../controllers';
+import { RegisterFormData, UserRole } from '../../models';
 
 interface SignUpPageProps {
   onBack: () => void;
@@ -11,14 +13,16 @@ interface SignUpPageProps {
 
 export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
   const [signupData, setSignupData] = useState({
+    username: '',
     fullName: '',
     phone: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (signupData.password !== signupData.confirmPassword) {
@@ -31,11 +35,38 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
       return;
     }
 
-    // Handle signup logic here
-    toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
-    setTimeout(() => {
-      onNavigateToLogin();
-    }, 1500);
+    if (!signupData.email && !signupData.phone) {
+      toast.error('Vui lòng nhập ít nhất email hoặc số điện thoại');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const formData: RegisterFormData = {
+        username: signupData.username,
+        email: signupData.email,
+        password: signupData.password,
+        confirmPassword: signupData.confirmPassword,
+        fullName: signupData.fullName,
+        phone: signupData.phone,
+        role: UserRole.PATIENT
+      };
+
+      const response = await authController.register(formData);
+      
+      toast.success(response.message || 'Đăng ký thành công! Vui lòng đăng nhập.');
+      
+      setTimeout(() => {
+        onNavigateToLogin();
+      }, 1500);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Đăng ký thất bại';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -77,6 +108,21 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
           <form onSubmit={handleSignup} className="space-y-[20px]">
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
+                Tên đăng nhập <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="text"
+                value={signupData.username}
+                onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
+                placeholder="Nhập tên đăng nhập (không dấu, không khoảng trống)"
+                className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div>
+              <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
                 Họ và tên <span className="text-red-500">*</span>
               </label>
               <Input
@@ -86,12 +132,13 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
                 placeholder="Nhập họ và tên đầy đủ"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
+                disabled={isLoading}
               />
             </div>
 
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Số điện thoại <span className="text-red-500">*</span>
+                Số điện thoại
               </label>
               <Input
                 type="tel"
@@ -99,20 +146,22 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
                 onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
                 placeholder="Nhập số điện thoại"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
-                required
+                disabled={isLoading}
               />
             </div>
 
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <Input
                 type="email"
                 value={signupData.email}
                 onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                placeholder="Nhập email (không bắt buộc)"
+                placeholder="Nhập email"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
+                required
+                disabled={isLoading}
               />
             </div>
 
@@ -128,6 +177,7 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
                 minLength={6}
+                disabled={isLoading}
               />
             </div>
 
@@ -142,14 +192,16 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
                 placeholder="Nhập lại mật khẩu"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
+                disabled={isLoading}
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 rounded-[12px] h-[56px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)] transition-all hover:shadow-[0px_6px_20px_0px_rgba(63,181,255,0.5)]"
+              disabled={isLoading}
+              className="w-full bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 rounded-[12px] h-[56px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)] transition-all hover:shadow-[0px_6px_20px_0px_rgba(63,181,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Đăng ký
+              {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
             </Button>
           </form>
 

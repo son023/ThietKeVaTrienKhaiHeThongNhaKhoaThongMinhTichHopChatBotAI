@@ -13,10 +13,10 @@ import java.util.Map;
 @FeignClient(name = "user-service")
 public interface UserServiceClient {
 
-    @PostMapping("/users/valid")
+    @PostMapping("/user-service/users/valid")
     ResponseEntity<UserDTO> valid(@RequestBody Map<String, String> credentials);
 
-    @GetMapping("/users/{username}")
+    @GetMapping("/user-service/users/{username}")
     ResponseEntity<UserDTO> getByUsername(@PathVariable String username);
 }
 

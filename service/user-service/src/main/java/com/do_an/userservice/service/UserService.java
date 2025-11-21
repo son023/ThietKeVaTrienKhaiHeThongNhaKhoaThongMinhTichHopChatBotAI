@@ -48,7 +48,7 @@ public class UserService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getHashedPassword());
+        user.setPassword(request.getPassword()); // Plain text password
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
         user.setImageUrl(request.getImageUrl());
@@ -250,6 +250,28 @@ public class UserService {
         return users.stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * CHỨC NĂNG 9: Xác thực thông tin đăng nhập (cho Auth Service)
+     */
+    @Transactional(readOnly = true)
+    public UserDTO validateCredentials(String username, String password) {
+        log.info("Xác thực thông tin đăng nhập cho username: {}", username);
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng với username: " + username));
+
+        if (!user.isActive()) {
+            throw new IllegalArgumentException("Tài khoản đã bị vô hiệu hóa");
+        }
+
+        if (!password.equals(user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu không đúng");
+        }
+        
+        log.info("Xác thực thành công cho username: {}", username);
+        return userMapper.toDto(user);
     }
 
     /**
