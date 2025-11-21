@@ -13,6 +13,10 @@ public class DispenseItemResponse {
     private UUID id;
     private Integer quantity;
     private Integer priceAtDispense;
+    private String dosage;
+    private String frequency;
+    private String duration;
+    private String usageInstructions;
     private UUID inventoryLotId;
     private UUID dispenseOrderId;
 }

@@ -15,6 +15,8 @@ public class DispenseOrderResponse {
     private Integer pharmacistId;
     private String prescription;
     private String status;
+    private String medicalHistoryId;
+    private String doctorId;
     private ZonedDateTime createAt;
     private ZonedDateTime updateAt;
 }

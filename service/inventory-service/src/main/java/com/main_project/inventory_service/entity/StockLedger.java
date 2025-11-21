@@ -18,15 +18,15 @@ public class StockLedger {
     private UUID id;
 
     @Column(length = 255)
-    private String lot;
-
-    @Column(length = 255)
     private String type; // 'IN', 'OUT', 'ADJUST'
 
     private Integer quantity;
 
     @Column(length = 255)
     private String referenceType;
+
+    @Column(name = "reference_id", length = 50)
+    private String referenceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_lot_id")

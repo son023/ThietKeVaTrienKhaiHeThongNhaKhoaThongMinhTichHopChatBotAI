@@ -26,6 +26,8 @@ public class DispenseOrderService implements IDispenseOrderService {
         dispenseOrder.setPharmacistId(request.getPharmacistId());
         dispenseOrder.setPrescription(request.getPrescription());
         dispenseOrder.setStatus(request.getStatus());
+        dispenseOrder.setMedicalHistoryId(request.getMedicalHistoryId());
+        dispenseOrder.setDoctorId(request.getDoctorId());
 
         DispenseOrder saved = dispenseOrderRepository.save(dispenseOrder);
         return mapToResponse(saved);
@@ -40,6 +42,8 @@ public class DispenseOrderService implements IDispenseOrderService {
         dispenseOrder.setPharmacistId(request.getPharmacistId());
         dispenseOrder.setPrescription(request.getPrescription());
         dispenseOrder.setStatus(request.getStatus());
+        dispenseOrder.setMedicalHistoryId(request.getMedicalHistoryId());
+        dispenseOrder.setDoctorId(request.getDoctorId());
 
         DispenseOrder updated = dispenseOrderRepository.save(dispenseOrder);
         return mapToResponse(updated);
@@ -76,6 +80,8 @@ public class DispenseOrderService implements IDispenseOrderService {
                 dispenseOrder.getPharmacistId(),
                 dispenseOrder.getPrescription(),
                 dispenseOrder.getStatus(),
+                dispenseOrder.getMedicalHistoryId(),
+                dispenseOrder.getDoctorId(),
                 dispenseOrder.getCreateAt(),
                 dispenseOrder.getUpdateAt()
         );

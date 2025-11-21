@@ -12,9 +12,12 @@ import java.util.UUID;
 @AllArgsConstructor
 public class InsuranceClaimDTO {
     private UUID id;
+    private String status;
     private Integer claimAmount;
     private Integer approvedAmount;
-    private String status;
+    private Integer patientPayAmount;
+    private Integer totalClaimAmount;
+    private Integer totalInsurancePay;
     private ZonedDateTime claimDate;
     private ZonedDateTime approvalDate;
     private String notes;
