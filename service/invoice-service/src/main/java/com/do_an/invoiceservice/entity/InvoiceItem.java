@@ -16,7 +16,7 @@ import java.util.UUID;
 @Setter
 public class InvoiceItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id; // varchar(50)
 
     private UUID referenceId;
@@ -30,10 +30,6 @@ public class InvoiceItem {
 
     private UUID claimItemId;
 
-    @CreationTimestamp
-    private LocalDateTime createAt;
-    @UpdateTimestamp
-    private LocalDateTime updateAt;
 
     // Quan hệ Nhiều-1
     @ManyToOne(fetch = FetchType.LAZY)

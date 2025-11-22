@@ -22,8 +22,6 @@ public interface InvoiceItemMapper {
     // (ĐÂY LÀ PHẦN SỬA LỖI)
     @Mappings({
             @Mapping(target = "id", ignore = true), // Bỏ qua ID khi TẠO MỚI
-            @Mapping(target = "createAt", ignore = true),
-            @Mapping(target = "updateAt", ignore = true),
             @Mapping(target = "invoice", ignore = true),
             @Mapping(target = "insurancePayAmount", ignore = true),
             @Mapping(target = "patientPayAmount", ignore = true)
@@ -36,8 +34,6 @@ public interface InvoiceItemMapper {
     // (Cần thiết cho logic "Update Invoice" của bạn)
     @Mappings({
             @Mapping(target = "id", ignore = true), // Không bao giờ map ID
-            @Mapping(target = "createAt", ignore = true),
-            @Mapping(target = "updateAt", ignore = true),
             @Mapping(target = "invoice", ignore = true),
             @Mapping(target = "insurancePayAmount", ignore = true),
             @Mapping(target = "patientPayAmount", ignore = true)

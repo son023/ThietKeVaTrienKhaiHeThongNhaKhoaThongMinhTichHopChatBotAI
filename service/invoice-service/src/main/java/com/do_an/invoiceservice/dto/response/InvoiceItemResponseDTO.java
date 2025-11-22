@@ -13,6 +13,11 @@ public class InvoiceItemResponseDTO {
     private String description;
     private Integer unitPrice;
 
+    private Integer insurancePayAmount;
+    private Integer patientPayAmount;
+    private UUID claimItemId;
+
+
     // Chúng ta có thể thêm một trường tính toán
     private Integer itemTotal;
 }

@@ -14,7 +14,18 @@ public class InvoiceResponseDTO {
     private Integer totalAmount;
     private String currency;
     private String status;
-    private LocalDateTime createAt;
+
+
+    private LocalDateTime issueAt;
+    private LocalDateTime paidAt;
+
+
+    private Integer insuranceTotalPay;
+    private Integer patientTotalPay;
+    private UUID insuranceClaimId;
+
+
+    private LocalDateTime updateAt;
 
     // Lồng danh sách DTO của Item
     private List<InvoiceItemResponseDTO> items;

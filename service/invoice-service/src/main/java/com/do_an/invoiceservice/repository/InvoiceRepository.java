@@ -13,26 +13,27 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findAllByStatus(String status);
 
     // API lọc theo lịch hẹn
-    List<Invoice> findAllByAppointmentId(String appointmentId);
+    List<Invoice> findAllByAppointmentId(UUID appointmentId);
     
     // API lọc theo receptionist ID
-    List<Invoice> findAllByReceptionistId(String receptionistId);
+    List<Invoice> findAllByReceptionistId(UUID receptionistId);
     
     // API lọc theo receptionist ID và status
-    List<Invoice> findAllByReceptionistIdAndStatus(String receptionistId, String status);
+    List<Invoice> findAllByReceptionistIdAndStatus(UUID receptionistId, String status);
     
     // API lọc theo appointment ID và status
-    List<Invoice> findAllByAppointmentIdAndStatus(String appointmentId, String status);
+    List<Invoice> findAllByAppointmentIdAndStatus(UUID appointmentId, String status);
     
     // API lọc theo khoảng thời gian tạo
-    List<Invoice> findAllByCreateAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
+
+    List<Invoice> findAllByPaidAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
     // API lọc theo khoảng thời gian issue
     List<Invoice> findAllByIssueAtBetween(LocalDateTime startDate, LocalDateTime endDate);
     
     // API sắp xếp theo thời gian tạo giảm dần
-    List<Invoice> findAllByOrderByCreateAtDesc();
+    List<Invoice> findAllByOrderByIssueAtDesc();
     
     // API sắp xếp theo thời gian tạo tăng dần
-    List<Invoice> findAllByOrderByCreateAtAsc();
+    List<Invoice> findAllByOrderByIssueAtAsc();
 }

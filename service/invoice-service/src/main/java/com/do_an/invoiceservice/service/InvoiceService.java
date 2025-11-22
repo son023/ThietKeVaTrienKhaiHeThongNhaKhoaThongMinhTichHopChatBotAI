@@ -38,16 +38,17 @@ public class InvoiceService {
      */
     @Transactional
     public InvoiceResponseDTO createInvoice(CreateInvoiceRequestDTO request) {
+
         Invoice invoice = invoiceMapper.toEntity(request);
-        String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
-        invoice.setId(UUID.fromString(invoiceId));
+        //String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
+        //invoice.setId(UUID.fromString(invoiceId));
 
         invoice.setStatus("DRAFT"); // <-- THAY ĐỔI: Bắt đầu là DRAFT
-
+        invoice.setIssueAt(LocalDateTime.now());
 
         int totalAmount = 0;
         for (InvoiceItem item : invoice.getItems()) {
-            item.setId(UUID.randomUUID());
+            //item.setId(UUID.randomUUID());
             item.setInvoice(invoice);
             totalAmount += (item.getQuantity() * item.getUnitPrice());
         }
@@ -111,7 +112,7 @@ public class InvoiceService {
             if (dto.getId() == null) {
                 // THÊM MỚI
                 InvoiceItem newItem = invoiceItemMapper.toEntity(dto); // Dùng mapper
-                newItem.setId(UUID.randomUUID());
+                //newItem.setId(UUID.randomUUID());
                 invoice.addItem(newItem); // Thêm vào collection (để Cascade lưu)
             } else {
                 // CẬP NHẬT
@@ -157,7 +158,7 @@ public class InvoiceService {
         }
 
         invoice.setStatus("PAID");
-
+        invoice.setPaidAt(LocalDateTime.now());
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
         return invoiceMapper.toResponseDto(savedInvoice);

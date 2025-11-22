@@ -2,6 +2,7 @@ package com.do_an.invoiceservice.dto.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -10,11 +11,10 @@ import java.util.UUID;
 
 @Data
 public class CreateInvoiceRequestDTO {
-    // Cho phép cập nhật các trường "header" này
-    @NotEmpty
-    private String receptionistId;
-    @NotEmpty
-    private String appointmentId;
+    @NotNull
+    private UUID receptionistId;
+    @NotNull
+    private UUID appointmentId;
     @NotEmpty
     private String currency;
 

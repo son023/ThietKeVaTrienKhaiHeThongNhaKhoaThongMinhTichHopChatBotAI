@@ -6,18 +6,19 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class UpdateInvoiceRequestDTO {
     // Cho phép cập nhật các trường "header" này
     @NotEmpty
-    private String receptionistId;
+    private UUID receptionistId;
 
     @NotEmpty
-    private String appointmentId;
+    private UUID appointmentId;
 
     @NotEmpty
-    private String currency;
+    private UUID currency;
 
     // Danh sách "ĐẦY ĐỦ" các item mà hóa đơn NÊN CÓ
     @Valid
