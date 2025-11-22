@@ -24,7 +24,9 @@ public interface InvoiceItemMapper {
             @Mapping(target = "id", ignore = true), // Bỏ qua ID khi TẠO MỚI
             @Mapping(target = "createAt", ignore = true),
             @Mapping(target = "updateAt", ignore = true),
-            @Mapping(target = "invoice", ignore = true)
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "insurancePayAmount", ignore = true),
+            @Mapping(target = "patientPayAmount", ignore = true)
     })
     // SỬA LỖI: Tham số phải là "CreateInvoiceItemDTO", không phải "InvoiceItemResponseDTO"
     InvoiceItem toEntity(CreateInvoiceItemRequestDTO dto);
@@ -36,7 +38,9 @@ public interface InvoiceItemMapper {
             @Mapping(target = "id", ignore = true), // Không bao giờ map ID
             @Mapping(target = "createAt", ignore = true),
             @Mapping(target = "updateAt", ignore = true),
-            @Mapping(target = "invoice", ignore = true)
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "insurancePayAmount", ignore = true),
+            @Mapping(target = "patientPayAmount", ignore = true)
     })
     void updateFromDto(CreateInvoiceItemRequestDTO dto, @MappingTarget InvoiceItem entity);
 }

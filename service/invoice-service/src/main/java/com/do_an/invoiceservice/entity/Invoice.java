@@ -19,16 +19,18 @@ public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID id; // varchar(50)
 
 
     private String receptionistId;
     private String appointmentId;
-    private Double totalAmount; // float4 -> Double
+    private Integer totalAmount;
     private String currency;
-    private String status; // Ví dụ: ISSUED, PAID, CANCELLED
-    private LocalDateTime issueAt;
-    private LocalDateTime paidAt;
+    private String status;
+
+
+    private Integer insuranceTotalPay;
+    private Integer patientTotalPay;
 
     @CreationTimestamp
     private LocalDateTime createAt;

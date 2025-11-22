@@ -17,13 +17,16 @@ import java.util.UUID;
 public class InvoiceItem {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID id; // varchar(50)
 
-    private Integer referenceId; // int4 -> Integer
+    private Integer referenceId;
     private String serviceType;
     private Integer quantity;
     private String description;
-    private Double unitPrice; // float4 -> Double
+    private Integer unitPrice;
+
+    private Integer insurancePayAmount;
+    private Integer patientPayAmount;
 
     @CreationTimestamp
     private LocalDateTime createAt;

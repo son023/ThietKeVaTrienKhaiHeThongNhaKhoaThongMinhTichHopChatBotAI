@@ -27,10 +27,10 @@ public interface InvoiceMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "totalAmount", ignore = true),
             @Mapping(target = "status", ignore = true),
-            @Mapping(target = "issueAt", ignore = true),
-            @Mapping(target = "paidAt", ignore = true),
             @Mapping(target = "createAt", ignore = true),
-            @Mapping(target = "updateAt", ignore = true)
+            @Mapping(target = "updateAt", ignore = true),
+            @Mapping(target = "insuranceTotalPay", ignore = true),
+            @Mapping(target = "patientTotalPay", ignore = true)
     })
     Invoice toEntity(CreateInvoiceRequestDTO dto); // Thay đổi type
 
@@ -41,10 +41,10 @@ public interface InvoiceMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "totalAmount", ignore = true), // Sẽ được tính toán lại
             @Mapping(target = "status", ignore = true), // Không cho phép DTO đổi status
-            @Mapping(target = "issueAt", ignore = true),
-            @Mapping(target = "paidAt", ignore = true),
             @Mapping(target = "createAt", ignore = true),
             @Mapping(target = "updateAt", ignore = true),
+            @Mapping(target = "insuranceTotalPay", ignore = true),
+            @Mapping(target = "patientTotalPay", ignore = true),
             @Mapping(target = "items", ignore = true) // items phải được xử lý thủ công (sync)
     })
     void updateFromDto(CreateInvoiceRequestDTO dto, @MappingTarget Invoice entity); // Thay đổi type

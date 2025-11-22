@@ -5,10 +5,12 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class CreateInvoiceItemRequestDTO {
     // ID CÓ THỂ NULL (nếu là item mới)
-    private String id; // ID của InvoiceItem đã tồn tại
+    private UUID id; // ID của InvoiceItem đã tồn tại
 
     private Integer referenceId;
     @NotEmpty
@@ -17,5 +19,5 @@ public class CreateInvoiceItemRequestDTO {
     private Integer quantity;
     private String description;
     @NotNull
-    private Double unitPrice;
+    private Integer unitPrice;
 }
