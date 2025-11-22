@@ -12,7 +12,7 @@ public class CreateInvoiceItemRequestDTO {
     // ID CÓ THỂ NULL (nếu là item mới)
     private UUID id; // ID của InvoiceItem đã tồn tại
 
-    private Integer referenceId;
+    private UUID referenceId;
     @NotEmpty
     private String serviceType;
     @NotNull @Min(1)

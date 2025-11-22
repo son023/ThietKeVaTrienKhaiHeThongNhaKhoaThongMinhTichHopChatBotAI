@@ -7,7 +7,7 @@ import java.util.UUID;
 @Data
 public class InvoiceItemResponseDTO {
     private UUID id;
-    private Integer referenceId;
+    private UUID referenceId;
     private String serviceType;
     private Integer quantity;
     private String description;

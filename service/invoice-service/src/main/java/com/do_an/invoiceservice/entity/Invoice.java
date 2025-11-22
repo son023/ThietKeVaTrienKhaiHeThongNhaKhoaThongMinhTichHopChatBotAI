@@ -31,7 +31,6 @@ public class Invoice {
 
     private Integer insuranceTotalPay;
     private Integer patientTotalPay;
-
     private UUID insuranceClaimId;
 
     @CreationTimestamp
