@@ -13,8 +13,6 @@ import java.util.UUID;
 public class InsuranceClaimDTO {
     private UUID id;
     private String status;
-    private Integer claimAmount;
-    private Integer approvedAmount;
     private Integer patientPayAmount;
     private Integer totalClaimAmount;
     private Integer totalInsurancePay;

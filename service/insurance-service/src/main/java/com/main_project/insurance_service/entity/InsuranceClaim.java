@@ -25,12 +25,6 @@ public class InsuranceClaim {
     @Column(name = "status")
     private String status;
 
-    @Column(name = "claim_amount")
-    private Integer claimAmount;
-
-    @Column(name = "approved_amount")
-    private Integer approvedAmount;
-
     @Column(name = "patient_pay_amount")
     private Integer patientPayAmount;
 

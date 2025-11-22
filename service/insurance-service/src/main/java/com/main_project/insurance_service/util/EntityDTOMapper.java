@@ -101,8 +101,6 @@ public class EntityDTOMapper {
         InsuranceClaimDTO dto = new InsuranceClaimDTO();
         dto.setId(entity.getId());
         dto.setStatus(entity.getStatus());
-        dto.setClaimAmount(entity.getClaimAmount());
-        dto.setApprovedAmount(entity.getApprovedAmount());
         dto.setPatientPayAmount(entity.getPatientPayAmount());
         dto.setTotalClaimAmount(entity.getTotalClaimAmount());
         dto.setTotalInsurancePay(entity.getTotalInsurancePay());
@@ -125,8 +123,6 @@ public class EntityDTOMapper {
         
         InsuranceClaim entity = new InsuranceClaim();
         entity.setStatus(requestDTO.getStatus());
-        entity.setClaimAmount(requestDTO.getClaimAmount());
-        entity.setApprovedAmount(requestDTO.getApprovedAmount());
         entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
         entity.setTotalClaimAmount(requestDTO.getTotalClaimAmount());
         entity.setTotalInsurancePay(requestDTO.getTotalInsurancePay());
@@ -141,8 +137,6 @@ public class EntityDTOMapper {
         if (entity == null || requestDTO == null) return;
         
         entity.setStatus(requestDTO.getStatus());
-        entity.setClaimAmount(requestDTO.getClaimAmount());
-        entity.setApprovedAmount(requestDTO.getApprovedAmount());
         entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
         entity.setTotalClaimAmount(requestDTO.getTotalClaimAmount());
         entity.setTotalInsurancePay(requestDTO.getTotalInsurancePay());

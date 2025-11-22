@@ -1,7 +1,6 @@
 package com.main_project.insurance_service.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,12 +15,6 @@ public class InsuranceClaimRequestDTO {
     
     @NotNull(message = "Status is required")
     private String status;
-    
-    @NotNull(message = "Claim amount is required")
-    @Positive(message = "Claim amount must be positive")
-    private Integer claimAmount;
-    
-    private Integer approvedAmount;
     
     private Integer patientPayAmount;
     
