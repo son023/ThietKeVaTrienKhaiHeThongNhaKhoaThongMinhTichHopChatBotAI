@@ -81,7 +81,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
     @Override
     @Transactional(readOnly = true)
     public List<InsuranceClaimDTO> getClaimsByStatusAndMinAmount(String status, Integer minAmount) {
-        return insuranceClaimRepository.findByStatusAndClaimAmountGreaterThanEqual(status, minAmount)
+        return insuranceClaimRepository.findByStatusAndTotalClaimAmountGreaterThanEqual(status, minAmount)
                 .stream()
                 .map(mapper::toInsuranceClaimDTO)
                 .collect(Collectors.toList());
@@ -129,8 +129,8 @@ public class InsuranceClaimService implements IInsuranceClaimService {
                 .orElseThrow(() -> new RuntimeException("Insurance claim not found with id: " + id));
 
         existingEntity.setStatus("APPROVED");
-        existingEntity.setApprovedAmount(approvedAmount);
         existingEntity.setApprovalDate(ZonedDateTime.now());
+        // Note: approvedAmount parameter is ignored as approvedAmount field was removed
 
         InsuranceClaim updatedEntity = insuranceClaimRepository.save(existingEntity);
         return mapper.toInsuranceClaimDTO(updatedEntity);
@@ -142,7 +142,6 @@ public class InsuranceClaimService implements IInsuranceClaimService {
                 .orElseThrow(() -> new RuntimeException("Insurance claim not found with id: " + id));
 
         existingEntity.setStatus("REJECTED");
-        existingEntity.setApprovedAmount(0);
         existingEntity.setApprovalDate(ZonedDateTime.now());
         existingEntity.setNotes(existingEntity.getNotes() + (existingEntity.getNotes() != null ? " | " : "") + "Reject reason: " + reason);
 

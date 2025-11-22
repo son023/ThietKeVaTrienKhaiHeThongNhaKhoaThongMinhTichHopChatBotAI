@@ -32,8 +32,6 @@ CREATE TABLE insurance_claim (
     patient_pay_amount INT,    -- Số tiền bệnh nhân phải trả
     total_claim_amount INT,    -- Tổng số tiền yêu cầu bồi thường
     total_insurance_pay INT,   -- Tổng số tiền bảo hiểm trả
-    claim_amount INT,          -- Số tiền claim cụ thể (có thể trùng lặp logic với total, giữ theo script cũ)
-    approved_amount INT,       -- Số tiền được duyệt
 
     patient_insurance_id UUID REFERENCES patient_insurance(id)
 );
@@ -79,9 +77,9 @@ VALUES
 ('c3c3c3c3-3333-4333-8333-333333333333', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '2025-02-15', '2026-02-15', 'ACTIVE', 'a1a1a1a1-1111-4111-8111-111111111111');
 
 -- 3. Thêm yêu cầu bồi thường (Cập nhật thêm các field tiền mới)
-INSERT INTO insurance_claim (id, claim_amount, approved_amount, patient_pay_amount, total_claim_amount, total_insurance_pay, status, claim_date, notes, patient_insurance_id)
+INSERT INTO insurance_claim (id, patient_pay_amount, total_claim_amount, total_insurance_pay, status, claim_date, notes, patient_insurance_id)
 VALUES
-('d4d4d4d4-4444-4444-8444-444444444444', 3500000, 0, 500000, 3500000, 3000000, 'PENDING', '2025-06-10T09:00:00Z', 'Yêu cầu bồi thường chi phí khám răng', 'c3c3c3c3-3333-4333-8333-333333333333');
+('d4d4d4d4-4444-4444-8444-444444444444', 500000, 3500000, 3000000, 'PENDING', '2025-06-10T09:00:00Z', 'Yêu cầu bồi thường chi phí khám răng', 'c3c3c3c3-3333-4333-8333-333333333333');
 
 -- 4. Thêm tài liệu
 INSERT INTO claim_document (file_path, document_type, status, upload_at, insurance_claim_id)
