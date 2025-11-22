@@ -20,4 +20,8 @@ public class CreateInvoiceItemRequestDTO {
     private String description;
     @NotNull
     private Integer unitPrice;
+
+    private Integer insurancePayAmount;
+    private Integer patientPayAmount;
+    private UUID claimItemId;
 }

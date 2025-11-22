@@ -19,7 +19,7 @@ public class InvoiceItem {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id; // varchar(50)
 
-    private Integer referenceId;
+    private UUID referenceId;
     private String serviceType;
     private Integer quantity;
     private String description;
@@ -27,6 +27,8 @@ public class InvoiceItem {
 
     private Integer insurancePayAmount;
     private Integer patientPayAmount;
+
+    private UUID claimItemId;
 
     @CreationTimestamp
     private LocalDateTime createAt;

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class CreateInvoiceRequestDTO {
@@ -16,6 +17,11 @@ public class CreateInvoiceRequestDTO {
     private String appointmentId;
     @NotEmpty
     private String currency;
+
+    private Integer insuranceTotalPay;
+    private Integer patientTotalPay;
+    private UUID insuranceClaimId;
+
 
     // Danh sách "ĐẦY ĐỦ" các item mà hóa đơn NÊN CÓ
     @Valid
