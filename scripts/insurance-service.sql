@@ -68,8 +68,8 @@ CREATE TABLE claim_item (
 -- 1. Thêm chính sách
 INSERT INTO insurance_policy (id, policy_number, policy_type, coverage_amount, deductible, start_date, end_date, status)
 VALUES
-('a1a1a1a1-1111-4111-8111-111111111111', 'PVI-GOLD-2025', 'Gold', 100000000, 2000000, '2025-01-01', '2026-01-01', 'ACTIVE'),
-('b2b2b2b2-2222-4222-8222-222222222222', 'BAOVIET-SILVER-2025', 'Silver', 50000000, 1000000, '2025-01-01', '2026-01-01', 'ACTIVE');
+('a1a1a1a1-1111-4111-8111-111111111111', 'PVI-GOLD-2025', 'Gold', 95, 2000000, '2025-01-01', '2026-01-01', 'ACTIVE'),
+('b2b2b2b2-2222-4222-8222-222222222222', 'BAOVIET-SILVER-2025', 'Silver', 80, 1000000, '2025-01-01', '2026-01-01', 'ACTIVE');
 
 -- 2. Thêm bảo hiểm bệnh nhân
 INSERT INTO patient_insurance (id, patient_id, issue_date, expiry_date, status, insurance_policy_id)
@@ -90,8 +90,8 @@ VALUES
 -- 5. Thêm danh mục BHYT (Dữ liệu mẫu)
 INSERT INTO bhyt_catalogue (id, service_code, service_name, service_type, is_covered, max_coverage_amount)
 VALUES
-('f5f5f5f5-5555-4555-8555-555555555555', 'SV-RANG-001', 'Nhổ răng khôn', 'DENTAL', true, 2000000),
-('f6f6f6f6-6666-4666-8666-666666666666', 'SV-RANG-002', 'Trám răng composite', 'DENTAL', true, 500000);
+('f5f5f5f5-5555-4555-8555-555555555555', 'f5f5f5f5-5555-4555-8555-555555555556', 'Nhổ răng khôn', 'DENTAL', true, 200000000),
+('f6f6f6f6-6666-4666-8666-666666666666', 'f6f6f6f6-6666-4666-8666-666666666667', 'Trám răng composite', 'DENTAL', true, 200000000);
 
 -- 6. Thêm chi tiết claim (Claim Item)
 -- Ví dụ: Claim 2 mục, 1 cái nhổ răng và 2 cái trám răng

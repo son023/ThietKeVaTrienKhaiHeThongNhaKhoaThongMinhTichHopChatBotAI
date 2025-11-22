@@ -1,9 +1,9 @@
 package com.main_project.insurance_service.service;
 
-import com.main_project.insurance_service.dto.InsuranceClaimDTO;
-import com.main_project.insurance_service.dto.InsuranceClaimRequestDTO;
-import com.main_project.insurance_service.entity.InsuranceClaim;
-import com.main_project.insurance_service.entity.PatientInsurance;
+import com.main_project.insurance_service.dto.*;
+import com.main_project.insurance_service.entity.*;
+import com.main_project.insurance_service.exceptions.AppException;
+import com.main_project.insurance_service.exceptions.enums.ErrorCode;
 import com.main_project.insurance_service.repository.InsuranceClaimRepository;
 import com.main_project.insurance_service.repository.PatientInsuranceRepository;
 import com.main_project.insurance_service.util.EntityDTOMapper;
@@ -11,10 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +23,9 @@ public class InsuranceClaimService implements IInsuranceClaimService {
 
     private final InsuranceClaimRepository insuranceClaimRepository;
     private final PatientInsuranceRepository patientInsuranceRepository;
+    private final IBhytCatalogueService bhytCatalogueService;
+    private final IClaimItemService claimItemService;
+    private final IInsurancePolicyService insurancePolicyService;
     private final EntityDTOMapper mapper;
 
     @Override
@@ -98,6 +100,144 @@ public class InsuranceClaimService implements IInsuranceClaimService {
     public Integer getTotalApprovedAmountByPatientInsurance(UUID patientInsuranceId) {
         Integer total = insuranceClaimRepository.getTotalApprovedAmountByPatientInsurance(patientInsuranceId);
         return total != null ? total : 0;
+    }
+
+    public InvoiceDTO processInvoiceClaim(InvoiceCheckerRequest requestDTO) {
+        PatientInsurance patientInsurance = patientInsuranceRepository.findByPatientId(requestDTO.getPatientId())
+                .orElseThrow(() -> new AppException(ErrorCode.PATIENT_NOT_EXISTED));
+        
+        LocalDate currentDate = LocalDate.now();
+        if (patientInsurance.getExpiryDate().isBefore(currentDate)) {
+            throw new RuntimeException("BHYT đã hết hạn sử dụng. Ngày hết hạn: " + patientInsurance.getExpiryDate());
+        }
+        
+        if (!"ACTIVE".equals(patientInsurance.getStatus())) {
+            throw new RuntimeException("BHYT không trong trạng thái hoạt động");
+        }
+
+        Float bhytPayRatio = patientInsurance.getInsurancePolicy().getCoverageAmount() / 100.0f;
+        
+        Set<InvoiceItemDTO> processedItems = new HashSet<>();
+        List<ProcessedInvoiceItem> itemsForClaim = new ArrayList<>();
+        Integer totalInsurancePay = 0;
+        Integer totalPatientPay = 0;
+        
+        for (InvoiceItemCheckerRequest itemRequest : requestDTO.getItems()) {
+            ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
+            processedItems.add(processedItem.getInvoiceItem());
+            
+            if (processedItem.getInvoiceItem().getInsurancePayAmount() > 0) {
+                itemsForClaim.add(processedItem);
+            }
+            
+            totalInsurancePay += processedItem.getInvoiceItem().getInsurancePayAmount();
+            totalPatientPay += processedItem.getInvoiceItem().getPatientPayAmount();
+        }
+        
+        InsuranceClaim insuranceClaim = new InsuranceClaim();
+        insuranceClaim.setPatientInsurance(patientInsurance);
+        insuranceClaim.setStatus("PENDING");
+        insuranceClaim.setTotalClaimAmount(requestDTO.getTotalAmount());
+        insuranceClaim.setTotalInsurancePay(totalInsurancePay);
+        insuranceClaim.setPatientPayAmount(totalPatientPay);
+        insuranceClaim.setClaimDate(ZonedDateTime.now());
+        insuranceClaim.setNotes("Claim created from invoice checker request");
+        
+        InsuranceClaim savedClaim = insuranceClaimRepository.save(insuranceClaim);
+        
+        for (ProcessedInvoiceItem processedItem : itemsForClaim) {
+            ClaimItemRequestDTO claimItemRequest = createClaimItemRequestFromProcessedItem(processedItem, savedClaim.getId());
+            ClaimItemDTO createdClaimItem = claimItemService.createClaimItem(claimItemRequest);
+            
+            for (InvoiceItemDTO invoiceItem : processedItems) {
+                if (invoiceItem.getId().equals(processedItem.getInvoiceItem().getId())) {
+                    invoiceItem.setClaimItemId(createdClaimItem.getId());
+                    break;
+                }
+            }
+        }
+        
+        InvoiceDTO invoiceDTO = new InvoiceDTO();
+        invoiceDTO.setId(requestDTO.getId());
+        invoiceDTO.setReceptionistId(requestDTO.getReceptionistId());
+        invoiceDTO.setAppointmentId(requestDTO.getAppointmentId());
+        invoiceDTO.setInsuranceClaimId(savedClaim.getId());
+        invoiceDTO.setTotalAmount(requestDTO.getTotalAmount());
+        invoiceDTO.setCurrency(requestDTO.getCurrency());
+        invoiceDTO.setStatus(requestDTO.getStatus());
+        invoiceDTO.setInsuranceTotalPay(totalInsurancePay);
+        invoiceDTO.setPatientTotalPay(totalPatientPay);
+        invoiceDTO.setIssueAt(requestDTO.getIssueAt());
+        invoiceDTO.setPaidAt(requestDTO.getPaidAt());
+        invoiceDTO.setUpdateAt(requestDTO.getUpdateAt());
+        invoiceDTO.setItems(processedItems);
+        
+        return invoiceDTO;
+    }
+    
+    private ProcessedInvoiceItem processInvoiceItem(InvoiceItemCheckerRequest itemRequest, Float bhytPayRatio) {
+        InvoiceItemDTO itemDTO = new InvoiceItemDTO();
+        itemDTO.setId(itemRequest.getId());
+        itemDTO.setReferenceId(itemRequest.getReferenceId());
+        itemDTO.setServiceType(itemRequest.getServiceType());
+        itemDTO.setQuantity(itemRequest.getQuantity());
+        itemDTO.setDescription(itemRequest.getDescription());
+        itemDTO.setUnitPrice(itemRequest.getUnitPrice());
+        
+        Integer totalAmount = itemRequest.getQuantity() * itemRequest.getUnitPrice();
+        Integer insurancePayAmount = 0;
+        Integer patientPayAmount = totalAmount;
+        UUID bhytCatalogueId = null;
+        
+        try {
+            BhytCatalogueDTO bhytService = bhytCatalogueService.getBhytCatalogueByServiceCode(itemRequest.getReferenceId().toString());
+            
+            if (bhytService.getIsCovered() && bhytService.getMaxCoverageAmount() > 0) {
+                Integer maxCoverage = bhytService.getMaxCoverageAmount();
+                insurancePayAmount = Math.round(Math.min(maxCoverage, totalAmount * bhytPayRatio));
+                patientPayAmount = totalAmount - insurancePayAmount;
+                bhytCatalogueId = bhytService.getId();
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Service not found in BHYT catalogue: " + itemRequest.getReferenceId() + ". Patient pays full amount.");
+        }
+        
+        itemDTO.setInsurancePayAmount(insurancePayAmount);
+        itemDTO.setPatientPayAmount(patientPayAmount);
+        
+        return new ProcessedInvoiceItem(itemDTO, bhytCatalogueId);
+    }
+    
+    private static class ProcessedInvoiceItem {
+        private final InvoiceItemDTO invoiceItem;
+        private final UUID bhytCatalogueId;
+        
+        public ProcessedInvoiceItem(InvoiceItemDTO invoiceItem, UUID bhytCatalogueId) {
+            this.invoiceItem = invoiceItem;
+            this.bhytCatalogueId = bhytCatalogueId;
+        }
+        
+        public InvoiceItemDTO getInvoiceItem() { return invoiceItem; }
+        public UUID getBhytCatalogueId() { return bhytCatalogueId; }
+    }
+    
+    private ClaimItemRequestDTO createClaimItemRequestFromProcessedItem(ProcessedInvoiceItem processedItem, UUID claimId) {
+        InvoiceItemDTO invoiceItem = processedItem.getInvoiceItem();
+        Integer totalAmount = invoiceItem.getQuantity() * invoiceItem.getUnitPrice();
+        
+        ClaimItemRequestDTO request = new ClaimItemRequestDTO();
+        request.setQuantity(invoiceItem.getQuantity());
+        request.setUnitPrice(invoiceItem.getUnitPrice());
+        request.setTotalAmount(totalAmount);
+        
+        Float ratio = totalAmount > 0 ? (float) invoiceItem.getInsurancePayAmount() / totalAmount : 0f;
+        request.setInsurancePayRatio(ratio);
+        request.setInsurancePayAmount(invoiceItem.getInsurancePayAmount());
+        request.setPatientPayAmount(invoiceItem.getPatientPayAmount());
+        request.setInsuranceClaimId(claimId);
+        request.setBhytCatalogueId(processedItem.getBhytCatalogueId());
+        
+        return request;
     }
 
     @Override

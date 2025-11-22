@@ -2,6 +2,8 @@ package com.main_project.insurance_service.service;
 
 import com.main_project.insurance_service.dto.InsuranceClaimDTO;
 import com.main_project.insurance_service.dto.InsuranceClaimRequestDTO;
+import com.main_project.insurance_service.dto.InvoiceCheckerRequest;
+import com.main_project.insurance_service.dto.InvoiceDTO;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -29,6 +31,8 @@ public interface IInsuranceClaimService {
     Integer getTotalApprovedAmountByPatientInsurance(UUID patientInsuranceId);
     
     InsuranceClaimDTO createClaim(InsuranceClaimRequestDTO requestDTO);
+    
+    InvoiceDTO processInvoiceClaim(InvoiceCheckerRequest requestDTO);
     
     InsuranceClaimDTO updateClaim(UUID id, InsuranceClaimRequestDTO requestDTO);
     
