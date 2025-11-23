@@ -4,7 +4,6 @@ import com.main_project.labtest_service.dto.*;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
 import com.main_project.labtest_service.entity.MedicalAttachment;
-import com.main_project.labtest_service.entity.MedicalHistory;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
@@ -14,7 +13,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class EntityDTOMapper {
-    // 🔹 Entity → DTO
+    // ===================
+    // LabTest
+    // ===================
     public LabTestDTO toLabTestDTO(LabTest entity) {
         if (entity == null) return null;
 
@@ -22,20 +23,17 @@ public class EntityDTOMapper {
         dto.setId(entity.getId());
         dto.setLabTechnicianId(entity.getLabTechnicianId());
         dto.setDoctorId(entity.getDoctorId());
+        dto.setMedicalRecordId(entity.getMedicalRecordId());
         dto.setPrice(entity.getPrice());
         dto.setInstructions(entity.getInstructions());
         dto.setStatus(entity.getStatus());
-        dto.setResultDate(entity.getResultDate() != null ? entity.getResultDate() : null);
+        dto.setResultDate(entity.getResultDate());
         dto.setAbnormalFlag(entity.getAbnormalFlag());
         dto.setUnits(entity.getUnits());
         dto.setStructureJson(entity.getStructureJson());
         dto.setReferenceRange(entity.getReferenceRange());
-        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt(): null);
-        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt() : null);
-
-        if (entity.getMedicalHistory() != null) {
-            dto.setMedicalHistoryId(entity.getMedicalHistory().getId());
-        }
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
 
         if (entity.getLabTestType() != null) {
             dto.setLabTestTypeId(entity.getLabTestType().getId());
@@ -53,13 +51,14 @@ public class EntityDTOMapper {
         return dto;
     }
 
-    // 🔹 RequestDTO → Entity
-    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, MedicalHistory medicalHistory, LabTestType labTestType) {
+    // RequestDTO -> Entity
+    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, LabTestType labTestType) {
         if (requestDTO == null) return null;
 
         LabTest entity = new LabTest();
         entity.setLabTechnicianId(requestDTO.getLabTechnicianId());
         entity.setDoctorId(requestDTO.getDoctorId());
+        entity.setMedicalRecordId(requestDTO.getMedicalRecordId());
         entity.setPrice(requestDTO.getPrice());
         entity.setInstructions(requestDTO.getInstructions());
         entity.setStatus(requestDTO.getStatus());
@@ -67,10 +66,9 @@ public class EntityDTOMapper {
         entity.setUnits(requestDTO.getUnits());
         entity.setStructureJson(requestDTO.getStructureJson());
         entity.setReferenceRange(requestDTO.getReferenceRange());
-        entity.setMedicalHistory(medicalHistory);
         entity.setLabTestType(labTestType);
-        entity.setCreatedAt(java.time.ZonedDateTime.now());
-        entity.setUpdatedAt(java.time.ZonedDateTime.now());
+        entity.setCreatedAt(ZonedDateTime.now());
+        entity.setUpdatedAt(ZonedDateTime.now());
 
         if (requestDTO.getResultDate() != null) {
             entity.setResultDate(requestDTO.getResultDate());
@@ -79,6 +77,9 @@ public class EntityDTOMapper {
         return entity;
     }
 
+    // ===================
+    // LabTestType
+    // ===================
     public LabTestTypeDTO toLabTestTypeDTO(LabTestType entity) {
         if (entity == null) return null;
 
@@ -106,6 +107,9 @@ public class EntityDTOMapper {
         if (dto.getDescription() != null) entity.setDescription(dto.getDescription());
     }
 
+    // ===================
+    // MedicalAttachment
+    // ===================
     public MedicalAttachmentDTO toMedicalAttachmentDTO(MedicalAttachment entity) {
         if (entity == null) return null;
 
@@ -119,7 +123,7 @@ public class EntityDTOMapper {
                 .build();
     }
 
-    public MedicalAttachment toEntity(MedicalAttachmentRequestDTO dto, LabTest labTest) {
+    public MedicalAttachment toMedicalAttachmentEntity(MedicalAttachmentRequestDTO dto, LabTest labTest) {
         if (dto == null) return null;
 
         return MedicalAttachment.builder()
@@ -131,7 +135,7 @@ public class EntityDTOMapper {
                 .build();
     }
 
-    public void updateEntity(MedicalAttachment entity, MedicalAttachmentRequestDTO dto, LabTest labTest) {
+    public void updateMedicalAttachmentEntity(MedicalAttachment entity, MedicalAttachmentRequestDTO dto, LabTest labTest) {
         if (dto == null || entity == null) return;
 
         if (dto.getFilePath() != null) entity.setFilePath(dto.getFilePath());
@@ -140,36 +144,4 @@ public class EntityDTOMapper {
         entity.setUpdatedAt(ZonedDateTime.now());
     }
 
-    public MedicalHistoryDTO toMedicalHistoryDTO(MedicalHistory entity) {
-        if (entity == null) return null;
-
-        MedicalHistoryDTO dto = new MedicalHistoryDTO();
-        dto.setId(entity.getId());
-        dto.setAppointmentId(entity.getAppointmentId());
-        dto.setSymptoms(entity.getSymptoms());
-        dto.setTreatment(entity.getTreatment());
-        dto.setDiagnosis(entity.getDiagnosis());
-        dto.setDisease(entity.getDisease());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-
-        if (entity.getLabTests() != null)
-            dto.setLabTestIds(entity.getLabTests().stream()
-                    .map(l -> l.getId())
-                    .collect(Collectors.toList()));
-
-        return dto;
-    }
-
-    public MedicalHistory toMedicalHistoryEntity(MedicalHistoryRequestDTO requestDTO) {
-        if (requestDTO == null) return null;
-
-        return MedicalHistory.builder()
-                .appointmentId(requestDTO.getAppointmentId())
-                .symptoms(requestDTO.getSymptoms())
-                .treatment(requestDTO.getTreatment())
-                .diagnosis(requestDTO.getDiagnosis())
-                .disease(requestDTO.getDisease())
-                .build();
-    }
 }

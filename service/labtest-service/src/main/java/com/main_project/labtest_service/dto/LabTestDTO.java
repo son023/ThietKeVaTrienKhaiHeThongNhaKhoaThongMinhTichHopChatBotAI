@@ -1,8 +1,6 @@
 package com.main_project.labtest_service.dto;
 
 import lombok.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -15,6 +13,7 @@ public class LabTestDTO {
     private UUID id;
     private UUID labTechnicianId;
     private UUID doctorId;
+    private UUID medicalRecordId;
     private int price;
     private String instructions;
     private String status;
@@ -26,8 +25,6 @@ public class LabTestDTO {
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 
-    private UUID medicalHistoryId;// để dễ mapping
-    private MedicalHistoryDTO medicalHistory;
     private UUID labTestTypeId;
     private LabTestTypeDTO labTestType;
     private List<UUID> medicalAttachmentIds;

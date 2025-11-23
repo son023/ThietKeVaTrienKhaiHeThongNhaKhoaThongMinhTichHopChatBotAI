@@ -4,10 +4,8 @@ import com.main_project.labtest_service.dto.LabTestDTO;
 import com.main_project.labtest_service.dto.LabTestRequestDTO;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
-import com.main_project.labtest_service.entity.MedicalHistory;
 import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
-import com.main_project.labtest_service.repository.MedicalHistoryRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,22 +15,17 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class LabTestService implements ILabTest{
     private final LabTestRepository labTestRepository;
-    private final MedicalHistoryRepository medicalHistoryRepository;
     private final LabTestTypeRepository labTestTypeRepository;
     private final EntityDTOMapper mapper;
 
     @Override
     public LabTestDTO createLabTest(LabTestRequestDTO requestDTO) {
-        MedicalHistory mh = medicalHistoryRepository.findById(requestDTO.getMedicalHistoryId())
-                .orElseThrow(() -> new RuntimeException("MedicalHistory not found"));
-
         LabTestType type = labTestTypeRepository.findById(requestDTO.getLabTestTypeId())
                 .orElseThrow(() -> new RuntimeException("LabTestType not found"));
 
-        LabTest entity = mapper.toLabTestEntity(requestDTO, mh, type);
+        LabTest entity = mapper.toLabTestEntity(requestDTO, type);
         labTestRepository.save(entity);
         return mapper.toLabTestDTO(entity);
     }
@@ -44,6 +37,7 @@ public class LabTestService implements ILabTest{
 
         existing.setDoctorId(requestDTO.getDoctorId());
         existing.setLabTechnicianId(requestDTO.getLabTechnicianId());
+        existing.setMedicalRecordId(requestDTO.getMedicalRecordId());
         existing.setPrice(requestDTO.getPrice());
         existing.setInstructions(requestDTO.getInstructions());
         existing.setStatus(requestDTO.getStatus());
@@ -89,6 +83,12 @@ public class LabTestService implements ILabTest{
     @Override
     public List<LabTestDTO> getLabTestsByStatus(String status) {
         return labTestRepository.findByStatus(status)
+                .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LabTestDTO> getLabTestsByMedicalRecordId(UUID medicalRecordId) {
+        return labTestRepository.findByMedicalRecordId(medicalRecordId)
                 .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
     }
 }

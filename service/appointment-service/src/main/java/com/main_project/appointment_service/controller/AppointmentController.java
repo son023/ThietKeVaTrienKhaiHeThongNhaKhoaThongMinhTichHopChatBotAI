@@ -3,7 +3,6 @@ package com.main_project.appointment_service.controller;
 import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
 import com.main_project.appointment_service.dto.HoldSlotRequestDTO;
-import com.main_project.appointment_service.dto.WorkScheduleDTO;
 import com.main_project.appointment_service.enums.AppointmentStatus;
 import com.main_project.appointment_service.service.AppointmentService;
 
