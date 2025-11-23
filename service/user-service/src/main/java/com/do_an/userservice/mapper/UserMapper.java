@@ -1,8 +1,8 @@
 package com.do_an.userservice.mapper;
 
 import com.do_an.userservice.dto.response.UserDTO;
-import com.do_an.userservice.entity.Role;
 import com.do_an.userservice.entity.User;
+import com.do_an.userservice.entity.UserRole;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -16,9 +16,9 @@ public interface UserMapper {
 
 
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRolesToStringSet")
+    @Mapping(source = "createAt", target = "createdAt")
+    @Mapping(source = "userRoles", target = "roles", qualifiedByName = "mapUserRolesToStringSet")
     @Mapping(source = ".", target = "primaryRole", qualifiedByName = "extractPrimaryRole")
-    @Mapping(source = ".", target = "profileId", qualifiedByName = "extractProfileId")
     UserDTO toDto(User user);
 
 
@@ -26,16 +26,16 @@ public interface UserMapper {
 
     /**
      * Hàm helper tùy chỉnh:
-     * Chuyển Set<UserRole> (Entity) -> Set<String> (Tên Role)
+     * Chuyển List<UserRole> (Entity) -> Set<String> (Tên Role)
      */
-    @Named("mapRolesToStringSet")
-    default Set<String> mapRolesToStringSet(List<Role> roles) {
-        if (roles == null || roles.isEmpty()) {
+    @Named("mapUserRolesToStringSet")
+    default Set<String> mapUserRolesToStringSet(List<UserRole> userRoles) {
+        if (userRoles == null || userRoles.isEmpty()) {
             return Set.of(); // Trả về Set rỗng
         }
 
-        return roles.stream()
-                .map(userRole -> userRole.getRoleName())
+        return userRoles.stream()
+                .map(userRole -> userRole.getRole().getRoleName())
                 .collect(Collectors.toSet());
     }
     
@@ -45,12 +45,12 @@ public interface UserMapper {
      */
     @Named("extractPrimaryRole")
     default String extractPrimaryRole(User user) {
-        if (user == null || user.getRoles() == null || user.getRoles().isEmpty()) {
+        if (user == null || user.getUserRoles() == null || user.getUserRoles().isEmpty()) {
             return null;
         }
         
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getRoleName)
+        Set<String> roleNames = user.getUserRoles().stream()
+                .map(userRole -> userRole.getRole().getRoleName())
                 .collect(Collectors.toSet());
         
         // Ưu tiên theo thứ tự
@@ -63,37 +63,5 @@ public interface UserMapper {
         
         // Nếu không có role nào khớp, lấy role đầu tiên
         return roleNames.iterator().next();
-    }
-    
-    /**
-     * Trích xuất profile ID dựa trên vai trò chính
-     */
-    @Named("extractProfileId")
-    default java.util.UUID extractProfileId(User user) {
-        if (user == null) {
-            return null;
-        }
-        
-        String primaryRole = extractPrimaryRole(user);
-        if (primaryRole == null) {
-            return null;
-        }
-        
-        switch (primaryRole) {
-            case "DOCTOR":
-                return user.getDoctor() != null ? user.getDoctor().getId() : null;
-            case "ADMIN":
-                return user.getAdmin() != null ? user.getAdmin().getId() : null;
-            case "PHARMACIST":
-                return user.getPharmacist() != null ? user.getPharmacist().getId() : null;
-            case "LAB_TECHNICIAN":
-                return user.getLabTechnician() != null ? user.getLabTechnician().getId() : null;
-            case "RECEPTIONIST":
-                return user.getReceptionist() != null ? user.getReceptionist().getId() : null;
-            case "PATIENT":
-                return user.getPatient() != null ? user.getPatient().getId() : null;
-            default:
-                return null;
-        }
     }
 }

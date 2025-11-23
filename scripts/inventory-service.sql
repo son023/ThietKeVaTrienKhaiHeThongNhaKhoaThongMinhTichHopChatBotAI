@@ -7,6 +7,12 @@ CREATE TABLE medicine (
     sale_price INT
 );
 
+CREATE TABLE pharmacist (
+    user_id UUID PRIMARY KEY,
+    degree VARCHAR(255),
+    certificate VARCHAR(255)
+);
+
 -- 2. Bảng inventory_lot (Lô thuốc trong kho)
 CREATE TABLE inventory_lot (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -27,14 +33,13 @@ CREATE TABLE stock_ledger (
     inventory_lot_id UUID REFERENCES inventory_lot(id)
 );
 
--- 4. Bảng dispense_order (Đơn cấp phát)
 CREATE TABLE dispense_order (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pharmacist_id INT,
+    pharmacist_id UUID REFERENCES pharmacist(user_id),
     prescription VARCHAR(255),
     status VARCHAR(255),
-    medical_history_id VARCHAR(50), -- Thêm mới theo hình
-    doctor_id VARCHAR(50),          -- Thêm mới theo hình
+    medical_history_id VARCHAR(50),
+    doctor_id VARCHAR(50),
     create_at TIMESTAMPTZ DEFAULT now(),
     update_at TIMESTAMPTZ DEFAULT now()
 );
@@ -51,6 +56,10 @@ CREATE TABLE dispense_item (
     inventory_lot_id UUID REFERENCES inventory_lot(id),
     dispense_order_id UUID REFERENCES dispense_order(id)
 );
+INSERT INTO pharmacist (user_id, degree, certificate)
+VALUES
+('4c84022a-1111-4001-8001-000000000004', 'Cử nhân Dược', 'Chứng chỉ hành nghề Dược');
+
 -- 1. Thêm thuốc
 INSERT INTO medicine (id, name, unit, description, sale_price)
 VALUES
@@ -71,7 +80,7 @@ VALUES
 -- Cập nhật: Thêm medical_history_id và doctor_id
 INSERT INTO dispense_order (id, pharmacist_id, prescription, status, medical_history_id, doctor_id)
 VALUES
-('cccc3333-cccc-4ccc-8ccc-333333333333', 12, 'PRESCRIPTION-XYZ-789', 'PENDING', 'HIST-001', 'DOC-007');
+('cccc3333-cccc-4ccc-8ccc-333333333333', '4c84022a-1111-4001-8001-000000000004', 'PRESCRIPTION-XYZ-789', 'PENDING', 'HIST-001', 'DOC-007');
 
 -- 5. Thêm chi tiết cấp phát
 -- Cập nhật: Thêm dosage, frequency, duration, usage_instructions

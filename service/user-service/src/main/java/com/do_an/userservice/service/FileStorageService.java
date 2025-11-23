@@ -1,6 +1,7 @@
 package com.do_an.userservice.service;
 
-import com.do_an.userservice.exception.FileUploadException;
+import com.do_an.userservice.exceptions.AppException;
+import com.do_an.userservice.exceptions.enums.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -29,7 +30,7 @@ public class FileStorageService {
             Files.createDirectories(this.fileStorageLocation);
             log.info("Created upload directory: " + this.fileStorageLocation.toString());
         } catch (Exception ex) {
-            throw new FileUploadException("Could not create the upload directory!", ex);
+            throw new AppException(ErrorCode.UNAUTHORIZATION);
         }
     }
 

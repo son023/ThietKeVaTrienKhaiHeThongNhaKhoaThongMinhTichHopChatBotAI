@@ -8,26 +8,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    
-    Optional<User> findByUsername(String username);
+
+    Optional<User> findByPhone(String phone);
     
     Optional<User> findByEmail(String email);
-    
-    // Tìm user theo username hoặc email
-    Optional<User> findByUsernameOrEmail(String username, String email);
     
     // Tìm user theo trạng thái active
     List<User> findAllByIsActive(boolean isActive);
     
-    // Tìm user theo fullName (chứa chuỗi)
-    List<User> findAllByFullNameContainingIgnoreCase(String fullName);
+    // Tìm user theo fullname (chứa chuỗi)
+    List<User> findAllByFullnameContainingIgnoreCase(String fullname);
     
     // Tìm user theo email (chứa chuỗi)
     List<User> findAllByEmailContainingIgnoreCase(String email);
     
     // Sắp xếp theo thời gian tạo giảm dần
-    List<User> findAllByOrderByCreatedAtDesc();
+    List<User> findAllByOrderByCreateAtDesc();
     
     // Sắp xếp theo thời gian tạo tăng dần
-    List<User> findAllByOrderByCreatedAtAsc();
+    List<User> findAllByOrderByCreateAtAsc();
 }

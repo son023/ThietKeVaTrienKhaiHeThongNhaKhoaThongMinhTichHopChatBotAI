@@ -12,19 +12,15 @@ import java.util.UUID;
 @Getter
 @Setter
 public class UserDTO {
-    private UUID id; // ID của User
-    private String username;
+    private UUID id;
     private String email;
-    private String fullName;
+    private String fullname;
     private String phone;
-    private boolean isActive; // Rất quan trọng cho Admin
+    private boolean isActive;
     private String imageUrl;
-    private LocalDateTime createdAt; // Hữu ích để sắp xếp
+    private LocalDateTime createdAt;
 
-    // Admin chắc chắn muốn biết user này có những quyền gì
     private Set<String> roles;
-    
-    // Thông tin cho JWT authentication
+
     private String primaryRole;
-    private UUID profileId;
 }

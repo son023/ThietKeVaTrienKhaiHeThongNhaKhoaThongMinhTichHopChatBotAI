@@ -19,7 +19,6 @@ class AuthController {
       }
 
       const createUserRequest: CreateUserRequest = {
-        username: formData.username,
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
@@ -57,7 +56,7 @@ class AuthController {
   async login(formData: LoginFormData): Promise<AuthResponse> {
     try {
       const loginRequest: LoginRequest = {
-        username: formData.username,
+        phone: formData.phone,
         password: formData.password
       };
 

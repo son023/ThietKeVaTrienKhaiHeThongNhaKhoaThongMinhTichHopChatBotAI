@@ -20,7 +20,9 @@ public class DispenseOrder {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private Integer pharmacistId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacist_id")
+    private Pharmacist pharmacist;
 
     @Column(length = 255)
     private String prescription;

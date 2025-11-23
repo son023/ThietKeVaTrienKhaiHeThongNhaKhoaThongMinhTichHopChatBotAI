@@ -17,5 +17,5 @@ public class UpdateUserRequestDTO {
     
     private Boolean isActive;
     
-    private List<String> roleNames; // Cập nhật roles (nếu có)
+    private List<String> roleNames;
 }

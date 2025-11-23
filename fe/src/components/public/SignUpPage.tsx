@@ -13,7 +13,6 @@ interface SignUpPageProps {
 
 export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
   const [signupData, setSignupData] = useState({
-    username: '',
     fullName: '',
     phone: '',
     email: '',
@@ -44,7 +43,7 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
 
     try {
       const formData: RegisterFormData = {
-        username: signupData.username,
+
         email: signupData.email,
         password: signupData.password,
         confirmPassword: signupData.confirmPassword,
@@ -106,17 +105,16 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
 
           {/* Signup Form */}
           <form onSubmit={handleSignup} className="space-y-[20px]">
-            <div>
+  <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Tên đăng nhập <span className="text-red-500">*</span>
+                Số điện thoại
               </label>
               <Input
-                type="text"
-                value={signupData.username}
-                onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
-                placeholder="Nhập tên đăng nhập (không dấu, không khoảng trống)"
+                type="tel"
+                value={signupData.phone}
+                onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
+                placeholder="Nhập số điện thoại"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
-                required
                 disabled={isLoading}
               />
             </div>
@@ -136,19 +134,7 @@ export function SignUpPage({ onBack, onNavigateToLogin }: SignUpPageProps) {
               />
             </div>
 
-            <div>
-              <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Số điện thoại
-              </label>
-              <Input
-                type="tel"
-                value={signupData.phone}
-                onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
-                placeholder="Nhập số điện thoại"
-                className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
-                disabled={isLoading}
-              />
-            </div>
+
 
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">

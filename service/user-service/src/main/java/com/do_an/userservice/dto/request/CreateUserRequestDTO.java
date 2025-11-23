@@ -8,8 +8,6 @@ import java.util.List;
 
 @Data
 public class CreateUserRequestDTO {
-    @NotEmpty
-    private String username;
     
     @NotEmpty
     @Email
@@ -20,12 +18,12 @@ public class CreateUserRequestDTO {
     
     @NotEmpty
     private String fullName;
-    
+    @NotEmpty
     private String phone;
     
     private String imageUrl;
     
     private boolean isActive = true;
     
-    private List<String> roleNames; // Danh sách tên role (ví dụ: ["PATIENT", "DOCTOR"])
+    private List<String> roleNames;
 }

@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseOrderResponse {
     private UUID id;
-    private Integer pharmacistId;
+    private UUID pharmacistId;
     private String prescription;
     private String status;
     private String medicalHistoryId;
