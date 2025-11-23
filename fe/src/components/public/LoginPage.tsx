@@ -14,7 +14,7 @@ interface LoginPageProps {
 
 export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginPageProps) {
   const [loginData, setLoginData] = useState({ 
-    username: '', 
+    phone: '',
     password: '', 
     rememberMe: false 
   });
@@ -26,7 +26,7 @@ export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginP
 
     try {
       const formData: LoginFormData = {
-        username: loginData.username,
+        phone: loginData.phone,
         password: loginData.password,
         rememberMe: loginData.rememberMe
       };
@@ -86,13 +86,13 @@ export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginP
           <form onSubmit={handleLogin} className="space-y-[24px]">
             <div>
               <label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] text-[14px] mb-[8px] block">
-                Tên đăng nhập
+                Số điện thoại
               </label>
               <Input
                 type="text"
-                value={loginData.username}
-                onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                placeholder="Nhập tên đăng nhập"
+                value={loginData.phone}
+                onChange={(e) => setLoginData({ ...loginData, phone: e.target.value })}
+                placeholder="Nhập số điện thoại"
                 className="h-[52px] rounded-[12px] border-[#ebf6fc] focus:border-[#3fb5ff] focus:ring-[#3fb5ff]"
                 required
                 disabled={isLoading}

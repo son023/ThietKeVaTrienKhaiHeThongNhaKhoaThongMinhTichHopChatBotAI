@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,53 +20,31 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(unique = true)
-    private String username;
-
     private String password; // auth-service sẽ gửi hash qua
 
     private String email;
 
     private String phone;
 
-    private String fullName;
+    @Column(name = "full_name")
+    private String fullname;
 
+    @Column(name = "is_active")
     private boolean isActive;
 
+    @Column(name = "image_url")
     private String imageUrl;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    @Column(name = "update_at")
+    private LocalDateTime updateAt;
 
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Patient patient;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Doctor doctor;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Pharmacist pharmacist;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private LabTechnician labTechnician;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Receptionist receptionist;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Admin admin;
-
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "role_id", nullable = false))
-
-    private List<Role> roles;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<UserRole> userRoles;
 
 }
 

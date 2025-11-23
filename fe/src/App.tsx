@@ -33,7 +33,7 @@ type Page =
 
 interface PublicAppProps {
   onLogin?: (
-    email: string,
+    phone: string,
     role:
       | "doctor"
       | "admin"
@@ -130,9 +130,9 @@ function PublicApp({ onLogin }: PublicAppProps) {
 
     // Call parent login handler if provided
     if (onLogin) {
-      // Get user from localStorage to get email
+      // Get user from localStorage to get phone
       const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      onLogin(currentUser.email || currentUser.username, role);
+      onLogin(currentUser.phone, role);
     }
   };
 
@@ -343,7 +343,7 @@ export default function App() {
   const [userRole, setUserRole] = useState<
     "doctor" | "admin" | "pharmacist" | "receptionist" | "patient" | "lab-technician" | null
   >(null);
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userPhone, setUserPhone] = useState<string>("");
 
   useEffect(() => {
     const currentUser = authController.getCurrentUser();
@@ -378,17 +378,17 @@ export default function App() {
           break;
       }
 
-      setUserEmail(currentUser.email || currentUser.username);
+      setUserPhone(currentUser.phone );
       setUserRole(role);
       setIsAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (
-    email: string,
+    phone: string,
     role: "doctor" | "admin" | "pharmacist" | "receptionist" | "patient" | "lab-technician"
   ) => {
-    setUserEmail(email);
+    setUserPhone(phone);
     setUserRole(role);
     setIsAuthenticated(true);
   };
@@ -398,7 +398,7 @@ export default function App() {
       await authController.logout();
       setIsAuthenticated(false);
       setUserRole(null);
-      setUserEmail("");
+      setUserPhone("");
       toast.success("Đăng xuất thành công!");
     } catch (error) {
       toast.error("Có lỗi khi đăng xuất");
@@ -410,7 +410,7 @@ export default function App() {
       await authController.logout();
       setIsAuthenticated(false);
       setUserRole(null);
-      setUserEmail("");
+      setUserPhone("");
     } catch (error) {
       console.error("Logout error:", error);
     }

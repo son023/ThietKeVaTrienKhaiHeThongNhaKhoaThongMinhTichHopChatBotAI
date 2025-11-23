@@ -9,7 +9,6 @@ export interface UserDTO {
   createdAt: string;
   roles: string[];
   primaryRole: string;
-  profileId?: string;
 }
 
 export interface CreateUserRequest {
@@ -52,7 +51,6 @@ export enum UserRole {
 
 // Form data types
 export interface RegisterFormData {
-  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -62,7 +60,7 @@ export interface RegisterFormData {
 }
 
 export interface LoginFormData {
-  username: string;
+  phone: string;
   password: string;
   rememberMe?: boolean;
 }

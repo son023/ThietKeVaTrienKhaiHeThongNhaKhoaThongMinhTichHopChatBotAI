@@ -1,8 +1,10 @@
 package com.do_an.userservice.controller;
 
 import com.do_an.userservice.dto.request.CreateUserRequestDTO;
+import com.do_an.userservice.dto.request.LoginRequest;
 import com.do_an.userservice.dto.request.UpdateUserRequestDTO;
 import com.do_an.userservice.dto.response.UserDTO;
+import com.do_an.userservice.service.AuthService;
 import com.do_an.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.Map;
 public class UserController {
     
     private final UserService userService;
+    private final AuthService authService;
 
     @Operation(
             summary = "Tạo User mới",
@@ -38,7 +40,7 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tạo user thành công",
                     content = @Content(schema = @Schema(implementation = UserDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Username hoặc Email đã tồn tại"),
+            @ApiResponse(responseCode = "400", description = "Số điện thoaị hoặc Email đã tồn tại"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     //@SecurityRequirement(name = "bearerAuth")
@@ -110,24 +112,6 @@ public class UserController {
     }
 
     @Operation(
-            summary = "Lấy User theo Username",
-            description = "Lấy thông tin chi tiết của một user theo Username"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tìm thấy user"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy user")
-    })
-    //@SecurityRequirement(name = "bearerAuth")
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserDTO> getUserByUsername(
-            @Parameter(description = "Username của User", required = true)
-            @PathVariable String username) {
-        log.info("Nhận request lấy user theo username: {}", username);
-        UserDTO user = userService.getUserByUsername(username);
-        return ResponseEntity.ok(user);
-    }
-
-    @Operation(
             summary = "Lấy danh sách Users với filter",
             description = "Lấy danh sách users với các filter: isActive, fullName, email"
     )
@@ -148,30 +132,9 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @Operation(
-            summary = "Xác thực thông tin đăng nhập",
-            description = "Endpoint nội bộ cho Auth Service để xác thực username/password. Trả về thông tin user đầy đủ."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Xác thực thành công",
-                    content = @Content(schema = @Schema(implementation = UserDTO.class))),
-            @ApiResponse(responseCode = "401", description = "Thông tin đăng nhập không đúng"),
-            @ApiResponse(responseCode = "403", description = "Tài khoản đã bị vô hiệu hóa")
-    })
-    @PostMapping("/valid")
-    public ResponseEntity<UserDTO> validateCredentials(
-            @Parameter(description = "Thông tin đăng nhập (username và password)", required = true)
-            @RequestBody Map<String, String> credentials) {
-        log.info("Nhận request xác thực thông tin đăng nhập");
-        
-        String username = credentials.get("username");
-        String password = credentials.get("password");
-        
-        if (username == null || password == null) {
-            throw new IllegalArgumentException("Username và password không được để trống");
-        }
-        
-        UserDTO user = userService.validateCredentials(username, password);
-        return ResponseEntity.ok(user);
+    @PostMapping("/login")
+    public ResponseEntity<UserDTO> login(@RequestBody LoginRequest credentials) {
+        return authService.login(credentials);
     }
+
 }

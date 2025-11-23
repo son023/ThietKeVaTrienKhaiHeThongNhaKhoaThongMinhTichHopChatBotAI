@@ -3,11 +3,10 @@ export const API_CONFIG = {
   USER_SERVICE_BASE_URL: 'http://localhost:8080',
 
   ENDPOINTS: {
-    // Auth Service
-    LOGIN: '/auth/login',
     
     // User Service  
     REGISTER: '/user-service/users',
+    LOGIN: '/user-service/users/login',
     GET_USER_BY_ID: '/user-service/users',
     GET_USER_BY_USERNAME: '/user-service/users/username',
     VALIDATE_CREDENTIALS: '/user-service/users/valid',
