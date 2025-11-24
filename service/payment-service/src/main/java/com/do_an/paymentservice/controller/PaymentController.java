@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -66,7 +67,7 @@ public class PaymentController {
     @GetMapping("/status")
     public ResponseEntity<PaymentResponseDTO> getPaymentStatus(
             @Parameter(description = "ID của Invoice", required = true)
-            @RequestParam String invoiceId) {
+            @RequestParam UUID invoiceId) {
 
         log.info("Kiểm tra trạng thái thanh toán cho Invoice: {}", invoiceId);
         PaymentResponseDTO response = paymentService.getPaymentStatus(invoiceId);
@@ -86,7 +87,7 @@ public class PaymentController {
     @GetMapping("/{paymentId}")
     public ResponseEntity<PaymentResponseDTO> getPaymentById(
             @Parameter(description = "ID của Payment", required = true)
-            @PathVariable String paymentId) {
+            @PathVariable UUID paymentId) {
 
         log.info("Lấy chi tiết Payment: {}", paymentId);
         PaymentResponseDTO response = paymentService.getPaymentById(paymentId);
@@ -107,7 +108,7 @@ public class PaymentController {
     @PutMapping("/{paymentId}")
     public ResponseEntity<PaymentResponseDTO> updatePayment(
             @Parameter(description = "ID của Payment", required = true)
-            @PathVariable String paymentId,
+            @PathVariable UUID paymentId,
             @Parameter(description = "Thông tin cần cập nhật", required = true)
             @Valid @RequestBody UpdatePaymentRequestDTO request) {
         
@@ -129,7 +130,7 @@ public class PaymentController {
     @DeleteMapping("/{paymentId}")
     public ResponseEntity<Void> deletePayment(
             @Parameter(description = "ID của Payment", required = true)
-            @PathVariable String paymentId) {
+            @PathVariable UUID paymentId) {
         
         log.info("Xóa Payment: {}", paymentId);
         paymentService.deletePayment(paymentId);
@@ -147,7 +148,7 @@ public class PaymentController {
     @GetMapping
     public ResponseEntity<List<PaymentResponseDTO>> getAllPayments(
             @Parameter(description = "ID của Invoice (optional)")
-            @RequestParam(required = false) String invoiceId,
+            @RequestParam(required = false) UUID invoiceId,
             @Parameter(description = "Trạng thái payment: PENDING, SUCCESSFUL, FAILED, CANCELLED, REFUNDED (optional)")
             @RequestParam(required = false) PaymentStatus status,
             @Parameter(description = "Phương thức thanh toán: CASH, BANK_TRANSFER (optional)")
@@ -172,7 +173,7 @@ public class PaymentController {
     @GetMapping("/invoice/{invoiceId}")
     public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByInvoiceId(
             @Parameter(description = "ID của Invoice", required = true)
-            @PathVariable String invoiceId) {
+            @PathVariable UUID invoiceId) {
         
         log.info("Lấy tất cả payments cho Invoice: {}", invoiceId);
         List<PaymentResponseDTO> response = paymentService.getPaymentsByInvoiceId(invoiceId);

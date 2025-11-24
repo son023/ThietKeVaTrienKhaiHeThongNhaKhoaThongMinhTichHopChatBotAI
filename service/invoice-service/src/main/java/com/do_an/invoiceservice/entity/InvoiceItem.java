@@ -16,8 +16,7 @@ import java.util.UUID;
 @Setter
 public class InvoiceItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id; // varchar(50)
+    private UUID id;
 
     private UUID referenceId;
     private String serviceType;
@@ -29,7 +28,6 @@ public class InvoiceItem {
     private Integer patientPayAmount;
 
     private UUID claimItemId;
-
 
     // Quan hệ Nhiều-1
     @ManyToOne(fetch = FetchType.LAZY)

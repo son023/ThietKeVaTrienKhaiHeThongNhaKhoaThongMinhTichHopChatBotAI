@@ -17,16 +17,19 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseOrder {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private Integer pharmacistId;
+    private UUID pharmacistId;
 
-    @Column(length = 255)
-    private String prescription;
+
+    private UUID prescription;
 
     @Column(length = 255)
     private String status;
+
+    private UUID medicalHistoryid;
+    private UUID doctorId;
 
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
@@ -35,6 +38,7 @@ public class DispenseOrder {
     @UpdateTimestamp
     @Column(name = "update_at")
     private ZonedDateTime updateAt;
+
 }
 
 

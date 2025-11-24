@@ -14,12 +14,17 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private Integer quantity;
 
     private Integer priceAtDispense;
+
+    private String dosage;
+    private String frequency;
+    private String duration;
+    private String usageInstructions;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_lot_id")

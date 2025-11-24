@@ -37,6 +37,12 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'vn.payos:payos-java:1.0.3'
 
+    // Thêm Axon Framework
+    implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
+    
+    // Thêm dependency vào common module
+    implementation project(':service:common')
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'

@@ -18,14 +18,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
-    private Double totalAmount;
+    private Integer totalAmount;
 
     @Column(nullable = false)
-    private String invoiceId; // ID của hóa đơn (từ invoice-service)
+    private UUID invoiceId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

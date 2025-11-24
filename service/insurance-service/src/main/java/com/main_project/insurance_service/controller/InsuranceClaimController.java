@@ -1,7 +1,9 @@
 package com.main_project.insurance_service.controller;
 
+import com.do_an.common.model.InvoiceCheckerRequest;
 import com.main_project.insurance_service.dto.InsuranceClaimDTO;
 import com.main_project.insurance_service.dto.InsuranceClaimRequestDTO;
+import com.main_project.insurance_service.dto.InvoiceDTO;
 import com.main_project.insurance_service.service.IInsuranceClaimService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -161,6 +163,15 @@ public class InsuranceClaimController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping("/validate-bhyt")
+    @Operation(summary = "Validate invoice BHYT", description = "Validate invoice BHYT")
+    public ResponseEntity<InvoiceDTO> validateBHYT(
+            @Valid @RequestBody InvoiceCheckerRequest requestDTO) {
+        InvoiceDTO invoiceResponse = insuranceClaimService.processInvoiceClaim(requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(invoiceResponse);
+
     }
 }
 

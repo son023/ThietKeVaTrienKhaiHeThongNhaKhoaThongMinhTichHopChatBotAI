@@ -12,8 +12,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseOrderResponse {
     private UUID id;
-    private Integer pharmacistId;
-    private String prescription;
+    private UUID pharmacistId;
+    private UUID prescription;
     private String status;
     private ZonedDateTime createAt;
     private ZonedDateTime updateAt;

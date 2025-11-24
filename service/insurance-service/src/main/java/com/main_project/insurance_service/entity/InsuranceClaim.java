@@ -22,14 +22,17 @@ public class InsuranceClaim {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "claim_amount")
-    private Integer claimAmount;
-
-    @Column(name = "approved_amount")
-    private Integer approvedAmount;
-
     @Column(name = "status")
     private String status;
+
+    @Column(name = "patient_pay_amount")
+    private Integer patientPayAmount;
+
+    @Column(name = "total_claim_amount")
+    private Integer totalClaimAmount;
+
+    @Column(name = "total_insurance_pay")
+    private Integer totalInsurancePay;
 
     @Column(name = "claim_date")
     private ZonedDateTime claimDate;
@@ -41,11 +44,11 @@ public class InsuranceClaim {
     private String notes;
 
     @CreationTimestamp
-    @Column(name = "create_at", nullable = false, updatable = false)
+    @Column(name = "create_at")
     private ZonedDateTime createAt;
 
     @UpdateTimestamp
-    @Column(name = "update_at", nullable = false)
+    @Column(name = "update_at")
     private ZonedDateTime updateAt;
 
     // Many-to-One relationship with PatientInsurance
@@ -56,6 +59,10 @@ public class InsuranceClaim {
     // One-to-Many relationship with ClaimDocument
     @OneToMany(mappedBy = "insuranceClaim", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ClaimDocument> claimDocuments;
+
+    // One-to-Many relationship with ClaimItem
+    @OneToMany(mappedBy = "insuranceClaim", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ClaimItem> claimItems;
 }
 
 

@@ -13,25 +13,18 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InsuranceClaimRequestDTO {
-    
-    @NotNull(message = "Claim amount is required")
-    @Positive(message = "Claim amount must be positive")
-    private Integer claimAmount;
-    
-    private Integer approvedAmount;
-    
-    @NotNull(message = "Status is required")
+    private UUID id;
     private String status;
-    
-    @NotNull(message = "Claim date is required")
+    private Integer patientPayAmount;
+    private Integer totalClaimAmount;
+    private Integer totalInsurancePay;
     private ZonedDateTime claimDate;
-    
     private ZonedDateTime approvalDate;
-    
     private String notes;
-    
-    @NotNull(message = "Patient insurance ID is required")
+    private ZonedDateTime createAt;
+    private ZonedDateTime updateAt;
     private UUID patientInsuranceId;
+    private PatientInsuranceDTO patientInsurance;
 }
 
 

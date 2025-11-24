@@ -21,17 +21,17 @@ public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, 
     List<InsuranceClaim> findByPatientId(@Param("patientId") UUID patientId);
 
     @Query("SELECT ic FROM InsuranceClaim ic WHERE ic.claimDate BETWEEN :startDate AND :endDate")
-    List<InsuranceClaim> findByClaimDateBetween(@Param("startDate") ZonedDateTime startDate, 
+    List<InsuranceClaim> findByClaimDateBetween(@Param("startDate") ZonedDateTime startDate,
                                                 @Param("endDate") ZonedDateTime endDate);
 
-    @Query("SELECT ic FROM InsuranceClaim ic WHERE ic.status = :status AND ic.claimAmount >= :minAmount")
-    List<InsuranceClaim> findByStatusAndClaimAmountGreaterThanEqual(@Param("status") String status, 
-                                                                   @Param("minAmount") Integer minAmount);
+    @Query("SELECT ic FROM InsuranceClaim ic WHERE ic.status = :status AND ic.totalClaimAmount >= :minAmount")
+    List<InsuranceClaim> findByStatusAndTotalClaimAmountGreaterThanEqual(@Param("status") String status,
+                                                                         @Param("minAmount") Integer minAmount);
 
     @Query("SELECT COUNT(ic) FROM InsuranceClaim ic WHERE ic.patientInsurance.id = :patientInsuranceId")
     long countByPatientInsuranceId(@Param("patientInsuranceId") UUID patientInsuranceId);
 
-    @Query("SELECT SUM(ic.claimAmount) FROM InsuranceClaim ic WHERE ic.patientInsurance.id = :patientInsuranceId AND ic.status = 'APPROVED'")
+    @Query("SELECT SUM(ic.totalInsurancePay) FROM InsuranceClaim ic WHERE ic.patientInsurance.id = :patientInsuranceId AND ic.status = 'APPROVED'")
     Integer getTotalApprovedAmountByPatientInsurance(@Param("patientInsuranceId") UUID patientInsuranceId);
 }
 
