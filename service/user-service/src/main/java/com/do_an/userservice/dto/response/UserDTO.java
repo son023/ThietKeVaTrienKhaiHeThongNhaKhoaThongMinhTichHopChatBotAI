@@ -18,7 +18,7 @@ public class UserDTO {
     private String phone;
     private boolean isActive;
     private String imageUrl;
-    private LocalDateTime createdAt;
+    private LocalDateTime createAt;
 
     private Set<String> roles;
 

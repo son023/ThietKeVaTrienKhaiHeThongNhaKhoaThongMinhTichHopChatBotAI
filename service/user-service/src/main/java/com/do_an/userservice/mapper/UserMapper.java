@@ -16,7 +16,6 @@ public interface UserMapper {
 
 
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "createAt", target = "createdAt")
     @Mapping(source = "userRoles", target = "roles", qualifiedByName = "mapUserRolesToStringSet")
     @Mapping(source = ".", target = "primaryRole", qualifiedByName = "extractPrimaryRole")
     UserDTO toDto(User user);

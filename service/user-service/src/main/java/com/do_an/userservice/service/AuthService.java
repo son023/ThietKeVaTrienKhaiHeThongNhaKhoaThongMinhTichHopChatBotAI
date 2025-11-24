@@ -40,18 +40,12 @@ public class AuthService {
     UserService userService;
 
     public ResponseEntity<UserDTO> login(LoginRequest loginRequest) {
-        try {
-            UserDTO existedUser = userService.validateCredentials(loginRequest.getPhone(), loginRequest.getPassword());
-            String token = this.generate(existedUser);
+        UserDTO existedUser = userService.validateCredentials(loginRequest.getPhone(), loginRequest.getPassword());
+        String token = this.generate(existedUser);
 
-            return ResponseEntity.ok()
-                    .header("Authorization", token)
-                    .body(existedUser);
-
-        } catch (Exception e) {
-            log.error("Login failed for user: {}", loginRequest.getPhone(), e);
-            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
-        }
+        return ResponseEntity.ok()
+                .header("Authorization", token)
+                .body(existedUser);
     }
 
     public String generate(UserDTO user) {
@@ -68,15 +62,14 @@ public class AuthService {
                     ))
                     .subject(user.getPhone())
                     .claim("user_id", user.getId().toString())
+                    .claim("phone", user.getPhone())
                     .claim("full_name", user.getFullname())
                     .jwtID(UUID.randomUUID().toString());
-            
-            // Thêm primary_role vào claims
+
             if (user.getPrimaryRole() != null) {
                 claimsBuilder.claim("primary_role", user.getPrimaryRole());
             }
-            
-            // Thêm roles vào claims (nếu cần)
+
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
                 claimsBuilder.claim("roles", user.getRoles());
             }
