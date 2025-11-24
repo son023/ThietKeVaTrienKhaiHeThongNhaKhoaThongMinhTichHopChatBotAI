@@ -22,7 +22,7 @@ public class DoctorWorkSchedule {
 
     @Id
     @Column(length = 50)
-    private String id;
+    private UUID id;
 
     @Column(length = 255)
     private String status;
@@ -43,8 +43,8 @@ public class DoctorWorkSchedule {
 
     @PrePersist
     public void onCreate() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
+        if (id == null || id.toString().isBlank()) {
+            id = UUID.randomUUID();
         }
         createdAt = ZonedDateTime.now(ZoneOffset.UTC);
         updatedAt = createdAt;

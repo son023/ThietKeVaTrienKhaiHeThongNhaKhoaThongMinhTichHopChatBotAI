@@ -4,17 +4,18 @@ import com.main_project.doctor_service.dto.DoctorWorkScheduleRequestDTO;
 import com.main_project.doctor_service.dto.DoctorWorkScheduleResponseDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface IDoctorWorkScheduleService {
     DoctorWorkScheduleResponseDTO createDoctorWorkSchedule(DoctorWorkScheduleRequestDTO request);
 
     List<DoctorWorkScheduleResponseDTO> getAllDoctorWorkSchedules();
 
-    DoctorWorkScheduleResponseDTO getDoctorWorkScheduleById(String id);
+    DoctorWorkScheduleResponseDTO getDoctorWorkScheduleById(UUID id);
 
-    List<DoctorWorkScheduleResponseDTO> getDoctorWorkSchedulesByDoctorId(String doctorId);
+    List<DoctorWorkScheduleResponseDTO> getDoctorWorkSchedulesByDoctorId(UUID doctorId);
 
-    DoctorWorkScheduleResponseDTO updateDoctorWorkSchedule(String id, DoctorWorkScheduleRequestDTO request);
+    DoctorWorkScheduleResponseDTO updateDoctorWorkSchedule(UUID id, DoctorWorkScheduleRequestDTO request);
 
-    void deleteDoctorWorkSchedule(String id);
+    void deleteDoctorWorkSchedule(UUID id);
 }

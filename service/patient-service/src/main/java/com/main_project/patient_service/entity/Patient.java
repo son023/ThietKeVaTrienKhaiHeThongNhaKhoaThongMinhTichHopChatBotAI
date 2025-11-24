@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "patient")
@@ -22,7 +23,7 @@ public class Patient {
 
     @Id
     @Column(name = "user_id", length = 50, nullable = false)
-    private String userId;
+    private UUID userId;
 
     private LocalDate dob;
 

@@ -12,8 +12,7 @@ import java.util.UUID;
 @Repository
 public interface LabTestRepository extends JpaRepository<LabTest, UUID> {
         List<LabTest> findByDoctorId(UUID doctorId);
-        List<LabTest> findByLabTechnicianId(UUID labTechnicianId);
-        List<LabTest> findByMedicalRecordId(UUID medicalRecordId);
+        List<LabTest> findByLabTechnician_UserId(UUID labTechnicianId);
         List<LabTest> findByStatus(String status);
         List<LabTest> findByResultDateBetween(ZonedDateTime start, ZonedDateTime end);
         List<LabTest> findByLabTestType_Id(UUID labTestTypeId);

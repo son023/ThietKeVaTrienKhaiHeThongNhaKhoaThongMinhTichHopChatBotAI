@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,14 +38,14 @@ public class WorkScheduleService implements IWorkScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    public WorkScheduleResponseDTO getWorkScheduleById(String id) {
+    public WorkScheduleResponseDTO getWorkScheduleById(UUID id) {
         return workScheduleRepository.findById(id)
                 .map(mapper::toWorkScheduleResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Work schedule not found for id " + id));
     }
 
     @Override
-    public WorkScheduleResponseDTO updateWorkSchedule(String id, WorkScheduleRequestDTO request) {
+    public WorkScheduleResponseDTO updateWorkSchedule(UUID id, WorkScheduleRequestDTO request) {
         WorkSchedule existing = workScheduleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Work schedule not found for id " + id));
         mapper.updateWorkScheduleEntity(existing, request);
@@ -52,7 +53,7 @@ public class WorkScheduleService implements IWorkScheduleService {
     }
 
     @Override
-    public void deleteWorkSchedule(String id) {
+    public void deleteWorkSchedule(UUID id) {
         if (!workScheduleRepository.existsById(id)) {
             throw new EntityNotFoundException("Work schedule not found for id " + id);
         }

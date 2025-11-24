@@ -1,6 +1,7 @@
 package com.main_project.labtest_service.util;
 
 import com.main_project.labtest_service.dto.*;
+import com.main_project.labtest_service.entity.LabTechnician;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
 import com.main_project.labtest_service.entity.MedicalAttachment;
@@ -21,9 +22,10 @@ public class EntityDTOMapper {
 
         LabTestDTO dto = new LabTestDTO();
         dto.setId(entity.getId());
-        dto.setLabTechnicianId(entity.getLabTechnicianId());
+        if (entity.getLabTechnician() != null) {
+            dto.setLabTechnicianId(entity.getLabTechnician().getUserId());
+        }
         dto.setDoctorId(entity.getDoctorId());
-        dto.setMedicalRecordId(entity.getMedicalRecordId());
         dto.setPrice(entity.getPrice());
         dto.setInstructions(entity.getInstructions());
         dto.setStatus(entity.getStatus());
@@ -52,13 +54,11 @@ public class EntityDTOMapper {
     }
 
     // RequestDTO -> Entity
-    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, LabTestType labTestType) {
+    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, LabTestType labTestType, LabTechnician labTechnician) {
         if (requestDTO == null) return null;
 
         LabTest entity = new LabTest();
-        entity.setLabTechnicianId(requestDTO.getLabTechnicianId());
         entity.setDoctorId(requestDTO.getDoctorId());
-        entity.setMedicalRecordId(requestDTO.getMedicalRecordId());
         entity.setPrice(requestDTO.getPrice());
         entity.setInstructions(requestDTO.getInstructions());
         entity.setStatus(requestDTO.getStatus());
@@ -67,6 +67,7 @@ public class EntityDTOMapper {
         entity.setStructureJson(requestDTO.getStructureJson());
         entity.setReferenceRange(requestDTO.getReferenceRange());
         entity.setLabTestType(labTestType);
+        entity.setLabTechnician(labTechnician);
         entity.setCreatedAt(ZonedDateTime.now());
         entity.setUpdatedAt(ZonedDateTime.now());
 
@@ -144,4 +145,27 @@ public class EntityDTOMapper {
         entity.setUpdatedAt(ZonedDateTime.now());
     }
 
+    // ===================
+    // LabTechnician
+    // ===================
+    public LabTechnicianDTO toLabTechnicianDTO(LabTechnician entity) {
+        if (entity == null) return null;
+        return LabTechnicianDTO.builder()
+                .userId(entity.getUserId())
+                .licenseNumber(entity.getLicenseNumber())
+                .build();
+    }
+
+    public LabTechnician toLabTechnicianEntity(LabTechnicianRequestDTO dto) {
+        if (dto == null) return null;
+        return LabTechnician.builder()
+                .userId(dto.getUserId())
+                .licenseNumber(dto.getLicenseNumber())
+                .build();
+    }
+
+    public void updateLabTechnicianEntity(LabTechnician entity, LabTechnicianRequestDTO dto) {
+        if (entity == null || dto == null) return;
+        entity.setLicenseNumber(dto.getLicenseNumber());
+    }
 }

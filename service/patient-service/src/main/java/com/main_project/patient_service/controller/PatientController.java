@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/patient-service/patients")
@@ -26,7 +27,7 @@ public class PatientController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<PatientResponseDTO> getPatient(@PathVariable String userId) {
+    public ResponseEntity<PatientResponseDTO> getPatient(@PathVariable UUID userId) {
         try {
             return ResponseEntity.ok(patientService.getPatientById(userId));
         } catch (EntityNotFoundException ex) {
@@ -56,7 +57,7 @@ public class PatientController {
 
     @PutMapping("/{userId}")
     public ResponseEntity<PatientResponseDTO> updatePatient(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody PatientRequestDTO request) {
         try {
             PatientResponseDTO updated = patientService.updatePatient(userId, request);
@@ -67,7 +68,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deletePatient(@PathVariable String userId) {
+    public ResponseEntity<Void> deletePatient(@PathVariable UUID userId) {
         try {
             patientService.deletePatient(userId);
             return ResponseEntity.noContent().build();

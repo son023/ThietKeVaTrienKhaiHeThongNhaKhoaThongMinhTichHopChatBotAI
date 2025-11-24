@@ -4,10 +4,11 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 @Data
 public class WorkScheduleResponseDTO {
-    private String id;
+    private UUID id;
     private LocalDate workDate;
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;

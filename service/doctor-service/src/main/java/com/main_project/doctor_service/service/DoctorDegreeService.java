@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
 
     @Override
     @Transactional(readOnly = true)
-    public DoctorDegreeResponseDTO getDoctorDegreeById(String id) {
+    public DoctorDegreeResponseDTO getDoctorDegreeById(UUID id) {
         return doctorDegreeRepository.findById(id)
                 .map(mapper::toDoctorDegreeResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor degree not found for id " + id));
@@ -49,7 +50,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DoctorDegreeResponseDTO> getDegreesByDoctorId(String doctorId) {
+    public List<DoctorDegreeResponseDTO> getDegreesByDoctorId(UUID doctorId) {
         return doctorDegreeRepository.findByDoctor_UserId(doctorId)
                 .stream()
                 .map(mapper::toDoctorDegreeResponse)
@@ -57,7 +58,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
     }
 
     @Override
-    public DoctorDegreeResponseDTO updateDoctorDegree(String id, DoctorDegreeRequestDTO request) {
+    public DoctorDegreeResponseDTO updateDoctorDegree(UUID id, DoctorDegreeRequestDTO request) {
         DoctorDegree existing = doctorDegreeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor degree not found for id " + id));
         Doctor doctor = getDoctor(request.getDoctorId());
@@ -66,14 +67,14 @@ public class DoctorDegreeService implements IDoctorDegreeService {
     }
 
     @Override
-    public void deleteDoctorDegree(String id) {
+    public void deleteDoctorDegree(UUID id) {
         if (!doctorDegreeRepository.existsById(id)) {
             throw new EntityNotFoundException("Doctor degree not found for id " + id);
         }
         doctorDegreeRepository.deleteById(id);
     }
 
-    private Doctor getDoctor(String doctorId) {
+    private Doctor getDoctor(UUID doctorId) {
         return doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + doctorId));
     }

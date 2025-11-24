@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
-public interface PatientRepository extends JpaRepository<Patient, String> {
+public interface PatientRepository extends JpaRepository<Patient, UUID> {
     List<Patient> findByGenderIgnoreCase(String gender);
     List<Patient> findByBloodTypeIgnoreCase(String bloodType);
     List<Patient> findByAllergyContainingIgnoreCase(String allergyKeyword);

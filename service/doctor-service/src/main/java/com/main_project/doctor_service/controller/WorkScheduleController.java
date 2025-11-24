@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/doctor-service/work-schedules")
@@ -25,7 +26,7 @@ public class WorkScheduleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkScheduleResponseDTO> getWorkSchedule(@PathVariable String id) {
+    public ResponseEntity<WorkScheduleResponseDTO> getWorkSchedule(@PathVariable UUID id) {
         try {
             return ResponseEntity.ok(workScheduleService.getWorkScheduleById(id));
         } catch (EntityNotFoundException ex) {
@@ -41,7 +42,7 @@ public class WorkScheduleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<WorkScheduleResponseDTO> updateWorkSchedule(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @Valid @RequestBody WorkScheduleRequestDTO request) {
         try {
             WorkScheduleResponseDTO updated = workScheduleService.updateWorkSchedule(id, request);
@@ -52,7 +53,7 @@ public class WorkScheduleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWorkSchedule(@PathVariable String id) {
+    public ResponseEntity<Void> deleteWorkSchedule(@PathVariable UUID id) {
         try {
             workScheduleService.deleteWorkSchedule(id);
             return ResponseEntity.noContent().build();

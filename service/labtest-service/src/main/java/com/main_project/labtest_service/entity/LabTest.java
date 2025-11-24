@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.ZonedDateTime;
 import java.util.*;
+import com.main_project.labtest_service.entity.LabTechnician;
 
 @Entity
 @Table(name = "lab_test")
@@ -19,12 +20,7 @@ public class LabTest {
     private UUID id;
 
     @Column(length = 50)
-    private UUID labTechnicianId;
-
-    @Column(length = 50)
     private UUID doctorId;
-
-    @Column private UUID medicalRecordId;
 
     private int price;
 
@@ -51,6 +47,10 @@ public class LabTest {
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lab_technician_id", referencedColumnName = "user_id")
+    private LabTechnician labTechnician;
+
     // Many LabTests belong to one LabTestType
     @ManyToOne
     @JoinColumn(name = "lab_test_type_id", referencedColumnName = "id")
@@ -59,4 +59,18 @@ public class LabTest {
     // One LabTest has many MedicalAttachments
     @OneToMany(mappedBy = "labTest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicalAttachment> medicalAttachments = new ArrayList<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+        createdAt = ZonedDateTime.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = ZonedDateTime.now();
+    }
 }

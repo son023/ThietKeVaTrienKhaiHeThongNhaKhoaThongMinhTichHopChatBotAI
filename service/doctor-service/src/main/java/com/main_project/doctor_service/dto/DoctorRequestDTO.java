@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class DoctorRequestDTO {
 
     @NotBlank(message = "userId is required")
     @Size(max = 50)
-    private String userId;
+    private UUID userId;
 
     @Size(max = 100)
     private String specializationCode;

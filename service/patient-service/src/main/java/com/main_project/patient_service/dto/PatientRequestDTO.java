@@ -5,13 +5,14 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class PatientRequestDTO {
 
     @NotBlank(message = "userId is required")
     @Size(max = 50)
-    private String userId;
+    private UUID userId;
 
     private LocalDate dob;
 
