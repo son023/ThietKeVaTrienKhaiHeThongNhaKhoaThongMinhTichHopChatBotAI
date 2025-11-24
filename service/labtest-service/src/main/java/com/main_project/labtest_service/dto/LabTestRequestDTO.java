@@ -14,7 +14,6 @@ public class LabTestRequestDTO {
 
     private UUID labTechnicianId;
     private UUID doctorId;
-    private UUID medicalRecordId;
     private int price;
     private String instructions;
     private String status;

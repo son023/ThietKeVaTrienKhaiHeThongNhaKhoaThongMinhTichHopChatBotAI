@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +46,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public MedicalHistoryResponseDTO getMedicalHistoryById(String id) {
+    public MedicalHistoryResponseDTO getMedicalHistoryById(UUID id) {
         return medicalHistoryRepository.findById(id)
                 .map(mapper::toMedicalHistoryResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Medical history not found for id " + id));
@@ -53,7 +54,7 @@ public class MedicalHistoryService implements IMedicalHistoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MedicalHistoryResponseDTO> getMedicalHistoriesByPatient(String patientId) {
+    public List<MedicalHistoryResponseDTO> getMedicalHistoriesByPatient(UUID patientId) {
         return medicalHistoryRepository.findByPatient_UserId(patientId)
                 .stream()
                 .map(mapper::toMedicalHistoryResponse)
@@ -61,7 +62,25 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     }
 
     @Override
-    public MedicalHistoryResponseDTO updateMedicalHistory(String id, MedicalHistoryRequestDTO request) {
+    @Transactional(readOnly = true)
+    public List<MedicalHistoryResponseDTO> getMedicalHistoriesByAppointment(UUID appointmentId) {
+        return medicalHistoryRepository.findByAppointmentId(appointmentId)
+                .stream()
+                .map(mapper::toMedicalHistoryResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MedicalHistoryResponseDTO> searchMedicalHistoriesByDisease(String diseaseKeyword) {
+        return medicalHistoryRepository.findByDiseaseContainingIgnoreCase(diseaseKeyword)
+                .stream()
+                .map(mapper::toMedicalHistoryResponse)
+                .toList();
+    }
+
+    @Override
+    public MedicalHistoryResponseDTO updateMedicalHistory(UUID id, MedicalHistoryRequestDTO request) {
         MedicalHistory existing = medicalHistoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Medical history not found for id " + id));
 
@@ -73,14 +92,14 @@ public class MedicalHistoryService implements IMedicalHistoryService {
     }
 
     @Override
-    public void deleteMedicalHistory(String id) {
+    public void deleteMedicalHistory(UUID id) {
         if (!medicalHistoryRepository.existsById(id)) {
             throw new EntityNotFoundException("Medical history not found for id " + id);
         }
         medicalHistoryRepository.deleteById(id);
     }
 
-    private Patient findPatient(String patientId) {
+    private Patient findPatient(UUID patientId) {
         return patientRepository.findById(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found for user " + patientId));
     }

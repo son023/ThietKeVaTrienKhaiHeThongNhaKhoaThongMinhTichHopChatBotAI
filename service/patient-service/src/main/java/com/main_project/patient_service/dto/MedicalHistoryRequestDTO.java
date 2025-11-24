@@ -4,11 +4,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class MedicalHistoryRequestDTO {
 
     @Size(max = 50)
-    private String appointmentId;
+    private UUID appointmentId;
 
     @Size(max = 255)
     private String symptoms;
@@ -24,5 +26,5 @@ public class MedicalHistoryRequestDTO {
 
     @NotBlank(message = "patientId is required")
     @Size(max = 50)
-    private String patientId;
+    private UUID patientId;
 }

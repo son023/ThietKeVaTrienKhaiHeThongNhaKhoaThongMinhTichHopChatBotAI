@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class PatientService implements IPatientService {
 
     @Override
     @Transactional(readOnly = true)
-    public PatientResponseDTO getPatientById(String userId) {
+    public PatientResponseDTO getPatientById(UUID userId) {
         return patientRepository.findById(userId)
                 .map(mapper::toPatientResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found for user " + userId));
@@ -67,7 +68,7 @@ public class PatientService implements IPatientService {
     }
 
     @Override
-    public PatientResponseDTO updatePatient(String userId, PatientRequestDTO request) {
+    public PatientResponseDTO updatePatient(UUID userId, PatientRequestDTO request) {
         Patient patient = patientRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found for user " + userId));
 
@@ -76,7 +77,7 @@ public class PatientService implements IPatientService {
     }
 
     @Override
-    public void deletePatient(String userId) {
+    public void deletePatient(UUID userId) {
         if (!patientRepository.existsById(userId)) {
             throw new EntityNotFoundException("Patient not found for user " + userId);
         }

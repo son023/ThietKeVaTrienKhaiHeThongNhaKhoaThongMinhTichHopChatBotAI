@@ -46,7 +46,6 @@ public class EntityMapper {
         dto.setDegreeName(entity.getDegreeName());
         dto.setInstitution(entity.getInstitution());
         dto.setYearObtained(entity.getYearObtained());
-        dto.setUserId(entity.getUserId());
         if (entity.getDoctor() != null) {
             dto.setDoctorId(entity.getDoctor().getUserId());
         }
@@ -59,7 +58,6 @@ public class EntityMapper {
                 .degreeName(request.getDegreeName())
                 .institution(request.getInstitution())
                 .yearObtained(request.getYearObtained())
-                .userId(request.getUserId())
                 .doctor(doctor)
                 .build();
     }
@@ -69,7 +67,6 @@ public class EntityMapper {
         entity.setDegreeName(request.getDegreeName());
         entity.setInstitution(request.getInstitution());
         entity.setYearObtained(request.getYearObtained());
-        entity.setUserId(request.getUserId());
         entity.setDoctor(doctor);
     }
 

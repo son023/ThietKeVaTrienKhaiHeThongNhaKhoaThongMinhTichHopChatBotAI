@@ -22,7 +22,7 @@ public class WorkSchedule {
 
     @Id
     @Column(length = 50)
-    private String id;
+    private UUID id;
 
     @Column(name = "work_date")
     private LocalDate workDate;
@@ -35,8 +35,8 @@ public class WorkSchedule {
 
     @PrePersist
     public void onCreate() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
+        if (id == null || id.toString().isBlank()) {
+            id = UUID.randomUUID();
         }
     }
 }

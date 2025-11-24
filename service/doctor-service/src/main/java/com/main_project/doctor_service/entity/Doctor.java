@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "doctor")
@@ -21,7 +22,7 @@ public class Doctor {
 
     @Id
     @Column(name = "user_id", length = 50, nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Column(name = "specialization_code", length = 100)
     private String specializationCode;

@@ -2,8 +2,10 @@ package com.main_project.labtest_service.service;
 
 import com.main_project.labtest_service.dto.LabTestDTO;
 import com.main_project.labtest_service.dto.LabTestRequestDTO;
+import com.main_project.labtest_service.entity.LabTechnician;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
+import com.main_project.labtest_service.repository.LabTechnicianRepository;
 import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LabTestService implements ILabTest{
     private final LabTestRepository labTestRepository;
+    private final LabTechnicianRepository labTechnicianRepository;
     private final LabTestTypeRepository labTestTypeRepository;
     private final EntityDTOMapper mapper;
 
@@ -25,7 +28,13 @@ public class LabTestService implements ILabTest{
         LabTestType type = labTestTypeRepository.findById(requestDTO.getLabTestTypeId())
                 .orElseThrow(() -> new RuntimeException("LabTestType not found"));
 
-        LabTest entity = mapper.toLabTestEntity(requestDTO, type);
+        LabTechnician technician = null;
+        if (requestDTO.getLabTechnicianId() != null) {
+            technician = labTechnicianRepository.findById(requestDTO.getLabTechnicianId())
+                    .orElseThrow(() -> new RuntimeException("LabTechnician not found"));
+        }
+
+        LabTest entity = mapper.toLabTestEntity(requestDTO, type, technician);
         labTestRepository.save(entity);
         return mapper.toLabTestDTO(entity);
     }
@@ -36,8 +45,13 @@ public class LabTestService implements ILabTest{
                 .orElseThrow(() -> new RuntimeException("LabTest not found"));
 
         existing.setDoctorId(requestDTO.getDoctorId());
-        existing.setLabTechnicianId(requestDTO.getLabTechnicianId());
-        existing.setMedicalRecordId(requestDTO.getMedicalRecordId());
+        if (requestDTO.getLabTechnicianId() != null) {
+            LabTechnician technician = labTechnicianRepository.findById(requestDTO.getLabTechnicianId())
+                    .orElseThrow(() -> new RuntimeException("LabTechnician not found"));
+            existing.setLabTechnician(technician);
+        } else {
+            existing.setLabTechnician(null);
+        }
         existing.setPrice(requestDTO.getPrice());
         existing.setInstructions(requestDTO.getInstructions());
         existing.setStatus(requestDTO.getStatus());
@@ -81,14 +95,14 @@ public class LabTestService implements ILabTest{
     }
 
     @Override
-    public List<LabTestDTO> getLabTestsByStatus(String status) {
-        return labTestRepository.findByStatus(status)
+    public List<LabTestDTO> getLabTestsByLabTechnicianId(UUID labTechnicianId) {
+        return labTestRepository.findByLabTechnician_UserId(labTechnicianId)
                 .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
     }
 
     @Override
-    public List<LabTestDTO> getLabTestsByMedicalRecordId(UUID medicalRecordId) {
-        return labTestRepository.findByMedicalRecordId(medicalRecordId)
+    public List<LabTestDTO> getLabTestsByStatus(String status) {
+        return labTestRepository.findByStatus(status)
                 .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
     }
 }

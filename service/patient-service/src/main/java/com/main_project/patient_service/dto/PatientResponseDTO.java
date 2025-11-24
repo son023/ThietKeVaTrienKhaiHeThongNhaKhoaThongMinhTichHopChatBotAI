@@ -3,10 +3,11 @@ package com.main_project.patient_service.dto;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 public class PatientResponseDTO {
-    private String userId;
+    private UUID userId;
     private LocalDate dob;
     private String gender;
     private String address;

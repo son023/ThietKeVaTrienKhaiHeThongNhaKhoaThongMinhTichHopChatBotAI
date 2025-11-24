@@ -6,10 +6,9 @@ import java.util.UUID;
 
 @Data
 public class DoctorDegreeResponseDTO {
-    private String id;
+    private UUID id;
     private String degreeName;
     private String institution;
     private Integer yearObtained;
-    private UUID userId;
-    private String doctorId;
+    private UUID doctorId;
 }

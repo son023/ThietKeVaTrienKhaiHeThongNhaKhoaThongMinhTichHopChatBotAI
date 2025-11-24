@@ -4,17 +4,18 @@ import com.main_project.doctor_service.dto.DoctorDegreeRequestDTO;
 import com.main_project.doctor_service.dto.DoctorDegreeResponseDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface IDoctorDegreeService {
     DoctorDegreeResponseDTO createDoctorDegree(DoctorDegreeRequestDTO request);
 
     List<DoctorDegreeResponseDTO> getAllDoctorDegrees();
 
-    DoctorDegreeResponseDTO getDoctorDegreeById(String id);
+    DoctorDegreeResponseDTO getDoctorDegreeById(UUID id);
 
-    List<DoctorDegreeResponseDTO> getDegreesByDoctorId(String doctorId);
+    List<DoctorDegreeResponseDTO> getDegreesByDoctorId(UUID doctorId);
 
-    DoctorDegreeResponseDTO updateDoctorDegree(String id, DoctorDegreeRequestDTO request);
+    DoctorDegreeResponseDTO updateDoctorDegree(UUID id, DoctorDegreeRequestDTO request);
 
-    void deleteDoctorDegree(String id);
+    void deleteDoctorDegree(UUID id);
 }

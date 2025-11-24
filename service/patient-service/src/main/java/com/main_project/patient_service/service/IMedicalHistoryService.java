@@ -4,17 +4,22 @@ import com.main_project.patient_service.dto.MedicalHistoryRequestDTO;
 import com.main_project.patient_service.dto.MedicalHistoryResponseDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface IMedicalHistoryService {
     MedicalHistoryResponseDTO createMedicalHistory(MedicalHistoryRequestDTO request);
 
     List<MedicalHistoryResponseDTO> getAllMedicalHistories();
 
-    MedicalHistoryResponseDTO getMedicalHistoryById(String id);
+    MedicalHistoryResponseDTO getMedicalHistoryById(UUID id);
 
-    List<MedicalHistoryResponseDTO> getMedicalHistoriesByPatient(String patientId);
+    List<MedicalHistoryResponseDTO> getMedicalHistoriesByPatient(UUID patientId);
 
-    MedicalHistoryResponseDTO updateMedicalHistory(String id, MedicalHistoryRequestDTO request);
+    List<MedicalHistoryResponseDTO> getMedicalHistoriesByAppointment(UUID appointmentId);
 
-    void deleteMedicalHistory(String id);
+    List<MedicalHistoryResponseDTO> searchMedicalHistoriesByDisease(String diseaseKeyword);
+
+    MedicalHistoryResponseDTO updateMedicalHistory(UUID id, MedicalHistoryRequestDTO request);
+
+    void deleteMedicalHistory(UUID id);
 }

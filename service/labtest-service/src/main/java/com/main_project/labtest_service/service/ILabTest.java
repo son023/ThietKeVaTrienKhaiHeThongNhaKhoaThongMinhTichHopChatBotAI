@@ -13,6 +13,6 @@ public interface ILabTest {
     LabTestDTO getLabTestById(UUID id);
     List<LabTestDTO> getAllLabTests();
     List<LabTestDTO> getLabTestsByDoctorId(UUID doctorId);
+    List<LabTestDTO> getLabTestsByLabTechnicianId(UUID labTechnicianId);
     List<LabTestDTO> getLabTestsByStatus(String status);
-    List<LabTestDTO> getLabTestsByMedicalRecordId(UUID medicalRecordId);
 }

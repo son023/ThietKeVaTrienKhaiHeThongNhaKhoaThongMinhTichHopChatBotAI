@@ -20,7 +20,7 @@ public class DoctorDegree {
 
     @Id
     @Column(length = 50)
-    private String id;
+    private UUID id;
 
     @Column(name = "degree_name", length = 255)
     private String degreeName;
@@ -31,17 +31,14 @@ public class DoctorDegree {
     @Column(name = "year_obtained")
     private Integer yearObtained;
 
-    @Column(name = "user_id")
-    private UUID userId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", referencedColumnName = "user_id")
     private Doctor doctor;
 
     @PrePersist
     public void onCreate() {
-        if (id == null || id.isBlank()) {
-            id = UUID.randomUUID().toString();
+        if (id == null || id.toString().isBlank()) {
+            id = UUID.randomUUID();
         }
     }
 }

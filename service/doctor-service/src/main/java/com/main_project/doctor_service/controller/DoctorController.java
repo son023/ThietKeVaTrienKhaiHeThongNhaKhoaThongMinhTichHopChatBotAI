@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/doctor-service/doctors")
@@ -26,7 +27,7 @@ public class DoctorController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<DoctorResponseDTO> getDoctor(@PathVariable String userId) {
+    public ResponseEntity<DoctorResponseDTO> getDoctor(@PathVariable UUID userId) {
         try {
             return ResponseEntity.ok(doctorService.getDoctorById(userId));
         } catch (EntityNotFoundException ex) {
@@ -46,7 +47,7 @@ public class DoctorController {
 
     @PutMapping("/{userId}")
     public ResponseEntity<DoctorResponseDTO> updateDoctor(
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Valid @RequestBody DoctorRequestDTO request) {
         try {
             DoctorResponseDTO updated = doctorService.updateDoctor(userId, request);
@@ -57,7 +58,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteDoctor(@PathVariable String userId) {
+    public ResponseEntity<Void> deleteDoctor(@PathVariable UUID userId) {
         try {
             doctorService.deleteDoctor(userId);
             return ResponseEntity.noContent().build();

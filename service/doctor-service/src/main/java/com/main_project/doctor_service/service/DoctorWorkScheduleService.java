@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +46,7 @@ public class DoctorWorkScheduleService implements IDoctorWorkScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    public DoctorWorkScheduleResponseDTO getDoctorWorkScheduleById(String id) {
+    public DoctorWorkScheduleResponseDTO getDoctorWorkScheduleById(UUID id) {
         return doctorWorkScheduleRepository.findById(id)
                 .map(mapper::toDoctorWorkScheduleResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor work schedule not found for id " + id));
@@ -53,7 +54,7 @@ public class DoctorWorkScheduleService implements IDoctorWorkScheduleService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DoctorWorkScheduleResponseDTO> getDoctorWorkSchedulesByDoctorId(String doctorId) {
+    public List<DoctorWorkScheduleResponseDTO> getDoctorWorkSchedulesByDoctorId(UUID doctorId) {
         return doctorWorkScheduleRepository.findByDoctor_UserId(doctorId)
                 .stream()
                 .map(mapper::toDoctorWorkScheduleResponse)
@@ -61,7 +62,7 @@ public class DoctorWorkScheduleService implements IDoctorWorkScheduleService {
     }
 
     @Override
-    public DoctorWorkScheduleResponseDTO updateDoctorWorkSchedule(String id, DoctorWorkScheduleRequestDTO request) {
+    public DoctorWorkScheduleResponseDTO updateDoctorWorkSchedule(UUID id, DoctorWorkScheduleRequestDTO request) {
         DoctorWorkSchedule existing = doctorWorkScheduleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor work schedule not found for id " + id));
 
@@ -73,19 +74,19 @@ public class DoctorWorkScheduleService implements IDoctorWorkScheduleService {
     }
 
     @Override
-    public void deleteDoctorWorkSchedule(String id) {
+    public void deleteDoctorWorkSchedule(UUID id) {
         if (!doctorWorkScheduleRepository.existsById(id)) {
             throw new EntityNotFoundException("Doctor work schedule not found for id " + id);
         }
         doctorWorkScheduleRepository.deleteById(id);
     }
 
-    private Doctor getDoctor(String doctorId) {
+    private Doctor getDoctor(UUID doctorId) {
         return doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + doctorId));
     }
 
-    private WorkSchedule getWorkSchedule(String workScheduleId) {
+    private WorkSchedule getWorkSchedule(UUID workScheduleId) {
         return workScheduleRepository.findById(workScheduleId)
                 .orElseThrow(() -> new EntityNotFoundException("Work schedule not found for id " + workScheduleId));
     }

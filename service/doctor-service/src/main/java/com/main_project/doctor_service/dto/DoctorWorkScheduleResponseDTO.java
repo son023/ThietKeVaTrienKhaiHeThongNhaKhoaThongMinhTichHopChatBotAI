@@ -3,13 +3,14 @@ package com.main_project.doctor_service.dto;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 @Data
 public class DoctorWorkScheduleResponseDTO {
-    private String id;
+    private UUID id;
     private String status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
-    private String workScheduleId;
-    private String doctorId;
+    private UUID workScheduleId;
+    private UUID doctorId;
 }

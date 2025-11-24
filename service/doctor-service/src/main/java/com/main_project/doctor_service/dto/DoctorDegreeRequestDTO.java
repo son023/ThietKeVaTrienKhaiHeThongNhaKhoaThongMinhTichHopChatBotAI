@@ -18,9 +18,7 @@ public class DoctorDegreeRequestDTO {
 
     private Integer yearObtained;
 
-    private UUID userId;
-
     @NotBlank(message = "doctorId is required")
     @Size(max = 50)
-    private String doctorId;
+    private UUID doctorId;
 }

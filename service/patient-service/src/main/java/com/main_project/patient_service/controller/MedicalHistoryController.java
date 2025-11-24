@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/patient-service/medical-histories")
@@ -25,7 +26,7 @@ public class MedicalHistoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MedicalHistoryResponseDTO> getMedicalHistory(@PathVariable String id) {
+    public ResponseEntity<MedicalHistoryResponseDTO> getMedicalHistory(@PathVariable UUID id) {
         try {
             return ResponseEntity.ok(medicalHistoryService.getMedicalHistoryById(id));
         } catch (EntityNotFoundException ex) {
@@ -34,8 +35,18 @@ public class MedicalHistoryController {
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<MedicalHistoryResponseDTO>> getByPatient(@PathVariable String patientId) {
+    public ResponseEntity<List<MedicalHistoryResponseDTO>> getByPatient(@PathVariable UUID patientId) {
         return ResponseEntity.ok(medicalHistoryService.getMedicalHistoriesByPatient(patientId));
+    }
+
+    @GetMapping("/appointment/{appointmentId}")
+    public ResponseEntity<List<MedicalHistoryResponseDTO>> getByAppointment(@PathVariable UUID appointmentId) {
+        return ResponseEntity.ok(medicalHistoryService.getMedicalHistoriesByAppointment(appointmentId));
+    }
+
+    @GetMapping("/disease")
+    public ResponseEntity<List<MedicalHistoryResponseDTO>> searchByDisease(@RequestParam("q") String diseaseKeyword) {
+        return ResponseEntity.ok(medicalHistoryService.searchMedicalHistoriesByDisease(diseaseKeyword));
     }
 
     @PostMapping
@@ -51,7 +62,7 @@ public class MedicalHistoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<MedicalHistoryResponseDTO> updateMedicalHistory(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @Valid @RequestBody MedicalHistoryRequestDTO request) {
         try {
             MedicalHistoryResponseDTO updated = medicalHistoryService.updateMedicalHistory(id, request);
@@ -62,7 +73,7 @@ public class MedicalHistoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMedicalHistory(@PathVariable String id) {
+    public ResponseEntity<Void> deleteMedicalHistory(@PathVariable UUID id) {
         try {
             medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/doctor-service/doctor-degrees")
@@ -25,7 +26,7 @@ public class DoctorDegreeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DoctorDegreeResponseDTO> getDoctorDegree(@PathVariable String id) {
+    public ResponseEntity<DoctorDegreeResponseDTO> getDoctorDegree(@PathVariable UUID id) {
         try {
             return ResponseEntity.ok(doctorDegreeService.getDoctorDegreeById(id));
         } catch (EntityNotFoundException ex) {
@@ -34,7 +35,7 @@ public class DoctorDegreeController {
     }
 
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<DoctorDegreeResponseDTO>> getByDoctor(@PathVariable String doctorId) {
+    public ResponseEntity<List<DoctorDegreeResponseDTO>> getByDoctor(@PathVariable UUID doctorId) {
         return ResponseEntity.ok(doctorDegreeService.getDegreesByDoctorId(doctorId));
     }
 
@@ -50,7 +51,7 @@ public class DoctorDegreeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<DoctorDegreeResponseDTO> updateDoctorDegree(
-            @PathVariable String id,
+            @PathVariable UUID id,
             @Valid @RequestBody DoctorDegreeRequestDTO request) {
         try {
             DoctorDegreeResponseDTO updated = doctorDegreeService.updateDoctorDegree(id, request);
@@ -61,7 +62,7 @@ public class DoctorDegreeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDoctorDegree(@PathVariable String id) {
+    public ResponseEntity<Void> deleteDoctorDegree(@PathVariable UUID id) {
         try {
             doctorDegreeService.deleteDoctorDegree(id);
             return ResponseEntity.noContent().build();
