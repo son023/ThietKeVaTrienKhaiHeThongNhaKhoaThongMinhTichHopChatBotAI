@@ -24,6 +24,8 @@ public class LabTest {
     @Column(length = 50)
     private UUID doctorId;
 
+    @Column private UUID medicalRecordId;
+
     private int price;
 
     @Column(length = 255)
@@ -48,11 +50,6 @@ public class LabTest {
 
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
-
-    // Many LabTests belong to one MedicalHistory
-    @ManyToOne
-    @JoinColumn(name = "medical_history_id", referencedColumnName = "id")
-    private MedicalHistory medicalHistory;
 
     // Many LabTests belong to one LabTestType
     @ManyToOne

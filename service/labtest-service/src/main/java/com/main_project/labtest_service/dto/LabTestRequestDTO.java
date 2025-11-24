@@ -1,7 +1,6 @@
 package com.main_project.labtest_service.dto;
 
 import lombok.*;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +14,7 @@ public class LabTestRequestDTO {
 
     private UUID labTechnicianId;
     private UUID doctorId;
+    private UUID medicalRecordId;
     private int price;
     private String instructions;
     private String status;
@@ -24,8 +24,7 @@ public class LabTestRequestDTO {
     private String structureJson;
     private String referenceRange;
 
-    private UUID medicalHistoryId; // Quan hệ 1-N với MedicalHistory
-    private UUID labTestTypeId;    // Quan hệ 1-1 với LabTestType
+    private UUID labTestTypeId;    // Quan h??? 1-1 v??>i LabTestType
 
     private List<UUID> medicalAttachmentIds;
 }

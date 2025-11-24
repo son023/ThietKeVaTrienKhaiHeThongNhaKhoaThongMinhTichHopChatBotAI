@@ -29,7 +29,7 @@ public class MedicalAttachmentService implements IMedicalAttachment{
                     .orElseThrow(() -> new RuntimeException("LabTest not found"));
         }
 
-        MedicalAttachment entity = mapper.toEntity(requestDTO, labTest);
+        MedicalAttachment entity = mapper.toMedicalAttachmentEntity(requestDTO, labTest);
         repository.save(entity);
         return mapper.toMedicalAttachmentDTO(entity);
     }
@@ -45,7 +45,7 @@ public class MedicalAttachmentService implements IMedicalAttachment{
                     .orElseThrow(() -> new RuntimeException("LabTest not found"));
         }
 
-        mapper.updateEntity(entity, requestDTO, labTest);
+        mapper.updateMedicalAttachmentEntity(entity, requestDTO, labTest);
         repository.save(entity);
         return mapper.toMedicalAttachmentDTO(entity);
     }
