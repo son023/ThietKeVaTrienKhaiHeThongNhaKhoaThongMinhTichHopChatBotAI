@@ -6,6 +6,7 @@ import com.do_an.common.event.MedicineReservedEvent;
 import com.do_an.common.model.MedicineItem;
 import com.main_project.inventory_service.entity.*;
 import com.main_project.inventory_service.repository.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.eventhandling.EventBus;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryEventHandler {
 
     private final MedicineRepository medicineRepository;
@@ -46,15 +48,12 @@ public class InventoryEventHandler {
             dispenseOrder.setStatus("RESERVED");
             dispenseOrderRepository.save(dispenseOrder);
 
-            // Validate and reserve each medicine
             for (MedicineItem item : event.getItems()) {
                 UUID medicineId = item.getMedicineId();
 
-                // Find medicine
                 Medicine medicine = medicineRepository.findById(medicineId)
                         .orElseThrow(() -> new RuntimeException("Medicine not found: " + item.getMedicineId()));
 
-                // Find available inventory lots for this medicine
                 List<InventoryLot> availableLots = inventoryLotRepository.findAll().stream()
                         .filter(lot -> lot.getMedicine() != null &&
                                 lot.getMedicine().getId().equals(medicineId) &&
@@ -63,22 +62,7 @@ public class InventoryEventHandler {
                         .sorted(Comparator.comparing(InventoryLot::getExpireDate, Comparator.nullsLast(Comparator.naturalOrder())))
                         .collect(Collectors.toList());
 
-                // Calculate total available quantity
-                int totalAvailable = availableLots.stream()
-                        .mapToInt(lot -> lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0)
-                        .sum();
-
-                // Check if enough stock available
-                if (totalAvailable < item.getQuantity()) {
-                    throw new RuntimeException("Rollback any partial reservations" + item.getName());
-
-                }
-
-                // Reserve medicine from lots (FIFO - First In First Out)
                 int remainingToReserve = item.getQuantity();
-
-                List<DispenseItem> dispenseItemTmp = new ArrayList<>();
-                List<StockLedger> stockLedgerTmp = new ArrayList<>();
 
                 for (InventoryLot lot : availableLots) {
                     if (remainingToReserve <= 0) break;
@@ -86,7 +70,6 @@ public class InventoryEventHandler {
                     int availableInLot = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
                     int toReserveFromLot = Math.min(remainingToReserve, availableInLot);
 
-                    // Create DispenseItem for this reservation
                     DispenseItem dispenseItem = new DispenseItem();
                     dispenseItem.setId(UUID.randomUUID());
                     dispenseItem.setQuantity(toReserveFromLot);
@@ -95,14 +78,9 @@ public class InventoryEventHandler {
                     dispenseItem.setDispenseOrder(dispenseOrder);
                     dispenseItem = dispenseItemRepository.save(dispenseItem);
 
-                    // Store DispenseItem ID for potential rollback
-                    //dispenseItemIds.add(dispenseItem.getId().toString());
-
-                    // Update lot quantity
                     lot.setQuantityOnHand(availableInLot - toReserveFromLot);
                     inventoryLotRepository.save(lot);
 
-                    // Record in stock ledger with referenceId = DispenseItem.id
                     StockLedger ledgerEntry = new StockLedger();
                     //ledgerEntry.setId(UUID.randomUUID());
                     ledgerEntry.setLot(lot.getLotNo());
@@ -115,65 +93,50 @@ public class InventoryEventHandler {
 
                     remainingToReserve -= toReserveFromLot;
                 }
-
-                // Check if all quantity was reserved successfully
-                if (remainingToReserve != 0) {
-                    throw new RuntimeException("Error calculating reservation for: " + medicine.getName());
-                }
             }
 
-            System.out.println("da kiem tra xong kho");
+            log.info("Đã cập nhật kho thành công cho đơn thuốc: {}", event.getPrescriptionId());
 
         } catch (Exception e) {
-            // FIX: Bắt lỗi để bắn Event thất bại, NHƯNG KHÔNG ĐƯỢC GỌI DB Ở ĐÂY
-            System.err.println("Loi giu thuoc, Transaction se Rollback tu dong: " + e.getMessage());
-            // Phát sự kiện thất bại để Saga biết đường xử lý (Compensating Transaction ở service khác)
+            //try-catch để báo Saga rollback nếu việc GHI DB thất bại
+            log.error("Lỗi khi cập nhật DB Inventory: {}", e.getMessage());
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new MedicineReservationFailedEvent(event.getPrescriptionId())
             ));
-            // Quan trọng: Phải ném lại RuntimeException để Spring kích hoạt @Transactional rollback
-            // Nếu bạn "nuốt" lỗi mà không ném ra, Spring sẽ tưởng thành công và Commit những gì đã ghi!
-            throw new RuntimeException("Rollback Inventory Transaction due to: " + e.getMessage());
+
+            throw new RuntimeException("Hoàn tác giao dịch kho", e);
         }
 
     }
+
+
 
     @EventHandler
     @Transactional
     public void on(MedicineReservationReleasedEvent event){
         try {
-            // Find all DispenseItems for this prescription by finding DispenseOrder
             List<DispenseOrder> dispenseOrders =
                     dispenseOrderRepository.findAllByPrescription(event.getPrescriptionId());
 
+            // Đánh dấu hủy đơn xuất
             dispenseOrders.forEach(order -> order.setStatus("CANCELLED"));
             dispenseOrderRepository.saveAll(dispenseOrders);
-            // Rollback all reservations for this prescription
-            for (DispenseOrder order : dispenseOrders) {
-                List<DispenseItem> dispenseItems = dispenseItemRepository.findAll().stream()
-                        .filter(item -> item.getDispenseOrder() != null &&
-                                item.getDispenseOrder().getId().equals(order.getId()))
-                        .toList();
 
+            // Hoàn trả lại số lượng vào lô
+            for (DispenseOrder order : dispenseOrders) {
+                List<DispenseItem> dispenseItems = dispenseItemRepository.findByDispenseOrderId(order.getId());
                 for (DispenseItem dispenseItem : dispenseItems) {
                     rollbackDispenseItem(dispenseItem);
                 }
             }
-            System.out.println("Database rollback successfully for Release");
+            log.info("Đã rollback kho thành công cho Release");
 
         } catch (Exception e) {
-            // Log error but still emit event (compensation should continue)
-            System.err.println("Error releasing medicine reservation: " + e.getMessage());
-
+            log.error("Lỗi khi rollback kho: {}", e.getMessage());
         }
     }
 
 
-
-
-    /**
-     * Rollback a single DispenseItem by restoring inventory and creating reverse StockLedger entry
-     */
     private void rollbackDispenseItem(DispenseItem dispenseItem) {
         if (dispenseItem == null || dispenseItem.getInventoryLot() == null) {
             return;
@@ -182,34 +145,27 @@ public class InventoryEventHandler {
         InventoryLot lot = dispenseItem.getInventoryLot();
         Integer quantityToRestore = dispenseItem.getQuantity();
 
-        // Find all StockLedger entries with referenceId = DispenseItem.id
+
         List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
                 .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
                         "OUT".equals(ledger.getType()) &&
                         "DISPENSE_ITEM".equals(ledger.getReferenceType()))
                 .toList();
 
-        // Restore quantity to inventory lot
         int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
         lot.setQuantityOnHand(currentQuantity + quantityToRestore);
         inventoryLotRepository.save(lot);
 
-        // Create reverse StockLedger entry (IN) for rollback
         StockLedger reverseLedgerEntry = new StockLedger();
         reverseLedgerEntry.setId(UUID.randomUUID());
         reverseLedgerEntry.setLot(lot.getLotNo());
         reverseLedgerEntry.setType("IN");
         reverseLedgerEntry.setQuantity(quantityToRestore);
-        reverseLedgerEntry.setReferenceId(dispenseItem.getId()); // Still reference DispenseItem
+        reverseLedgerEntry.setReferenceId(dispenseItem.getId()); //reference DispenseItem
         reverseLedgerEntry.setReferenceType("DISPENSE_ITEM_ROLLBACK");
         reverseLedgerEntry.setInventoryLot(lot);
         stockLedgerRepository.save(reverseLedgerEntry);
-
-        // Optionally delete or mark DispenseItem as cancelled
-        // For now, we'll keep it for audit trail
-        //dispenseItemRepository.delete(dispenseItem);
     }
-
 
 
 }

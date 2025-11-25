@@ -18,8 +18,6 @@ import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.stereotype.Component;
 
 
-
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -27,40 +25,19 @@ public class InvoiceEventHandler {
 
     private final InvoiceRepository invoiceRepository;
 
-
     private final InvoiceItemRepository invoiceItemRepository;
-
-    private final InvoiceSagaMapper invoiceSagaMapper;
 
     private final EventBus eventBus;
 
 
     @EventHandler
     @Transactional
-    public void on(MedicineChargesAddedEvent event){
-
-        // --- FIX IDEMPOTENCY: KIỂM TRA TRÙNG LẶP ---
-        // Nếu hóa đơn đã tồn tại trong DB rồi (do lần chạy trước thành công 1 nửa),
-        // thì ta KHÔNG làm gì cả, coi như thành công để Saga đi tiếp.
-
-//        if (invoiceRepository.existsById(event.getInvoiceId())) {
-//            log.warn("Invoice {} đã tồn tại. Bỏ qua bước tạo DB để đảm bảo Idempotency.", event.getInvoiceId());
-//            return;
-//        }
-
-
+        public void on(MedicineChargesAddedEvent event){
         try {
-            // Load invoice from database
-            Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
-                    .orElseThrow(() -> new InvoiceNotFoundException("Invoice not found: " + event.getInvoiceId()));
+            Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
 
-            // Validate invoice status
-            if (!"DRAFT".equals(invoice.getStatus()) && !"PENDING".equals(invoice.getStatus())) {
-                throw new RuntimeException("Invalid invoice status: " + invoice.getStatus());
-            }
-
-            // Add medicine items to invoice
             int addedAmount = 0;
+
             for (InvoiceItemCheckerRequest medicineItem : event.getInvoiceItemCheckerRequest().getItems()) {
                 InvoiceItem invoiceItem = new InvoiceItem();
                 invoiceItem.setId(medicineItem.getId());
@@ -68,44 +45,43 @@ public class InvoiceEventHandler {
                 invoiceItem.setReferenceId(medicineItem.getReferenceId());
                 invoiceItem.setQuantity(medicineItem.getQuantity());
                 invoiceItem.setDescription(medicineItem.getDescription());
-                //inventory-serivce nhận medicineItem.getMedicineId() để tra cứu giá tiền của thuốc
-                //medicineRepository.findById().getSalePrice()-->price
-
                 invoiceItem.setUnitPrice(medicineItem.getUnitPrice());
-                for(MedicineItem it : event.getMedicineItems()){
-                   if(it.getId() == medicineItem.getId()){
-                       invoiceItem.setDescription(it.getName());
-                       break;
-                   }
+
+                for (MedicineItem it : event.getMedicineItems()) {
+                    if (medicineItem.getId().equals(it.getId()) ||
+                            it.getMedicineId().equals(medicineItem.getReferenceId())) {
+                        invoiceItem.setDescription(it.getName());
+                        break;
+                    }
                 }
 
                 invoiceItem.setInvoice(invoice);
-
                 invoice.addItem(invoiceItem);
                 invoiceItemRepository.save(invoiceItem);
 
                 addedAmount += (medicineItem.getQuantity() * medicineItem.getUnitPrice());
             }
 
-            // Update total amount
             invoice.setTotalAmount((invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) + addedAmount);
+
             Invoice invoiceSaved = invoiceRepository.save(invoice);
 
-            log.info("Successfully added medicine charges to Invoice: {}", invoice.getId());
+            log.info("Đã cập nhật Invoice DB thành công. Tổng tiền mới: {}", (invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) + addedAmount);
 
         } catch (Exception e) {
-            log.error("Failed to process Invoice charges: {}", e.getMessage());
+            log.error("LỖI NGHIÊM TRỌNG khi cập nhật Invoice DB: {}", e.getMessage());
 
-            // Bắn sự kiện lỗi để Saga biết đường Rollback
+            //COMPENSATION: PHÁT SỰ KIỆN LỖI ĐỂ SAGA ROLLBACK
+            // Nếu lưu DB thất bại, Saga cần biết để rollback bước Inventory trước đó
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new ChargesAdditionFailedEvent(
                             event.getPrescriptionId(),
                             event.getInvoiceId(),
-                            e.getMessage()
+                            "Lỗi DB Invoice: " + e.getMessage()
                     )
             ));
 
-            throw new RuntimeException("Rollback Invoice DB Transaction", e);
+            throw new RuntimeException("Hoàn tác giao dịch hóa đơn", e);
         }
     }
 
@@ -114,47 +90,38 @@ public class InvoiceEventHandler {
     public void on(InsuranceDiscountUpdatedEvent event){
         try {
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
-                    .orElseThrow(() -> new InvoiceNotFoundException("Invoice not found: " + event.getInvoiceId()));
+                    .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn: " + event.getInvoiceId()));
 
-            // Validate invoice status
-            if (!"DRAFT".equals(invoice.getStatus()) && !"PENDING".equals(invoice.getStatus())) {
-                throw new RuntimeException("Invalid status for discount");
-            }
-
-            // Apply discount
             Integer currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
             Integer discount = event.getDiscountAmount() != null ? event.getDiscountAmount() : 0;
 
-
-            // Update total amount after discount
             Integer finalAmount = Math.max(0, currentTotal - discount);
             invoice.setInsuranceTotalPay(discount);
             invoice.setPatientTotalPay(finalAmount);
 
-
             invoiceRepository.save(invoice);
-            log.info("Insurance discount applied successfully");
-
+            log.info("Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}", discount, finalAmount);
         } catch (Exception e) {
-            log.error("Failed to apply discount: {}", e.getMessage());
-
+            log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
+            // 4. COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new InsuranceUpdateFailedEvent(
                             event.getPrescriptionId(),
                             event.getInvoiceId(),
-                            e.getMessage()
+                            "Lỗi cơ sở dữ liệu: " + e.getMessage()
                     )
             ));
-            throw new RuntimeException("Rollback Discount", e);
+
+            throw new RuntimeException("Hoàn tác Cập nhật Giảm giá", e);
         }
     }
 
-    // --- XỬ LÝ ROLLBACK: HỦY GIẢM GIÁ (COMPENSATION) ---
+    // --- XỬ LÝ ROLLBACK: HỦY GIẢM GIÁ ---(TẠM THỜI CHƯA DÙNG ĐỂ PHỤC VỤ CHO PAYMENT SAU NÀY)
     @EventHandler
     @Transactional
     public void on(InsuranceDiscountRevertedEvent event) {
         try {
-            log.info("Reverting Insurance Discount for Invoice: {}", event.getInvoiceId());
+            log.info("Hoàn lại giảm giá bảo hiểm cho hóa đơn: {}", event.getInvoiceId());
 
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
                     .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -164,48 +131,37 @@ public class InvoiceEventHandler {
             invoice.setPatientTotalPay(invoice.getTotalAmount()); // Trả về nguyên giá
 
             invoiceRepository.save(invoice);
-            log.info("Discount reverted successfully");
+            log.info("Hoàn lại giảm giá thành công");
 
         } catch (Exception e) {
-            log.error("Failed to revert discount: {}", e.getMessage());
-            // Không cần throw exception ở đây vì đây là bước rollback cuối cùng
+            log.error("Không thể hoàn lại giảm giá:{}", e.getMessage());
         }
     }
 
-    // --- XỬ LÝ ROLLBACK: XÓA THUỐC (COMPENSATION) ---
+    // --- XỬ LÝ ROLLBACK: XÓA THUỐC ---
     @EventHandler
     @Transactional
     public void on(MedicineChargesRemovedEvent event) {
         try {
-            log.info("Removing Medicine Charges for Invoice: {}", event.getInvoiceId());
+            log.info("Loại bỏ phí thuốc cho hóa đơn: {}", event.getInvoiceId());
 
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
-                    .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                    .orElseThrow(() -> new RuntimeException("Loại bỏ phí thuốc cho hóa đơn: ..."));
 
-            // Tìm và xóa các item là thuốc
-            // Lưu ý: Cần cẩn thận với ConcurrentModificationException khi xóa trong loop
-            // Nên dùng query delete hoặc iterator remove
-
-            var items = invoiceItemRepository.findByInvoiceId(invoice.getId());
             int removedAmount = 0;
 
-            for (InvoiceItem item : items) {
-                if ("MEDICINE".equals(item.getServiceType())) {
-                    removedAmount += (item.getQuantity() * item.getUnitPrice());
-                    invoiceItemRepository.delete(item);
-                }
-            }
+            //Xóa tất cả item thuốc của hóa đơn này một lần
+            invoiceItemRepository.deleteByInvoice_IdAndServiceType(event.getInvoiceId(), "MEDICINE");
 
-            // Cập nhật lại tổng tiền
             int newTotal = (invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) - removedAmount;
             invoice.setTotalAmount(Math.max(0, newTotal));
-            invoice.setPatientTotalPay(Math.max(0, newTotal)); // Reset patient pay
-
+            invoice.setPatientTotalPay(Math.max(0, newTotal));
             invoiceRepository.save(invoice);
-            log.info("Medicine charges removed successfully");
+
+            log.info("Phí thuốc đã được xoá thành công");
 
         } catch (Exception e) {
-            log.error("Failed to remove charges: {}", e.getMessage());
+            log.error("Không thể xoá các phí thuốc: {}", e.getMessage());
         }
     }
 

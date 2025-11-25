@@ -1,8 +1,9 @@
 package com.main_project.insurance_service.aggregate;
 
+import com.do_an.common.command.CancelInsuranceClaimCommand;
 import com.do_an.common.command.ValidateInsuranceCommand;
+import com.do_an.common.event.InsuranceClaimCancelledEvent;
 import com.do_an.common.event.InsuranceRejectedEvent;
-import com.do_an.common.event.InsuranceValidatedEvent;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.main_project.insurance_service.dto.*;
@@ -17,13 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventhandling.EventBus;
-import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.GenericEventMessage;
-import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -54,38 +52,33 @@ public class InsuranceCommandHandler {
         try {
             UUID patientId = command.getPatientId();
 
-            //InvoiceDTO invoiceDTO = insuranceClaimService.processInvoiceClaim(command.getInvoiceCheckerRequest());
-
-            // 1. Kiểm tra thông tin bảo hiểm
             PatientInsurance patientInsurance = patientInsuranceRepository
                     .findActiveInsuranceByPatientId(patientId)
-                    .orElseThrow(() -> new RuntimeException("No active insurance found for patient: " + patientId));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm đang hoạt động cho bệnh nhân: " + patientId));
 
-            // Check valid
             if (!isInsuranceValid(patientInsurance)) {
                 eventBus.publish(GenericEventMessage.asEventMessage(
                         new InsuranceRejectedEvent(
                                 command.getPatientId(),
                                 command.getPrescriptionId(),
-                                "Insurance has expired or is not active"
+                                "Bảo hiểm đã hết hạn hoặc không còn hiệu lực"
                         )
                 ));
                 return;
             }
 
-            // Check policy
             if (patientInsurance.getInsurancePolicy() == null) {
                 eventBus.publish(GenericEventMessage.asEventMessage(
                         new InsuranceRejectedEvent(
                                 command.getPatientId(),
                                 command.getPrescriptionId(),
-                                "No insurance policy found"
+                                "Không tìm thấy chính sách bảo hiểm nào"
                         )
                 ));
                 return;
             }
 
-            // 2. Tính toán chi trả
+            //Tính toán chi trả
             Float bhytPayRatio = patientInsurance.getInsurancePolicy().getCoverageAmount() / 100.0f;
             Set<InvoiceItemDTO> processedItems = new HashSet<>();
             List<ProcessedInvoiceItem> itemsForClaim = new ArrayList<>();
@@ -98,16 +91,14 @@ public class InsuranceCommandHandler {
             for (InvoiceItemCheckerRequest itemRequest : requestDTO.getItems()) {
                 ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
                 processedItems.add(processedItem.getInvoiceItem());
-
                 if (processedItem.getInvoiceItem().getInsurancePayAmount() > 0) {
                     itemsForClaim.add(processedItem);
                 }
-
                 totalInsurancePay += processedItem.getInvoiceItem().getInsurancePayAmount();
                 totalPatientPay += processedItem.getInvoiceItem().getPatientPayAmount();
             }
 
-            // 3. Lưu Insurance Claim vào DB
+
             InsuranceClaim insuranceClaim = new InsuranceClaim();
             insuranceClaim.setId(command.getInsuranceClaimId());
             insuranceClaim.setPatientInsurance(patientInsurance);
@@ -117,15 +108,12 @@ public class InsuranceCommandHandler {
             insuranceClaim.setPatientPayAmount(totalPatientPay);
             insuranceClaim.setClaimDate(ZonedDateTime.now());
             insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
-
             InsuranceClaim savedClaim = insuranceClaimRepository.save(insuranceClaim);
 
-            // 4. Lưu các Claim Items
             for (ProcessedInvoiceItem processedItem : itemsForClaim) {
                 ClaimItemRequestDTO claimItemRequest = createClaimItemRequestFromProcessedItem(processedItem, savedClaim.getId());
                 ClaimItemDTO createdClaimItem = claimItemService.createClaimItem(claimItemRequest);
 
-                // Map ngược lại ID để update vào InvoiceItem nếu cần
                 for (InvoiceItemDTO invoiceItem : processedItems) {
                     if (invoiceItem.getId().equals(processedItem.getInvoiceItem().getId())) {
                         invoiceItem.setClaimItemId(createdClaimItem.getId());
@@ -134,8 +122,7 @@ public class InsuranceCommandHandler {
                 }
             }
 
-            // 5. THÀNH CÔNG: Khởi tạo Aggregate để phát sự kiện Validated
-            // Lưu ý: totalInsurancePay chính là coverageAmount cần trả về cho Invoice Service
+            //Khởi tạo Aggregate để phát sự kiện  InsuranceValidatedEvent
             Integer finalCoverageAmount = totalInsurancePay;
 
             insuranceAggregateRepository.newInstance(() ->
@@ -147,20 +134,39 @@ public class InsuranceCommandHandler {
                     )
             );
 
-            log.info("Insurance Validated. Coverage: {}", finalCoverageAmount);
+            log.info("Đã xác thực bảo hiểm. Mức bảo hiểm: {}", finalCoverageAmount);
 
         } catch (Exception e) {
-            log.error("Insurance validation failed: {}", e.getMessage());
+            log.error("Xác thực bảo hiểm thất bại: {}", e.getMessage());
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new InsuranceRejectedEvent(
                             command.getPatientId(),
                             command.getPrescriptionId(),
-                            "Insurance validation failed: " + e.getMessage()
+                            "Xác thực bảo hiểm thất bại: {} " + e.getMessage()
                     )
             ));
+            throw new RuntimeException("Hoàn tác giao dịch bảo hiểm", e);
         }
+    }
+
+    @CommandHandler
+    public void handle(CancelInsuranceClaimCommand command) {
+        log.info("Nhận lệnh CancelInsuranceClaimCommand cho ClaimId: {}", command.getInsuranceClaimId());
+        try {
+            //Cập nhật DB sang trạng thái CANCELLED/REJECTED
+            insuranceClaimService.rejectClaim(command.getInsuranceClaimId(), command.getReason());
 
 
+            eventBus.publish(GenericEventMessage.asEventMessage(
+                    new InsuranceClaimCancelledEvent(
+                            command.getInsuranceClaimId(),
+                            command.getPrescriptionId()
+                    )
+            ));
+
+        } catch (Exception e) {
+            log.error("Lỗi khi hủy InsuranceClaim: {}", e.getMessage());
+        }
     }
 
     private boolean isInsuranceValid(PatientInsurance patientInsurance) {
@@ -193,7 +199,7 @@ public class InsuranceCommandHandler {
                 bhytCatalogueId = bhytService.getId();
             }
         } catch (RuntimeException e) {
-            log.warn("Service not found in BHYT catalogue: {}. Patient pays full amount.", itemRequest.getReferenceId());
+            log.warn("Dịch vụ không có trong danh mục BHYT: {}. Bệnh nhân thanh toán toàn bộ chi phí.", itemRequest.getReferenceId());
         }
 
         itemDTO.setInsurancePayAmount(insurancePayAmount);

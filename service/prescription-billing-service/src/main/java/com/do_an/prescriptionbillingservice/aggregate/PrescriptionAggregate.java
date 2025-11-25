@@ -16,19 +16,17 @@ import java.util.UUID;
 @Aggregate
 @NoArgsConstructor
 public class PrescriptionAggregate {
-
     @AggregateIdentifier
     private UUID prescriptionId;
     private String status;
 
     @CommandHandler
     public PrescriptionAggregate(CreatePrescriptionCommand command) {
-        // Validate dữ liệu đầu vào
         if (command.getItems() == null || command.getItems().isEmpty()) {
             throw new IllegalArgumentException("Đơn thuốc không được rỗng");
         }
 
-        // Phát sự kiện bắt đầu -> Kích hoạt Saga (Đúng thứ tự tham số)
+        //Kích hoạt Saga
         AggregateLifecycle.apply(new PrescriptionCreatedEvent(
                 command.getPrescriptionId(),
                 command.getPatientId(),
