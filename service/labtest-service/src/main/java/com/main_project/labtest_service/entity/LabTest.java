@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.ZonedDateTime;
 import java.util.*;
-import com.main_project.labtest_service.entity.LabTechnician;
 
 @Entity
 @Table(name = "lab_test")
@@ -16,10 +15,13 @@ import com.main_project.labtest_service.entity.LabTechnician;
 public class LabTest {
 
     @Id
-    @Column(length = 50)
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(length = 50)
+    @Column(name = "medical_history_id", columnDefinition = "uuid")
+    private UUID medicalHistoryId;
+
+    @Column(name = "doctor_id", columnDefinition = "uuid")
     private UUID doctorId;
 
     private int price;
@@ -27,24 +29,28 @@ public class LabTest {
     @Column(length = 255)
     private String instructions;
 
-    @Column(length = 255)
+    @Column(length = 50)
     private String status;
 
+    @Column(name = "result_date")
     private ZonedDateTime resultDate;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "abnormal_flag")
     private String abnormalFlag;
 
-    @Column(length = 255)
+    @Column(length = 50)
     private String units;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "structure_json")
     private String structureJson;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "reference_range")
     private String referenceRange;
 
+    @Column(name = "created_at")
     private ZonedDateTime createdAt;
+    
+    @Column(name = "updated_at")
     private ZonedDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)

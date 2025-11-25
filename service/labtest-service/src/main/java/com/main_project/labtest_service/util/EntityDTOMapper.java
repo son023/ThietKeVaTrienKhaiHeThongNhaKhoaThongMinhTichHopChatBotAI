@@ -22,6 +22,7 @@ public class EntityDTOMapper {
 
         LabTestDTO dto = new LabTestDTO();
         dto.setId(entity.getId());
+        dto.setMedicalHistoryId(entity.getMedicalHistoryId());
         if (entity.getLabTechnician() != null) {
             dto.setLabTechnicianId(entity.getLabTechnician().getUserId());
         }
@@ -58,6 +59,7 @@ public class EntityDTOMapper {
         if (requestDTO == null) return null;
 
         LabTest entity = new LabTest();
+        entity.setMedicalHistoryId(requestDTO.getMedicalHistoryId());
         entity.setDoctorId(requestDTO.getDoctorId());
         entity.setPrice(requestDTO.getPrice());
         entity.setInstructions(requestDTO.getInstructions());
@@ -130,8 +132,6 @@ public class EntityDTOMapper {
         return MedicalAttachment.builder()
                 .filePath(dto.getFilePath())
                 .type(dto.getType())
-                .createdAt(ZonedDateTime.now())
-                .updatedAt(ZonedDateTime.now())
                 .labTest(labTest)
                 .build();
     }
