@@ -1,11 +1,7 @@
 package com.main_project.appointment_service.dto;
 
 import com.main_project.appointment_service.enums.MedicalServiceStatus;
-import jakarta.persistence.Column;
 import lombok.*;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,4 +15,6 @@ public class MedicalServiceRequestDTO {
     private Integer serviceTime;
     private MedicalServiceStatus status;
     private Float price;
+    private String description;
+    private String imgUrl;
 }

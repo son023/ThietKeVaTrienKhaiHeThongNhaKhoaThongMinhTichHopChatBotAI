@@ -1,9 +1,6 @@
 package com.main_project.appointment_service.util;
 
-import com.main_project.appointment_service.dto.AppointmentDTO;
-import com.main_project.appointment_service.dto.AppointmentRequestDTO;
-import com.main_project.appointment_service.dto.MedicalServiceDTO;
-import com.main_project.appointment_service.dto.MedicalServiceRequestDTO;
+import com.main_project.appointment_service.dto.*;
 import com.main_project.appointment_service.entity.Appointment;
 import com.main_project.appointment_service.entity.MedicalService;
 import org.springframework.stereotype.Component;
@@ -14,7 +11,9 @@ import java.util.List;
 @Component
 public class EntityDTOMapper {
 
+    // ========================
     // Appointment -> DTO
+    // ========================
     public AppointmentDTO toAppointmentDTO(Appointment entity) {
         if (entity == null) return null;
 
@@ -38,6 +37,8 @@ public class EntityDTOMapper {
                         msDTO.setServiceTime(ms.getServiceTime());
                         msDTO.setStatus(ms.getStatus());
                         msDTO.setPrice(ms.getPrice());
+                        msDTO.setDescription(ms.getDescription());
+                        msDTO.setImgUrl(ms.getImgUrl());
                         return msDTO;
                     }).toList();
             dto.setMedicalServices(serviceDTOs);
@@ -48,7 +49,9 @@ public class EntityDTOMapper {
         return dto;
     }
 
-    // RequestDTO -> Appointment entity
+    // ========================
+    // RequestDTO -> Appointment Entity
+    // ========================
     public Appointment toAppointmentEntity(AppointmentRequestDTO requestDTO, List<MedicalService> medicalServices) {
         if (requestDTO == null) return null;
 
@@ -60,11 +63,14 @@ public class EntityDTOMapper {
         entity.setStatus(requestDTO.getStatus());
         entity.setCreatedAt(ZonedDateTime.now());
         entity.setUpdatedAt(ZonedDateTime.now());
+
         entity.setMedicalServices(medicalServices);
         return entity;
     }
 
-    // Update Appointment from RequestDTO
+    // ========================
+    // Update Entity from RequestDTO
+    // ========================
     public void updateAppointmentEntity(Appointment entity, AppointmentRequestDTO requestDTO, List<MedicalService> medicalServices) {
         if (entity == null || requestDTO == null) return;
 
@@ -74,10 +80,18 @@ public class EntityDTOMapper {
         entity.setAppointmentEndTime(requestDTO.getAppointmentEndTime());
         entity.setStatus(requestDTO.getStatus());
         entity.setUpdatedAt(ZonedDateTime.now());
-        entity.setMedicalServices(medicalServices != null ? medicalServices : List.of());
+
+        if (medicalServices != null) {
+            entity.setMedicalServices(medicalServices);
+        } else {
+            entity.setMedicalServices(List.of());
+        }
     }
 
-    // MedicalService -> DTO
+    // ======================
+    // MedicalService Mapping
+    // ======================
+
     public MedicalServiceDTO toMedicalServiceDTO(MedicalService entity) {
         if (entity == null) return null;
 
@@ -88,6 +102,8 @@ public class EntityDTOMapper {
         dto.setServiceTime(entity.getServiceTime());
         dto.setStatus(entity.getStatus());
         dto.setPrice(entity.getPrice());
+        dto.setDescription(entity.getDescription());
+        dto.setImgUrl(entity.getImgUrl());
         return dto;
     }
 
@@ -100,6 +116,8 @@ public class EntityDTOMapper {
         entity.setServiceTime(requestDTO.getServiceTime());
         entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
+        entity.setDescription(requestDTO.getDescription());
+        entity.setImgUrl(requestDTO.getImgUrl());
         return entity;
     }
 
@@ -111,5 +129,7 @@ public class EntityDTOMapper {
         entity.setServiceTime(requestDTO.getServiceTime());
         entity.setStatus(requestDTO.getStatus());
         entity.setPrice(requestDTO.getPrice());
+        entity.setDescription(requestDTO.getDescription());
+        entity.setImgUrl(requestDTO.getImgUrl());
     }
 }
