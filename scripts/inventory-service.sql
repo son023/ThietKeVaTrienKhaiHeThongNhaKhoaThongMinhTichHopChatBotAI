@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS dispense_item CASCADE;
+DROP TABLE IF EXISTS dispense_order CASCADE;
+DROP TABLE IF EXISTS stock_ledger CASCADE;
+DROP TABLE IF EXISTS inventory_lot CASCADE;
+DROP TABLE IF EXISTS pharmacist CASCADE;
+DROP TABLE IF EXISTS medicine CASCADE;
+
 -- 1. Bảng medicine (Thuốc)
 CREATE TABLE medicine (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

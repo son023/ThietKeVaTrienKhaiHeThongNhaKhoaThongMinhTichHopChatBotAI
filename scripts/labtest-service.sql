@@ -1,5 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+DROP TABLE IF EXISTS medical_attachment CASCADE;
+DROP TABLE IF EXISTS lab_test CASCADE;
+DROP TABLE IF EXISTS lab_test_type CASCADE;
+DROP TABLE IF EXISTS lab_technician CASCADE;
+
 CREATE TABLE lab_technician (
     user_id        UUID PRIMARY KEY,
     license_number VARCHAR(100)

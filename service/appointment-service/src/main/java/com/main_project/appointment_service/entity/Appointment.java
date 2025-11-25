@@ -26,10 +26,10 @@ public class Appointment {
     @Column(nullable = false, name = "patient_id")
     private UUID patientId;
 
-    @Column(nullable = false, name = "start_time")
+    @Column(nullable = false, name = "appointment_start_time")
     private ZonedDateTime appointmentStartTime;
 
-    @Column(nullable = false, name = "end_time")
+    @Column(nullable = false, name = "appointment_end_time")
     private ZonedDateTime appointmentEndTime;
 
     @Enumerated(EnumType.STRING)
