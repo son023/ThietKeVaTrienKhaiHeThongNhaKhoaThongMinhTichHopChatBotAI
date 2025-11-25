@@ -1,3 +1,12 @@
+DROP TABLE IF EXISTS claim_item CASCADE;
+DROP TABLE IF EXISTS bhyt_catalogue CASCADE;
+
+DROP TABLE IF EXISTS claim_document CASCADE;
+DROP TABLE IF EXISTS insurance_claim CASCADE;
+
+DROP TABLE IF EXISTS patient_insurance CASCADE;
+DROP TABLE IF EXISTS insurance_policy CASCADE;
+
 CREATE TABLE insurance_policy (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     policy_number VARCHAR(255) UNIQUE NOT NULL,

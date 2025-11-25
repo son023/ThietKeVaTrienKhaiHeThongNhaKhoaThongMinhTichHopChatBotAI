@@ -12,6 +12,7 @@ import java.util.UUID;
 @Builder
 public class LabTestRequestDTO {
 
+    private UUID medicalHistoryId;
     private UUID labTechnicianId;
     private UUID doctorId;
     private int price;

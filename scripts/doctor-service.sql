@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS doctor_work_schedule CASCADE;
+DROP TABLE IF EXISTS doctor_degree CASCADE;
+DROP TABLE IF EXISTS work_schedule CASCADE;
+DROP TABLE IF EXISTS doctor CASCADE;
+
 -- ---------------------------------------------------------------------
 -- Bảng 1: doctor
 -- Lưu trữ thông tin cơ bản về bác sĩ
@@ -91,3 +96,37 @@ CREATE TABLE IF NOT EXISTS public.doctor_work_schedule
 CREATE INDEX idx_doctor_degree_doctor_id ON public.doctor_degree (doctor_id);
 CREATE INDEX idx_dws_doctor_id ON public.doctor_work_schedule (doctor_id);
 CREATE INDEX idx_dws_work_schedule_id ON public.doctor_work_schedule (work_schedule_id);
+
+-- -------------------------
+-- Bảng doctor
+-- -------------------------
+INSERT INTO public.doctor (user_id, consultation_fee_amount, license_number, specialization_code, working_hospital)
+VALUES
+('d903022a-1000-4001-8001-000000000002', 500000, 'LIC-001', 'CARDIO', 'Bệnh viện A'),
+('d903022a-1000-4001-8001-000000000007', 400000, 'LIC-002', 'DERM', 'Bệnh viện B');
+
+-- -------------------------
+-- Bảng work_schedule
+-- -------------------------
+INSERT INTO public.work_schedule (id, start_time, end_time, work_date)
+VALUES
+('11111111-0000-0000-0000-000000000001', '2025-11-26 08:00:00+07', '2025-11-26 12:00:00+07', '2025-11-26'),
+('11111111-0000-0000-0000-000000000002', '2025-11-26 13:00:00+07', '2025-11-26 17:00:00+07', '2025-11-26'),
+('11111111-0000-0000-0000-000000000003', '2025-11-27 08:00:00+07', '2025-11-27 12:00:00+07', '2025-11-27');
+
+-- -------------------------
+-- Bảng doctor_degree
+-- -------------------------
+INSERT INTO public.doctor_degree (id, degree_name, institution, year_obtained, doctor_id)
+VALUES
+('22222222-0000-0000-0000-000000000001', 'Bác sĩ Đa khoa', 'ĐH Y Hà Nội', 2015, 'd903022a-1000-4001-8001-000000000002'),
+('22222222-0000-0000-0000-000000000002', 'Bác sĩ Da liễu', 'ĐH Y Hà Nội', 2018, 'd903022a-1000-4001-8001-000000000007');
+
+-- -------------------------
+-- Bảng doctor_work_schedule
+-- -------------------------
+INSERT INTO public.doctor_work_schedule (id, created_at, updated_at, status, doctor_id, work_schedule_id)
+VALUES
+('33333333-0000-0000-0000-000000000001', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000001'),
+('33333333-0000-0000-0000-000000000002', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000002'),
+('33333333-0000-0000-0000-000000000003', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000003');

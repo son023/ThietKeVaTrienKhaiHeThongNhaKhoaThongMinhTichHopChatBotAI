@@ -11,6 +11,7 @@ import java.util.*;
 @Builder
 public class LabTestDTO {
     private UUID id;
+    private UUID medicalHistoryId;
     private UUID labTechnicianId;
     private UUID doctorId;
     private int price;
