@@ -6,6 +6,8 @@ import com.main_project.appointment_service.dto.UserDTO;
 import com.main_project.appointment_service.entity.Appointment;
 import com.main_project.appointment_service.entity.MedicalService;
 import com.main_project.appointment_service.enums.AppointmentStatus;
+import com.main_project.appointment_service.exceptions.AppException;
+import com.main_project.appointment_service.exceptions.enums.ErrorCode;
 import com.main_project.appointment_service.feignclient.UserServiceClient;
 import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
@@ -108,14 +110,8 @@ public class AppointmentService implements IAppointmentService {
     @Override
     public AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO) {
         if (requestDTO.getMedicalServiceIds() == null || requestDTO.getMedicalServiceIds().isEmpty()) {
-            throw new RuntimeException("At least one medical service must be provided");
+            throw new AppException(ErrorCode.LIST_MEDICAL_SERVICE_EMPTY);
         }
-
-        // ---- VALIDATE BÁC SĨ ----
-        validateDoctor(requestDTO.getDoctorId());
-
-        // ---- VALIDATE BỆNH NHÂN ----
-        validatePatient(requestDTO.getPatientId());
 
         // ============================================
         // 🔹 1. LOAD MEDICAL SERVICES
@@ -124,7 +120,7 @@ public class AppointmentService implements IAppointmentService {
                 medicalServiceRepository.findAllById(requestDTO.getMedicalServiceIds());
 
         if (medicalServices.size() != requestDTO.getMedicalServiceIds().size()) {
-            throw new RuntimeException("Some MedicalService IDs are invalid");
+            throw new AppException(ErrorCode.INVALID_MEDICAL_SERVICE_ID);
         }
 
         int totalServiceTime = medicalServices.stream()
@@ -143,7 +139,8 @@ public class AppointmentService implements IAppointmentService {
         boolean available = slotService.validateAndUnlockSlot(
                 requestDTO.getDoctorId(),
                 requestDTO.getPatientId(),
-                requestDTO.getAppointmentStartTime()
+                requestDTO.getAppointmentStartTime(),
+                end
         );
 
         if (!available) {

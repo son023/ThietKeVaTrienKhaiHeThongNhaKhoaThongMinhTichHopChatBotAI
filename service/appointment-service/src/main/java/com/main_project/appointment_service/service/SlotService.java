@@ -1,17 +1,27 @@
 package com.main_project.appointment_service.service;
 
+import com.main_project.appointment_service.dto.DoctorWorkScheduleDTO;
+import com.main_project.appointment_service.dto.WorkScheduleDTO;
 import com.main_project.appointment_service.entity.Appointment;
 import com.main_project.appointment_service.entity.MedicalService;
+import com.main_project.appointment_service.feignclient.DoctorServiceClient;
 import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -22,10 +32,13 @@ public class SlotService implements ISlotService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalServiceRepository medicalServiceRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final DoctorServiceClient doctorServiceClient;
 
     private static final String SLOT_KEY_PREFIX = "slot:";
     private static final int SLOT_STEP_MINUTE = 10;
-    private static final long LOCK_EXPIRE_SEC = 120; // slot lock tạm 2 phút
+    private static final long LOCK_EXPIRE_SEC = 15 * 60; // slot lock 15 phút để giữ slot trong 10 phút
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HHmm");
 
     @Override
     public List<ZonedDateTime> getAvailableSlots(UUID doctorId, UUID serviceId, ZonedDateTime date) {
@@ -35,9 +48,13 @@ public class SlotService implements ISlotService {
 
         int serviceTime = service.getServiceTime(); // phút
 
-        // Khung giờ làm việc (có thể sau này lấy từ WorkSchedule)
-        ZonedDateTime workStart = date.withHour(7).withMinute(0).withSecond(0).withNano(0);
-        ZonedDateTime workEnd   = date.withHour(17).withMinute(0).withSecond(0).withNano(0);
+        WorkScheduleDTO workSchedule = resolveWorkSchedule(doctorId, date.toLocalDate());
+        if (workSchedule == null) {
+            return List.of();
+        }
+
+        ZonedDateTime workStart = workSchedule.getStartTime();
+        ZonedDateTime workEnd   = workSchedule.getEndTime();
 
         // Lấy các appointment đã đặt trong ngày cho bác sĩ này
         List<Appointment> appointments = appointmentRepository
@@ -59,17 +76,10 @@ public class SlotService implements ISlotService {
                             || a.getAppointmentEndTime().isBefore(finalSlotStart))
             );
 
-            // Key redis cho slot (theo ngày + giờ của slotStart)
-            String dateString = slotStart.toLocalDate().format(DateTimeFormatter.BASIC_ISO_DATE);
-            String timeString = finalSlotStart.toLocalTime().format(DateTimeFormatter.ofPattern("HHmm"));
-            String redisKey = SLOT_KEY_PREFIX + doctorId + ":" + dateString + ":" + timeString;
+            boolean redisConflict = hasRedisOverlap(doctorId, slotStart, slotEnd);
 
-            Boolean locked = redisTemplate.hasKey(redisKey);
-
-            // Slot chỉ được xem là "available" nếu:
-            // - Không trùng Appointment trong DB
-            // - Không đang bị giữ trong Redis
-            if (!dbConflict && (locked == null || !locked)) {
+            // Slot chỉ được xem là "available" nếu không trùng DB và không bị giữ trong Redis
+            if (!dbConflict && !redisConflict) {
                 slots.add(slotStart);
             }
 
@@ -83,13 +93,13 @@ public class SlotService implements ISlotService {
      * Trả về true nếu giữ thành công, false nếu slot đã bị người khác giữ.
      */
     @Override
-    public boolean lockSlot(UUID doctorId, UUID patientId, ZonedDateTime slotStart) {
+    public boolean lockSlot(UUID doctorId, UUID patientId, ZonedDateTime slotStart, ZonedDateTime slotEnd) {
         String key = buildKey(doctorId, slotStart);
 
         // Dùng setIfAbsent (SETNX) + TTL để đảm bảo atomic lock
         Boolean success = redisTemplate.opsForValue().setIfAbsent(
                 key,
-                patientId.toString(),
+                serializeLock(patientId, slotStart, slotEnd),
                 LOCK_EXPIRE_SEC,
                 TimeUnit.SECONDS
         );
@@ -112,17 +122,23 @@ public class SlotService implements ISlotService {
      * - Nếu sai / hết hạn → trả false → báo lỗi "Slot hết hạn hoặc không hợp lệ"
      */
     @Override
-    public boolean validateAndUnlockSlot(UUID doctorId, UUID patientId, ZonedDateTime slotStart) {
+    public boolean validateAndUnlockSlot(UUID doctorId, UUID patientId, ZonedDateTime slotStart, ZonedDateTime slotEnd) {
         String key = buildKey(doctorId, slotStart);
         Object value = redisTemplate.opsForValue().get(key);
 
-        if (value == null) {
+        SlotLock lock = deserializeLock(value, slotStart);
+        if (lock == null) {
             // TTL hết hoặc chưa từng lock
             return false;
         }
 
-        if (!patientId.toString().equals(value.toString())) {
+        if (!patientId.equals(lock.getPatientId())) {
             // Người khác đang giữ slot này
+            return false;
+        }
+
+        if (lock.getEnd() != null && !lock.getEnd().isEqual(slotEnd)) {
+            // Slot end-time khác với thời lượng đang giữ
             return false;
         }
 
@@ -131,9 +147,147 @@ public class SlotService implements ISlotService {
         return true;
     }
 
+    @Override
+    public boolean isSlotAvailable(UUID doctorId, ZonedDateTime slotStart, ZonedDateTime slotEnd) {
+        List<Appointment> overlapping = appointmentRepository
+                .findOverlappingAppointments(doctorId, slotStart, slotEnd);
+
+        if (!overlapping.isEmpty()) {
+            return false;
+        }
+
+        return !hasRedisOverlap(doctorId, slotStart, slotEnd);
+    }
+
+    @Override
+    public int calculateServiceDurationMinutes(List<UUID> medicalServiceIds) {
+        if (CollectionUtils.isEmpty(medicalServiceIds)) {
+            throw new RuntimeException("At least one medical service must be provided");
+        }
+        List<MedicalService> services = medicalServiceRepository.findAllById(medicalServiceIds);
+        if (services.size() != medicalServiceIds.size()) {
+            throw new RuntimeException("Some medical services not found");
+        }
+        return services.stream()
+                .mapToInt(MedicalService::getServiceTime)
+                .sum();
+    }
+
     private String buildKey(UUID doctorId, ZonedDateTime slotStart) {
-        String dateStr = slotStart.toLocalDate().format(DateTimeFormatter.BASIC_ISO_DATE);
-        String timeStr = slotStart.toLocalTime().format(DateTimeFormatter.ofPattern("HHmm"));
+        String dateStr = slotStart.toLocalDate().format(DATE_FORMATTER);
+        String timeStr = slotStart.toLocalTime().format(TIME_FORMATTER);
         return SLOT_KEY_PREFIX + doctorId + ":" + dateStr + ":" + timeStr;
+    }
+
+    private String buildDatePrefix(UUID doctorId, ZonedDateTime slotStart) {
+        String dateStr = slotStart.toLocalDate().format(DATE_FORMATTER);
+        return SLOT_KEY_PREFIX + doctorId + ":" + dateStr + ":";
+    }
+
+    private WorkScheduleDTO resolveWorkSchedule(UUID doctorId, LocalDate workDate) {
+        try {
+            List<DoctorWorkScheduleDTO> doctorSchedules = doctorServiceClient.getDoctorWorkSchedules(doctorId);
+            if (CollectionUtils.isEmpty(doctorSchedules)) {
+                return null;
+            }
+
+            for (DoctorWorkScheduleDTO doctorSchedule : doctorSchedules) {
+                WorkScheduleDTO schedule = doctorServiceClient.getWorkSchedule(doctorSchedule.getWorkScheduleId());
+                if (schedule != null && workDate.equals(schedule.getWorkDate())) {
+                    return schedule;
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Cannot fetch doctor work schedule", ex);
+        }
+        return null;
+    }
+
+    private boolean hasRedisOverlap(UUID doctorId, ZonedDateTime start, ZonedDateTime end) {
+        String prefix = buildDatePrefix(doctorId, start);
+        Set<String> keys = redisTemplate.keys(prefix + "*");
+        if (keys == null || keys.isEmpty()) {
+            return false;
+        }
+
+        for (String key : keys) {
+            ZonedDateTime lockedStartFromKey = parseSlotStartFromKey(key);
+            SlotLock lock = deserializeLock(redisTemplate.opsForValue().get(key), lockedStartFromKey);
+            if (lock == null) {
+                // Nếu không parse được, coi như đang bị giữ để an toàn
+                return true;
+            }
+            ZonedDateTime lockStart = lock.getStart() != null ? lock.getStart() : lockedStartFromKey;
+            ZonedDateTime lockEnd = lock.getEnd() != null ? lock.getEnd() : lockStart.plusMinutes(SLOT_STEP_MINUTE);
+            if (lockStart == null || lockEnd == null) {
+                return true;
+            }
+            if (rangesOverlap(lockStart, lockEnd, start, end)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean rangesOverlap(ZonedDateTime start1, ZonedDateTime end1, ZonedDateTime start2, ZonedDateTime end2) {
+        return start1.isBefore(end2) && start2.isBefore(end1);
+    }
+
+    private ZonedDateTime parseSlotStartFromKey(String key) {
+        // key format: slot:{doctorId}:{yyyyMMdd}:{HHmm}
+        try {
+            String[] parts = key.split(":");
+            if (parts.length < 4) {
+                return null;
+            }
+            String dateStr = parts[2];
+            String timeStr = parts[3];
+            LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
+            LocalTime time = LocalTime.parse(timeStr, TIME_FORMATTER);
+            return ZonedDateTime.of(date, time, ZoneId.systemDefault());
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private String serializeLock(UUID patientId, ZonedDateTime start, ZonedDateTime end) {
+        return new SlotLock(patientId, start, end).toPayload();
+    }
+
+    private SlotLock deserializeLock(Object value, ZonedDateTime fallbackStart) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof SlotLock lock) {
+            return lock;
+        }
+        return SlotLock.fromPayload(value.toString(), fallbackStart);
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class SlotLock {
+        private UUID patientId;
+        private ZonedDateTime start;
+        private ZonedDateTime end;
+
+        String toPayload() {
+            return patientId + "|" + start + "|" + end;
+        }
+
+        static SlotLock fromPayload(String payload, ZonedDateTime fallbackStart) {
+            if (payload == null || payload.isEmpty()) {
+                return null;
+            }
+            String[] parts = payload.split("\\|");
+            try {
+                UUID patient = UUID.fromString(parts[0]);
+                ZonedDateTime start = parts.length > 1 && !parts[1].isEmpty() ? ZonedDateTime.parse(parts[1]) : fallbackStart;
+                ZonedDateTime end = parts.length > 2 && !parts[2].isEmpty() ? ZonedDateTime.parse(parts[2]) : null;
+                return new SlotLock(patient, start, end);
+            } catch (Exception ex) {
+                return null;
+            }
+        }
     }
 }

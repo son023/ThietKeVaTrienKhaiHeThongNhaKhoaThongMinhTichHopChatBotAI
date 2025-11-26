@@ -14,7 +14,9 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(1003, "Invalid credentials", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(1004, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZATION(1005, "Unauthorization", HttpStatus.FORBIDDEN),
-    PHONEANDPASSWONULL(1006, "phone và password không được để trống", HttpStatus.BAD_REQUEST);
+    PHONEANDPASSWONULL(1006, "phone và password không được để trống", HttpStatus.BAD_REQUEST),
+    LIST_MEDICAL_SERVICE_EMPTY(1007, "At least one medical service must be provided", HttpStatus.BAD_REQUEST),
+    INVALID_MEDICAL_SERVICE_ID(1008, "The provided medical service ID is invalid", HttpStatus.BAD_REQUEST);
 
     private int code;
     private String message;

@@ -2,6 +2,7 @@ package com.main_project.doctor_service.util;
 
 import com.main_project.doctor_service.dto.*;
 import com.main_project.doctor_service.entity.*;
+import com.main_project.doctor_service.enums.SpecializationEnum;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,7 +13,7 @@ public class EntityMapper {
         if (entity == null) return null;
         DoctorResponseDTO dto = new DoctorResponseDTO();
         dto.setUserId(entity.getUserId());
-        dto.setSpecializationCode(entity.getSpecializationCode());
+        dto.setSpecializationCodes(entity.getSpecializationCodes());
         dto.setWorkingHospital(entity.getWorkingHospital());
         dto.setLicenseNumber(entity.getLicenseNumber());
         dto.setConsultationFeeAmount(entity.getConsultationFeeAmount());
@@ -23,7 +24,7 @@ public class EntityMapper {
         if (request == null) return null;
         return Doctor.builder()
                 .userId(request.getUserId())
-                .specializationCode(request.getSpecializationCode())
+                .specializationCodes(request.getSpecializationCodes())
                 .workingHospital(request.getWorkingHospital())
                 .licenseNumber(request.getLicenseNumber())
                 .consultationFeeAmount(request.getConsultationFeeAmount())
@@ -32,7 +33,7 @@ public class EntityMapper {
 
     public void updateDoctorEntity(Doctor entity, DoctorRequestDTO request) {
         if (entity == null || request == null) return;
-        entity.setSpecializationCode(request.getSpecializationCode());
+        entity.setSpecializationCodes(request.getSpecializationCodes());
         entity.setWorkingHospital(request.getWorkingHospital());
         entity.setLicenseNumber(request.getLicenseNumber());
         entity.setConsultationFeeAmount(request.getConsultationFeeAmount());

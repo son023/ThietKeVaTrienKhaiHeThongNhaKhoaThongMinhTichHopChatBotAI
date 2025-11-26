@@ -27,16 +27,22 @@ public class MedicalService {
     private String serviceType;
 
     @Column(nullable = false)
-    private Integer serviceTime;  // đơn vị: phút
+    private Integer serviceTime;  // don vi: phut
 
     @Column(nullable = false)
     private Float price;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(length = 255)
+    private String imgUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255)
     private MedicalServiceStatus status;
 
-    // Many-to-Many với Appointment
+    // Many-to-Many voi Appointment
     @ManyToMany(mappedBy = "medicalServices")
     private List<Appointment> appointments;
 }

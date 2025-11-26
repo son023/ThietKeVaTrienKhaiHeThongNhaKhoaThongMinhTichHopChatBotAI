@@ -41,10 +41,30 @@ public class AppointmentController {
     @Operation(summary = "Giữ slot trong 10 phút trước khi tạo lịch hẹn")
     public ResponseEntity<?> holdSlot(@RequestBody HoldSlotRequestDTO request) {
 
+        if (request.getMedicalServiceIds() == null || request.getMedicalServiceIds().isEmpty()) {
+            return ResponseEntity.badRequest().body("Thiếu danh sách dịch vụ để tính thời lượng");
+        }
+
+        int durationMinutes;
+        try {
+            durationMinutes = slotService.calculateServiceDurationMinutes(request.getMedicalServiceIds());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+
+        ZonedDateTime slotStart = request.getAppointmentStartTime();
+        ZonedDateTime slotEnd = slotStart.plusMinutes(durationMinutes);
+
+        if (!slotService.isSlotAvailable(request.getDoctorId(), slotStart, slotEnd)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Slot đã được giữ hoặc trùng lịch, vui lòng chọn thời gian khác");
+        }
+
         boolean locked = slotService.lockSlot(
                 request.getDoctorId(),
                 request.getPatientId(),
-                request.getAppointmentStartTime()
+                slotStart,
+                slotEnd
         );
 
         if (!locked) {
