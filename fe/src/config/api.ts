@@ -1,7 +1,5 @@
 export const API_CONFIG = {
-  AUTH_SERVICE_BASE_URL: 'http://localhost:8080',
-  USER_SERVICE_BASE_URL: 'http://localhost:8080',
-  APPOINTMENT_SERVICE_BASE_URL: 'http://localhost:8082',
+  BASE_URL: 'http://localhost:8080',
 
   ENDPOINTS: {
     // User Service
@@ -16,17 +14,8 @@ export const API_CONFIG = {
   }
 };
 
-export const createApiUrl = (service: 'auth' | 'user' | 'appointment', endpoint: string) => {
-  switch (service) {
-    case 'auth':
-      return `${API_CONFIG.AUTH_SERVICE_BASE_URL}${endpoint}`;
-    case 'user':
-      return `${API_CONFIG.USER_SERVICE_BASE_URL}${endpoint}`;
-    case 'appointment':
-      return `${API_CONFIG.APPOINTMENT_SERVICE_BASE_URL}${endpoint}`;
-    default:
-      return endpoint;
-  }
+export const createApiUrl = (endpoint: string) => {
+    return `${API_CONFIG.BASE_URL}${endpoint}`;
 };
 
 export const getApiHeaders = (includeAuth = false) => {
