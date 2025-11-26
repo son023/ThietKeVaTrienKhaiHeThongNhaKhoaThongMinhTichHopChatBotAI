@@ -103,12 +103,12 @@ public class PrescriptionBillingSaga {
         ));
     }
 
+
     @EndSaga
     @SagaEventHandler(associationProperty = "prescriptionId")
-    public void on(InsuranceDiscountUpdatedEvent event) {
-        System.out.println("SAGA PRE-BILLING HOÀN TẤT: Hóa đơn đã sẵn sàng để thanh toán.");
+    public void on(InvoiceDiscountAppliedSuccessEvent event) {
+        log.info("🎉 SAGA PRE-BILLING HOÀN TẤT: Hóa đơn đã sẵn sàng để thanh toán.");
     }
-
 
     //Rollback
     @EndSaga
@@ -155,11 +155,10 @@ public class PrescriptionBillingSaga {
 
     //Save DB Fail
     @SagaEventHandler(associationProperty = "prescriptionId")
-    public void on(InsuranceUpdateFailedEvent event) {
+    public void on(InvoiceDiscountAppliedFailedEvent event) {
         log.error("🛑 FAILURE (STEP 4): Lỗi cập nhật Invoice DB. Lý do: {}. -> Bắt đầu Rollback: Hủy Claim.", event.getReason());
         triggerRollbackInsuranceClaim(event.getPrescriptionId());
     }
-
 
 
     private void triggerRollbackCharges(UUID prescriptionId) {
@@ -181,7 +180,7 @@ public class PrescriptionBillingSaga {
         commandGateway.send(new CancelInsuranceClaimCommand(
                 this.insuranceClaimId,
                 prescriptionId,
-                "Rollback do lỗi cập nhật hóa đơn: "
+                "Rollback do lỗi cập nhật hóa đơn cho InsuranceClaim: " + this.insuranceClaimId
         ));
     }
 

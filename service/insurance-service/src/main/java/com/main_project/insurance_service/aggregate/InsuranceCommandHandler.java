@@ -134,7 +134,7 @@ public class InsuranceCommandHandler {
                     )
             );
 
-            log.info("Đã xác thực bảo hiểm. Mức bảo hiểm: {}", finalCoverageAmount);
+            log.info("Đã xác thực bảo hiểm {}. Mức bảo hiểm: {}", command.getInsuranceClaimId(), finalCoverageAmount);
 
         } catch (Exception e) {
             log.error("Xác thực bảo hiểm thất bại: {}", e.getMessage());
@@ -156,7 +156,7 @@ public class InsuranceCommandHandler {
             //Cập nhật DB sang trạng thái CANCELLED/REJECTED
             insuranceClaimService.rejectClaim(command.getInsuranceClaimId(), command.getReason());
 
-
+            log.info("Đã cập nhật trạng thái REJECTED cho InsuranceClaim {}", command.getInsuranceClaimId());
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new InsuranceClaimCancelledEvent(
                             command.getInsuranceClaimId(),

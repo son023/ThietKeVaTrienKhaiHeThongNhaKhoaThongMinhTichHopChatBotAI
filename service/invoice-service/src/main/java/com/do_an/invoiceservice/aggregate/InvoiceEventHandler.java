@@ -6,7 +6,6 @@ import com.do_an.common.model.MedicineItem;
 import com.do_an.invoiceservice.entity.Invoice;
 import com.do_an.invoiceservice.entity.InvoiceItem;
 import com.do_an.invoiceservice.exception.InvoiceNotFoundException;
-import com.do_an.invoiceservice.mapper.InvoiceSagaMapper;
 import com.do_an.invoiceservice.repository.InvoiceItemRepository;
 import com.do_an.invoiceservice.repository.InvoiceRepository;
 import jakarta.transaction.Transactional;
@@ -100,12 +99,19 @@ public class InvoiceEventHandler {
             invoice.setPatientTotalPay(finalAmount);
 
             invoiceRepository.save(invoice);
+
+                eventBus.publish(GenericEventMessage.asEventMessage(
+                        new InvoiceDiscountAppliedSuccessEvent(
+                                event.getPrescriptionId(),
+                                event.getInvoiceId()
+                        )
+                ));
             log.info("Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}", discount, finalAmount);
         } catch (Exception e) {
             log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
             // 4. COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
             eventBus.publish(GenericEventMessage.asEventMessage(
-                    new InsuranceUpdateFailedEvent(
+                    new InvoiceDiscountAppliedFailedEvent(
                             event.getPrescriptionId(),
                             event.getInvoiceId(),
                             "Lỗi cơ sở dữ liệu: " + e.getMessage()
@@ -114,6 +120,7 @@ public class InvoiceEventHandler {
 
             throw new RuntimeException("Hoàn tác Cập nhật Giảm giá", e);
         }
+
     }
 
     // --- XỬ LÝ ROLLBACK: HỦY GIẢM GIÁ ---(TẠM THỜI CHƯA DÙNG ĐỂ PHỤC VỤ CHO PAYMENT SAU NÀY)

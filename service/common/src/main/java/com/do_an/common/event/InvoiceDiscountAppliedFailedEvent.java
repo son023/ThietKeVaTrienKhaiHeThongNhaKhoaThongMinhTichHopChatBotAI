@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InsuranceUpdateFailedEvent {
+public class InvoiceDiscountAppliedFailedEvent {
     private UUID prescriptionId;
     private UUID invoiceId;
     private String reason;
