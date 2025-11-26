@@ -25,6 +25,8 @@ public class InventoryAggregate {
         AggregateLifecycle.apply(new MedicineReservedEvent(
                 command.getPrescriptionId(),
                 command.getDispenseOrderId(),
+                command.getDoctorId(),
+                command.getMedicalHistoryId(),
                 command.getItems()
         ));
     }

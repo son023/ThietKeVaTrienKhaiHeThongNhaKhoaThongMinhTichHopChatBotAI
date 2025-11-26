@@ -24,4 +24,7 @@ public class InvoiceItemResponse {
     private Integer insurancePayAmount;
     private Integer patientPayAmount;
     private UUID claimItemId;
+
+    // --- BỔ SUNG TRƯỜNG NÀY ---
+    private UUID bhytCatalogueId;
 }

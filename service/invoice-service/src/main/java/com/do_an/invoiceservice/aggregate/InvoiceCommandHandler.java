@@ -49,6 +49,7 @@ public class InvoiceCommandHandler {
 
         Optional<Invoice> existingInvoice = invoiceRepository.findById(command.getInvoiceId());
 
+
         if (existingInvoice.isPresent()) {
             Invoice invoice = existingInvoice.get();
 

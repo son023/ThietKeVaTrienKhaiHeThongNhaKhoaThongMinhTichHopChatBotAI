@@ -24,8 +24,8 @@ public class DispenseOrder {
     @JoinColumn(name = "pharmacist_id")
     private Pharmacist pharmacist;
 
-    @Column(length = 255)
-    private String prescription;
+
+    private UUID prescription;
 
     @Column(length = 255)
     private String status;

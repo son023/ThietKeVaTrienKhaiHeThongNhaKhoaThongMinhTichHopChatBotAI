@@ -23,11 +23,12 @@ public class StockLedger {
     private UUID id;
 
     @Column(length = 255)
+    private String lot;
+
+    @Column(length = 255)
     private String type; // 'IN', 'OUT', 'ADJUST'
 
     private Integer quantity;
-
-    private UUID referenceId;
 
 
     @CreationTimestamp
@@ -42,8 +43,8 @@ public class StockLedger {
     @Column(length = 255)
     private String referenceType;
 
-    @Column(name = "reference_id", length = 50)
-    private String referenceId;
+    @Column(name = "reference_id")
+    private UUID referenceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_lot_id")

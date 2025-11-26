@@ -45,7 +45,7 @@ public class InventoryEventHandler {
             DispenseOrder dispenseOrder = new DispenseOrder();
             dispenseOrder.setId(event.getDispenseOrderId());
             dispenseOrder.setPrescription(event.getPrescriptionId());
-            dispenseOrder.setMedicalHistoryid(event.getMedicalHistoryId());
+            dispenseOrder.setMedicalHistoryId(event.getMedicalHistoryId());
             dispenseOrder.setDoctorId(event.getDoctorId());
             dispenseOrder.setStatus("RESERVED");
             dispenseOrderRepository.save(dispenseOrder);

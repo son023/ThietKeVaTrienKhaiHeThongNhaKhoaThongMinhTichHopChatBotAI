@@ -97,23 +97,24 @@ public class EntityDTOMapper {
     // Insurance Claim Mappings
     public InsuranceClaimDTO toInsuranceClaimDTO(InsuranceClaim entity) {
         if (entity == null) return null;
-        
+
         InsuranceClaimDTO dto = new InsuranceClaimDTO();
         dto.setId(entity.getId());
-        dto.setClaimAmount(entity.getClaimAmount());
-        dto.setApprovedAmount(entity.getApprovedAmount());
         dto.setStatus(entity.getStatus());
+        dto.setPatientPayAmount(entity.getPatientPayAmount());
+        dto.setTotalClaimAmount(entity.getTotalClaimAmount());
+        dto.setTotalInsurancePay(entity.getTotalInsurancePay());
         dto.setClaimDate(entity.getClaimDate());
         dto.setApprovalDate(entity.getApprovalDate());
         dto.setNotes(entity.getNotes());
         dto.setCreateAt(entity.getCreateAt());
         dto.setUpdateAt(entity.getUpdateAt());
-        
+
         if (entity.getPatientInsurance() != null) {
             dto.setPatientInsuranceId(entity.getPatientInsurance().getId());
             dto.setPatientInsurance(toPatientInsuranceDTO(entity.getPatientInsurance()));
         }
-        
+
         return dto;
     }
 

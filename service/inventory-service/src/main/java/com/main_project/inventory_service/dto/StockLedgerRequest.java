@@ -20,7 +20,7 @@ public class StockLedgerRequest {
     
     private String referenceType;
     
-    private String referenceId;
+    private UUID referenceId;
     
     @NotNull(message = "Inventory Lot ID is required")
     private UUID inventoryLotId;

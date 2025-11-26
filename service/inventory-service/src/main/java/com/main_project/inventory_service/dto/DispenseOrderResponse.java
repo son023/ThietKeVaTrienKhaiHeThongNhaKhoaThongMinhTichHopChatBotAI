@@ -15,8 +15,8 @@ public class DispenseOrderResponse {
     private UUID pharmacistId;
     private UUID prescription;
     private String status;
-    private String medicalHistoryId;
-    private String doctorId;
+    private UUID medicalHistoryId;
+    private UUID doctorId;
     private ZonedDateTime createAt;
     private ZonedDateTime updateAt;
 }

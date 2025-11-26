@@ -28,7 +28,6 @@ public class PrescriptionBillingSaga {
     private UUID dispenseOrderId;
     private UUID insuranceClaimId;
 
-
     private List<MedicineItem> medicineItems;
     private Integer discountAmount;
 
@@ -56,11 +55,8 @@ public class PrescriptionBillingSaga {
                 event.getMedicalHistoryId(),
                 event.getItems()
         )).exceptionally(exception -> {
-
-            //CommandHandler NÉM EXCEPTION
             System.err.println("Saga nhận được lỗi từ Inventory: " + exception.getMessage());
 
-            //Kết thúc Saga ngay lập tức vì chưa làm gì nên không cần Rollback
             SagaLifecycle.end();
 
             //phát một Event thất bại thủ công tại đây cho Notification Service
@@ -71,38 +67,64 @@ public class PrescriptionBillingSaga {
     // BƯỚC 2: Thuốc đã giữ -> Cộng tiền vào hóa đơn
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineReservedEvent event) {
+        log.info("✅ STEP 1 OK: Thuốc đã giữ. -> STEP 2: Thêm phí thuốc vào Invoice: {}", this.invoiceId);
         commandGateway.send(new AddMedicineChargesCommand(
                 this.invoiceId,
                 event.getPrescriptionId(),
                 this.medicineItems
-        ));
+        )).exceptionally(exception -> {
+            // LOGIC XỬ LÝ KHI INVOICE SERVICE BỊ TẮT HOẶC LỖI KẾT NỐI
+            log.error("❌ LỖI GIAO TIẾP: Không thể gọi Invoice Service (Service có thể đang tắt). Lỗi: {}", exception.getMessage());
+
+            // Kích hoạt bù trừ (Compensation) ngay lập tức: Trả lại thuốc vào kho
+            triggerRollbackInventory(event.getPrescriptionId());
+
+            return null;
+        });
     }
 
     // BƯỚC 3: Tiền đã cộng -> Thẩm định bảo hiểm
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineChargesAddedEvent event) {
         this.insuranceClaimId = UUID.randomUUID();
-
+        log.info("✅ STEP 2 OK: Phí thuốc đã thêm. -> STEP 3: Gửi lệnh thẩm định bảo hiểm (ClaimId: {})", this.insuranceClaimId);
         commandGateway.send(new ValidateInsuranceCommand(
                 this.insuranceClaimId,
                 event.getPrescriptionId(),
                 this.invoiceId,
                 this.patientId,
                 event.getInvoiceItemCheckerRequest()
-        ));
+        )).exceptionally(exception -> {
+            // --- XỬ LÝ KHI INSURANCE SERVICE BỊ DOWN ---
+            log.error("❌ LỖI GIAO TIẾP (STEP 3): Không thể gọi Insurance Service. Lỗi: {}", exception.getMessage());
+
+            // -> Kích hoạt Rollback từ bước Invoice (Remove Charges)
+            triggerRollbackCharges(event.getPrescriptionId());
+
+            return null;
+        });
     }
 
     // BƯỚC 4: Bảo hiểm OK -> Cập nhật giảm giá vào hóa đơn
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InsuranceValidatedEvent event) {
         this.discountAmount = event.getCoverageAmount();
+        log.info("✅ STEP 3 OK: Bảo hiểm hợp lệ. -> STEP 4: Cập nhật giảm giá vào Invoice.");
 
         commandGateway.send(new ApplyInsuranceDiscountCommand(
                 this.invoiceId,
                 event.getPrescriptionId(),
                 event.getCoverageAmount(),
                 event.getItems()
-        ));
+        )).exceptionally(exception -> {
+            // --- XỬ LÝ KHI INVOICE SERVICE BỊ DOWN (LẦN 2) ---
+            log.error("❌ LỖI GIAO TIẾP (STEP 4): Không thể gọi Invoice Service để update giảm giá. Lỗi: {}", exception.getMessage());
+
+            // -> Kích hoạt Rollback toàn phần từ bước Insurance (Cancel Claim)
+            triggerRollbackInsuranceClaim(event.getPrescriptionId());
+
+            return null;
+        });
     }
 
 

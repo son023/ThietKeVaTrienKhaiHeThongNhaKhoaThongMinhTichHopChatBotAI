@@ -13,4 +13,5 @@ import java.util.UUID;
 public class InsuranceClaimCancelledEvent {
     private UUID insuranceClaimId;
     private UUID prescriptionId;
+    private String reason;
 }

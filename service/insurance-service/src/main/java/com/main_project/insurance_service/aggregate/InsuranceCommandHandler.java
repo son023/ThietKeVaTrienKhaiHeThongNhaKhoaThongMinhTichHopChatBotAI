@@ -48,7 +48,7 @@ public class InsuranceCommandHandler {
 
 
     @CommandHandler
-    @Transactional
+    @Transactional(readOnly = true)
     public void handle(ValidateInsuranceCommand command){
         try {
             UUID patientId = command.getPatientId();
@@ -79,71 +79,41 @@ public class InsuranceCommandHandler {
                 return;
             }
 
-            //Tính toán chi trả
+            // 2. TÍNH TOÁN CHI TRẢ (BUSINESS LOGIC)
             Float bhytPayRatio = patientInsurance.getInsurancePolicy().getCoverageAmount() / 100.0f;
-            Set<InvoiceItemDTO> processedItems = new HashSet<>();
-            List<ProcessedInvoiceItem> itemsForClaim = new ArrayList<>();
-
+            Set<InvoiceItemResponse> itemResponses = new HashSet<>();
             Integer totalInsurancePay = 0;
-            Integer totalPatientPay = 0;
 
             InvoiceCheckerRequest requestDTO = command.getInvoiceCheckerRequest();
 
             for (InvoiceItemCheckerRequest itemRequest : requestDTO.getItems()) {
                 ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
-                processedItems.add(processedItem.getInvoiceItem());
-                if (processedItem.getInvoiceItem().getInsurancePayAmount() > 0) {
-                    itemsForClaim.add(processedItem);
-                }
-                totalInsurancePay += processedItem.getInvoiceItem().getInsurancePayAmount();
-                totalPatientPay += processedItem.getInvoiceItem().getPatientPayAmount();
+                InvoiceItemDTO dto = processedItem.getInvoiceItem();
+
+                // Tạo UUID trước cho ClaimItem để gửi qua Event (giúp EventHandler lưu đúng ID)
+                UUID claimItemId = (dto.getInsurancePayAmount() > 0) ? UUID.randomUUID() : null;
+                InvoiceItemResponse response = InvoiceItemResponse.builder()
+                        .id(dto.getId())
+                        .referenceId(dto.getReferenceId())
+                        .serviceType(dto.getServiceType())
+                        .quantity(dto.getQuantity())
+                        .description(dto.getDescription())
+                        .unitPrice(dto.getUnitPrice())
+                        .insurancePayAmount(dto.getInsurancePayAmount())
+                        .patientPayAmount(dto.getPatientPayAmount())
+                        .claimItemId(claimItemId)
+                        // C. SET BHYT ID TỪ KẾT QUẢ TÍNH TOÁN
+                        .bhytCatalogueId(processedItem.getBhytCatalogueId())
+                        .build();
+
+                itemResponses.add(response);
+                totalInsurancePay += dto.getInsurancePayAmount();
             }
-
-
-            InsuranceClaim insuranceClaim = new InsuranceClaim();
-            insuranceClaim.setId(command.getInsuranceClaimId());
-            insuranceClaim.setPatientInsurance(patientInsurance);
-            insuranceClaim.setStatus("PENDING");
-            insuranceClaim.setTotalClaimAmount(requestDTO.getTotalAmount());
-            insuranceClaim.setTotalInsurancePay(totalInsurancePay);
-            insuranceClaim.setPatientPayAmount(totalPatientPay);
-            insuranceClaim.setClaimDate(ZonedDateTime.now());
-            insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
-            InsuranceClaim savedClaim = insuranceClaimRepository.save(insuranceClaim);
-
-            for (ProcessedInvoiceItem processedItem : itemsForClaim) {
-                ClaimItemRequestDTO claimItemRequest = createClaimItemRequestFromProcessedItem(processedItem, savedClaim.getId());
-                ClaimItemDTO createdClaimItem = claimItemService.createClaimItem(claimItemRequest);
-
-                for (InvoiceItemDTO invoiceItem : processedItems) {
-                    if (invoiceItem.getId().equals(processedItem.getInvoiceItem().getId())) {
-                        invoiceItem.setClaimItemId(createdClaimItem.getId());
-                        break;
-                    }
-                }
-            }
-
 
 
 
             //Khởi tạo Aggregate để phát sự kiện  InsuranceValidatedEvent
             Integer finalCoverageAmount = totalInsurancePay;
-
-            Set<InvoiceItemResponse> itemResponses = new HashSet<>();
-            for(InvoiceItemDTO dto : processedItems){
-                InvoiceItemResponse it =  InvoiceItemResponse.builder()
-                    .id(dto.getId())
-                    .referenceId(dto.getReferenceId())
-                    .serviceType(dto.getServiceType())
-                    .quantity(dto.getQuantity())
-                    .description(dto.getDescription())
-                    .unitPrice(dto.getUnitPrice())
-                    .insurancePayAmount(dto.getInsurancePayAmount())
-                    .patientPayAmount(dto.getPatientPayAmount())
-                    .claimItemId(dto.getClaimItemId())
-                    .build();
-                itemResponses.add(it);
-             }
 
 
             insuranceAggregateRepository.newInstance(() ->
@@ -153,7 +123,6 @@ public class InsuranceCommandHandler {
                             command.getPatientId(),
                             finalCoverageAmount,
                             itemResponses
-
                     )
             );
 
@@ -175,21 +144,15 @@ public class InsuranceCommandHandler {
     @CommandHandler
     public void handle(CancelInsuranceClaimCommand command) {
         log.info("Nhận lệnh CancelInsuranceClaimCommand cho ClaimId: {}", command.getInsuranceClaimId());
-        try {
-            //Cập nhật DB sang trạng thái CANCELLED/REJECTED
-            insuranceClaimService.rejectClaim(command.getInsuranceClaimId(), command.getReason());
-
-            log.info("Đã cập nhật trạng thái REJECTED cho InsuranceClaim {}", command.getInsuranceClaimId());
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new InsuranceClaimCancelledEvent(
                             command.getInsuranceClaimId(),
-                            command.getPrescriptionId()
+                            command.getPrescriptionId(),
+                            command.getReason()
                     )
             ));
 
-        } catch (Exception e) {
-            log.error("Lỗi khi hủy InsuranceClaim: {}", e.getMessage());
-        }
+
     }
 
     private boolean isInsuranceValid(PatientInsurance patientInsurance) {

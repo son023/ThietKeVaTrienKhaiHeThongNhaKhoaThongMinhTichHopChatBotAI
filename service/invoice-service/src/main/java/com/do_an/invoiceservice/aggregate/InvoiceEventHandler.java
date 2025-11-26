@@ -78,7 +78,7 @@ public class InvoiceEventHandler {
             log.error("LỖI NGHIÊM TRỌNG khi cập nhật Invoice DB: {}", e.getMessage());
 
             //COMPENSATION: PHÁT SỰ KIỆN LỖI ĐỂ SAGA ROLLBACK
-            // Nếu lưu DB thất bại, Saga cần biết để rollback bước Inventory trước đó
+            //Nếu lưu DB thất bại, Saga cần biết để rollback bước Inventory trước đó
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new ChargesAdditionFailedEvent(
                             event.getPrescriptionId(),
@@ -94,6 +94,15 @@ public class InvoiceEventHandler {
     @EventHandler
     @Transactional
     public void on(InsuranceDiscountUpdatedEvent event){
+        //BỎ COMMENT NÀY ĐỂ TEST LUỒNG ROLLBACK FULL
+//        eventBus.publish(GenericEventMessage.asEventMessage(
+//                new InvoiceDiscountAppliedFailedEvent(
+//                        event.getPrescriptionId(),
+//                        event.getInvoiceId(),
+//                        "Lỗi cơ sở dữ liệu: "
+//                )
+//        ));
+
         try {
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
                     .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn: " + event.getInvoiceId()));
