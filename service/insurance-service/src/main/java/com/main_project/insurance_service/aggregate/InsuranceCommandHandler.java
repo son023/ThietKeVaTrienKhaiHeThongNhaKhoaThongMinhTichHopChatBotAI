@@ -6,6 +6,7 @@ import com.do_an.common.event.InsuranceClaimCancelledEvent;
 import com.do_an.common.event.InsuranceRejectedEvent;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
 import com.main_project.insurance_service.dto.*;
 import com.main_project.insurance_service.entity.InsuranceClaim;
 import com.main_project.insurance_service.entity.PatientInsurance;
@@ -122,15 +123,37 @@ public class InsuranceCommandHandler {
                 }
             }
 
+
+
+
             //Khởi tạo Aggregate để phát sự kiện  InsuranceValidatedEvent
             Integer finalCoverageAmount = totalInsurancePay;
+
+            Set<InvoiceItemResponse> itemResponses = new HashSet<>();
+            for(InvoiceItemDTO dto : processedItems){
+                InvoiceItemResponse it =  InvoiceItemResponse.builder()
+                    .id(dto.getId())
+                    .referenceId(dto.getReferenceId())
+                    .serviceType(dto.getServiceType())
+                    .quantity(dto.getQuantity())
+                    .description(dto.getDescription())
+                    .unitPrice(dto.getUnitPrice())
+                    .insurancePayAmount(dto.getInsurancePayAmount())
+                    .patientPayAmount(dto.getPatientPayAmount())
+                    .claimItemId(dto.getClaimItemId())
+                    .build();
+                itemResponses.add(it);
+             }
+
 
             insuranceAggregateRepository.newInstance(() ->
                     new InsuranceAggregate(
                             command.getInsuranceClaimId(),
                             command.getPrescriptionId(),
                             command.getPatientId(),
-                            finalCoverageAmount
+                            finalCoverageAmount,
+                            itemResponses
+
                     )
             );
 

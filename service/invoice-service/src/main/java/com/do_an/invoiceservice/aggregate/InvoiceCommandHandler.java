@@ -93,7 +93,8 @@ public class InvoiceCommandHandler {
                 .execute(aggregate -> aggregate.applyInsuranceDiscount(
                         command.getPrescriptionId(),
                         command.getInvoiceId(),
-                        command.getDiscountAmount()
+                        command.getDiscountAmount(),
+                        command.getItems()
                 ));
     }
 

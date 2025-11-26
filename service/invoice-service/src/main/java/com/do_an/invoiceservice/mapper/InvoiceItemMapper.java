@@ -1,5 +1,6 @@
 package com.do_an.invoiceservice.mapper;
 
+import com.do_an.common.model.InvoiceItemResponse;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceItemRequestDTO;
 import com.do_an.invoiceservice.dto.response.InvoiceItemResponseDTO;
 import com.do_an.invoiceservice.entity.InvoiceItem;
@@ -39,4 +40,12 @@ public interface InvoiceItemMapper {
             @Mapping(target = "patientPayAmount", ignore = true)
     })
     void updateFromDto(CreateInvoiceItemRequestDTO dto, @MappingTarget InvoiceItem entity);
+
+
+    @Mappings({
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "id", ignore = true)
+    })
+    void updateFromResponse(InvoiceItemResponse response, @MappingTarget InvoiceItem entity);
+
 }

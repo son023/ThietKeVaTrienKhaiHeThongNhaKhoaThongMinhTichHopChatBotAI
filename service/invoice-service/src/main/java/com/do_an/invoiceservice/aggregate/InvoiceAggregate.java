@@ -8,6 +8,7 @@ import com.do_an.common.event.InsuranceDiscountUpdatedEvent;
 import com.do_an.common.event.MedicineChargesAddedEvent;
 import com.do_an.common.event.MedicineChargesRemovedEvent;
 import com.do_an.common.model.InvoiceCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
 import com.do_an.common.model.MedicineItem;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
@@ -17,6 +18,7 @@ import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -53,11 +55,12 @@ public class InvoiceAggregate {
         ));
     }
 
-    public void applyInsuranceDiscount(UUID prescriptionId, UUID invoiceId, Integer discountAmount) {
+    public void applyInsuranceDiscount(UUID prescriptionId, UUID invoiceId, Integer discountAmount, Set<InvoiceItemResponse> items) {
         AggregateLifecycle.apply(new InsuranceDiscountUpdatedEvent(
                 prescriptionId,
                 invoiceId,
-                discountAmount
+                discountAmount,
+                items
         ));
     }
 

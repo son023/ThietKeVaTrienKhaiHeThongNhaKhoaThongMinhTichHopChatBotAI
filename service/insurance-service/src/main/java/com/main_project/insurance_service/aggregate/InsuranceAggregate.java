@@ -3,6 +3,7 @@ package com.main_project.insurance_service.aggregate;
 
 import com.do_an.common.event.InsuranceRejectedEvent;
 import com.do_an.common.event.InsuranceValidatedEvent;
+import com.do_an.common.model.InvoiceItemResponse;
 import lombok.NoArgsConstructor;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -19,12 +20,13 @@ public class InsuranceAggregate {
     
     private String status;
 
-    public InsuranceAggregate(UUID insuranceClaimId, UUID prescriptionId, UUID patientId, Integer coverageAmount) {
+    public InsuranceAggregate(UUID insuranceClaimId, UUID prescriptionId, UUID patientId, Integer coverageAmount, Set<InvoiceItemResponse> items) {
         AggregateLifecycle.apply(new InsuranceValidatedEvent(
                 insuranceClaimId,
                 prescriptionId,
                 patientId,
-                coverageAmount
+                coverageAmount,
+                items
         ));
 
     }

@@ -2,10 +2,12 @@ package com.do_an.invoiceservice.aggregate;
 
 import com.do_an.common.event.*;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
 import com.do_an.common.model.MedicineItem;
 import com.do_an.invoiceservice.entity.Invoice;
 import com.do_an.invoiceservice.entity.InvoiceItem;
 import com.do_an.invoiceservice.exception.InvoiceNotFoundException;
+import com.do_an.invoiceservice.mapper.InvoiceItemMapper;
 import com.do_an.invoiceservice.repository.InvoiceItemRepository;
 import com.do_an.invoiceservice.repository.InvoiceRepository;
 import jakarta.transaction.Transactional;
@@ -16,6 +18,9 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.stereotype.Component;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 @Component
 @RequiredArgsConstructor
@@ -25,6 +30,8 @@ public class InvoiceEventHandler {
     private final InvoiceRepository invoiceRepository;
 
     private final InvoiceItemRepository invoiceItemRepository;
+
+    private final InvoiceItemMapper invoiceItemMapper;
 
     private final EventBus eventBus;
 
@@ -99,6 +106,20 @@ public class InvoiceEventHandler {
             invoice.setPatientTotalPay(finalAmount);
 
             invoiceRepository.save(invoice);
+            List<InvoiceItem> existingItems = invoiceItemRepository.findByInvoiceId(event.getInvoiceId());
+            Map<UUID, InvoiceItem> existingMap = existingItems.stream()
+                    .collect(Collectors.toMap(InvoiceItem::getId, item -> item));
+            List<InvoiceItem> itemsToUpdate = new ArrayList<>();
+
+            for (InvoiceItemResponse it : event.getItems()) {
+                if (existingMap.containsKey(it.getId())) {
+                    InvoiceItem entity = existingMap.get(it.getId());
+                    invoiceItemMapper.updateFromResponse(it, entity);
+                    itemsToUpdate.add(entity);
+                }
+            }
+
+            invoiceItemRepository.saveAll(itemsToUpdate);
 
                 eventBus.publish(GenericEventMessage.asEventMessage(
                         new InvoiceDiscountAppliedSuccessEvent(

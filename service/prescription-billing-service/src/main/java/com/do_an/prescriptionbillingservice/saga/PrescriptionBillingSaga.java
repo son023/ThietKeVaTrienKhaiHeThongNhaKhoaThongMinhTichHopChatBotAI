@@ -99,7 +99,8 @@ public class PrescriptionBillingSaga {
         commandGateway.send(new ApplyInsuranceDiscountCommand(
                 this.invoiceId,
                 event.getPrescriptionId(),
-                event.getCoverageAmount()
+                event.getCoverageAmount(),
+                event.getItems()
         ));
     }
 
