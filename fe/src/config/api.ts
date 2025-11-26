@@ -1,7 +1,7 @@
 export const API_CONFIG = {
   AUTH_SERVICE_BASE_URL: 'http://localhost:8080',
   USER_SERVICE_BASE_URL: 'http://localhost:8080',
-  APPOINTMENT_SERVICE_BASE_URL: 'http://localhost:8082',
+  APPOINTMENT_SERVICE_BASE_URL: 'http://localhost:8080',
 
   ENDPOINTS: {
     // User Service
