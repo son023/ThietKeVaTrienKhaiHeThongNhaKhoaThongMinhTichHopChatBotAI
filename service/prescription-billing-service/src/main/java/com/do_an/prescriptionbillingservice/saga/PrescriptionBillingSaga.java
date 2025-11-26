@@ -48,11 +48,12 @@ public class PrescriptionBillingSaga {
         SagaLifecycle.associateWith("invoiceId", String.valueOf(this.invoiceId));
         this.dispenseOrderId = UUID.randomUUID();
 
-
         //xử lý callback (kết quả trả về)
         commandGateway.send(new ReserveMedicineCommand(
                 this.dispenseOrderId,
                 event.getPrescriptionId(),
+                event.getDoctorId(),
+                event.getMedicalHistoryId(),
                 event.getItems()
         )).exceptionally(exception -> {
 

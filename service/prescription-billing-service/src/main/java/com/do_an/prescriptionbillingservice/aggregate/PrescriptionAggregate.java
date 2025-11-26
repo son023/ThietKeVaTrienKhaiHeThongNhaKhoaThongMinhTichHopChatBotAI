@@ -30,6 +30,7 @@ public class PrescriptionAggregate {
         AggregateLifecycle.apply(new PrescriptionCreatedEvent(
                 command.getPrescriptionId(),
                 command.getPatientId(),
+                command.getDoctorId(),
                 command.getMedicalHistoryId(),
                 command.getItems()
         ));

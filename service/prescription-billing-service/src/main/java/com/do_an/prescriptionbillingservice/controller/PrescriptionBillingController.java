@@ -30,6 +30,7 @@ public class PrescriptionBillingController {
         return commandGateway.send(new CreatePrescriptionCommand(
                 prescriptionId,
                 request.getPatientId(),
+                request.getDoctorId(),
                 request.getMedicalHistoryId(),
                 request.getItems()
         ));
