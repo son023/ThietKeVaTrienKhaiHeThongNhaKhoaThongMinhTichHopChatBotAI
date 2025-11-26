@@ -1,6 +1,6 @@
-import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { Button } from '../ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { Button } from "../ui/button";
+import { ArrowRight } from "lucide-react";
 
 interface ServiceCardProps {
   name: string;
@@ -11,9 +11,16 @@ interface ServiceCardProps {
   onLearnMore?: () => void;
 }
 
-export function ServiceCard({ name, description, image, icon, price, onLearnMore }: ServiceCardProps) {
+export function ServiceCard({
+  name,
+  description,
+  image,
+  icon,
+  price,
+  onLearnMore,
+}: ServiceCardProps) {
   return (
-    <div 
+    <div
       onClick={onLearnMore}
       className="bg-[#fcfeff] rounded-[20px] shadow-[0px_4px_10px_0px_rgba(0,0,0,0.1)] overflow-hidden hover:shadow-[0px_6px_20px_0px_rgba(63,181,255,0.3)] transition-all duration-300 group cursor-pointer"
     >
@@ -37,15 +44,19 @@ export function ServiceCard({ name, description, image, icon, price, onLearnMore
           <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[20px] tracking-[0.5px]">
             {name}
           </h3>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[24px] line-clamp-3">
+          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[24px] whitespace-pre-line">
             {description}
           </p>
         </div>
 
         {price && (
           <div className="flex items-baseline gap-[8px]">
-            <span className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">Từ</span>
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#3fb5ff] text-[20px]">{price}</span>
+            <span className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+              T?
+            </span>
+            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#3fb5ff] text-[20px]">
+              {price}
+            </span>
           </div>
         )}
 
@@ -54,7 +65,7 @@ export function ServiceCard({ name, description, image, icon, price, onLearnMore
           variant="ghost"
           className="w-full justify-between text-[#3fb5ff] hover:text-[#3fb5ff] hover:bg-[#ebf6fc] rounded-[12px] h-[44px] font-['Fz_Poppins:Medium',sans-serif] text-[15px] tracking-[0.5px] group-hover:bg-[#ebf6fc]"
         >
-          Tìm hiểu thêm
+          T�m hi?u th�m
           <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>

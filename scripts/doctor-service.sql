@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.doctor
     license_number          VARCHAR(100),
     specialization_code     VARCHAR(100),
     working_hospital        VARCHAR(255),
+    specialization_codes    JSONB,
 
     -- Khóa chính
     CONSTRAINT doctor_pkey PRIMARY KEY (user_id)
@@ -105,6 +106,46 @@ VALUES
 ('d903022a-1000-4001-8001-000000000002', 500000, 'LIC-001', 'CARDIO', 'Bệnh viện A'),
 ('d903022a-1000-4001-8001-000000000007', 400000, 'LIC-002', 'DERM', 'Bệnh viện B');
 
+INSERT INTO public.doctor (
+    user_id,
+    consultation_fee_amount,
+    license_number,
+    specialization_code,
+    working_hospital,
+    specialization_codes
+)
+VALUES
+-- Doctor 1: 2 specialization codes
+(
+    'd903022a-1000-4001-8001-000000000002',
+    250000,
+    'LIC-20240011',
+    'GEN',
+    'Nha Khoa Sunshine',
+    '["GEN", "ENDO"]'::jsonb
+),
+
+-- Doctor 2: 3 specialization codes
+(
+    'd903022a-1000-4001-8001-000000000007',
+    350000,
+    'LIC-20240012',
+    'ORTHO',
+    'Bệnh viện Răng Hàm Mặt Trung Ương',
+    '["ORTHO", "PEDO", "PROSTH"]'::jsonb
+),
+
+-- Doctor 3: 3 specialization codes
+(
+    'd903022a-1000-4001-8001-000000000012',
+    400000,
+    'LIC-20240013',
+    'IMPL',
+    'Nha Khoa Paris',
+    '["IMPL", "PROSTH", "PERIO"]'::jsonb
+);
+
+
 -- -------------------------
 -- Bảng work_schedule
 -- -------------------------
@@ -122,6 +163,40 @@ VALUES
 ('22222222-0000-0000-0000-000000000001', 'Bác sĩ Đa khoa', 'ĐH Y Hà Nội', 2015, 'd903022a-1000-4001-8001-000000000002'),
 ('22222222-0000-0000-0000-000000000002', 'Bác sĩ Da liễu', 'ĐH Y Hà Nội', 2018, 'd903022a-1000-4001-8001-000000000007');
 
+INSERT INTO public.doctor_degree (
+    id,
+    degree_name,
+    institution,
+    year_obtained,
+    doctor_id
+)
+VALUES
+-- Bằng cấp cho bác sĩ LIC-20240011
+(
+    '22222222-0000-0000-0000-000000000001',
+    'Bác sĩ Răng Hàm Mặt',
+    'Đại học Y Dược TP. Hồ Chí Minh',
+    2018,
+    (SELECT user_id FROM public.doctor WHERE license_number = 'LIC-20240011')
+),
+
+-- Bằng cấp cho bác sĩ LIC-20240012
+(
+    '22222222-0000-0000-0000-000000000002',
+    'Thạc sĩ Chỉnh nha',
+    'Đại học Y Hà Nội',
+    2019,
+    (SELECT user_id FROM public.doctor WHERE license_number = 'LIC-20240012')
+),
+
+-- Bằng cấp cho bác sĩ LIC-20240013
+(
+    '22222222-0000-0000-0000-000000000003',
+    'Chuyên khoa Implant Nha khoa',
+    'Đại học Răng Hàm Mặt',
+    2020,
+    (SELECT user_id FROM public.doctor WHERE license_number = 'LIC-20240013')
+);
 -- -------------------------
 -- Bảng doctor_work_schedule
 -- -------------------------
@@ -129,4 +204,7 @@ INSERT INTO public.doctor_work_schedule (id, created_at, updated_at, status, doc
 VALUES
 ('33333333-0000-0000-0000-000000000001', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000001'),
 ('33333333-0000-0000-0000-000000000002', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000002'),
-('33333333-0000-0000-0000-000000000003', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000003');
+('33333333-0000-0000-0000-000000000003', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000003'),
+('33333333-0000-0000-0000-000000000004', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000002'),
+('33333333-0000-0000-0000-000000000005', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000012', '11111111-0000-0000-0000-000000000001');
+
