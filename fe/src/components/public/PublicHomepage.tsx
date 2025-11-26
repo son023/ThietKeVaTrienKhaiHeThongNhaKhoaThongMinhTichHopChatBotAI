@@ -1,6 +1,4 @@
-import { useState } from "react";
-import React from "react";
-import { ImageWithFallback } from "../figma/ImageWithFallback";
+import React, { useEffect, useState } from "react";
 import {
   Sparkles,
   Shield,
@@ -39,6 +37,14 @@ import imgPatient1 from "../../assets/imgPatient1.png";
 import imgPatient2 from "../../assets/imgPatient2.png";
 import imgPatient3 from "../../assets/imgPatient3.png";
 import imgPatient4 from "../../assets/imgPatient4.png";
+import {
+  medicalServiceController,
+  MedicalServiceDTO,
+} from "../../controllers/MedicalServiceController";
+import {
+  doctorController,
+  DoctorWithUser,
+} from "../../controllers/DoctorController";
 
 interface PublicHomepageProps {
   onNavigate: (page: string) => void;
@@ -47,8 +53,8 @@ interface PublicHomepageProps {
   onServiceSelect?: (serviceId: string) => void;
 }
 
-// 9 Services for carousel
-const servicesData = [
+// 9 Services for carousel (legacy mock data)
+const sampleServicesData = [
   {
     id: "1",
     icon: img1,
@@ -132,8 +138,8 @@ const servicesData = [
   },
 ];
 
-// 6 Doctors for carousel
-const doctorsData = [
+// 6 Doctors for carousel (legacy mock data)
+const sampleDoctorsData = [
   {
     id: "1",
     name: "BS. Nguyễn Văn An",
@@ -177,6 +183,23 @@ const doctorsData = [
     image: imgDoctor11,
   },
 ];
+
+const SPECIALIZATION_MAP: Record<string, string> = {
+  GEN: "General Dentistry",
+  ENDO: "Endodontics (Noi nha)",
+  ORTHO: "Orthodontics (Chinh nha)",
+  PERIO: "Periodontics (Nha chu)",
+  PROSTH: "Prosthodontics (Phuc hinh rang)",
+  IMPL: "Implant Dentistry",
+  OMFS: "Oral & Maxillofacial Surgery",
+  PEDO: "Pediatric Dentistry",
+  COS: "Cosmetic Dentistry",
+  OMDIAG: "Oral Medicine",
+  RAD: "Radiology",
+};
+
+const serviceIconPool = [img1, img4, img];
+const doctorPlaceholderImg = imgDoctor11;
 
 const testimonials = [
   {
@@ -223,50 +246,124 @@ export function PublicHomepage({
   onBookingClick,
   onServiceSelect,
 }: PublicHomepageProps) {
+  const [servicesData, setServicesData] = useState<MedicalServiceDTO[]>([]);
+  const [doctorsData, setDoctorsData] = useState<DoctorWithUser[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithUser | null>(null);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0);
   const [currentDoctorIndex, setCurrentDoctorIndex] = useState(0);
-  const [selectedDoctor, setSelectedDoctor] = useState(doctorsData[1]); // Default to BS. Trần Thị Bình
+
+  useEffect(() => {
+    setServicesLoading(true);
+    medicalServiceController
+      .getAll()
+      .then((data) => {
+        setServicesData(data);
+        setServicesError(null);
+        setCurrentServiceIndex(0);
+      })
+      .catch((err) =>
+        setServicesError(
+          err instanceof Error ? err.message : "Khong tai duoc dich vu"
+        )
+      )
+      .finally(() => setServicesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setDoctorsLoading(true);
+    doctorController
+      .getWithUserDetails()
+      .then((data) => {
+        setDoctorsData(data);
+        setDoctorsError(null);
+        setSelectedDoctor(data[0] || null);
+        setCurrentDoctorIndex(0);
+      })
+      .catch((err) =>
+        setDoctorsError(
+          err instanceof Error ? err.message : "Khong tai duoc bac si"
+        )
+      )
+      .finally(() => setDoctorsLoading(false));
+  }, []);
 
   // Services carousel - show 3 at a time
   const servicesPerPage = 3;
-  const totalServicePages = Math.ceil(servicesData.length / servicesPerPage);
+  const totalServicePages =
+    servicesData.length > 0 ? Math.ceil(servicesData.length / servicesPerPage) : 1;
 
   const handlePrevService = () => {
     setCurrentServiceIndex((prev) =>
-      prev === 0 ? totalServicePages - 1 : prev - 1
+      prev === 0 ? Math.max(totalServicePages - 1, 0) : prev - 1
     );
   };
 
   const handleNextService = () => {
     setCurrentServiceIndex((prev) =>
-      prev === totalServicePages - 1 ? 0 : prev + 1
+      prev === Math.max(totalServicePages - 1, 0) ? 0 : prev + 1
     );
   };
 
   const getVisibleServices = () => {
+    if (!servicesData.length) return [];
     const start = currentServiceIndex * servicesPerPage;
     return servicesData.slice(start, start + servicesPerPage);
   };
 
   // Doctors carousel - show 3 at a time
   const doctorsPerPage = 3;
-  const totalDoctorPages = Math.ceil(doctorsData.length / doctorsPerPage);
+  const totalDoctorPages =
+    doctorsData.length > 0 ? Math.ceil(doctorsData.length / doctorsPerPage) : 1;
 
   const handlePrevDoctor = () => {
     setCurrentDoctorIndex((prev) =>
-      prev === 0 ? totalDoctorPages - 1 : prev - 1
+      prev === 0 ? Math.max(totalDoctorPages - 1, 0) : prev - 1
     );
   };
 
   const handleNextDoctor = () => {
     setCurrentDoctorIndex((prev) =>
-      prev === totalDoctorPages - 1 ? 0 : prev + 1
+      prev === Math.max(totalDoctorPages - 1, 0) ? 0 : prev + 1
     );
   };
 
   const getVisibleDoctors = () => {
+    if (!doctorsData.length) return [];
     const start = currentDoctorIndex * doctorsPerPage;
     return doctorsData.slice(start, start + doctorsPerPage);
+  };
+
+  const formatServiceFeatures = (service: MedicalServiceDTO) => {
+    const features = [
+      SPECIALIZATION_MAP[service.serviceType || ""] || service.serviceType,
+      service.serviceTime ? `${service.serviceTime} phut` : null,
+      service.status ? `Trang thai: ${service.status}` : null,
+    ].filter(Boolean) as string[];
+    return features.length ? features : ["Dich vu nha khoa"];
+  };
+
+  const formatServicePrice = (service: MedicalServiceDTO) =>
+    service.price ? `${service.price.toLocaleString("vi-VN")} VND` : "Lien he";
+
+  const getDoctorName = (doctor?: DoctorWithUser | null) =>
+    doctor?.user?.fullName || "Bac si nha khoa";
+
+  const getDoctorSpecialty = (doctor?: DoctorWithUser | null) => {
+    const spec = doctor?.specializationCodes?.[0];
+    const code = spec?.code || "";
+    return spec?.displayName || SPECIALIZATION_MAP[code] || doctor?.workingHospital || "Nha khoa tong quat";
+  };
+
+  const getDoctorSubtitle = (doctor?: DoctorWithUser | null) => {
+    if (!doctor) return "Tan tam - chuyen nghiep";
+    if (doctor.consultationFeeAmount) {
+      return `Phi tu van ${doctor.consultationFeeAmount.toLocaleString("vi-VN")} VND`;
+    }
+    return doctor.workingHospital || "Tan tam - chuyen nghiep";
   };
 
   return (
@@ -353,6 +450,85 @@ export function PublicHomepage({
                   className="relative w-full h-auto object-contain drop-shadow-[0px_20px_40px_rgba(63,181,255,0.25)] rounded-[24px]"
                 />
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Data lists from backend */}
+      <section className="bg-[#fcfeff] py-[40px] px-[20px] sm:px-[40px] lg:px-[80px] border-b border-[#ebf6fc]">
+        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-[24px]">
+          <div className="bg-white rounded-[20px] border border-[#ebf6fc] shadow-sm p-[20px]">
+            <div className="flex items-center justify-between mb-[12px]">
+              <h3 className="text-[#01304e] text-[20px] font-semibold">Dịch vụ đang có</h3>
+              {servicesLoading && <span className="text-xs text-gray-500">Đang tải...</span>}
+              {servicesError && <span className="text-xs text-red-500">Lỗi tải dịch vụ</span>}
+            </div>
+            <div className="space-y-[10px] max-h-[320px] overflow-auto">
+              {servicesData.slice(0, 8).map((svc) => (
+                <div
+                  key={svc.id}
+                  className="p-[12px] rounded-[12px] bg-[#f7fbff] border border-[#ebf6fc] hover:border-[#3fb5ff] transition"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-[#01304e] text-[15px] font-semibold">{svc.serviceName}</div>
+                      <div className="text-xs text-gray-600">
+                        {(svc.serviceType || '').toUpperCase()} • {svc.serviceTime ? `${svc.serviceTime} phút` : 'Thời lượng linh hoạt'}
+                      </div>
+                    </div>
+                    <div className="text-[#3fb5ff] text-sm font-semibold">
+                      {svc.price ? `${svc.price.toLocaleString('vi-VN')} VND` : 'Liên hệ'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!servicesLoading && servicesData.length === 0 && (
+                <div className="text-sm text-gray-500">Chưa có dữ liệu dịch vụ.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[20px] border border-[#ebf6fc] shadow-sm p-[20px]">
+            <div className="flex items-center justify-between mb-[12px]">
+              <h3 className="text-[#01304e] text-[20px] font-semibold">Bác sĩ đang phục vụ</h3>
+              {doctorsLoading && <span className="text-xs text-gray-500">Đang tải...</span>}
+              {doctorsError && <span className="text-xs text-red-500">Lỗi tải bác sĩ</span>}
+            </div>
+            <div className="space-y-[10px] max-h-[320px] overflow-auto">
+              {doctorsData.slice(0, 8).map((doc) => (
+                <div
+                  key={doc.userId}
+                  className="p-[12px] rounded-[12px] bg-[#f7fbff] border border-[#ebf6fc] hover:border-[#3fb5ff] transition"
+                >
+                  <div className="flex items-center gap-[10px]">
+                    <img
+                      src={doc.user?.avatarUrl || doctorPlaceholderImg}
+                      alt={doc.user?.fullName || 'Bác sĩ'}
+                      className="w-[42px] h-[42px] rounded-full object-cover border border-[#ebf6fc]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-[#01304e] text-[15px] font-semibold">
+                        {doc.user?.fullName || 'Bác sĩ'}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {doc.specializationCodes?.[0]?.displayName ||
+                          doc.specializationCodes?.[0]?.code ||
+                          doc.workingHospital ||
+                          'Nha khoa tổng quát'}
+                      </div>
+                    </div>
+                    {doc.consultationFeeAmount && (
+                      <div className="text-[#3fb5ff] text-sm font-semibold">
+                        {doc.consultationFeeAmount.toLocaleString('vi-VN')} VND
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {!doctorsLoading && doctorsData.length === 0 && (
+                <div className="text-sm text-gray-500">Chưa có dữ liệu bác sĩ.</div>
+              )}
             </div>
           </div>
         </div>
@@ -483,23 +659,30 @@ export function PublicHomepage({
             {/* Left - Doctor Image */}
             <div className="relative">
               <div className="relative bg-[#fcfeff] rounded-[32px] p-[40px] shadow-[0px_10px_40px_0px_rgba(0,0,0,0.08)]">
-                <img
-                  src={selectedDoctor.image}
-                  alt={selectedDoctor.name}
-                  className="w-full h-[500px] object-cover rounded-[24px]"
-                />
-                <div className="absolute bottom-[60px] left-[60px] right-[60px] bg-[#fcfeff]/95 backdrop-blur-sm rounded-[20px] p-[24px] shadow-lg">
-                  <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[22px] mb-[8px]">
-                    {selectedDoctor.name}
-                  </h3>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[16px] mb-[12px]">
-                    {selectedDoctor.specialty}
-                  </p>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px] leading-[1.6]">
-                    {selectedDoctor.experience} kinh nghiệm, Thạc sĩ Nha khoa,
-                    Chứng chỉ hành nghề quốc tế
-                  </p>
-                </div>
+                {selectedDoctor ? (
+                  <>
+                    <img
+                      src={selectedDoctor.user?.imageUrl || doctorPlaceholderImg}
+                      alt={getDoctorName(selectedDoctor)}
+                      className="w-full h-[500px] object-cover rounded-[24px]"
+                    />
+                    <div className="absolute bottom-[60px] left-[60px] right-[60px] bg-[#fcfeff]/95 backdrop-blur-sm rounded-[20px] p-[24px] shadow-lg">
+                      <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[22px] mb-[8px]">
+                        {getDoctorName(selectedDoctor)}
+                      </h3>
+                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[16px] mb-[12px]">
+                        {getDoctorSpecialty(selectedDoctor)}
+                      </p>
+                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px] leading-[1.6]">
+                        {getDoctorSubtitle(selectedDoctor)}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-[500px] flex items-center justify-center text-[#666]">
+                    Dang tai thong tin bac si...
+                  </div>
+                )}
               </div>
             </div>
 
@@ -605,33 +788,33 @@ export function PublicHomepage({
                             {getVisibleDoctors().map((doctor) =>
                                  (
                                     <div
-                                        key={doctor.id}
+                                        key={doctor.userId || doctor.id}
                                         className="transition-all duration-500 ease-in-out transform hover:scale-[1.02]"
                                     >
                                         <div
                                             onClick={() => setSelectedDoctor(doctor)}
                                             className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
-                                                selectedDoctor.id === doctor.id
+                                                selectedDoctor && (selectedDoctor.userId || selectedDoctor.id) === (doctor.userId || doctor.id)
                                                     ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
                                                     : "border-[#ebf6fc] hover:border-[#3fb5ff]"
                                             }`}
                                         >
                                             <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
                                                 <img
-                                                    src={doctor.image}
-                                                    alt={doctor.name}
+                                                    src={doctor.user?.imageUrl || doctorPlaceholderImg}
+                                                    alt={getDoctorName(doctor)}
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
                                                 />
                                             </div>
                                             <div className="p-[24px] text-center">
                                                 <h4 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[19px] mb-[6px]">
-                                                    {doctor.name}
+                                                    {getDoctorName(doctor)}
                                                 </h4>
                                                 <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[15px] mb-[8px]">
-                                                    {doctor.specialty}
+                                                    {getDoctorSpecialty(doctor)}
                                                 </p>
                                                 <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#999999] text-[13px]">
-                                                    {doctor.experience} kinh nghiệm
+                                                    {getDoctorSubtitle(doctor)}
                                                 </p>
                                             </div>
                                         </div>
@@ -707,38 +890,35 @@ export function PublicHomepage({
                 {getVisibleServices().map((service, index) => (
                   <div
                     key={service.id}
-                    onClick={() => {
-                      console.log(
-                        "Service clicked:",
-                        service.id,
-                        service.title
-                      );
-                      if (onServiceSelect) {
-                        onServiceSelect(service.id);
-                      }
-                    }}
+                    onClick={() => onServiceSelect?.(service.id)}
                     className="group bg-[#fcfeff] rounded-[24px] overflow-hidden shadow-[0px_4px_20px_0px_rgba(0,0,0,0.08)] hover:shadow-[0px_12px_40px_0px_rgba(63,181,255,0.2)] transition-all duration-300 border border-[#ebf6fc] cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <div className="relative h-[240px] bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa] flex items-center justify-center overflow-hidden">
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSg2MywxODEsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50" />
                       <img
-                        src={service.icon}
-                        alt={service.title}
+                        src={
+                          service.imgUrl ||
+                          serviceIconPool[
+                            (currentServiceIndex * servicesPerPage + index) %
+                              serviceIconPool.length
+                          ]
+                        }
+                        alt={service.serviceName}
                         className="relative w-[120px] h-[120px] object-contain group-hover:scale-110 transition-transform duration-300"
                       />
                     </div>
                     <div className="p-[32px]">
                       <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[22px] mb-[12px]">
-                        {service.title}
+                        {service.serviceName}
                       </h3>
                       <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] mb-[20px] line-clamp-3">
-                        {service.description}
+                        {SPECIALIZATION_MAP[service.serviceType || ''] || service.description || 'Dich vu y te'}
                       </p>
 
                       <div className="flex flex-wrap gap-[8px] mb-[20px]">
-                        {service.features.map((feature, idx) => (
+                        {formatServiceFeatures(service).map((feature, idx) => (
                           <span
-                            key={idx}
+                            key={`${service.id}-feature-${idx}`}
                             className="px-[12px] py-[6px] bg-[#ebf6fc] text-[#3fb5ff] rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px]"
                           >
                             {feature}
@@ -748,7 +928,7 @@ export function PublicHomepage({
 
                       <div className="flex items-center justify-between pt-[20px] border-t border-[#ebf6fc]">
                         <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#3fb5ff] text-[18px]">
-                          {service.price}
+                          {formatServicePrice(service)}
                         </p>
                         <span className="text-[#3fb5ff] font-['Fz_Poppins:Medium',sans-serif] text-[15px] group-hover:underline group-hover:translate-x-[4px] transition-transform inline-block">
                           Chi tiết →

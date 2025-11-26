@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { authController } from '../../controllers';
 import { LoginFormData, UserRole } from '../../models';
+import { medicalServiceController, doctorController } from '../../controllers';
+import type { MedicalServiceDTO } from '../../controllers/MedicalServiceController';
+import type { DoctorWithUser } from '../../controllers/DoctorController';
 
 interface LoginPageProps {
   onBack: () => void;
@@ -19,6 +22,9 @@ export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginP
     rememberMe: false 
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [services, setServices] = useState<MedicalServiceDTO[]>([]);
+  const [doctors, setDoctors] = useState<DoctorWithUser[]>([]);
+  const [isLoadingLists, setIsLoadingLists] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +52,24 @@ export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginP
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const loadLists = async () => {
+      try {
+        setIsLoadingLists(true);
+        const [serviceRes, doctorRes] = await Promise.all([
+          medicalServiceController.getAll().catch(() => []),
+          doctorController.getWithUserDetails().catch(() => []),
+        ]);
+        setServices(serviceRes || []);
+        setDoctors(doctorRes || []);
+      } finally {
+        setIsLoadingLists(false);
+      }
+    };
+
+    loadLists();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ebf6fc] to-[#fcfeff] flex flex-col">
@@ -156,6 +180,50 @@ export function LoginPage({ onBack, onNavigateToSignup, onLoginSuccess }: LoginP
                 Đăng ký ngay
               </button>
             </p>
+          </div>
+        </div>
+        <div className="mt-8 w-full max-w-[960px]">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white/70 rounded-2xl border border-[#ebf6fc] p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[#01304e] font-semibold text-lg">Dịch vụ nổi bật</h3>
+                {isLoadingLists && <span className="text-xs text-gray-500">Đang tải...</span>}
+              </div>
+              <div className="space-y-2 max-h-[260px] overflow-auto">
+                {(services || []).slice(0, 6).map((svc) => (
+                  <div key={svc.id} className="p-3 rounded-xl bg-[#f7fbff] border border-[#ebf6fc]">
+                    <div className="text-sm text-[#01304e] font-medium">{svc.serviceName}</div>
+                    <div className="text-xs text-gray-600">
+                      {(svc.serviceType || '').toUpperCase()} • {svc.price ? `${svc.price.toLocaleString('vi-VN')} VND` : 'Liên hệ'}
+                    </div>
+                  </div>
+                ))}
+                {!isLoadingLists && services.length === 0 && (
+                  <div className="text-sm text-gray-500">Chưa có dịch vụ để hiển thị.</div>
+                )}
+              </div>
+            </div>
+            <div className="bg-white/70 rounded-2xl border border-[#ebf6fc] p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[#01304e] font-semibold text-lg">Bác sĩ</h3>
+                {isLoadingLists && <span className="text-xs text-gray-500">Đang tải...</span>}
+              </div>
+              <div className="space-y-2 max-h-[260px] overflow-auto">
+                {(doctors || []).slice(0, 6).map((doc) => (
+                  <div key={doc.userId} className="p-3 rounded-xl bg-[#f7fbff] border border-[#ebf6fc]">
+                    <div className="text-sm text-[#01304e] font-medium">
+                      {doc.user?.fullName || 'Bác sĩ'}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {doc.specializationCodes?.[0]?.displayName || doc.specializationCodes?.[0]?.code || doc.workingHospital || 'Nha khoa'}
+                    </div>
+                  </div>
+                ))}
+                {!isLoadingLists && doctors.length === 0 && (
+                  <div className="text-sm text-gray-500">Chưa có bác sĩ để hiển thị.</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

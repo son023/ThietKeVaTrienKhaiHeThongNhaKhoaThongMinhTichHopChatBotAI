@@ -4,8 +4,8 @@ import { PublicFooter } from "./components/public/PublicFooter";
 import { PublicHomepage } from "./components/public/PublicHomepage";
 import { ServicesList } from "./components/public/ServicesList";
 import { ServiceDetail } from "./components/public/ServiceDetail";
-import { DoctorsList } from "./components/public/DoctorsList";
-import { DoctorDetail } from "./components/public/DoctorDetail";
+import { DoctorsListRemote } from "./components/public/DoctorsListRemote";
+import { DoctorDetailRemote } from "./components/public/DoctorDetailRemote";
 import { BookingPage } from "./components/public/BookingPage";
 import { LoginPage } from "./components/public/LoginPage";
 import { SignUpPage } from "./components/public/SignUpPage";
@@ -50,6 +50,7 @@ function PublicApp({ onLogin }: PublicAppProps) {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [preselectedService, setPreselectedService] = useState<string>("");
   const [preselectedDoctor, setPreselectedDoctor] = useState<string>("");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
@@ -80,6 +81,14 @@ function PublicApp({ onLogin }: PublicAppProps) {
   };
 
   const handleBookingClick = (serviceId?: string, doctorId?: string) => {
+    const currentUser = authController.getCurrentUser();
+    if (!currentUser) {
+      setPreselectedService(serviceId || "");
+      setPreselectedDoctor(doctorId || "");
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setPreselectedService(serviceId || "");
     setPreselectedDoctor(doctorId || "");
     setCurrentPage("booking");
@@ -94,6 +103,16 @@ function PublicApp({ onLogin }: PublicAppProps) {
   const handleSignUpClick = () => {
     setCurrentPage("signup");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleConfirmLoginPrompt = () => {
+    setShowLoginPrompt(false);
+    setCurrentPage("login");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCloseLoginPrompt = () => {
+    setShowLoginPrompt(false);
   };
 
   const handleLoginSuccess = (userRole: string) => {
@@ -199,7 +218,7 @@ function PublicApp({ onLogin }: PublicAppProps) {
 
       case "doctors":
         return (
-          <DoctorsList
+          <DoctorsListRemote
             onDoctorSelect={handleDoctorSelect}
             onBooking={(doctorId) => handleBookingClick(undefined, doctorId)}
           />
@@ -207,7 +226,7 @@ function PublicApp({ onLogin }: PublicAppProps) {
 
       case "doctor-detail":
         return (
-          <DoctorDetail
+          <DoctorDetailRemote
             doctorId={selectedDoctorId}
             onBack={handleBackToDoctors}
             onBooking={(doctorId) => handleBookingClick(undefined, doctorId)}
@@ -323,6 +342,33 @@ function PublicApp({ onLogin }: PublicAppProps) {
 
   return (
     <div className="min-h-screen bg-[#fcfeff]">
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-[#01304e]">
+              Bạn cần đăng nhập để đặt lịch
+            </h3>
+            <p className="text-sm text-gray-600">
+              Vui lòng đăng nhập trước khi tiếp tục đặt lịch khám.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={handleCloseLoginPrompt}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                Để sau
+              </button>
+              <button
+                onClick={handleConfirmLoginPrompt}
+                className="px-4 py-2 rounded-lg bg-[#3fb5ff] text-white hover:bg-[#35a4e6]"
+              >
+                Đồng ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showHeaderFooter && (
         <PublicHeader
           onNavigate={handleNavigate}
