@@ -6,14 +6,12 @@ import lombok.Data;
 
 @Data
 public class InternalRegistrationRequestDTO {
-    // Thông tin cơ bản cho bảng User
     @NotEmpty @Email
     private String email;
     @NotEmpty
-    private String username;
-    @NotEmpty
-    private String hashedPassword; // auth-service đã hash sẵn
+    private String hashedPassword;
     @NotEmpty
     private String fullName;
+    @NotEmpty
     private String phone;
 }

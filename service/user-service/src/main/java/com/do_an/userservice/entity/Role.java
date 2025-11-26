@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "role")
@@ -13,10 +13,13 @@ import java.util.List;
 @Setter
 public class Role {
     @Id
-    @Column(length = 50, unique = true, nullable = false)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
+
+    @Column(name = "role_name")
     private String roleName;
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
-    private List<User> users;
+
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<UserRole> userRoles;
 }

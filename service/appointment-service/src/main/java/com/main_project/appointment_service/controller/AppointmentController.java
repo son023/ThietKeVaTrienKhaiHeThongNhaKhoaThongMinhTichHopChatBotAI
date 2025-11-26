@@ -2,9 +2,16 @@ package com.main_project.appointment_service.controller;
 
 import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
+import com.main_project.appointment_service.dto.HoldSlotRequestDTO;
 import com.main_project.appointment_service.enums.AppointmentStatus;
-import com.main_project.appointment_service.service.IAppointmentService;
+import com.main_project.appointment_service.service.AppointmentService;
+
+import com.main_project.appointment_service.service.SlotService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,10 +19,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import jakarta.validation.Valid;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
@@ -24,7 +34,46 @@ import static org.springframework.http.HttpStatus.CREATED;
 @RequiredArgsConstructor
 public class AppointmentController {
 
-    private final IAppointmentService appointmentService;
+    private final AppointmentService appointmentService;
+    private final SlotService slotService;
+
+    @PostMapping("/slots/hold")
+    @Operation(summary = "Giữ slot trong 10 phút trước khi tạo lịch hẹn")
+    public ResponseEntity<?> holdSlot(@RequestBody HoldSlotRequestDTO request) {
+
+        if (request.getMedicalServiceIds() == null || request.getMedicalServiceIds().isEmpty()) {
+            return ResponseEntity.badRequest().body("Thiếu danh sách dịch vụ để tính thời lượng");
+        }
+
+        int durationMinutes;
+        try {
+            durationMinutes = slotService.calculateServiceDurationMinutes(request.getMedicalServiceIds());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+
+        ZonedDateTime slotStart = request.getAppointmentStartTime();
+        ZonedDateTime slotEnd = slotStart.plusMinutes(durationMinutes);
+
+        if (!slotService.isSlotAvailable(request.getDoctorId(), slotStart, slotEnd)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Slot đã được giữ hoặc trùng lịch, vui lòng chọn thời gian khác");
+        }
+
+        boolean locked = slotService.lockSlot(
+                request.getDoctorId(),
+                request.getPatientId(),
+                slotStart,
+                slotEnd
+        );
+
+        if (!locked) {
+            return ResponseEntity.badRequest().body("Slot đã được giữ bởi người khác, vui lòng chọn slot khác");
+        }
+
+        // Có thể trả thêm expiredAt = now + 10 phút cho FE đếm ngược
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping
     @Operation(summary = "Lấy tất cả lịch hẹn")
@@ -65,6 +114,30 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getAppointmentsBetween(start, end));
     }
 
+    @GetMapping("/date")
+    @Operation(summary = "Lấy lịch hẹn theo ngày (dd/mm/yyyy)", description = "Trả về danh sách ca làm việc trong ngày được chỉ định")
+    @Parameter(name = "date", description = "Ngày cần lấy ca làm việc", required = true)
+    public ResponseEntity<List<AppointmentDTO>> getByDate(@RequestParam("date") String date) {
+        // 1. Parse String "dd/MM/yyyy" → LocalDate
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(date, formatter);
+        } catch (DateTimeParseException ex) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.emptyList()); // hoặc trả lỗi chi tiết
+        }
+
+        // 2. Chuyển LocalDate → ZonedDateTime start-of-day và end-of-day
+        ZonedDateTime startOfDay = localDate.atStartOfDay(ZoneId.systemDefault());
+        ZonedDateTime endOfDay   = localDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault());
+
+        // 3. Gọi service (service dùng repository query ZonedDateTime)
+        List<AppointmentDTO> appointments = appointmentService.getAppointmentsBetween(startOfDay, endOfDay);
+
+        return ResponseEntity.ok(appointments);
+    }
+
     @PostMapping
     @Operation(summary = "Tạo lịch hẹn mới")
     public ResponseEntity<AppointmentDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO requestDTO) {
@@ -92,23 +165,20 @@ public class AppointmentController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa lịch hẹn theo ID")
     public ResponseEntity<Void> deleteAppointment(@PathVariable UUID id) {
-        appointmentService.deleteAppointment(id);
-        return ResponseEntity.noContent().build();
+        try {
+            appointmentService.deleteAppointment(id);
+            return ResponseEntity.noContent().build(); // 204 OK
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+        }
     }
 
-    @DeleteMapping("/doctor/{doctorId}")
-    @Operation(summary = "Xóa lịch hẹn theo bác sĩ")
-    public ResponseEntity<Void> deleteByDoctor(@PathVariable UUID doctorId) {
-        appointmentService.deleteAppointmentsByDoctorId(doctorId);
-        return ResponseEntity.noContent().build();
-    }
 
-    @DeleteMapping("/patient/{patientId}")
-    @Operation(summary = "Xóa lịch hẹn theo bệnh nhân")
-    public ResponseEntity<Void> deleteByPatient(@PathVariable UUID patientId) {
-        appointmentService.deleteAppointmentsByPatientId(patientId);
-        return ResponseEntity.noContent().build();
-    }
+
 }
 
 

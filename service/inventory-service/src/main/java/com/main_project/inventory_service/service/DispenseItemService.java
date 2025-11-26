@@ -37,6 +37,10 @@ public class DispenseItemService implements IDispenseItemService {
         DispenseItem dispenseItem = new DispenseItem();
         dispenseItem.setQuantity(request.getQuantity());
         dispenseItem.setPriceAtDispense(request.getPriceAtDispense());
+        dispenseItem.setDosage(request.getDosage());
+        dispenseItem.setFrequency(request.getFrequency());
+        dispenseItem.setDuration(request.getDuration());
+        dispenseItem.setUsageInstructions(request.getUsageInstructions());
         dispenseItem.setInventoryLot(inventoryLot);
         dispenseItem.setDispenseOrder(dispenseOrder);
 
@@ -58,6 +62,10 @@ public class DispenseItemService implements IDispenseItemService {
 
         dispenseItem.setQuantity(request.getQuantity());
         dispenseItem.setPriceAtDispense(request.getPriceAtDispense());
+        dispenseItem.setDosage(request.getDosage());
+        dispenseItem.setFrequency(request.getFrequency());
+        dispenseItem.setDuration(request.getDuration());
+        dispenseItem.setUsageInstructions(request.getUsageInstructions());
         dispenseItem.setInventoryLot(inventoryLot);
         dispenseItem.setDispenseOrder(dispenseOrder);
 
@@ -97,6 +105,10 @@ public class DispenseItemService implements IDispenseItemService {
                 dispenseItem.getId(),
                 dispenseItem.getQuantity(),
                 dispenseItem.getPriceAtDispense(),
+                dispenseItem.getDosage(),
+                dispenseItem.getFrequency(),
+                dispenseItem.getDuration(),
+                dispenseItem.getUsageInstructions(),
                 inventoryLot != null ? inventoryLot.getId() : null,
                 dispenseOrder != null ? dispenseOrder.getId() : null
         );

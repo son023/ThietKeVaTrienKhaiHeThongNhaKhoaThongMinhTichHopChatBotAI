@@ -1,5 +1,6 @@
 package com.main_project.insurance_service.exceptions;
 
+import com.main_project.insurance_service.exceptions.ExceptionResponse;
 import com.main_project.insurance_service.exceptions.enums.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

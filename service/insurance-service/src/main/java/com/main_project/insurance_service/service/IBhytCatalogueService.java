@@ -14,3 +14,4 @@ public interface IBhytCatalogueService {
     BhytCatalogueDTO updateBhytCatalogue(UUID id, BhytCatalogueRequestDTO requestDTO);
     void deleteBhytCatalogue(UUID id);
 }
+

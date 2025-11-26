@@ -8,24 +8,22 @@ import java.util.List;
 
 @Data
 public class CreateUserRequestDTO {
-    @NotEmpty
-    private String username;
     
     @NotEmpty
     @Email
     private String email;
     
     @NotEmpty
-    private String hashedPassword; // Password đã được hash từ auth-service
+    private String password; 
     
     @NotEmpty
     private String fullName;
-    
+    @NotEmpty
     private String phone;
     
     private String imageUrl;
     
     private boolean isActive = true;
     
-    private List<String> roleNames; // Danh sách tên role (ví dụ: ["PATIENT", "DOCTOR"])
+    private List<String> roleNames;
 }

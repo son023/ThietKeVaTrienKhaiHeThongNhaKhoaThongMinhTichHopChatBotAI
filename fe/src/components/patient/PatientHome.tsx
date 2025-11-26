@@ -19,6 +19,7 @@ import {
   Stethoscope,
   Crown,
   Smile,
+  LogOut,
 } from "lucide-react";
 import {
   Accordion,
@@ -39,6 +40,7 @@ import imgWomanSmileToCamera20231127053322Utc1 from "../../assets/imgPatient2.pn
 import imgCloseupPortraitOfHappyArabicGuySmilingAtCa20231127051731Utc1 from "../../assets/imgPatient3.png";
 import imgHandsomeArabGuyChillingAtHomeSmilingAtCam20231127044927Utc1 from "../../assets/imgPatient4.png";
 import {BookAppointmentDialog} from "./BookAppointmentDialog";
+import { authController } from "../../controllers/AuthController";
 
 interface PatientHomeProps {
     onNavigate: (page: string) => void;
@@ -210,6 +212,15 @@ export function PatientHome({ onNavigate }: PatientHomeProps) {
         onNavigate('appointments');
     };
 
+    const handleLogout = async () => {
+        try {
+            await authController.logout();
+            onNavigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     return (
         <div className="w-full bg-white">
             {/* Book Appointment Dialog */}
@@ -221,6 +232,15 @@ export function PatientHome({ onNavigate }: PatientHomeProps) {
 
             {/* Hero Section */}
             <section className="relative bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] py-[80px] px-[20px] md:px-[80px] overflow-hidden">
+                <div className="absolute top-[20px] right-[20px] md:right-[80px] z-10">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-[8px] px-[16px] py-[8px] bg-white/90 hover:bg-white text-[#01304e] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] shadow-md hover:shadow-lg transition-all"
+                    >
+                        <LogOut className="w-[16px] h-[16px]" />
+                        <span>Đăng xuất</span>
+                    </button>
+                </div>
                 <div className="max-w-[1440px] mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-[60px] items-center">
                         <div className="space-y-[32px]">

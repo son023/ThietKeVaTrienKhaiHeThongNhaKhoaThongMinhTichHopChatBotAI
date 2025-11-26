@@ -10,7 +10,7 @@ public class EntityDTOMapper {
     // Insurance Policy Mappings
     public InsurancePolicyDTO toInsurancePolicyDTO(InsurancePolicy entity) {
         if (entity == null) return null;
-
+        
         InsurancePolicyDTO dto = new InsurancePolicyDTO();
         dto.setId(entity.getId());
         dto.setPolicyNumber(entity.getPolicyNumber());
@@ -27,7 +27,7 @@ public class EntityDTOMapper {
 
     public InsurancePolicy toInsurancePolicyEntity(InsurancePolicyRequestDTO requestDTO) {
         if (requestDTO == null) return null;
-
+        
         InsurancePolicy entity = new InsurancePolicy();
         entity.setPolicyNumber(requestDTO.getPolicyNumber());
         entity.setPolicyType(requestDTO.getPolicyType());
@@ -41,7 +41,7 @@ public class EntityDTOMapper {
 
     public void updateInsurancePolicyEntity(InsurancePolicy entity, InsurancePolicyRequestDTO requestDTO) {
         if (entity == null || requestDTO == null) return;
-
+        
         entity.setPolicyNumber(requestDTO.getPolicyNumber());
         entity.setPolicyType(requestDTO.getPolicyType());
         entity.setCoverageAmount(requestDTO.getCoverageAmount());
@@ -54,7 +54,7 @@ public class EntityDTOMapper {
     // Patient Insurance Mappings
     public PatientInsuranceDTO toPatientInsuranceDTO(PatientInsurance entity) {
         if (entity == null) return null;
-
+        
         PatientInsuranceDTO dto = new PatientInsuranceDTO();
         dto.setId(entity.getId());
         dto.setPatientId(entity.getPatientId());
@@ -63,18 +63,18 @@ public class EntityDTOMapper {
         dto.setStatus(entity.getStatus());
         dto.setCreateAt(entity.getCreateAt());
         dto.setUpdateAt(entity.getUpdateAt());
-
+        
         if (entity.getInsurancePolicy() != null) {
             dto.setInsurancePolicyId(entity.getInsurancePolicy().getId());
             dto.setInsurancePolicy(toInsurancePolicyDTO(entity.getInsurancePolicy()));
         }
-
+        
         return dto;
     }
 
     public PatientInsurance toPatientInsuranceEntity(PatientInsuranceRequestDTO requestDTO, InsurancePolicy insurancePolicy) {
         if (requestDTO == null) return null;
-
+        
         PatientInsurance entity = new PatientInsurance();
         entity.setPatientId(requestDTO.getPatientId());
         entity.setIssueDate(requestDTO.getIssueDate());
@@ -86,7 +86,7 @@ public class EntityDTOMapper {
 
     public void updatePatientInsuranceEntity(PatientInsurance entity, PatientInsuranceRequestDTO requestDTO, InsurancePolicy insurancePolicy) {
         if (entity == null || requestDTO == null) return;
-
+        
         entity.setPatientId(requestDTO.getPatientId());
         entity.setIssueDate(requestDTO.getIssueDate());
         entity.setExpiryDate(requestDTO.getExpiryDate());
@@ -97,24 +97,23 @@ public class EntityDTOMapper {
     // Insurance Claim Mappings
     public InsuranceClaimDTO toInsuranceClaimDTO(InsuranceClaim entity) {
         if (entity == null) return null;
-
+        
         InsuranceClaimDTO dto = new InsuranceClaimDTO();
         dto.setId(entity.getId());
+        dto.setClaimAmount(entity.getClaimAmount());
+        dto.setApprovedAmount(entity.getApprovedAmount());
         dto.setStatus(entity.getStatus());
-        dto.setPatientPayAmount(entity.getPatientPayAmount());
-        dto.setTotalClaimAmount(entity.getTotalClaimAmount());
-        dto.setTotalInsurancePay(entity.getTotalInsurancePay());
         dto.setClaimDate(entity.getClaimDate());
         dto.setApprovalDate(entity.getApprovalDate());
         dto.setNotes(entity.getNotes());
         dto.setCreateAt(entity.getCreateAt());
         dto.setUpdateAt(entity.getUpdateAt());
-
+        
         if (entity.getPatientInsurance() != null) {
             dto.setPatientInsuranceId(entity.getPatientInsurance().getId());
             dto.setPatientInsurance(toPatientInsuranceDTO(entity.getPatientInsurance()));
         }
-
+        
         return dto;
     }
 
@@ -135,6 +134,7 @@ public class EntityDTOMapper {
 
     public void updateInsuranceClaimEntity(InsuranceClaim entity, InsuranceClaimRequestDTO requestDTO, PatientInsurance patientInsurance) {
         if (entity == null || requestDTO == null) return;
+
 
         entity.setStatus(requestDTO.getStatus());
         entity.setPatientPayAmount(requestDTO.getPatientPayAmount());
@@ -166,7 +166,7 @@ public class EntityDTOMapper {
 
     public ClaimDocument toClaimDocumentEntity(ClaimDocumentRequestDTO requestDTO, InsuranceClaim insuranceClaim) {
         if (requestDTO == null) return null;
-
+        
         ClaimDocument entity = new ClaimDocument();
         entity.setFilePath(requestDTO.getFilePath());
         entity.setDocumentType(requestDTO.getDocumentType());
@@ -178,7 +178,7 @@ public class EntityDTOMapper {
 
     public void updateClaimDocumentEntity(ClaimDocument entity, ClaimDocumentRequestDTO requestDTO, InsuranceClaim insuranceClaim) {
         if (entity == null || requestDTO == null) return;
-
+        
         entity.setFilePath(requestDTO.getFilePath());
         entity.setDocumentType(requestDTO.getDocumentType());
         entity.setStatus(requestDTO.getStatus());

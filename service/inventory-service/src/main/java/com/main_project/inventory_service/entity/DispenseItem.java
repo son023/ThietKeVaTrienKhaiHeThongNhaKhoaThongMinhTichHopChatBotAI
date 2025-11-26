@@ -21,9 +21,17 @@ public class DispenseItem {
 
     private Integer priceAtDispense;
 
+
+    @Column(length = 100)
     private String dosage;
+
+    @Column(length = 50)
     private String frequency;
+
+    @Column(length = 50)
     private String duration;
+
+    @Column(name = "usage_instructions", length = 255)
     private String usageInstructions;
 
     @ManyToOne(fetch = FetchType.LAZY)

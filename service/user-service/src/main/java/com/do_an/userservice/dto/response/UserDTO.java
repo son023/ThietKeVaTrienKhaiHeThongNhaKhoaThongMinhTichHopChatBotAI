@@ -6,20 +6,21 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Getter
 @Setter
 public class UserDTO {
-    private String id; // ID của User
-    private String username;
+    private UUID id;
     private String email;
-    private String fullName;
+    private String fullname;
     private String phone;
-    private boolean isActive; // Rất quan trọng cho Admin
+    private boolean isActive;
     private String imageUrl;
-    private LocalDateTime createdAt; // Hữu ích để sắp xếp
+    private LocalDateTime createAt;
 
-    // Admin chắc chắn muốn biết user này có những quyền gì
     private Set<String> roles;
+
+    private String primaryRole;
 }

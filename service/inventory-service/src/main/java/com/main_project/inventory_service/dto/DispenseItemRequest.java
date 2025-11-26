@@ -17,6 +17,11 @@ public class DispenseItemRequest {
     @NotNull(message = "Price at dispense is required")
     private Integer priceAtDispense;
     
+    private String dosage;
+    private String frequency;
+    private String duration;
+    private String usageInstructions;
+    
     @NotNull(message = "Inventory Lot ID is required")
     private UUID inventoryLotId;
     

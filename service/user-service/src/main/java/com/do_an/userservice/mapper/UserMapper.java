@@ -1,8 +1,8 @@
 package com.do_an.userservice.mapper;
 
 import com.do_an.userservice.dto.response.UserDTO;
-import com.do_an.userservice.entity.Role;
 import com.do_an.userservice.entity.User;
+import com.do_an.userservice.entity.UserRole;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -16,7 +16,8 @@ public interface UserMapper {
 
 
     @Mapping(source = "id", target = "id")
-    @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRolesToStringSet")
+    @Mapping(source = "userRoles", target = "roles", qualifiedByName = "mapUserRolesToStringSet")
+    @Mapping(source = ".", target = "primaryRole", qualifiedByName = "extractPrimaryRole")
     UserDTO toDto(User user);
 
 
@@ -24,16 +25,42 @@ public interface UserMapper {
 
     /**
      * Hàm helper tùy chỉnh:
-     * Chuyển Set<UserRole> (Entity) -> Set<String> (Tên Role)
+     * Chuyển List<UserRole> (Entity) -> Set<String> (Tên Role)
      */
-    @Named("mapRolesToStringSet")
-    default Set<String> mapRolesToStringSet(List<Role> roles) {
-        if (roles == null || roles.isEmpty()) {
+    @Named("mapUserRolesToStringSet")
+    default Set<String> mapUserRolesToStringSet(List<UserRole> userRoles) {
+        if (userRoles == null || userRoles.isEmpty()) {
             return Set.of(); // Trả về Set rỗng
         }
 
-        return roles.stream()
-                .map(userRole -> userRole.getRoleName())
+        return userRoles.stream()
+                .map(userRole -> userRole.getRole().getRoleName())
                 .collect(Collectors.toSet());
+    }
+    
+    /**
+     * Trích xuất vai trò chính từ User
+     * Ưu tiên: DOCTOR > ADMIN > PHARMACIST > LAB_TECHNICIAN > RECEPTIONIST > PATIENT
+     */
+    @Named("extractPrimaryRole")
+    default String extractPrimaryRole(User user) {
+        if (user == null || user.getUserRoles() == null || user.getUserRoles().isEmpty()) {
+            return null;
+        }
+        
+        Set<String> roleNames = user.getUserRoles().stream()
+                .map(userRole -> userRole.getRole().getRoleName())
+                .collect(Collectors.toSet());
+        
+        // Ưu tiên theo thứ tự
+        if (roleNames.contains("DOCTOR")) return "DOCTOR";
+        if (roleNames.contains("ADMIN")) return "ADMIN";
+        if (roleNames.contains("PHARMACIST")) return "PHARMACIST";
+        if (roleNames.contains("LAB_TECHNICIAN")) return "LAB_TECHNICIAN";
+        if (roleNames.contains("RECEPTIONIST")) return "RECEPTIONIST";
+        if (roleNames.contains("PATIENT")) return "PATIENT";
+        
+        // Nếu không có role nào khớp, lấy role đầu tiên
+        return roleNames.iterator().next();
     }
 }

@@ -1,10 +1,10 @@
 package com.main_project.labtest_service.util;
 
 import com.main_project.labtest_service.dto.*;
+import com.main_project.labtest_service.entity.LabTechnician;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
 import com.main_project.labtest_service.entity.MedicalAttachment;
-import com.main_project.labtest_service.entity.MedicalHistory;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
@@ -14,28 +14,29 @@ import java.util.stream.Collectors;
 
 @Component
 public class EntityDTOMapper {
-    // 🔹 Entity → DTO
+    // ===================
+    // LabTest
+    // ===================
     public LabTestDTO toLabTestDTO(LabTest entity) {
         if (entity == null) return null;
 
         LabTestDTO dto = new LabTestDTO();
         dto.setId(entity.getId());
-        dto.setLabTechnicianId(entity.getLabTechnicianId());
+        dto.setMedicalHistoryId(entity.getMedicalHistoryId());
+        if (entity.getLabTechnician() != null) {
+            dto.setLabTechnicianId(entity.getLabTechnician().getUserId());
+        }
         dto.setDoctorId(entity.getDoctorId());
         dto.setPrice(entity.getPrice());
         dto.setInstructions(entity.getInstructions());
         dto.setStatus(entity.getStatus());
-        dto.setResultDate(entity.getResultDate() != null ? entity.getResultDate() : null);
+        dto.setResultDate(entity.getResultDate());
         dto.setAbnormalFlag(entity.getAbnormalFlag());
         dto.setUnits(entity.getUnits());
         dto.setStructureJson(entity.getStructureJson());
         dto.setReferenceRange(entity.getReferenceRange());
-        dto.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt(): null);
-        dto.setUpdatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt() : null);
-
-        if (entity.getMedicalHistory() != null) {
-            dto.setMedicalHistoryId(entity.getMedicalHistory().getId());
-        }
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
 
         if (entity.getLabTestType() != null) {
             dto.setLabTestTypeId(entity.getLabTestType().getId());
@@ -53,12 +54,12 @@ public class EntityDTOMapper {
         return dto;
     }
 
-    // 🔹 RequestDTO → Entity
-    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, MedicalHistory medicalHistory, LabTestType labTestType) {
+    // RequestDTO -> Entity
+    public LabTest toLabTestEntity(LabTestRequestDTO requestDTO, LabTestType labTestType, LabTechnician labTechnician) {
         if (requestDTO == null) return null;
 
         LabTest entity = new LabTest();
-        entity.setLabTechnicianId(requestDTO.getLabTechnicianId());
+        entity.setMedicalHistoryId(requestDTO.getMedicalHistoryId());
         entity.setDoctorId(requestDTO.getDoctorId());
         entity.setPrice(requestDTO.getPrice());
         entity.setInstructions(requestDTO.getInstructions());
@@ -67,10 +68,10 @@ public class EntityDTOMapper {
         entity.setUnits(requestDTO.getUnits());
         entity.setStructureJson(requestDTO.getStructureJson());
         entity.setReferenceRange(requestDTO.getReferenceRange());
-        entity.setMedicalHistory(medicalHistory);
         entity.setLabTestType(labTestType);
-        entity.setCreatedAt(java.time.ZonedDateTime.now());
-        entity.setUpdatedAt(java.time.ZonedDateTime.now());
+        entity.setLabTechnician(labTechnician);
+        entity.setCreatedAt(ZonedDateTime.now());
+        entity.setUpdatedAt(ZonedDateTime.now());
 
         if (requestDTO.getResultDate() != null) {
             entity.setResultDate(requestDTO.getResultDate());
@@ -79,6 +80,9 @@ public class EntityDTOMapper {
         return entity;
     }
 
+    // ===================
+    // LabTestType
+    // ===================
     public LabTestTypeDTO toLabTestTypeDTO(LabTestType entity) {
         if (entity == null) return null;
 
@@ -106,6 +110,9 @@ public class EntityDTOMapper {
         if (dto.getDescription() != null) entity.setDescription(dto.getDescription());
     }
 
+    // ===================
+    // MedicalAttachment
+    // ===================
     public MedicalAttachmentDTO toMedicalAttachmentDTO(MedicalAttachment entity) {
         if (entity == null) return null;
 
@@ -119,19 +126,17 @@ public class EntityDTOMapper {
                 .build();
     }
 
-    public MedicalAttachment toEntity(MedicalAttachmentRequestDTO dto, LabTest labTest) {
+    public MedicalAttachment toMedicalAttachmentEntity(MedicalAttachmentRequestDTO dto, LabTest labTest) {
         if (dto == null) return null;
 
         return MedicalAttachment.builder()
                 .filePath(dto.getFilePath())
                 .type(dto.getType())
-                .createdAt(ZonedDateTime.now())
-                .updatedAt(ZonedDateTime.now())
                 .labTest(labTest)
                 .build();
     }
 
-    public void updateEntity(MedicalAttachment entity, MedicalAttachmentRequestDTO dto, LabTest labTest) {
+    public void updateMedicalAttachmentEntity(MedicalAttachment entity, MedicalAttachmentRequestDTO dto, LabTest labTest) {
         if (dto == null || entity == null) return;
 
         if (dto.getFilePath() != null) entity.setFilePath(dto.getFilePath());
@@ -140,36 +145,27 @@ public class EntityDTOMapper {
         entity.setUpdatedAt(ZonedDateTime.now());
     }
 
-    public MedicalHistoryDTO toMedicalHistoryDTO(MedicalHistory entity) {
+    // ===================
+    // LabTechnician
+    // ===================
+    public LabTechnicianDTO toLabTechnicianDTO(LabTechnician entity) {
         if (entity == null) return null;
-
-        MedicalHistoryDTO dto = new MedicalHistoryDTO();
-        dto.setId(entity.getId());
-        dto.setAppointmentId(entity.getAppointmentId());
-        dto.setSymptoms(entity.getSymptoms());
-        dto.setTreatment(entity.getTreatment());
-        dto.setDiagnosis(entity.getDiagnosis());
-        dto.setDisease(entity.getDisease());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-
-        if (entity.getLabTests() != null)
-            dto.setLabTestIds(entity.getLabTests().stream()
-                    .map(l -> l.getId())
-                    .collect(Collectors.toList()));
-
-        return dto;
+        return LabTechnicianDTO.builder()
+                .userId(entity.getUserId())
+                .licenseNumber(entity.getLicenseNumber())
+                .build();
     }
 
-    public MedicalHistory toMedicalHistoryEntity(MedicalHistoryRequestDTO requestDTO) {
-        if (requestDTO == null) return null;
-
-        return MedicalHistory.builder()
-                .appointmentId(requestDTO.getAppointmentId())
-                .symptoms(requestDTO.getSymptoms())
-                .treatment(requestDTO.getTreatment())
-                .diagnosis(requestDTO.getDiagnosis())
-                .disease(requestDTO.getDisease())
+    public LabTechnician toLabTechnicianEntity(LabTechnicianRequestDTO dto) {
+        if (dto == null) return null;
+        return LabTechnician.builder()
+                .userId(dto.getUserId())
+                .licenseNumber(dto.getLicenseNumber())
                 .build();
+    }
+
+    public void updateLabTechnicianEntity(LabTechnician entity, LabTechnicianRequestDTO dto) {
+        if (entity == null || dto == null) return;
+        entity.setLicenseNumber(dto.getLicenseNumber());
     }
 }

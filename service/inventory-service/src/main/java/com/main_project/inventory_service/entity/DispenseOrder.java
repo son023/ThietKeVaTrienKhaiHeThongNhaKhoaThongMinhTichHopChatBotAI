@@ -20,15 +20,20 @@ public class DispenseOrder {
     //@GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID pharmacistId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacist_id")
+    private Pharmacist pharmacist;
 
-
-    private UUID prescription;
+    @Column(length = 255)
+    private String prescription;
 
     @Column(length = 255)
     private String status;
 
-    private UUID medicalHistoryid;
+    @Column(name = "medical_history_id", length = 50)
+    private UUID medicalHistoryId;
+
+    @Column(name = "doctor_id", length = 50)
     private UUID doctorId;
 
     @CreationTimestamp
@@ -38,7 +43,6 @@ public class DispenseOrder {
     @UpdateTimestamp
     @Column(name = "update_at")
     private ZonedDateTime updateAt;
-
 }
 
 

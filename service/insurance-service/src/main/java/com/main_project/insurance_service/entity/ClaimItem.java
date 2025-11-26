@@ -46,3 +46,4 @@ public class ClaimItem {
     @JoinColumn(name = "bhyt_catalogue_id", referencedColumnName = "id")
     private BhytCatalogue bhytCatalogue;
 }
+

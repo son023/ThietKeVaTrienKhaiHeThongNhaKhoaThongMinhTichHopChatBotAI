@@ -1,8 +1,10 @@
 package com.do_an.userservice.controller;
 
 import com.do_an.userservice.dto.request.CreateUserRequestDTO;
+import com.do_an.userservice.dto.request.LoginRequest;
 import com.do_an.userservice.dto.request.UpdateUserRequestDTO;
 import com.do_an.userservice.dto.response.UserDTO;
+import com.do_an.userservice.service.AuthService;
 import com.do_an.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.UUID;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user-service/users")
@@ -29,6 +31,7 @@ import java.util.List;
 public class UserController {
     
     private final UserService userService;
+    private final AuthService authService;
 
     @Operation(
             summary = "Tạo User mới",
@@ -37,7 +40,7 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tạo user thành công",
                     content = @Content(schema = @Schema(implementation = UserDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Username hoặc Email đã tồn tại"),
+            @ApiResponse(responseCode = "400", description = "Số điện thoaị hoặc Email đã tồn tại"),
             @ApiResponse(responseCode = "500", description = "Lỗi server")
     })
     //@SecurityRequirement(name = "bearerAuth")
@@ -63,7 +66,7 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<UserDTO> updateUser(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId,
+            @PathVariable UUID userId,
             @Parameter(description = "Thông tin cần cập nhật", required = true)
             @Valid @RequestBody UpdateUserRequestDTO request) {
         log.info("Nhận request cập nhật user: {}", userId);
@@ -83,7 +86,7 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId) {
+            @PathVariable UUID userId) {
         log.info("Nhận request xóa user: {}", userId);
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
@@ -102,27 +105,9 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(
             @Parameter(description = "ID của User", required = true)
-            @PathVariable String userId) {
+            @PathVariable UUID userId) {
         log.info("Nhận request lấy user theo ID: {}", userId);
         UserDTO user = userService.getUserById(userId);
-        return ResponseEntity.ok(user);
-    }
-
-    @Operation(
-            summary = "Lấy User theo Username",
-            description = "Lấy thông tin chi tiết của một user theo Username"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tìm thấy user"),
-            @ApiResponse(responseCode = "404", description = "Không tìm thấy user")
-    })
-    //@SecurityRequirement(name = "bearerAuth")
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserDTO> getUserByUsername(
-            @Parameter(description = "Username của User", required = true)
-            @PathVariable String username) {
-        log.info("Nhận request lấy user theo username: {}", username);
-        UserDTO user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
 
@@ -146,4 +131,10 @@ public class UserController {
         List<UserDTO> users = userService.getAllUsers(isActive, fullName, email);
         return ResponseEntity.ok(users);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserDTO> login(@RequestBody LoginRequest credentials) {
+        return authService.login(credentials);
+    }
+
 }

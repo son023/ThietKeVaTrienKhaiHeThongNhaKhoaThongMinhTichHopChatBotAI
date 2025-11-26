@@ -1,12 +1,12 @@
 package com.main_project.insurance_service.service;
 
-import com.do_an.common.model.InvoiceCheckerRequest;
-import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.main_project.insurance_service.dto.*;
-import com.main_project.insurance_service.entity.InsuranceClaim;
-import com.main_project.insurance_service.entity.PatientInsurance;
 import com.main_project.insurance_service.exceptions.AppException;
 import com.main_project.insurance_service.exceptions.enums.ErrorCode;
+import com.do_an.common.model.InvoiceCheckerRequest;
+import com.do_an.common.model.InvoiceItemCheckerRequest;
+import com.main_project.insurance_service.entity.InsuranceClaim;
+import com.main_project.insurance_service.entity.PatientInsurance;
 import com.main_project.insurance_service.repository.InsuranceClaimRepository;
 import com.main_project.insurance_service.repository.PatientInsuranceRepository;
 import com.main_project.insurance_service.util.EntityDTOMapper;
@@ -211,7 +211,18 @@ public class InsuranceClaimService implements IInsuranceClaimService {
         return new ProcessedInvoiceItem(itemDTO, bhytCatalogueId);
     }
 
+    private static class ProcessedInvoiceItem {
+        private final InvoiceItemDTO invoiceItem;
+        private final UUID bhytCatalogueId;
 
+        public ProcessedInvoiceItem(InvoiceItemDTO invoiceItem, UUID bhytCatalogueId) {
+            this.invoiceItem = invoiceItem;
+            this.bhytCatalogueId = bhytCatalogueId;
+        }
+
+        public InvoiceItemDTO getInvoiceItem() { return invoiceItem; }
+        public UUID getBhytCatalogueId() { return bhytCatalogueId; }
+    }
 
     private ClaimItemRequestDTO createClaimItemRequestFromProcessedItem(ProcessedInvoiceItem processedItem, UUID claimId) {
         InvoiceItemDTO invoiceItem = processedItem.getInvoiceItem();
@@ -231,6 +242,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
 
         return request;
     }
+
 
     @Override
     public InsuranceClaimDTO createClaim(InsuranceClaimRequestDTO requestDTO) {

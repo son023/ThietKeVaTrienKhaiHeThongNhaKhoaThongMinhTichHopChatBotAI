@@ -14,7 +14,7 @@ import java.util.*;
 public class LabTestType {
 
     @Id
-    @Column(length = 50)
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
     @Column(length = 255)

@@ -15,13 +15,13 @@ import java.util.*;
 public class LabTest {
 
     @Id
-    @Column(length = 50)
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(length = 50)
-    private UUID labTechnicianId;
+    @Column(name = "medical_history_id", columnDefinition = "uuid")
+    private UUID medicalHistoryId;
 
-    @Column(length = 50)
+    @Column(name = "doctor_id", columnDefinition = "uuid")
     private UUID doctorId;
 
     private int price;
@@ -29,30 +29,33 @@ public class LabTest {
     @Column(length = 255)
     private String instructions;
 
-    @Column(length = 255)
+    @Column(length = 50)
     private String status;
 
+    @Column(name = "result_date")
     private ZonedDateTime resultDate;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "abnormal_flag")
     private String abnormalFlag;
 
-    @Column(length = 255)
+    @Column(length = 50)
     private String units;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "structure_json")
     private String structureJson;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "reference_range")
     private String referenceRange;
 
+    @Column(name = "created_at")
     private ZonedDateTime createdAt;
+    
+    @Column(name = "updated_at")
     private ZonedDateTime updatedAt;
 
-    // Many LabTests belong to one MedicalHistory
-    @ManyToOne
-    @JoinColumn(name = "medical_history_id", referencedColumnName = "id")
-    private MedicalHistory medicalHistory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lab_technician_id", referencedColumnName = "user_id")
+    private LabTechnician labTechnician;
 
     // Many LabTests belong to one LabTestType
     @ManyToOne
@@ -62,4 +65,18 @@ public class LabTest {
     // One LabTest has many MedicalAttachments
     @OneToMany(mappedBy = "labTest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicalAttachment> medicalAttachments = new ArrayList<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+        createdAt = ZonedDateTime.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = ZonedDateTime.now();
+    }
 }

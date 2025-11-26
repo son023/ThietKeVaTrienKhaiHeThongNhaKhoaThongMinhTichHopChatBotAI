@@ -3,8 +3,10 @@ package com.main_project.inventory_service.service;
 import com.main_project.inventory_service.dto.DispenseOrderRequest;
 import com.main_project.inventory_service.dto.DispenseOrderResponse;
 import com.main_project.inventory_service.entity.DispenseOrder;
+import com.main_project.inventory_service.entity.Pharmacist;
 import com.main_project.inventory_service.iservice.IDispenseOrderService;
 import com.main_project.inventory_service.repository.DispenseOrderRepository;
+import com.main_project.inventory_service.repository.PharmacistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,14 +20,20 @@ import java.util.stream.Collectors;
 public class DispenseOrderService implements IDispenseOrderService {
 
     private final DispenseOrderRepository dispenseOrderRepository;
+    private final PharmacistRepository pharmacistRepository;
 
     @Override
     @Transactional
     public DispenseOrderResponse create(DispenseOrderRequest request) {
+        Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
+                .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
+
         DispenseOrder dispenseOrder = new DispenseOrder();
-        dispenseOrder.setPharmacistId(request.getPharmacistId());
+        dispenseOrder.setPharmacist(pharmacist);
         dispenseOrder.setPrescription(request.getPrescription());
         dispenseOrder.setStatus(request.getStatus());
+        dispenseOrder.setMedicalHistoryId(request.getMedicalHistoryId());
+        dispenseOrder.setDoctorId(request.getDoctorId());
 
         DispenseOrder saved = dispenseOrderRepository.save(dispenseOrder);
         return mapToResponse(saved);
@@ -37,9 +45,14 @@ public class DispenseOrderService implements IDispenseOrderService {
         DispenseOrder dispenseOrder = dispenseOrderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("DispenseOrder not found with id: " + id));
 
-        dispenseOrder.setPharmacistId(request.getPharmacistId());
+        Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
+                .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
+
+        dispenseOrder.setPharmacist(pharmacist);
         dispenseOrder.setPrescription(request.getPrescription());
         dispenseOrder.setStatus(request.getStatus());
+        dispenseOrder.setMedicalHistoryId(request.getMedicalHistoryId());
+        dispenseOrder.setDoctorId(request.getDoctorId());
 
         DispenseOrder updated = dispenseOrderRepository.save(dispenseOrder);
         return mapToResponse(updated);
@@ -73,9 +86,11 @@ public class DispenseOrderService implements IDispenseOrderService {
     private DispenseOrderResponse mapToResponse(DispenseOrder dispenseOrder) {
         return new DispenseOrderResponse(
                 dispenseOrder.getId(),
-                dispenseOrder.getPharmacistId(),
+                dispenseOrder.getPharmacist() != null ? dispenseOrder.getPharmacist().getUserId() : null,
                 dispenseOrder.getPrescription(),
                 dispenseOrder.getStatus(),
+                dispenseOrder.getMedicalHistoryId(),
+                dispenseOrder.getDoctorId(),
                 dispenseOrder.getCreateAt(),
                 dispenseOrder.getUpdateAt()
         );

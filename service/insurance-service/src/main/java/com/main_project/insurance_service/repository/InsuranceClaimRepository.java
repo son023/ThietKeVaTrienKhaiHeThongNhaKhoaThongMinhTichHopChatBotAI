@@ -26,7 +26,7 @@ public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, 
 
     @Query("SELECT ic FROM InsuranceClaim ic WHERE ic.status = :status AND ic.totalClaimAmount >= :minAmount")
     List<InsuranceClaim> findByStatusAndTotalClaimAmountGreaterThanEqual(@Param("status") String status,
-                                                                         @Param("minAmount") Integer minAmount);
+                                                                   @Param("minAmount") Integer minAmount);
 
     @Query("SELECT COUNT(ic) FROM InsuranceClaim ic WHERE ic.patientInsurance.id = :patientInsuranceId")
     long countByPatientInsuranceId(@Param("patientInsuranceId") UUID patientInsuranceId);

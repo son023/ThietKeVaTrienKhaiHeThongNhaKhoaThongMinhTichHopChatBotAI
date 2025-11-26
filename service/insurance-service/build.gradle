@@ -30,6 +30,8 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.7.3'
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.1.1'
 
     // Thêm Axon Framework
     implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'

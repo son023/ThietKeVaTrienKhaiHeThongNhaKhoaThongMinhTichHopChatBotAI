@@ -78,10 +78,10 @@ public class InsuranceClaimController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search claims by status and minimum amount", description = "Search insurance claims by status and minimum claim amount")
+    @Operation(summary = "Search claims by status and minimum amount", description = "Search insurance claims by status and minimum total claim amount")
     public ResponseEntity<List<InsuranceClaimDTO>> getClaimsByStatusAndMinAmount(
             @Parameter(description = "Claim Status") @RequestParam String status,
-            @Parameter(description = "Minimum Claim Amount") @RequestParam Integer minAmount) {
+            @Parameter(description = "Minimum Total Claim Amount") @RequestParam Integer minAmount) {
         List<InsuranceClaimDTO> claims = insuranceClaimService.getClaimsByStatusAndMinAmount(status, minAmount);
         return ResponseEntity.ok(claims);
     }
@@ -95,23 +95,11 @@ public class InsuranceClaimController {
     }
 
     @GetMapping("/total-approved/patient-insurance/{patientInsuranceId}")
-    @Operation(summary = "Get total approved amount by patient insurance", description = "Get the total approved amount for a patient insurance")
+    @Operation(summary = "Get total insurance pay amount by patient insurance", description = "Get the total insurance pay amount for a patient insurance (sum of totalInsurancePay)")
     public ResponseEntity<Integer> getTotalApprovedAmountByPatientInsurance(
             @Parameter(description = "Patient Insurance ID") @PathVariable UUID patientInsuranceId) {
         Integer totalAmount = insuranceClaimService.getTotalApprovedAmountByPatientInsurance(patientInsuranceId);
         return ResponseEntity.ok(totalAmount);
-    }
-
-    @PostMapping
-    @Operation(summary = "Create new insurance claim", description = "Create a new insurance claim")
-    public ResponseEntity<InsuranceClaimDTO> createClaim(
-            @Valid @RequestBody InsuranceClaimRequestDTO requestDTO) {
-        try {
-            InsuranceClaimDTO createdClaim = insuranceClaimService.createClaim(requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdClaim);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
     @PutMapping("/{id}")
@@ -128,10 +116,10 @@ public class InsuranceClaimController {
     }
 
     @PatchMapping("/{id}/approve")
-    @Operation(summary = "Approve insurance claim", description = "Approve an insurance claim with approved amount")
+    @Operation(summary = "Approve insurance claim", description = "Approve an insurance claim (approved amount tracked via totalInsurancePay)")
     public ResponseEntity<InsuranceClaimDTO> approveClaim(
             @Parameter(description = "Claim ID") @PathVariable UUID id,
-            @Parameter(description = "Approved Amount") @RequestParam Integer approvedAmount) {
+            @Parameter(description = "Approved Amount (deprecated - not used)") @RequestParam(required = false) Integer approvedAmount) {
         try {
             InsuranceClaimDTO approvedClaim = insuranceClaimService.approveClaim(id, approvedAmount);
             return ResponseEntity.ok(approvedClaim);

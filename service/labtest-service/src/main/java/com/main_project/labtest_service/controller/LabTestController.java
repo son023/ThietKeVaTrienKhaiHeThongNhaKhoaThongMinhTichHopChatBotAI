@@ -48,6 +48,11 @@ public class LabTestController {
         return ResponseEntity.ok(labTestService.getLabTestsByDoctorId(doctorId));
     }
 
+    @GetMapping("/technician/{technicianId}")
+    public ResponseEntity<List<LabTestDTO>> getByTechnicianId(@PathVariable UUID technicianId) {
+        return ResponseEntity.ok(labTestService.getLabTestsByLabTechnicianId(technicianId));
+    }
+
     @GetMapping("/status/{status}")
     public ResponseEntity<List<LabTestDTO>> getByStatus(@PathVariable String status) {
         return ResponseEntity.ok(labTestService.getLabTestsByStatus(status));

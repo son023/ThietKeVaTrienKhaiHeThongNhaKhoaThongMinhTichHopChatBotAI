@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -100,5 +101,65 @@ public class MedicalServiceController {
     public ResponseEntity<Void> deleteByName(@PathVariable String name) {
         service.deleteByServiceName(name);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/deactivate/name/{name}")
+    @Operation(summary = "Vô hiệu hóa dịch vụ theo tên")
+    public ResponseEntity<?> deactivateByName(
+            @PathVariable String name) {
+
+        try {
+            int result = service.deactivateMedicalServiceName(name);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Đã vô hiệu hóa dịch vụ có tên: " + name,
+                    "updatedRows", result
+            ));
+        } catch (Exception ex) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of("error", ex.getMessage())
+            );
+        }
+    }
+
+    @PatchMapping("/deactivate/{id}")
+    @Operation(summary = "Vô hiệu hóa dịch vụ theo ID")
+    public ResponseEntity<?> deactivateById(
+            @PathVariable UUID id) {
+
+        try {
+            int result = service.deactivateMedicalService(id);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Đã vô hiệu hóa dịch vụ có ID: " + id,
+                    "updatedRows", result
+            ));
+        } catch (Exception ex) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of("error", ex.getMessage())
+            );
+        }
+    }
+
+    @PatchMapping("/deactivate/type/{type}")
+    @Operation(summary = "Vô hiệu hóa tất cả dịch vụ theo loại")
+    public ResponseEntity<?> deactivateByType(
+            @PathVariable String type) {
+
+        try {
+            int result = service.deactivateMedicalServiceType(type);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Đã vô hiệu hóa các dịch vụ thuộc loại: " + type,
+                    "updatedRows", result
+            ));
+        } catch (Exception ex) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of("error", ex.getMessage())
+            );
+        }
     }
 }
