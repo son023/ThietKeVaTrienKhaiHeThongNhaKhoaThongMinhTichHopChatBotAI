@@ -1,5 +1,6 @@
 package com.do_an.invoiceservice.mapper;
 
+import com.do_an.common.model.InvoiceItemResponse;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceItemRequestDTO;
 import com.do_an.invoiceservice.dto.response.InvoiceItemResponseDTO;
 import com.do_an.invoiceservice.entity.InvoiceItem;
@@ -22,9 +23,9 @@ public interface InvoiceItemMapper {
     // (ĐÂY LÀ PHẦN SỬA LỖI)
     @Mappings({
             @Mapping(target = "id", ignore = true), // Bỏ qua ID khi TẠO MỚI
-            @Mapping(target = "createAt", ignore = true),
-            @Mapping(target = "updateAt", ignore = true),
-            @Mapping(target = "invoice", ignore = true)
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "insurancePayAmount", ignore = true),
+            @Mapping(target = "patientPayAmount", ignore = true)
     })
     // SỬA LỖI: Tham số phải là "CreateInvoiceItemDTO", không phải "InvoiceItemResponseDTO"
     InvoiceItem toEntity(CreateInvoiceItemRequestDTO dto);
@@ -34,9 +35,17 @@ public interface InvoiceItemMapper {
     // (Cần thiết cho logic "Update Invoice" của bạn)
     @Mappings({
             @Mapping(target = "id", ignore = true), // Không bao giờ map ID
-            @Mapping(target = "createAt", ignore = true),
-            @Mapping(target = "updateAt", ignore = true),
-            @Mapping(target = "invoice", ignore = true)
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "insurancePayAmount", ignore = true),
+            @Mapping(target = "patientPayAmount", ignore = true)
     })
     void updateFromDto(CreateInvoiceItemRequestDTO dto, @MappingTarget InvoiceItem entity);
+
+
+    @Mappings({
+            @Mapping(target = "invoice", ignore = true),
+            @Mapping(target = "id", ignore = true)
+    })
+    void updateFromResponse(InvoiceItemResponse response, @MappingTarget InvoiceItem entity);
+
 }

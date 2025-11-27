@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class UpdatePaymentRequestDTO {
-    private Double totalAmount;
+    private Integer totalAmount;
     
     private PaymentStatus status;
     

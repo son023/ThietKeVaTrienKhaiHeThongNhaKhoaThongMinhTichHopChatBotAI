@@ -17,9 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/invoices")
+@RequestMapping("/invoice-service/invoices")
 @RequiredArgsConstructor
 @Tag(name = "Invoice Management", description = "API quản lý hóa đơn và chi tiết hóa đơn")
 public class InvoiceController {
@@ -58,7 +59,7 @@ public class InvoiceController {
     @PutMapping("/{id}")
     public ResponseEntity<InvoiceResponseDTO> updateInvoice(
             @Parameter(description = "ID của hóa đơn cần cập nhật", required = true)
-            @PathVariable String id,
+            @PathVariable UUID id,
             @Parameter(description = "Thông tin hóa đơn cần cập nhật", required = true)
             @Valid @RequestBody CreateInvoiceRequestDTO request) {
         InvoiceResponseDTO updatedInvoice = invoiceService.updateInvoice(id, request);
@@ -77,7 +78,7 @@ public class InvoiceController {
     @PatchMapping("/{id}/finalize")
     public ResponseEntity<InvoiceResponseDTO> finalizeInvoice(
             @Parameter(description = "ID của hóa đơn cần chốt", required = true)
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         InvoiceResponseDTO finalizedInvoice = invoiceService.finalizeInvoice(id);
         return ResponseEntity.ok(finalizedInvoice);
     }
@@ -94,7 +95,7 @@ public class InvoiceController {
     @GetMapping("/{id}")
     public ResponseEntity<InvoiceResponseDTO> getInvoiceById(
             @Parameter(description = "ID của hóa đơn", required = true)
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         InvoiceResponseDTO invoice = invoiceService.getInvoiceById(id);
         return ResponseEntity.ok(invoice);
     }
@@ -126,7 +127,7 @@ public class InvoiceController {
     @PatchMapping("/{id}/pay")
     public ResponseEntity<InvoiceResponseDTO> markAsPaid(
             @Parameter(description = "ID của hóa đơn", required = true)
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         InvoiceResponseDTO paidInvoice = invoiceService.markAsPaid(id);
         return ResponseEntity.ok(paidInvoice);
     }
@@ -144,7 +145,7 @@ public class InvoiceController {
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<InvoiceResponseDTO> cancelInvoice(
             @Parameter(description = "ID của hóa đơn", required = true)
-            @PathVariable String id) {
+            @PathVariable UUID id) {
         InvoiceResponseDTO cancelledInvoice = invoiceService.cancelInvoice(id);
         return ResponseEntity.ok(cancelledInvoice);
     }

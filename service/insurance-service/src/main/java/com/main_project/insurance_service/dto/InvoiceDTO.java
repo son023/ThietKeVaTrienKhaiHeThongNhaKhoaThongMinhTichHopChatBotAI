@@ -3,9 +3,11 @@ package com.main_project.insurance_service.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
+
 
 @Data
 @NoArgsConstructor
@@ -30,5 +32,4 @@ public class InvoiceDTO {
     private LocalDateTime updateAt;
 
     private Set<InvoiceItemDTO> items;
-
 }

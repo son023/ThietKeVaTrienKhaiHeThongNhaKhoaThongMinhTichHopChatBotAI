@@ -1,5 +1,6 @@
 package com.main_project.insurance_service.entity;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,19 +46,16 @@ public class InsurancePolicy {
     private String status;
 
     @CreationTimestamp
-    @Column(name = "create_at", nullable = false, updatable = false)
+    @Column(name = "create_at")
     private ZonedDateTime createAt;
 
     @UpdateTimestamp
-    @Column(name = "update_at", nullable = false)
+    @Column(name = "update_at")
     private ZonedDateTime updateAt;
 
     // One-to-Many relationship with PatientInsurance
     @OneToMany(mappedBy = "insurancePolicy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PatientInsurance> patientInsurances;
 }
-
-
-
 
 

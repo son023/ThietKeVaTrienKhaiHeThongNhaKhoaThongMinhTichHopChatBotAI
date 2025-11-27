@@ -14,5 +14,7 @@ import java.util.UUID;
 public class MedicineReservedEvent {
     private UUID prescriptionId;
     private UUID dispenseOrderId;
+    private UUID doctorId;
+    private UUID medicalHistoryId;
     private List<MedicineItem> items;
 }

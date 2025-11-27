@@ -14,10 +14,10 @@ public class DispenseOrderRequest {
     @NotNull(message = "Pharmacist ID is required")
     private UUID pharmacistId;
     
-    private String prescription;
+    private UUID prescription;
     private String status;
-    private String medicalHistoryId;
-    private String doctorId;
+    private UUID medicalHistoryId;
+    private UUID doctorId;
 }
 
 

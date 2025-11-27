@@ -14,12 +14,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private Integer quantity;
 
     private Integer priceAtDispense;
+
 
     @Column(length = 100)
     private String dosage;

@@ -17,6 +17,7 @@ public class CreatePrescriptionCommand {
     @TargetAggregateIdentifier
     private UUID prescriptionId;
     private UUID patientId;
+    private UUID doctorId;
     private UUID medicalHistoryId;
     private List<MedicineItem> items;
 }

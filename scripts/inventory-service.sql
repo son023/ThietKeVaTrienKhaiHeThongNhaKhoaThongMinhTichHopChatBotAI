@@ -36,17 +36,19 @@ CREATE TABLE stock_ledger (
     type VARCHAR(255), -- 'IN', 'OUT', 'ADJUST'
     quantity INT,
     reference_type VARCHAR(255), -- Ví dụ: 'PURCHASE_ORDER', 'DISPENSE'
-    reference_id VARCHAR(50),    -- ID của phiếu nhập hoặc đơn thuốc liên quan
-    inventory_lot_id UUID REFERENCES inventory_lot(id)
+    reference_id UUID,    -- ID của phiếu nhập hoặc đơn thuốc liên quan
+    inventory_lot_id UUID REFERENCES inventory_lot(id),
+    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE dispense_order (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     pharmacist_id UUID REFERENCES pharmacist(user_id),
-    prescription VARCHAR(255),
+    prescription UUID,
     status VARCHAR(255),
-    medical_history_id VARCHAR(50),
-    doctor_id VARCHAR(50),
+    medical_history_id UUID,
+    doctor_id UUID,
     create_at TIMESTAMPTZ DEFAULT now(),
     update_at TIMESTAMPTZ DEFAULT now()
 );
@@ -78,16 +80,16 @@ VALUES
 ('bbbb2222-bbbb-4bbb-8bbb-222222222222', 'LOTA100-2025', '2027-10-01', 1000, 700, 'aaaa1111-aaaa-4aaa-8aaa-111111111111');
 
 -- 3. Ghi sổ kho (Nhập kho)
--- Cập nhật: Bỏ cột 'lot', thêm 'reference_id' (ví dụ mã phiếu nhập PO-001)
+-- Cập nhật: Bỏ cột 'lot', thêm 'reference_id' (ví dụ mã phiếu nhập)
 INSERT INTO stock_ledger (type, quantity, reference_type, reference_id, inventory_lot_id)
 VALUES
-('IN', 1000, 'PURCHASE_ORDER', 'PO-001', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
+('IN', 1000, 'PURCHASE_ORDER', 'dddd4444-dddd-4ddd-8ddd-444444444444', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
 
 -- 4. Tạo đơn cấp phát
 -- Cập nhật: Thêm medical_history_id và doctor_id
 INSERT INTO dispense_order (id, pharmacist_id, prescription, status, medical_history_id, doctor_id)
 VALUES
-('cccc3333-cccc-4ccc-8ccc-333333333333', '4c84022a-1111-4001-8001-000000000004', 'PRESCRIPTION-XYZ-789', 'PENDING', 'HIST-001', 'DOC-007');
+('cccc3333-cccc-4ccc-8ccc-333333333333', '4c84022a-1111-4001-8001-000000000004', 'eeee5555-eeee-4eee-8eee-555555555555', 'PENDING', 'ffff6666-ffff-4fff-8fff-666666666666', 'aaaa7777-aaaa-4aaa-8aaa-777777777777');
 
 -- 5. Thêm chi tiết cấp phát
 -- Cập nhật: Thêm dosage, frequency, duration, usage_instructions

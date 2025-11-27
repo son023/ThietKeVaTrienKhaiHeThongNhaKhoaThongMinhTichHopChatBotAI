@@ -18,20 +18,24 @@ import java.util.UUID;
 public class Invoice {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id; // varchar(50)
 
 
-    private String receptionistId;
-    private String appointmentId;
-    private Double totalAmount; // float4 -> Double
+    private UUID receptionistId;
+    private UUID appointmentId;
+    private Integer totalAmount;
     private String currency;
-    private String status; // Ví dụ: ISSUED, PAID, CANCELLED
+    private String status;
+
     private LocalDateTime issueAt;
     private LocalDateTime paidAt;
 
-    @CreationTimestamp
-    private LocalDateTime createAt;
+    private Integer insuranceTotalPay;
+    private Integer patientTotalPay;
+    private UUID insuranceClaimId;
+
+
     @UpdateTimestamp
     private LocalDateTime updateAt;
 

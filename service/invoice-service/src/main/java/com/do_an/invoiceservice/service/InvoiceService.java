@@ -38,16 +38,17 @@ public class InvoiceService {
      */
     @Transactional
     public InvoiceResponseDTO createInvoice(CreateInvoiceRequestDTO request) {
+
         Invoice invoice = invoiceMapper.toEntity(request);
-        String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
-        invoice.setId(invoiceId);
+        //String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
+        //invoice.setId(UUID.fromString(invoiceId));
 
         invoice.setStatus("DRAFT"); // <-- THAY ĐỔI: Bắt đầu là DRAFT
-        invoice.setIssueAt(LocalDateTime.now()); // Vẫn set ngày tạo
+        invoice.setIssueAt(LocalDateTime.now());
 
-        double totalAmount = 0.0;
+        int totalAmount = 0;
         for (InvoiceItem item : invoice.getItems()) {
-            item.setId(UUID.randomUUID().toString());
+            //item.setId(UUID.randomUUID());
             item.setInvoice(invoice);
             totalAmount += (item.getQuantity() * item.getUnitPrice());
         }
@@ -61,7 +62,7 @@ public class InvoiceService {
      * HÀM MỚI: Cập nhật Hóa đơn (chỉ khi là DRAFT)
      */
     @Transactional
-    public InvoiceResponseDTO updateInvoice(String invoiceId, CreateInvoiceRequestDTO request) {
+    public InvoiceResponseDTO updateInvoice(UUID invoiceId, CreateInvoiceRequestDTO request) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn"));
 
@@ -79,8 +80,8 @@ public class InvoiceService {
         syncInvoiceItems(invoice, request.getItems());
 
         // 3. Tính toán lại tổng tiền
-        double newTotalAmount = invoice.getItems().stream()
-                .mapToDouble(item -> item.getQuantity() * item.getUnitPrice())
+        int newTotalAmount = invoice.getItems().stream()
+                .mapToInt(item -> item.getQuantity() * item.getUnitPrice())
                 .sum();
         invoice.setTotalAmount(newTotalAmount);
 
@@ -93,7 +94,7 @@ public class InvoiceService {
      */
     private void syncInvoiceItems(Invoice invoice, List<CreateInvoiceItemRequestDTO> dtos) {
         // 1. Lấy Map các item DTO có ID (để cập nhật)
-        Map<String, CreateInvoiceItemRequestDTO> dtoMap = dtos.stream()
+        Map<UUID, CreateInvoiceItemRequestDTO> dtoMap = dtos.stream()
                 .filter(dto -> dto.getId() != null)
                 .collect(Collectors.toMap(CreateInvoiceItemRequestDTO::getId, Function.identity()));
 
@@ -111,7 +112,7 @@ public class InvoiceService {
             if (dto.getId() == null) {
                 // THÊM MỚI
                 InvoiceItem newItem = invoiceItemMapper.toEntity(dto); // Dùng mapper
-                newItem.setId(UUID.randomUUID().toString());
+                //newItem.setId(UUID.randomUUID());
                 invoice.addItem(newItem); // Thêm vào collection (để Cascade lưu)
             } else {
                 // CẬP NHẬT
@@ -132,7 +133,7 @@ public class InvoiceService {
      * HÀM MỚI: "Chốt" hóa đơn, chuyển từ DRAFT -> ISSUED
      */
     @Transactional
-    public InvoiceResponseDTO finalizeInvoice(String invoiceId) {
+    public InvoiceResponseDTO finalizeInvoice(UUID invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn"));
 
@@ -148,7 +149,7 @@ public class InvoiceService {
      * CHỨC NĂNG 2: Đánh dấu Đã thanh toán
      */
     @Transactional
-    public InvoiceResponseDTO markAsPaid(String invoiceId) {
+    public InvoiceResponseDTO markAsPaid(UUID invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn"));
 
@@ -158,7 +159,6 @@ public class InvoiceService {
 
         invoice.setStatus("PAID");
         invoice.setPaidAt(LocalDateTime.now());
-
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
         return invoiceMapper.toResponseDto(savedInvoice);
@@ -168,7 +168,7 @@ public class InvoiceService {
      * CHỨC NĂNG 3: Hủy Hóa đơn
      */
     @Transactional
-    public InvoiceResponseDTO cancelInvoice(String invoiceId) {
+    public InvoiceResponseDTO cancelInvoice(UUID invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn"));
 
@@ -184,7 +184,7 @@ public class InvoiceService {
      * CHỨC NĂNG 4: Lấy Hóa đơn theo ID
      */
     @Transactional(readOnly = true)
-    public InvoiceResponseDTO getInvoiceById(String invoiceId) {
+    public InvoiceResponseDTO getInvoiceById(UUID invoiceId) {
         // Cần join fetch items để lấy luôn
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn"));

@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class InventoryLot {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(unique = true, nullable = false, length = 100)
