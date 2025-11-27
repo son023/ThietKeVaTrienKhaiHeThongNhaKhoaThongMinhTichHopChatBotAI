@@ -2,15 +2,22 @@ package com.do_an.invoiceservice.dto.response;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class InvoiceItemResponseDTO {
-    private String id;
-    private Integer referenceId;
+    private UUID id;
+    private UUID referenceId;
     private String serviceType;
     private Integer quantity;
     private String description;
-    private Double unitPrice;
+    private Integer unitPrice;
+
+    private Integer insurancePayAmount;
+    private Integer patientPayAmount;
+    private UUID claimItemId;
+
 
     // Chúng ta có thể thêm một trường tính toán
-    private Double itemTotal;
+    private Integer itemTotal;
 }

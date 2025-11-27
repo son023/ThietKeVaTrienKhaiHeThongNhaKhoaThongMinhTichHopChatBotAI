@@ -17,24 +17,24 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DispenseOrder {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pharmacist_id")
     private Pharmacist pharmacist;
 
-    @Column(length = 255)
-    private String prescription;
+
+    private UUID prescription;
 
     @Column(length = 255)
     private String status;
 
     @Column(name = "medical_history_id", length = 50)
-    private String medicalHistoryId;
+    private UUID medicalHistoryId;
 
     @Column(name = "doctor_id", length = 50)
-    private String doctorId;
+    private UUID doctorId;
 
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)

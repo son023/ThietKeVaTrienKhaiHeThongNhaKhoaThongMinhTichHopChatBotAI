@@ -13,10 +13,10 @@ import java.util.UUID;
 public class DispenseOrderResponse {
     private UUID id;
     private UUID pharmacistId;
-    private String prescription;
+    private UUID prescription;
     private String status;
-    private String medicalHistoryId;
-    private String doctorId;
+    private UUID medicalHistoryId;
+    private UUID doctorId;
     private ZonedDateTime createAt;
     private ZonedDateTime updateAt;
 }

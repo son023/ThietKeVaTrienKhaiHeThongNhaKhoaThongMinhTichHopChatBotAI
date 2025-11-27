@@ -1,5 +1,6 @@
 package com.main_project.insurance_service.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,4 +15,3 @@ public class BhytCatalogueRequestDTO {
     private Boolean isCovered;
     private Integer maxCoverageAmount;
 }
-

@@ -2,6 +2,7 @@ package com.do_an.invoiceservice.entity;
 
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,19 +17,18 @@ import java.util.UUID;
 @Setter
 public class InvoiceItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private Integer referenceId; // int4 -> Integer
+    private UUID referenceId;
     private String serviceType;
     private Integer quantity;
     private String description;
-    private Double unitPrice; // float4 -> Double
+    private Integer unitPrice;
 
-    @CreationTimestamp
-    private LocalDateTime createAt;
-    @UpdateTimestamp
-    private LocalDateTime updateAt;
+    private Integer insurancePayAmount;
+    private Integer patientPayAmount;
+
+    private UUID claimItemId;
 
     // Quan hệ Nhiều-1
     @ManyToOne(fetch = FetchType.LAZY)

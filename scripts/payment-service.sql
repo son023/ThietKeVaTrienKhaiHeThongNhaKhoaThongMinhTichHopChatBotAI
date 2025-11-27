@@ -1,8 +1,8 @@
-
+DROP TABLE IF EXISTS public.payment CASCADE;
 CREATE TABLE IF NOT EXISTS payment (
-                                       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    invoice_id VARCHAR(255) NOT NULL,
-    total_amount DOUBLE PRECISION NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    invoice_id UUID NOT NULL,
+    total_amount INTEGER NOT NULL,
     status VARCHAR(50) NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
     transaction_id VARCHAR(255) UNIQUE,

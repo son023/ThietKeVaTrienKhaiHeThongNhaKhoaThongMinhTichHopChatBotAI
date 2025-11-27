@@ -33,6 +33,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'com.nimbusds:nimbus-jose-jwt:9.1.1'
 
+    // Thêm Axon Framework
+    implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
+    
+    // Thêm dependency vào common module
+    implementation project(':service:common')
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

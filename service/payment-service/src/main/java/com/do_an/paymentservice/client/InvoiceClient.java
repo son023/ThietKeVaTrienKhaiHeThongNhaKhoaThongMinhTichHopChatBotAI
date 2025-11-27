@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.UUID;
+
 @FeignClient(
     name = "invoice-service",
     url = "${invoice.service.url:http://localhost:8086}" // URL của invoice-service
@@ -17,19 +19,19 @@ public interface InvoiceClient {
      * GET /api/invoices/{id}
      */
     @GetMapping("/api/invoices/{id}")
-    InvoiceResponseDTO getInvoiceById(@PathVariable("id") String invoiceId);
+    InvoiceResponseDTO getInvoiceById(@PathVariable("id") UUID invoiceId);
     
     /**
      * Đánh dấu Invoice đã thanh toán
      * PATCH /api/invoices/{id}/pay
      */
     @PatchMapping("/api/invoices/{id}/pay")
-    InvoiceResponseDTO markAsPaid(@PathVariable("id") String invoiceId);
+    InvoiceResponseDTO markAsPaid(@PathVariable("id") UUID invoiceId);
     
     /**
      * Hủy Invoice
      * PATCH /api/invoices/{id}/cancel
      */
     @PatchMapping("/api/invoices/{id}/cancel")
-    InvoiceResponseDTO cancelInvoice(@PathVariable("id") String invoiceId);
+    InvoiceResponseDTO cancelInvoice(@PathVariable("id") UUID invoiceId);
 }

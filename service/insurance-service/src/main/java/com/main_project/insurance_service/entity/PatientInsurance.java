@@ -36,11 +36,11 @@ public class PatientInsurance {
     private String status;
 
     @CreationTimestamp
-    @Column(name = "create_at", nullable = false, updatable = false)
+    @Column(name = "create_at")
     private ZonedDateTime createAt;
 
     @UpdateTimestamp
-    @Column(name = "update_at", nullable = false)
+    @Column(name = "update_at")
     private ZonedDateTime updateAt;
 
     // Many-to-One relationship with InsurancePolicy
@@ -52,8 +52,6 @@ public class PatientInsurance {
     @OneToMany(mappedBy = "patientInsurance", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<InsuranceClaim> insuranceClaims;
 }
-
-
 
 
 

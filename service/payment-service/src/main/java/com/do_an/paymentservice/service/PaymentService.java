@@ -70,7 +70,7 @@ public class PaymentService {
             }
             
             // Tính tổng tiền từ InvoiceItem
-            Double calculatedTotalAmount = calculateTotalAmountFromItems(invoice.getItems());
+            int calculatedTotalAmount = calculateTotalAmountFromItems(invoice.getItems());
             log.info("Tổng tiền tính từ InvoiceItem: {}", calculatedTotalAmount);
             
             // Nếu client gửi totalAmount, kiểm tra khớp
@@ -101,13 +101,13 @@ public class PaymentService {
     /**
      * Tính tổng tiền từ danh sách InvoiceItem
      */
-    private Double calculateTotalAmountFromItems(List<InvoiceItemResponseDTO> items) {
+    private int calculateTotalAmountFromItems(List<InvoiceItemResponseDTO> items) {
         if (items == null || items.isEmpty()) {
             throw new IllegalStateException("Invoice không có items để tính tổng tiền");
         }
         
         return items.stream()
-                .mapToDouble(item -> {
+                .mapToInt(item -> {
                     // Sử dụng itemTotal nếu có, nếu không thì tính từ quantity * unitPrice
                     if (item.getItemTotal() != null) {
                         return item.getItemTotal();
@@ -115,7 +115,7 @@ public class PaymentService {
                         return item.getQuantity() * item.getUnitPrice();
                     } else {
                         log.warn("InvoiceItem {} không có đủ thông tin để tính tổng tiền", item.getId());
-                        return 0.0;
+                        return 0;
                     }
                 })
                 .sum();
@@ -129,7 +129,6 @@ public class PaymentService {
         log.info("Xử lý thanh toán CASH cho Invoice: {}", request.getInvoiceId());
 
         Payment payment = Payment.builder()
-                .id(UUID.randomUUID().toString())
                 .invoiceId(request.getInvoiceId())
                 .totalAmount(request.getTotalAmount())
                 .paymentMethod(PaymentMethod.CASH)
@@ -192,7 +191,6 @@ public class PaymentService {
 
             // Lưu payment record
             Payment payment = Payment.builder()
-                    .id(UUID.randomUUID().toString())
                     .invoiceId(request.getInvoiceId())
                     .totalAmount(request.getTotalAmount())
                     .paymentMethod(PaymentMethod.BANK_TRANSFER)
@@ -291,7 +289,7 @@ public class PaymentService {
      * CHỨC NĂNG 3: Lấy trạng thái thanh toán (Client polling)
      */
     @Transactional(readOnly = true)
-    public PaymentResponseDTO getPaymentStatus(String invoiceId) {
+    public PaymentResponseDTO getPaymentStatus(UUID invoiceId) {
         log.debug("Lấy trạng thái thanh toán cho Invoice: {}", invoiceId);
 
         Payment payment = paymentRepository.findFirstByInvoiceIdOrderByCreateAtDesc(invoiceId)
@@ -304,7 +302,7 @@ public class PaymentService {
      * Lấy chi tiết payment theo ID
      */
     @Transactional(readOnly = true)
-    public PaymentResponseDTO getPaymentById(String paymentId) {
+    public PaymentResponseDTO getPaymentById(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy Payment ID: " + paymentId));
 
@@ -315,7 +313,7 @@ public class PaymentService {
      * CHỨC NĂNG 4: Cập nhật Payment
      */
     @Transactional
-    public PaymentResponseDTO updatePayment(String paymentId, UpdatePaymentRequestDTO request) {
+    public PaymentResponseDTO updatePayment(UUID paymentId, UpdatePaymentRequestDTO request) {
         log.info("Cập nhật Payment: {}", paymentId);
         
         Payment payment = paymentRepository.findById(paymentId)
@@ -332,7 +330,7 @@ public class PaymentService {
             // Nếu cập nhật totalAmount, validate với Invoice
             try {
                 InvoiceResponseDTO invoice = invoiceClient.getInvoiceById(payment.getInvoiceId());
-                Double calculatedTotal = calculateTotalAmountFromItems(invoice.getItems());
+                int calculatedTotal = calculateTotalAmountFromItems(invoice.getItems());
                 if (!request.getTotalAmount().equals(calculatedTotal)) {
                     log.warn("Số tiền cập nhật ({}) không khớp với tổng tiền InvoiceItem ({})", 
                             request.getTotalAmount(), calculatedTotal);
@@ -372,7 +370,7 @@ public class PaymentService {
      * CHỨC NĂNG 5: Xóa Payment
      */
     @Transactional
-    public void deletePayment(String paymentId) {
+    public void deletePayment(UUID paymentId) {
         log.info("Xóa Payment: {}", paymentId);
         
         Payment payment = paymentRepository.findById(paymentId)
@@ -393,7 +391,7 @@ public class PaymentService {
      */
     @Transactional(readOnly = true)
     public List<PaymentResponseDTO> getAllPayments(
-            String invoiceId,
+            UUID invoiceId,
             PaymentStatus status,
             PaymentMethod paymentMethod) {
         
@@ -431,7 +429,7 @@ public class PaymentService {
      * CHỨC NĂNG 7: Lấy tất cả payments theo Invoice ID
      */
     @Transactional(readOnly = true)
-    public List<PaymentResponseDTO> getPaymentsByInvoiceId(String invoiceId) {
+    public List<PaymentResponseDTO> getPaymentsByInvoiceId(UUID invoiceId) {
         log.debug("Lấy tất cả payments cho Invoice: {}", invoiceId);
         
         List<Payment> payments = paymentRepository.findAllByInvoiceId(invoiceId);
@@ -445,7 +443,7 @@ public class PaymentService {
      * CHỨC NĂNG 8: Kiểm tra Invoice tồn tại và hợp lệ
      */
     @Transactional(readOnly = true)
-    public InvoiceResponseDTO validateInvoice(String invoiceId) {
+    public InvoiceResponseDTO validateInvoice(UUID invoiceId) {
         log.debug("Kiểm tra Invoice: {}", invoiceId);
         
         try {
@@ -457,7 +455,7 @@ public class PaymentService {
             }
             
             // Tính tổng tiền từ items
-            Double calculatedTotal = calculateTotalAmountFromItems(invoice.getItems());
+            int calculatedTotal = calculateTotalAmountFromItems(invoice.getItems());
             log.info("Invoice hợp lệ: {} - Status: {} - TotalAmount (tính từ items): {}", 
                     invoice.getId(), invoice.getStatus(), calculatedTotal);
             

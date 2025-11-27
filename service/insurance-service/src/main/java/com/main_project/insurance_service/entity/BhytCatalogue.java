@@ -1,5 +1,6 @@
 package com.main_project.insurance_service.entity;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BhytCatalogue {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
