@@ -10,8 +10,9 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StartClinicalCommand {
+public class AppointmentUpdateStatusCommand {
     @TargetAggregateIdentifier
     private UUID clinicalId;
     private UUID appointmentId;
+    private String status;
 }

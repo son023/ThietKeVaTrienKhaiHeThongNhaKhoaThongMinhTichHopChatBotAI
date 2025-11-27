@@ -1,7 +1,7 @@
 package com.main_project.clinical_service.aggregate;
 
-import com.do_an.common.command.CreatePrescriptionCommand;
-import com.do_an.common.event.PrescriptionCreatedEvent;
+import com.main_project.clinical_service.command.StartClinicalCommand;
+import com.main_project.clinical_service.event.StartClinicalEvent;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -21,18 +21,18 @@ public class ClinicalAggregate {
     @CommandHandler
     public ClinicalAggregate(StartClinicalCommand command) {
 
-        AggregateLifecycle.apply(new PrescriptionCreatedEvent(
-                command.getPrescriptionId(),
+        AggregateLifecycle.apply(new StartClinicalEvent(
+                command.getClinicalId(),
+                command.getAppointmentId(),
                 command.getPatientId(),
-                command.getMedicalHistoryId(),
-                command.getItems()
+                command.getMedicalServices()
         ));
 
     }
 
     @EventSourcingHandler
-    public void on(PrescriptionCreatedEvent event) {
-        this.prescriptionId = event.getPrescriptionId();
+    public void on(StartClinicalEvent event) {
+        this.clinicalId = event.getClinicalId();
         this.status = "CREATED";
     }
 }

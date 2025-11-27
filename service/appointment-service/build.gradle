@@ -39,9 +39,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    implementation 'org.axonframework:axon-messaging:4.9.0'
-    implementation 'org.axonframework:axon-spring-boot-starter:4.9.0'
-    implementation 'org.axonframework:axon-server-connector:4.9.0'
+    implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
+    implementation project(':service:common')
 
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 

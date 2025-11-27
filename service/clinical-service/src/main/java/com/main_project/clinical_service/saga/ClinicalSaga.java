@@ -1,8 +1,11 @@
 package com.main_project.clinical_service.saga;
 
 
-import com.do_an.common.command.ReserveMedicineCommand;
-import com.do_an.common.event.PrescriptionCreatedEvent;
+import com.do_an.common.command.AppointmentUpdateStatusCommand;
+import com.do_an.common.event.AppointmentUpdateStatusEvent;
+import com.do_an.common.command.MedicalHistoryCreateCommand;
+import com.main_project.clinical_service.dto.MedicalServiceDTO;
+import com.main_project.clinical_service.event.StartClinicalEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.modelling.saga.SagaEventHandler;
@@ -11,6 +14,7 @@ import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.UUID;
 
 @Saga
@@ -23,34 +27,45 @@ public class ClinicalSaga {
     private UUID patientId;
     private UUID invoiceId;
     private UUID appointmentId;
+    private UUID medicalHistoryId;
     private UUID doctorId;
     private UUID labTestId;
+    private List<MedicalServiceDTO> medicalServices;
+    private UUID clinicalId;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "clinicalId")
-    public void on(PrescriptionCreatedEvent event) {
-        log.info("🚀 SAGA STARTED: Prescription {} created, starting billing process", event.getPrescriptionId());
+    public void on(StartClinicalEvent event) {
+        log.info("SAGA STARTED: starting clinical process", event.getClinicalId());
+        log.info("Bat dau event", event.getAppointmentId());
 
         this.patientId = event.getPatientId();
-        this.medicineItems = event.getItems();
+        this.appointmentId = event.getAppointmentId();
+        this.medicalServices = event.getMedicalServices();
+        this.clinicalId = event.getClinicalId();
 
-        // TODO: Từ medicalHistoryId trong request có appointmentId, sau đó tìm kiếm appointmentId trong invoice
-        // Labtest.getMedicalHistory(event.getMedicalHistoryId())-->MedicalHistory.getAppointmentId()
-        // Invoice.getInvoice(MedicalHistory.getAppointmentId())-->Invoice()
-        // Tạm thời hardcode, cần implement logic tìm invoiceId từ medicalHistoryId
-        this.invoiceId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+        SagaLifecycle.associateWith("appointmentId", String.valueOf(this.appointmentId));
+        this.medicalHistoryId = UUID.randomUUID();
 
-        SagaLifecycle.associateWith("invoiceId", String.valueOf(this.invoiceId));
-        this.dispenseOrderId = UUID.randomUUID();
-
-        log.info("📦 STEP 1: Sending ReserveMedicineCommand for prescription {}", event.getPrescriptionId());
-
-        // Gửi command - Axon sẽ tự động xử lý exception thông qua events
-        commandGateway.send(new ReserveMedicineCommand(
-                this.dispenseOrderId,
-                event.getPrescriptionId(),
-                event.getItems()
+        commandGateway.send(new AppointmentUpdateStatusCommand(
+                this.clinicalId,
+                this.appointmentId,
+                "PROGRESSING"
         ));
+
+        commandGateway.send(new MedicalHistoryCreateCommand(
+                this.clinicalId,
+                this.appointmentId,
+                this.patientId,
+                this.medicalHistoryId
+        ));
+
+    }
+
+    @SagaEventHandler(associationProperty = "clinicalId")
+    public void on(AppointmentUpdateStatusEvent event) {
+        log.info("Nhan du lieu tu appointment", event.getAppointmentId());
+
     }
 
 }
