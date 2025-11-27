@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { Search, Phone, Calendar } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Phone } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
 import {
   Table,
   TableBody,
@@ -11,6 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { patientController, PatientWithUser } from '../../controllers/PatientController';
+import { appointmentController } from '../../controllers/AppointmentController';
+import { authController } from '../../controllers';
 
 interface MyPatientsProps {
   onNavigateToPatient: (id: string) => void;
@@ -18,81 +20,90 @@ interface MyPatientsProps {
 
 export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [patients, setPatients] = useState<PatientWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const patients = [
-    {
-      id: 'BN001',
-      name: 'Nguyễn Văn An',
-      phone: '0901234567',
-      lastVisit: '25/10/2025',
-      status: 'in-treatment',
-      nextAppointment: '30/10/2025',
-    },
-    {
-      id: 'BN002',
-      name: 'Trần Thị Bình',
-      phone: '0912345678',
-      lastVisit: '24/10/2025',
-      status: 'completed',
-      nextAppointment: null,
-    },
-    {
-      id: 'BN003',
-      name: 'Lê Văn Cường',
-      phone: '0923456789',
-      lastVisit: '20/10/2025',
-      status: 'in-treatment',
-      nextAppointment: '27/10/2025',
-    },
-    {
-      id: 'BN004',
-      name: 'Phạm Thị Dung',
-      phone: '0934567890',
-      lastVisit: '23/10/2025',
-      status: 'in-treatment',
-      nextAppointment: '28/10/2025',
-    },
-    {
-      id: 'BN005',
-      name: 'Hoàng Văn Em',
-      phone: '0945678901',
-      lastVisit: '22/10/2025',
-      status: 'completed',
-      nextAppointment: null,
-    },
-    {
-      id: 'BN006',
-      name: 'Đỗ Thị Phương',
-      phone: '0956789012',
-      lastVisit: '26/10/2025',
-      status: 'in-treatment',
-      nextAppointment: '02/11/2025',
-    },
-  ];
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone.includes(searchQuery) ||
-    patient.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+        const currentUser = authController.getCurrentUser();
+        if (!currentUser?.id) {
+          setError('Khong tim thay thong tin bac si dang dang nhap');
+          setPatients([]);
+          return;
+        }
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'in-treatment') {
-      return <Badge className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">Đang điều trị</Badge>;
-    }
-    return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Hoàn thành</Badge>;
+        const appointments = await appointmentController.getByDoctorId(currentUser.id);
+        const patientIds = Array.from(
+          new Set(appointments.map((apt) => apt.patientId).filter(Boolean))
+        );
+
+        if (!patientIds.length) {
+          setPatients([]);
+          return;
+        }
+
+        const patientData = await Promise.all(
+          patientIds.map(async (pid) => {
+            try {
+              return await patientController.getWithUserById(pid);
+            } catch (err) {
+              console.error('Failed to load patient', pid, err);
+              return null;
+            }
+          })
+        );
+
+        setPatients(patientData.filter(Boolean) as PatientWithUser[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  const filteredPatients = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return patients.filter(
+      (patient) =>
+        patient.user?.fullName?.toLowerCase().includes(q) ||
+        patient.contactPhone?.includes(searchQuery) ||
+        patient.user?.phone?.includes(searchQuery) ||
+        patient.userId.toLowerCase().includes(q)
+    );
+  }, [patients, searchQuery]);
+
+  const formatDob = (dob?: string) => {
+    if (!dob) return '-';
+    const date = new Date(dob);
+    return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('vi-VN');
+  };
+
+  const formatGender = (gender?: string) => {
+    if (!gender) return '-';
+    const g = gender.toLowerCase();
+    if (g === 'male') return 'Nam';
+    if (g === 'female') return 'Nu';
+    return 'Khac';
   };
 
   return (
     <div className="p-6 bg-[#fcfeff]">
       <div className="mb-6">
-        <h1 className="text-[#01304e] mb-4">Bệnh nhân của tôi</h1>
+        <h1 className="text-[#01304e] mb-4">Benh nhan cua toi</h1>
         
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
           <Input
             type="text"
-            placeholder="Tìm kiếm theo tên, số điện thoại hoặc mã bệnh nhân..."
+            placeholder="Tim kiem theo ten, so dien thoai hoac ma benh nhan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 rounded-[10px] border-[#e8e8e8]"
@@ -105,58 +116,70 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Mã BN</TableHead>
-                <TableHead>Tên bệnh nhân</TableHead>
-                <TableHead>Số điện thoại</TableHead>
-                <TableHead>Ngày khám cuối</TableHead>
-                <TableHead>Lịch hẹn tiếp theo</TableHead>
-                <TableHead>Tình trạng</TableHead>
+                <TableHead>Ma BN (6 so cuoi)</TableHead>
+                <TableHead>Ten benh nhan</TableHead>
+                <TableHead>So dien thoai</TableHead>
+                <TableHead>Ngay sinh</TableHead>
+                <TableHead>Gioi tinh</TableHead>
+                <TableHead>Nhom mau</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPatients.map((patient) => (
-                <TableRow
-                  key={patient.id}
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => onNavigateToPatient(patient.id)}
-                >
-                  <TableCell className="text-[#333333]/60">{patient.id}</TableCell>
-                  <TableCell className="text-[#333333]">{patient.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-[#333333]/60">
-                      <Phone className="w-4 h-4" />
-                      {patient.phone}
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12">
+                    Dang tai du lieu...
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-[#333333]/60">
-                      <Calendar className="w-4 h-4" />
-                      {patient.lastVisit}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {patient.nextAppointment ? (
-                      <div className="flex items-center gap-2 text-[#3FB5FF]">
-                        <Calendar className="w-4 h-4" />
-                        {patient.nextAppointment}
-                      </div>
-                    ) : (
-                      <span className="text-[#333333]/40">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(patient.status)}</TableCell>
                 </TableRow>
-              ))}
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-red-500">
+                    {error}
+                  </TableCell>
+                </TableRow>
+              ) : filteredPatients.length > 0 ? (
+                filteredPatients.map((patient) => {
+                  const displayId =
+                    patient.userId && patient.userId.length > 6
+                      ? patient.userId.slice(-6)
+                      : patient.userId || 'N/A';
+                  const phone = patient.contactPhone || patient.user?.phone || 'N/A';
+                  const bloodType = patient.bloodType || '-';
+
+                  return (
+                    <TableRow
+                      key={patient.userId}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => onNavigateToPatient(patient.userId)}
+                    >
+                      <TableCell className="text-[#333333]/60">{displayId}</TableCell>
+                      <TableCell className="text-[#333333]">
+                        {patient.user?.fullName || 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-[#333333]/60">
+                          <Phone className="w-4 h-4" />
+                          {phone}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[#333333]/60">{formatDob(patient.dob)}</TableCell>
+                      <TableCell className="text-[#333333]/60">{formatGender(patient.gender)}</TableCell>
+                      <TableCell className="text-[#333333]/60">{bloodType}</TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-[#333333]/60">
+                    Khong tim thay benh nhan phu hop
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
-
-      {filteredPatients.length === 0 && (
-        <div className="text-center py-12 text-[#333333]/60">
-          Không tìm thấy bệnh nhân phù hợp
-        </div>
-      )}
     </div>
   );
 }
+

@@ -8,6 +8,7 @@ plugins {
 
 group = 'com.main_project'
 version = '0.0.1-SNAPSHOT'
+description = 'patient-service'
 
 java {
     toolchain {

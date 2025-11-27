@@ -23,9 +23,10 @@ export interface CreateUserRequest {
 }
 
 export interface LoginRequest {
-  username: string;
+  phone: string;
   password: string;
 }
+
 
 export interface AuthResponse {
   user: UserDTO;

@@ -1,5 +1,5 @@
-import { API_CONFIG, createApiUrl, getApiHeaders } from '../config/api';
-import { MedicalServiceDTO } from './MedicalServiceController';
+import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
+import { MedicalServiceDTO } from "./MedicalServiceController";
 
 export interface AppointmentDTO {
   id: string;
@@ -32,22 +32,25 @@ class AppointmentController {
 
   async getAll(): Promise<AppointmentDTO[]> {
     const res = await fetch(createApiUrl(this.baseUrl), {
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
     });
     return this.handleResponse<AppointmentDTO[]>(res);
   }
 
   async getByDoctorId(doctorId: string): Promise<AppointmentDTO[]> {
     const res = await fetch(createApiUrl(`${this.baseUrl}/doctor`, doctorId), {
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
     });
     return this.handleResponse<AppointmentDTO[]>(res);
   }
 
   async getByPatientId(patientId: string): Promise<AppointmentDTO[]> {
-    const res = await fetch(createApiUrl(`${this.baseUrl}/patient`, patientId), {
-      headers: getApiHeaders(),
-    });
+    const res = await fetch(
+      createApiUrl(`${this.baseUrl}/patient`, patientId),
+      {
+        headers: getApiHeaders(true),
+      }
+    );
     return this.handleResponse<AppointmentDTO[]>(res);
   }
 }

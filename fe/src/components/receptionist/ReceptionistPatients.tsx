@@ -1,8 +1,8 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Search, Phone, Mail, Calendar } from 'lucide-react';
-import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -11,8 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { appointmentController } from '../../controllers/AppointmentController';
+import { patientController, PatientWithUser } from '../../controllers/PatientController';
 
-interface Patient {
+interface ReceptionistPatientsProps {
+  onPatientSelect: (patientId: string) => void;
+}
+
+type DisplayPatient = {
   id: string;
   code: string;
   name: string;
@@ -22,201 +28,236 @@ interface Patient {
   address: string;
   notes: string;
   lastVisit: string;
-}
-
-interface ReceptionistPatientsProps {
-  onPatientSelect: (patientId: string) => void;
-}
+};
 
 export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const patients: Patient[] = [
-    {
-      id: '1',
-      code: 'BN001',
-      name: 'Nguyễn Văn A',
-      phone: '0901234567',
-      email: 'nguyenvana@gmail.com',
-      birthDate: '15/03/1985',
-      address: '123 Nguyễn Huệ, Q1, TP.HCM',
-      notes: 'Khách hàng VIP',
-      lastVisit: '20/10/2025',
-    },
-    {
-      id: '2',
-      code: 'BN002',
-      name: 'Trần Thị B',
-      phone: '0902345678',
-      email: 'tranthib@gmail.com',
-      birthDate: '22/07/1990',
-      address: '456 Lê Lợi, Q1, TP.HCM',
-      notes: '',
-      lastVisit: '18/10/2025',
-    },
-    {
-      id: '3',
-      code: 'BN003',
-      name: 'Lê Văn C',
-      phone: '0903456789',
-      email: 'levanc@gmail.com',
-      birthDate: '10/11/1988',
-      address: '789 Trần Hưng Đạo, Q5, TP.HCM',
-      notes: 'Dị ứng thuốc gây tê',
-      lastVisit: '15/10/2025',
-    },
-    {
-      id: '4',
-      code: 'BN004',
-      name: 'Phạm Thị D',
-      phone: '0904567890',
-      email: 'phamthid@gmail.com',
-      birthDate: '05/09/1992',
-      address: '321 Điện Biên Phủ, Q3, TP.HCM',
-      notes: '',
-      lastVisit: '12/10/2025',
-    },
-    {
-      id: '5',
-      code: 'BN005',
-      name: 'Hoàng Văn E',
-      phone: '0905678901',
-      email: 'hoangvane@gmail.com',
-      birthDate: '28/12/1987',
-      address: '654 Võ Văn Tần, Q3, TP.HCM',
-      notes: 'Bệnh nhân khó tính, cần gọi nhắc trước 2 ngày',
-      lastVisit: '08/10/2025',
-    },
-  ];
+  const [patients, setPatients] = useState<PatientWithUser[]>([]);
+  const [patientAppointments, setPatientAppointments] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone.includes(searchQuery) ||
-    patient.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const loadTodayPatients = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const appointments = await appointmentController.getAll();
+        const today = new Date();
+
+        const isSameDay = (dateStr: string) => {
+          const d = new Date(dateStr);
+          return (
+            !isNaN(d.getTime()) &&
+            d.getFullYear() === today.getFullYear() &&
+            d.getMonth() === today.getMonth() &&
+            d.getDate() === today.getDate()
+          );
+        };
+
+        const todayAppointments = appointments.filter(
+          (apt) => apt.appointmentStartTime && isSameDay(apt.appointmentStartTime)
+        );
+
+        const patientIds = Array.from(
+          new Set(todayAppointments.map((apt) => apt.patientId).filter(Boolean))
+        );
+
+        const patientData = await Promise.all(
+          patientIds.map(async (pid) => {
+            try {
+              return await patientController.getWithUserById(pid);
+            } catch (err) {
+              console.error('Failed to fetch patient', pid, err);
+              return null;
+            }
+          })
+        );
+
+        const patientTimeMap: Record<string, string> = {};
+        todayAppointments.forEach((apt) => {
+          if (!apt.patientId || !apt.appointmentStartTime) return;
+          const start = new Date(apt.appointmentStartTime);
+          patientTimeMap[apt.patientId] = isNaN(start.getTime())
+            ? '-'
+            : start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        });
+
+        setPatients(patientData.filter(Boolean) as PatientWithUser[]);
+        setPatientAppointments(patientTimeMap);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Khong the tai danh sach benh nhan hom nay');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTodayPatients();
+  }, []);
+
+  const filteredPatients: DisplayPatient[] = useMemo(
+    () =>
+      patients
+        .map((patient) => {
+          const name = patient.user?.fullName || 'Chua cap nhat';
+          const phone = patient.contactPhone || patient.user?.phone || '';
+          const email = patient.user?.email || '';
+          const birthDate = patient.dob
+            ? new Date(patient.dob).toLocaleDateString('vi-VN')
+            : '-';
+          return {
+            id: patient.userId,
+            code: patient.userId,
+            name,
+            phone,
+            email,
+            birthDate,
+            address: patient.address || '',
+            notes: patient.allergy || '',
+            lastVisit: patientAppointments[patient.userId] || '-',
+          };
+        })
+        .filter(
+          (patient) =>
+            patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            patient.phone.includes(searchQuery) ||
+            patient.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            patient.email.toLowerCase().includes(searchQuery.toLowerCase())
+        ),
+    [patients, searchQuery, patientAppointments]
   );
 
   return (
     <div className="p-8 space-y-6">
-      {/* DoctorHeader */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl text-[#01304e] mb-1">Quản lý Bệnh nhân</h1>
-          <p className="text-gray-600">Danh sách và hồ sơ bệnh nhân</p>
+          <h1 className="text-2xl text-[#01304e] mb-1">Quan ly Benh nhan</h1>
+          <p className="text-gray-600">Danh sach va ho so benh nhan</p>
         </div>
       </div>
 
-      {/* Search and Actions */}
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Tìm kiếm theo Tên, SĐT, Mã BN, Email..."
+              placeholder="Tim kiem theo Ten, SDT, Ma BN, Email..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Button className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">
-            + Thêm Bệnh nhân mới
+            + Them Benh nhan moi
           </Button>
         </div>
       </Card>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Tổng số bệnh nhân</p>
+          <p className="text-sm text-gray-600 mb-1">Tong so benh nhan hom nay</p>
           <p className="text-2xl text-[#01304e]">{patients.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Bệnh nhân mới (tháng này)</p>
-          <p className="text-2xl text-green-600">12</p>
+          <p className="text-sm text-gray-600 mb-1">Benh nhan moi (thang nay)</p>
+          <p className="text-2xl text-green-600">-</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Có lịch hẹn hôm nay</p>
-          <p className="text-2xl text-blue-600">8</p>
+          <p className="text-sm text-gray-600 mb-1">Ca lich hen hom nay</p>
+          <p className="text-2xl text-blue-600">{patients.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Cần liên hệ lại</p>
-          <p className="text-2xl text-orange-600">3</p>
+          <p className="text-sm text-gray-600 mb-1">Can lien he lai</p>
+          <p className="text-2xl text-orange-600">-</p>
         </Card>
       </div>
 
-      {/* Patient Table */}
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Mã BN</TableHead>
-              <TableHead>Họ tên</TableHead>
-              <TableHead>Số điện thoại</TableHead>
+              <TableHead>Ma BN</TableHead>
+              <TableHead>Ho ten</TableHead>
+              <TableHead>So dien thoai</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Ngày sinh</TableHead>
-              <TableHead>Lần khám gần nhất</TableHead>
-              <TableHead>Ghi chú</TableHead>
-              <TableHead>Thao tác</TableHead>
+              <TableHead>Ngay sinh</TableHead>
+              <TableHead>Gio hen hom nay</TableHead>
+              <TableHead>Ghi chu</TableHead>
+              <TableHead>Thao tac</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPatients.map((patient) => (
-              <TableRow key={patient.id} className="cursor-pointer hover:bg-gray-50">
-                <TableCell className="font-mono text-xs">{patient.code}</TableCell>
-                <TableCell>
-                  <button
-                    onClick={() => onPatientSelect(patient.id)}
-                    className="text-[#3FB5FF] hover:underline text-left"
-                  >
-                    {patient.name}
-                  </button>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3 h-3 text-gray-400" />
-                    <span className="text-sm">{patient.phone}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3 h-3 text-gray-400" />
-                    <span className="text-sm">{patient.email}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3 h-3 text-gray-400" />
-                    <span className="text-sm">{patient.birthDate}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm">{patient.lastVisit}</TableCell>
-                <TableCell>
-                  {patient.notes && (
-                    <div className="text-xs text-gray-600 max-w-[200px] truncate" title={patient.notes}>
-                      {patient.notes}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onPatientSelect(patient.id)}
-                  >
-                    Xem
-                  </Button>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  Dang tai danh sach benh nhan hom nay...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-red-500">
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredPatients.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  Khong tim thay benh nhan nao co lich hom nay
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPatients.map((patient) => (
+                <TableRow key={patient.id} className="cursor-pointer hover:bg-gray-50">
+                  <TableCell className="font-mono text-xs">{patient.code}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => onPatientSelect(patient.id)}
+                      className="text-[#3FB5FF] hover:underline text-left"
+                    >
+                      {patient.name}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3 h-3 text-gray-400" />
+                      <span className="text-sm">{patient.phone || '-'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3 h-3 text-gray-400" />
+                      <span className="text-sm">{patient.email || '-'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3 h-3 text-gray-400" />
+                      <span className="text-sm">{patient.birthDate}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">{patient.lastVisit}</TableCell>
+                  <TableCell>
+                    {patient.notes && (
+                      <div
+                        className="text-xs text-gray-600 max-w-[200px] truncate"
+                        title={patient.notes}
+                      >
+                        {patient.notes}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="outline" onClick={() => onPatientSelect(patient.id)}>
+                      Xem
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-
-        {filteredPatients.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
-            Không tìm thấy bệnh nhân nào
-          </div>
-        )}
       </Card>
     </div>
   );

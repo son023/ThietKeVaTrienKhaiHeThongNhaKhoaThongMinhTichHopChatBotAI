@@ -1,6 +1,6 @@
-import { API_CONFIG, createApiUrl, getApiHeaders } from '../config/api';
-import { UserDTO } from '../models';
-import { userController } from './UserController';
+import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
+import { UserDTO } from "../models";
+import { userController } from "./UserController";
 
 export interface DoctorDTO {
   userId: string;
@@ -48,29 +48,32 @@ class DoctorController {
 
   async getById(id: string): Promise<DoctorDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
     });
     return this.handleResponse<DoctorDTO>(res);
   }
 
   async create(payload: UpsertDoctorRequest): Promise<DoctorDTO> {
     const res = await fetch(createApiUrl(this.baseUrl), {
-      method: 'POST',
+      method: "POST",
       headers: {
         ...getApiHeaders(),
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
     return this.handleResponse<DoctorDTO>(res);
   }
 
-  async update(userId: string, payload: UpsertDoctorRequest): Promise<DoctorDTO> {
+  async update(
+    userId: string,
+    payload: UpsertDoctorRequest
+  ): Promise<DoctorDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, userId), {
-      method: 'PUT',
+      method: "PUT",
       headers: {
         ...getApiHeaders(),
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
@@ -81,7 +84,9 @@ class DoctorController {
     const doctors = await this.getAll();
     if (!doctors.length) return [];
 
-    const userMap = await userController.getByIds(doctors.map((doc) => doc.userId));
+    const userMap = await userController.getByIds(
+      doctors.map((doc) => doc.userId)
+    );
     return doctors.map((doc) => ({
       ...doc,
       user: userMap[doc.userId],
