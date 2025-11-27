@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Search, Phone, User } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Phone, Calendar } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Card, CardContent } from '../ui/card';
+import { Badge } from '../ui/badge';
 import {
   Table,
   TableBody,
@@ -10,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-import { patientController, PatientWithUser } from '../../controllers/PatientController';
 
 interface MyPatientsProps {
   onNavigateToPatient: (id: string) => void;
@@ -18,32 +18,70 @@ interface MyPatientsProps {
 
 export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [patients, setPatients] = useState<PatientWithUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        const patientData = await patientController.getWithUserDetails();
-        setPatients(patientData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPatients();
-  }, []);
+  const patients = [
+    {
+      id: 'BN001',
+      name: 'Nguyễn Văn An',
+      phone: '0901234567',
+      lastVisit: '25/10/2025',
+      status: 'in-treatment',
+      nextAppointment: '30/10/2025',
+    },
+    {
+      id: 'BN002',
+      name: 'Trần Thị Bình',
+      phone: '0912345678',
+      lastVisit: '24/10/2025',
+      status: 'completed',
+      nextAppointment: null,
+    },
+    {
+      id: 'BN003',
+      name: 'Lê Văn Cường',
+      phone: '0923456789',
+      lastVisit: '20/10/2025',
+      status: 'in-treatment',
+      nextAppointment: '27/10/2025',
+    },
+    {
+      id: 'BN004',
+      name: 'Phạm Thị Dung',
+      phone: '0934567890',
+      lastVisit: '23/10/2025',
+      status: 'in-treatment',
+      nextAppointment: '28/10/2025',
+    },
+    {
+      id: 'BN005',
+      name: 'Hoàng Văn Em',
+      phone: '0945678901',
+      lastVisit: '22/10/2025',
+      status: 'completed',
+      nextAppointment: null,
+    },
+    {
+      id: 'BN006',
+      name: 'Đỗ Thị Phương',
+      phone: '0956789012',
+      lastVisit: '26/10/2025',
+      status: 'in-treatment',
+      nextAppointment: '02/11/2025',
+    },
+  ];
 
   const filteredPatients = patients.filter((patient) =>
-    patient.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.contactPhone?.includes(searchQuery) ||
-    patient.userId.toLowerCase().includes(searchQuery.toLowerCase())
+    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.phone.includes(searchQuery) ||
+    patient.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getStatusBadge = (status: string) => {
+    if (status === 'in-treatment') {
+      return <Badge className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">Đang điều trị</Badge>;
+    }
+    return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Hoàn thành</Badge>;
+  };
 
   return (
     <div className="p-6 bg-[#fcfeff]">
@@ -70,58 +108,55 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
                 <TableHead>Mã BN</TableHead>
                 <TableHead>Tên bệnh nhân</TableHead>
                 <TableHead>Số điện thoại</TableHead>
-                <TableHead>Giới tính</TableHead>
-                <TableHead>Địa chỉ</TableHead>
+                <TableHead>Ngày khám cuối</TableHead>
+                <TableHead>Lịch hẹn tiếp theo</TableHead>
+                <TableHead>Tình trạng</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12">
-                    Đang tải dữ liệu...
+              {filteredPatients.map((patient) => (
+                <TableRow
+                  key={patient.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => onNavigateToPatient(patient.id)}
+                >
+                  <TableCell className="text-[#333333]/60">{patient.id}</TableCell>
+                  <TableCell className="text-[#333333]">{patient.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-[#333333]/60">
+                      <Phone className="w-4 h-4" />
+                      {patient.phone}
+                    </div>
                   </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-red-500">
-                    {error}
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-[#333333]/60">
+                      <Calendar className="w-4 h-4" />
+                      {patient.lastVisit}
+                    </div>
                   </TableCell>
-                </TableRow>
-              ) : filteredPatients.length > 0 ? (
-                filteredPatients.map((patient) => (
-                  <TableRow
-                    key={patient.userId}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => onNavigateToPatient(patient.userId)}
-                  >
-                    <TableCell className="text-[#333333]/60">{patient.userId}</TableCell>
-                    <TableCell className="text-[#333333]">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        {patient.user?.fullName || 'N/A'}
+                  <TableCell>
+                    {patient.nextAppointment ? (
+                      <div className="flex items-center gap-2 text-[#3FB5FF]">
+                        <Calendar className="w-4 h-4" />
+                        {patient.nextAppointment}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-[#333333]/60">
-                        <Phone className="w-4 h-4" />
-                        {patient.contactPhone || 'N/A'}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[#333333]/60">{patient.gender || 'N/A'}</TableCell>
-                    <TableCell className="text-[#333333]/60">{patient.address || 'N/A'}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-[#333333]/60">
-                    Không có bệnh nhân nào.
+                    ) : (
+                      <span className="text-[#333333]/40">—</span>
+                    )}
                   </TableCell>
+                  <TableCell>{getStatusBadge(patient.status)}</TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {filteredPatients.length === 0 && (
+        <div className="text-center py-12 text-[#333333]/60">
+          Không tìm thấy bệnh nhân phù hợp
+        </div>
+      )}
     </div>
   );
 }

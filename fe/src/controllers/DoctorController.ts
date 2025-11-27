@@ -41,14 +41,14 @@ class DoctorController {
 
   async getAll(): Promise<DoctorDTO[]> {
     const res = await fetch(createApiUrl(this.baseUrl), {
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(),
     });
     return this.handleResponse<DoctorDTO[]>(res);
   }
 
   async getById(id: string): Promise<DoctorDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(),
     });
     return this.handleResponse<DoctorDTO>(res);
   }
@@ -57,7 +57,7 @@ class DoctorController {
     const res = await fetch(createApiUrl(this.baseUrl), {
       method: 'POST',
       headers: {
-        ...getApiHeaders(true),
+        ...getApiHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -69,7 +69,7 @@ class DoctorController {
     const res = await fetch(createApiUrl(this.baseUrl, userId), {
       method: 'PUT',
       headers: {
-        ...getApiHeaders(true),
+        ...getApiHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),

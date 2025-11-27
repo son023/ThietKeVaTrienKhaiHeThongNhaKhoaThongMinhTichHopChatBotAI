@@ -20,14 +20,14 @@ class UserController {
 
   async getAll(): Promise<UserDTO[]> {
     const res = await fetch(createApiUrl(this.baseUrl), {
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(),
     });
     return this.handleResponse<UserDTO[]>(res);
   }
 
   async getById(id: string): Promise<UserDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(),
     });
     return this.handleResponse<UserDTO>(res);
   }
