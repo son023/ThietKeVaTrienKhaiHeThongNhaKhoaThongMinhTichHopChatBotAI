@@ -85,7 +85,6 @@ public class InventoryEventHandler {
 
                     StockLedger ledgerEntry = new StockLedger();
                     //ledgerEntry.setId(UUID.randomUUID());
-                    ledgerEntry.setLot(lot.getLotNo());
                     ledgerEntry.setType("OUT");
                     ledgerEntry.setQuantity(toReserveFromLot);
                     ledgerEntry.setReferenceId(dispenseItem.getId()); // Reference to DispenseItem
@@ -160,7 +159,6 @@ public class InventoryEventHandler {
 
         StockLedger reverseLedgerEntry = new StockLedger();
         reverseLedgerEntry.setId(UUID.randomUUID());
-        reverseLedgerEntry.setLot(lot.getLotNo());
         reverseLedgerEntry.setType("IN");
         reverseLedgerEntry.setQuantity(quantityToRestore);
         reverseLedgerEntry.setReferenceId(dispenseItem.getId()); //reference DispenseItem

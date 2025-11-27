@@ -48,9 +48,7 @@ public class InvoiceCommandHandler {
         invoiceCheckerRequest.setItems(itemCheckers);
 
         Optional<Invoice> existingInvoice = invoiceRepository.findById(command.getInvoiceId());
-
-
-        if (existingInvoice.isPresent()) {
+        try{
             Invoice invoice = existingInvoice.get();
 
             if (!"DRAFT".equals(invoice.getStatus()) && !"PENDING".equals(invoice.getStatus())) {
@@ -64,7 +62,7 @@ public class InvoiceCommandHandler {
                             command.getMedicineItems(),
                             invoiceCheckerRequest
                     ));
-        } else {
+        } catch (org.axonframework.modelling.command.AggregateNotFoundException e) {
             invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
                     command.getPrescriptionId(),
                     command.getInvoiceId(),
