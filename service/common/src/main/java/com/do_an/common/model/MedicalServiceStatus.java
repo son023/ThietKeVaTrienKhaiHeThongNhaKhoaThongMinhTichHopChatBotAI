@@ -1,4 +1,4 @@
-package com.main_project.clinical_service.dto;
+package com.do_an.common.model;
 
 public enum MedicalServiceStatus {
     ACTIVE,

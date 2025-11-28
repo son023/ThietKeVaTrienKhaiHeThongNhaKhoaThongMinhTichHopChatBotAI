@@ -48,5 +48,6 @@ public class Appointment {
             joinColumns = @JoinColumn(name = "appointment_id"),
             inverseJoinColumns = @JoinColumn(name = "medical_service_id")
     )
+    @Builder.Default
     private List<MedicalService> medicalServices = new ArrayList<>();;
 }

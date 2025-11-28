@@ -9,6 +9,7 @@ import com.do_an.common.event.MedicineChargesAddedEvent;
 import com.do_an.common.event.MedicineChargesRemovedEvent;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemResponse;
+import com.do_an.common.model.MedicalServiceDTO;
 import com.do_an.common.model.MedicineItem;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
@@ -33,14 +34,15 @@ public class InvoiceAggregate {
     private boolean medicineChargesAdded;
     private boolean insuranceApplied;
 
-    public InvoiceAggregate(UUID prescriptionId, UUID invoiceId,
-                            List<MedicineItem> medicineItems,
-                            InvoiceCheckerRequest invoiceCheckerRequest) {
-        AggregateLifecycle.apply(new MedicineChargesAddedEvent(
-                prescriptionId,
+    public InvoiceAggregate(UUID clinicalId, UUID invoiceId, UUID appointmentId, UUID patientId, UUID medicalHistoryId, UUID doctorId, List<MedicalServiceDTO> medicalServices) {
+        AggregateLifecycle.apply(new InvoiceCreateEvent(
+                clinicalId,
                 invoiceId,
-                medicineItems,
-                invoiceCheckerRequest
+                appointmentId,
+                patientId,
+                medicalHistoryId,
+                doctorId,
+                medicalServices
         ));
     }
 
@@ -85,6 +87,11 @@ public class InvoiceAggregate {
        this.invoiceId = event.getInvoiceId();
        this.medicineChargesAdded = true;
    }
+
+    @EventSourcingHandler
+    public void on(InvoiceCreateEvent event) {
+        this.invoiceId = event.getInvoiceId();
+    }
 
    @EventSourcingHandler
    public void on(InsuranceDiscountUpdatedEvent event) {

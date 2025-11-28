@@ -1,10 +1,9 @@
-package com.main_project.clinical_service.command;
+package com.do_an.invoiceservice.aggregate;
 
-import com.main_project.clinical_service.dto.MedicalServiceDTO;
+import com.do_an.common.model.MedicalServiceDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,11 +11,12 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StartClinicalCommand {
-    @TargetAggregateIdentifier
+public class InvoiceCreateEvent {
     private UUID clinicalId;
+    private UUID invoiceId;
     private UUID appointmentId;
     private UUID patientId;
+    private UUID medicalHistoryId;
+    private UUID doctorId;
     private List<MedicalServiceDTO> medicalServices;
-
 }

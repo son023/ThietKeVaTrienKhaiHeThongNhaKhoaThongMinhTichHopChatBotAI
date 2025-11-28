@@ -1,6 +1,5 @@
 package com.main_project.patient_service.configuration;
 
-import com.main_project.appointment_service.aggregate.AppointmentAggregate;
 import com.thoughtworks.xstream.XStream;
 import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -19,11 +18,5 @@ public class AxonConfig {
         });
     }
 
-    @Bean
-    public Repository<AppointmentAggregate> appointmentAggregateRepository(EventStore eventStore) {
-        return EventSourcingRepository.builder(AppointmentAggregate.class)
-                .eventStore(eventStore)
-                .build();
-    }
 }
 

@@ -1,16 +1,13 @@
-package com.main_project.clinical_service.dto;
+package com.main_project.appointment_service.aggregate;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StartClinicalrRequest {
+public class CheckInAppointmentEvent {
     private UUID appointmentId;
-    private UUID patientId;
-    private List<MedicalServiceDTO> medicalServices;
 }

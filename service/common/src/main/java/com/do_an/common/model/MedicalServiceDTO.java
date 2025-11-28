@@ -1,11 +1,9 @@
-package com.main_project.clinical_service.dto;
+package com.do_an.common.model;
 
 import lombok.*;
 
 import java.util.UUID;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

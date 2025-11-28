@@ -26,6 +26,7 @@ public interface IAppointmentService {
     AppointmentDTO createAppointment(AppointmentRequestDTO requestDTO);
     AppointmentDTO updateAppointment(UUID id, AppointmentRequestDTO requestDTO);
     AppointmentDTO updateAppointmentStatus(UUID id, AppointmentStatus status);
+    AppointmentDTO startAppointment(UUID id);
 
     void deleteAppointment(UUID id);
 }
