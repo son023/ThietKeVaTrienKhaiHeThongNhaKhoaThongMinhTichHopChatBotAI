@@ -229,7 +229,15 @@ public class InvoiceEventHandler {
             )));
 
         } catch (Exception e) {
-            log.error("Không thể tạo hóa đơn: {}", e.getMessage());
+            log.error("Không thể tạo hóa đơn: {}", e.getMessage(), e);
+            eventBus.publish(asEventMessage(new InvoicePersistenceFailedEvent(
+                    event.getClinicalId(),
+                    event.getAppointmentId(),
+                    event.getPatientId(),
+                    event.getMedicalHistoryId(),
+                    event.getInvoiceId(),
+                    e.getMessage()
+            )));
         }
     }
 

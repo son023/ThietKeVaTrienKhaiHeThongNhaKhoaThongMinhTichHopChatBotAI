@@ -1,6 +1,7 @@
 package com.main_project.patient_service.aggregate;
 
 import com.do_an.common.command.CreateMedicalHistoryCommand;
+import com.do_an.common.command.RollbackMedicalHistoryCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
@@ -23,5 +24,14 @@ public class MedicalHistoryCommandHandler {
                 command.getPatientId(),
                 command.getMedicalHistoryId()
         ));
+    }
+
+    @CommandHandler
+    public void handle(RollbackMedicalHistoryCommand command) throws Exception {
+        log.warn("Nhận RollbackMedicalHistoryCommand cho appointment {} reason={}",
+                command.getAppointmentId(), command.getReason());
+
+        medicalHistoryAggregateRepository.load(command.getMedicalHistoryId().toString())
+                .execute(aggregate -> aggregate.handle(command));
     }
 }
