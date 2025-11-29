@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Bell, LogOut, User, Settings, Home } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Badge } from './ui/badge';
+import { useMemo, useState } from "react";
+import { Bell, LogOut, User, Settings, Home } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +10,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import type { DoctorWithUser } from '../controllers/DoctorController';
+} from "./ui/dropdown-menu";
+import type { DoctorWithUser } from "../controllers/DoctorController";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -20,21 +20,26 @@ interface HeaderProps {
   isLoading?: boolean;
 }
 
-export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderProps = {}) {
+export function DoctorHeader({
+  onLogout,
+  onGoHome,
+  doctor,
+  isLoading,
+}: HeaderProps = {}) {
   const [notifications] = useState([
-    { id: 1, message: 'Thong bao he thong', time: 'Vua xong', unread: true },
+    { id: 1, message: "Thong bao he thong", time: "Vua xong", unread: true },
   ]);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-  const displayName = useMemo(() => doctor?.user?.fullName || 'Bac si', [doctor]);
+  const displayName = useMemo(() => doctor?.user?.fullName, [doctor]);
   const subtitle = useMemo(() => {
     const specialization = doctor?.specializationCodes?.[0];
     if (specialization) return `Chuyen khoa: ${specialization}`;
     if (doctor?.workingHospital) return doctor.workingHospital;
-    return 'Ho so bac si';
+    return "Ho so bac si";
   }, [doctor]);
   const avatarFallback = useMemo(
-    () => (displayName ? displayName.slice(0, 2).toUpperCase() : 'DR'),
+    () => (displayName ? displayName.slice(0, 2).toUpperCase() : "DR"),
     [displayName]
   );
 
@@ -47,11 +52,11 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
         >
           <h2 className="text-[#01304e]">Phong kham Nha khoa DentalCareX</h2>
           <p className="text-[#333333]/60 text-sm mt-1">
-            {new Date().toLocaleDateString('vi-VN', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+            {new Date().toLocaleDateString("vi-VN", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </p>
         </div>
@@ -68,7 +73,10 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
                 )}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-96 p-0 rounded-[15px] border-[#e8e8e8]" align="end">
+            <PopoverContent
+              className="w-96 p-0 rounded-[15px] border-[#e8e8e8]"
+              align="end"
+            >
               <div className="p-4 border-b border-[#e8e8e8]">
                 <h3 className="text-[#01304e]">Thong bao</h3>
               </div>
@@ -77,7 +85,7 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
                   <div
                     key={notif.id}
                     className={`p-4 border-b border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors ${
-                      notif.unread ? 'bg-[#d8f0ff]/50' : ''
+                      notif.unread ? "bg-[#d8f0ff]/50" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -86,7 +94,9 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
                         <div className="w-2 h-2 bg-[#3FB5FF] rounded-full flex-shrink-0 mt-1" />
                       )}
                     </div>
-                    <p className="text-xs text-[#333333]/60 mt-1">{notif.time}</p>
+                    <p className="text-xs text-[#333333]/60 mt-1">
+                      {notif.time}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -98,10 +108,10 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
               <div className="flex items-center gap-3 cursor-pointer hover:bg-[#d8f0ff]/30 rounded-[10px] px-3 py-2 transition-colors">
                 <div className="text-right">
                   <p className="text-[#333333]">
-                    {isLoading ? 'Dang tai...' : displayName}
+                    {isLoading ? "Dang tai..." : displayName}
                   </p>
                   <p className="text-sm text-[#333333]/60">
-                    {isLoading ? '' : subtitle}
+                    {isLoading ? "" : subtitle}
                   </p>
                 </div>
                 <Avatar>
@@ -110,8 +120,13 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
                 </Avatar>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 rounded-[10px] border-[#e8e8e8]" align="end">
-              <DropdownMenuLabel className="text-[#01304e]">Tai khoan</DropdownMenuLabel>
+            <DropdownMenuContent
+              className="w-56 rounded-[10px] border-[#e8e8e8]"
+              align="end"
+            >
+              <DropdownMenuLabel className="text-[#01304e]">
+                Tai khoan
+              </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-[#e8e8e8]" />
               <DropdownMenuItem className="cursor-pointer rounded-[8px]">
                 <User className="mr-2 h-4 w-4 text-[#3FB5FF]" />
@@ -120,14 +135,6 @@ export function DoctorHeader({ onLogout, onGoHome, doctor, isLoading }: HeaderPr
               <DropdownMenuItem className="cursor-pointer rounded-[8px]">
                 <Settings className="mr-2 h-4 w-4 text-[#3FB5FF]" />
                 <span>Cai dat</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
-              <DropdownMenuItem
-                className="cursor-pointer rounded-[8px]"
-                onClick={onGoHome}
-              >
-                <Home className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Trang chu</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#e8e8e8]" />
               <DropdownMenuItem

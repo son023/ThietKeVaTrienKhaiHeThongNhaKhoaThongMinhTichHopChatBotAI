@@ -32,7 +32,7 @@ import imgDoctor31 from "../../assets/imgDoctor2.png";
 import imgDoctor61 from "../../assets/imgDoctor3.png";
 import img1 from "../../assets/img1.png";
 import img4 from "../../assets/img4.png";
-import img from '../../assets/img1.png';
+import img from "../../assets/img1.png";
 import imgPatient1 from "../../assets/imgPatient1.png";
 import imgPatient2 from "../../assets/imgPatient2.png";
 import imgPatient3 from "../../assets/imgPatient3.png";
@@ -248,7 +248,9 @@ export function PublicHomepage({
 }: PublicHomepageProps) {
   const [servicesData, setServicesData] = useState<MedicalServiceDTO[]>([]);
   const [doctorsData, setDoctorsData] = useState<DoctorWithUser[]>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithUser | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithUser | null>(
+    null
+  );
   const [servicesLoading, setServicesLoading] = useState(false);
   const [doctorsLoading, setDoctorsLoading] = useState(false);
   const [servicesError, setServicesError] = useState<string | null>(null);
@@ -294,7 +296,9 @@ export function PublicHomepage({
   // Services carousel - show 3 at a time
   const servicesPerPage = 3;
   const totalServicePages =
-    servicesData.length > 0 ? Math.ceil(servicesData.length / servicesPerPage) : 1;
+    servicesData.length > 0
+      ? Math.ceil(servicesData.length / servicesPerPage)
+      : 1;
 
   const handlePrevService = () => {
     setCurrentServiceIndex((prev) =>
@@ -355,13 +359,20 @@ export function PublicHomepage({
   const getDoctorSpecialty = (doctor?: DoctorWithUser | null) => {
     const spec = doctor?.specializationCodes?.[0];
     const code = spec?.code || "";
-    return spec?.displayName || SPECIALIZATION_MAP[code] || doctor?.workingHospital || "Nha khoa tong quat";
+    return (
+      spec?.displayName ||
+      SPECIALIZATION_MAP[code] ||
+      doctor?.workingHospital ||
+      "Nha khoa tong quat"
+    );
   };
 
   const getDoctorSubtitle = (doctor?: DoctorWithUser | null) => {
     if (!doctor) return "Tan tam - chuyen nghiep";
     if (doctor.consultationFeeAmount) {
-      return `Phi tu van ${doctor.consultationFeeAmount.toLocaleString("vi-VN")} VND`;
+      return `Phi tu van ${doctor.consultationFeeAmount.toLocaleString(
+        "vi-VN"
+      )} VND`;
     }
     return doctor.workingHospital || "Tan tam - chuyen nghiep";
   };
@@ -450,85 +461,6 @@ export function PublicHomepage({
                   className="relative w-full h-auto object-contain drop-shadow-[0px_20px_40px_rgba(63,181,255,0.25)] rounded-[24px]"
                 />
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Data lists from backend */}
-      <section className="bg-[#fcfeff] py-[40px] px-[20px] sm:px-[40px] lg:px-[80px] border-b border-[#ebf6fc]">
-        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-[24px]">
-          <div className="bg-white rounded-[20px] border border-[#ebf6fc] shadow-sm p-[20px]">
-            <div className="flex items-center justify-between mb-[12px]">
-              <h3 className="text-[#01304e] text-[20px] font-semibold">Dịch vụ đang có</h3>
-              {servicesLoading && <span className="text-xs text-gray-500">Đang tải...</span>}
-              {servicesError && <span className="text-xs text-red-500">Lỗi tải dịch vụ</span>}
-            </div>
-            <div className="space-y-[10px] max-h-[320px] overflow-auto">
-              {servicesData.slice(0, 8).map((svc) => (
-                <div
-                  key={svc.id}
-                  className="p-[12px] rounded-[12px] bg-[#f7fbff] border border-[#ebf6fc] hover:border-[#3fb5ff] transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-[#01304e] text-[15px] font-semibold">{svc.serviceName}</div>
-                      <div className="text-xs text-gray-600">
-                        {(svc.serviceType || '').toUpperCase()} • {svc.serviceTime ? `${svc.serviceTime} phút` : 'Thời lượng linh hoạt'}
-                      </div>
-                    </div>
-                    <div className="text-[#3fb5ff] text-sm font-semibold">
-                      {svc.price ? `${svc.price.toLocaleString('vi-VN')} VND` : 'Liên hệ'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {!servicesLoading && servicesData.length === 0 && (
-                <div className="text-sm text-gray-500">Chưa có dữ liệu dịch vụ.</div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-[20px] border border-[#ebf6fc] shadow-sm p-[20px]">
-            <div className="flex items-center justify-between mb-[12px]">
-              <h3 className="text-[#01304e] text-[20px] font-semibold">Bác sĩ đang phục vụ</h3>
-              {doctorsLoading && <span className="text-xs text-gray-500">Đang tải...</span>}
-              {doctorsError && <span className="text-xs text-red-500">Lỗi tải bác sĩ</span>}
-            </div>
-            <div className="space-y-[10px] max-h-[320px] overflow-auto">
-              {doctorsData.slice(0, 8).map((doc) => (
-                <div
-                  key={doc.userId}
-                  className="p-[12px] rounded-[12px] bg-[#f7fbff] border border-[#ebf6fc] hover:border-[#3fb5ff] transition"
-                >
-                  <div className="flex items-center gap-[10px]">
-                    <img
-                      src={doc.user?.avatarUrl || doctorPlaceholderImg}
-                      alt={doc.user?.fullName || 'Bác sĩ'}
-                      className="w-[42px] h-[42px] rounded-full object-cover border border-[#ebf6fc]"
-                    />
-                    <div className="flex-1">
-                      <div className="text-[#01304e] text-[15px] font-semibold">
-                        {doc.user?.fullName || 'Bác sĩ'}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {doc.specializationCodes?.[0]?.displayName ||
-                          doc.specializationCodes?.[0]?.code ||
-                          doc.workingHospital ||
-                          'Nha khoa tổng quát'}
-                      </div>
-                    </div>
-                    {doc.consultationFeeAmount && (
-                      <div className="text-[#3fb5ff] text-sm font-semibold">
-                        {doc.consultationFeeAmount.toLocaleString('vi-VN')} VND
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {!doctorsLoading && doctorsData.length === 0 && (
-                <div className="text-sm text-gray-500">Chưa có dữ liệu bác sĩ.</div>
-              )}
             </div>
           </div>
         </div>
@@ -662,7 +594,9 @@ export function PublicHomepage({
                 {selectedDoctor ? (
                   <>
                     <img
-                      src={selectedDoctor.user?.imageUrl || doctorPlaceholderImg}
+                      src={
+                        selectedDoctor.user?.imageUrl || doctorPlaceholderImg
+                      }
                       alt={getDoctorName(selectedDoctor)}
                       className="w-full h-[500px] object-cover rounded-[24px]"
                     />
@@ -755,91 +689,91 @@ export function PublicHomepage({
           </div>
 
           {/* Doctors Carousel */}
-            <div className="relative">
-                <div className="rounded-[24px] bg-[#fcfeff] p-[40px] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.08)]">
-                    <div className="flex items-center justify-between mb-[32px]">
-                        <div>
-                            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[24px] mb-[8px]">
-                                Gặp gỡ đội ngũ của chúng tôi
-                            </h3>
-                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px]">
-                                {doctorsData.length} bác sĩ giàu kinh nghiệm
-                            </p>
-                        </div>
-                        <div className="flex gap-[12px]">
-                            <button
-                                onClick={handlePrevDoctor}
-                                className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
-                            >
-                                <ChevronLeft className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
-                            </button>
-                            <button
-                                onClick={handleNextDoctor}
-                                className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
-                            >
-                                <ChevronRight className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Carousel Track */}
-                    <div className="overflow-hidden">
-                        <div className="grid md:grid-cols-3 gap-[24px]">
-                            {getVisibleDoctors().map((doctor) =>
-                                 (
-                                    <div
-                                        key={doctor.userId || doctor.id}
-                                        className="transition-all duration-500 ease-in-out transform hover:scale-[1.02]"
-                                    >
-                                        <div
-                                            onClick={() => setSelectedDoctor(doctor)}
-                                            className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
-                                                selectedDoctor && (selectedDoctor.userId || selectedDoctor.id) === (doctor.userId || doctor.id)
-                                                    ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
-                                                    : "border-[#ebf6fc] hover:border-[#3fb5ff]"
-                                            }`}
-                                        >
-                                            <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
-                                                <img
-                                                    src={doctor.user?.imageUrl || doctorPlaceholderImg}
-                                                    alt={getDoctorName(doctor)}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                                                />
-                                            </div>
-                                            <div className="p-[24px] text-center">
-                                                <h4 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[19px] mb-[6px]">
-                                                    {getDoctorName(doctor)}
-                                                </h4>
-                                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[15px] mb-[8px]">
-                                                    {getDoctorSpecialty(doctor)}
-                                                </p>
-                                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#999999] text-[13px]">
-                                                    {getDoctorSubtitle(doctor)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Pagination Dots */}
-                    <div className="flex justify-center gap-[8px] mt-[32px]">
-                        {Array.from({ length: totalDoctorPages }).map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setCurrentDoctorIndex(index)}
-                                className={`h-[8px] rounded-full transition-all duration-500 ease-in-out ${
-                                    index === currentDoctorIndex
-                                        ? "w-[32px] bg-[#3fb5ff]"
-                                        : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
-                                }`}
-                            />
-                        ))}
-                    </div>
+          <div className="relative">
+            <div className="rounded-[24px] bg-[#fcfeff] p-[40px] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-between mb-[32px]">
+                <div>
+                  <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[24px] mb-[8px]">
+                    Gặp gỡ đội ngũ của chúng tôi
+                  </h3>
+                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px]">
+                    {doctorsData.length} bác sĩ giàu kinh nghiệm
+                  </p>
                 </div>
+                <div className="flex gap-[12px]">
+                  <button
+                    onClick={handlePrevDoctor}
+                    className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
+                  >
+                    <ChevronLeft className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
+                  </button>
+                  <button
+                    onClick={handleNextDoctor}
+                    className="w-[48px] h-[48px] bg-[#ebf6fc] hover:bg-[#3fb5ff] rounded-[14px] flex items-center justify-center transition-all group shadow-sm hover:shadow-md"
+                  >
+                    <ChevronRight className="w-[24px] h-[24px] text-[#3fb5ff] group-hover:text-[#fcfeff]" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Carousel Track */}
+              <div className="overflow-hidden">
+                <div className="grid md:grid-cols-3 gap-[24px]">
+                  {getVisibleDoctors().map((doctor) => (
+                    <div
+                      key={doctor.userId || doctor.id}
+                      className="transition-all duration-500 ease-in-out transform hover:scale-[1.02]"
+                    >
+                      <div
+                        onClick={() => setSelectedDoctor(doctor)}
+                        className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
+                          selectedDoctor &&
+                          (selectedDoctor.userId || selectedDoctor.id) ===
+                            (doctor.userId || doctor.id)
+                            ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
+                            : "border-[#ebf6fc] hover:border-[#3fb5ff]"
+                        }`}
+                      >
+                        <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
+                          <img
+                            src={doctor.user?.imageUrl || doctorPlaceholderImg}
+                            alt={getDoctorName(doctor)}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                          />
+                        </div>
+                        <div className="p-[24px] text-center">
+                          <h4 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[19px] mb-[6px]">
+                            {getDoctorName(doctor)}
+                          </h4>
+                          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#3fb5ff] text-[15px] mb-[8px]">
+                            {getDoctorSpecialty(doctor)}
+                          </p>
+                          <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#999999] text-[13px]">
+                            {getDoctorSubtitle(doctor)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pagination Dots */}
+              <div className="flex justify-center gap-[8px] mt-[32px]">
+                {Array.from({ length: totalDoctorPages }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentDoctorIndex(index)}
+                    className={`h-[8px] rounded-full transition-all duration-500 ease-in-out ${
+                      index === currentDoctorIndex
+                        ? "w-[32px] bg-[#3fb5ff]"
+                        : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
+          </div>
         </div>
       </section>
 
@@ -912,7 +846,9 @@ export function PublicHomepage({
                         {service.serviceName}
                       </h3>
                       <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] mb-[20px] line-clamp-3">
-                        {SPECIALIZATION_MAP[service.serviceType || ''] || service.description || 'Dich vu y te'}
+                        {SPECIALIZATION_MAP[service.serviceType || ""] ||
+                          service.description ||
+                          "Dich vu y te"}
                       </p>
 
                       <div className="flex flex-wrap gap-[8px] mb-[20px]">

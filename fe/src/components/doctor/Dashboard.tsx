@@ -1,62 +1,156 @@
-import { useState } from 'react';
-import { Clock, User, CheckCircle, AlertCircle, FileCheck, Calendar, X, FileText, Image as ImageIcon } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Clock, User, CheckCircle, AlertCircle, FileCheck, Calendar, X, FileText, Image as ImageIcon, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
+import {
+  appointmentController,
+  AppointmentDTO,
+} from '../../controllers/AppointmentController';
+import {
+  patientController,
+  PatientWithUser,
+} from '../../controllers/PatientController';
 
 interface DashboardProps {
   onNavigateToPatient: (id: string) => void;
+  doctorId?: string | null;
 }
 
-export function Dashboard({ onNavigateToPatient }: DashboardProps) {
+type AppointmentWithPatient = AppointmentDTO & {
+  patient?: PatientWithUser;
+  timeLabel: string;
+};
+
+export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
+  const [patientMap, setPatientMap] = useState<Record<string, PatientWithUser>>(
+    {}
+  );
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [appointmentError, setAppointmentError] = useState<string | null>(null);
 
-  /* Appointment Status:
-  - Confirmed
-  - Checked-in
-  - In Progress
-  - Completed
-  - No-show
-  - Cancelled
-  */
+  // Appointment data and status helpers
 
-  const todayAppointments = [
-    {
-      id: '1',
-      time: '09:00',
-      patientName: 'Nguyễn Văn An',
-      patientId: 'BN001',
-      service: 'Khám tổng quát',
-      status: 'checked-in',
+    const statusMeta: Record<string, { label: string; className: string }> = {
+    pending: {
+      label: 'Cho xac nhan',
+      className: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
     },
-    {
-      id: '2',
-      time: '10:30',
-      patientName: 'Trần Thị Bình',
-      patientId: 'BN002',
-      service: 'Trám răng',
-      status: 'in-progress',
+    confirmed: {
+      label: 'Da xac nhan',
+      className: 'bg-blue-100 text-blue-800 border border-blue-300',
     },
-    {
-      id: '3',
-      time: '14:00',
-      patientName: 'Lê Văn Cường',
-      patientId: 'BN003',
-      service: 'Lấy tủy',
-      status: 'completed',
+    'checked-in': {
+      label: 'Da check-in',
+      className: 'bg-yellow-500 text-white',
     },
-    {
-      id: '4',
-      time: '15:30',
-      patientName: 'Phạm Thị Dung',
-      patientId: 'BN004',
-      service: 'Tái khám niềng răng',
-      status: 'confirmed',
+    'in-progress': {
+      label: 'Dang kham',
+      className: 'bg-[#3FB5FF] text-white',
     },
-  ];
+    completed: {
+      label: 'Hoan thanh',
+      className: 'bg-green-500 text-white',
+    },
+    cancelled: {
+      label: 'Da huy',
+      className: 'bg-red-100 text-red-800 border border-red-300',
+    },
+    'no-show': {
+      label: 'Khong den',
+      className: 'bg-gray-200 text-gray-800 border border-gray-300',
+    },
+  };
+
+  const getStatusBadge = (status: string) => {
+    const meta = statusMeta[status] || statusMeta.pending;
+    return <Badge className={`${meta.className} h-7`}>{meta.label}</Badge>;
+  };
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        setLoadingAppointments(true);
+        setAppointmentError(null);
+
+        if (!doctorId) {
+          setAppointmentError('Khong tim thay thong tin bac si');
+          setAppointments([]);
+          setPatientMap({});
+          return;
+        }
+
+        const data = await appointmentController.getByDoctorId(doctorId);
+        setAppointments(data);
+
+        const patientIds = Array.from(
+          new Set(data.map((apt) => apt.patientId).filter(Boolean))
+        );
+        if (!patientIds.length) {
+          setPatientMap({});
+          return;
+        }
+
+        const patients = await Promise.all(
+          patientIds.map(async (pid) => {
+            try {
+              return await patientController.getWithUserById(pid);
+            } catch (err) {
+              console.error('Failed to load patient', pid, err);
+              return null;
+            }
+          })
+        );
+
+        const map: Record<string, PatientWithUser> = {};
+        patients.forEach((p) => {
+          if (p?.userId) {
+            map[p.userId] = p;
+          }
+        });
+        setPatientMap(map);
+      } catch (err) {
+        setAppointmentError(
+          err instanceof Error ? err.message : 'Khong tai duoc lich hen'
+        );
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+
+    loadAppointments();
+  }, [doctorId]);
+
+  const todayAppointments: AppointmentWithPatient[] = useMemo(() => {
+    const todayKey = new Date().toDateString();
+    return appointments
+      .filter((apt) => {
+        const start = new Date(apt.appointmentStartTime);
+        return !isNaN(start.getTime()) && start.toDateString() === todayKey;
+      })
+      .map((apt) => {
+        const patient = apt.patientId ? patientMap[apt.patientId] : undefined;
+        const start = new Date(apt.appointmentStartTime);
+        const timeLabel = isNaN(start.getTime())
+          ? 'N/A'
+          : start.toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+        return { ...apt, patient, timeLabel };
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.appointmentStartTime).getTime() -
+          new Date(b.appointmentStartTime).getTime()
+      );
+  }, [appointments, patientMap]);
+
 
   const pendingRecords = [
     { id: '1', patientName: 'Nguyễn Văn An', type: 'Chưa hoàn tất ghi chú', date: '25/10/2025' },
@@ -98,23 +192,7 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
       ]
     },
   ];
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'checked-in':
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600 h-7">Đã check-in</Badge>;
-      case 'in-progress':
-        return <Badge className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 h-7">Đang khám</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500 hover:bg-green-600 h-7">Hoàn thành</Badge>;
-        case 'confirmed':
-            return <Badge className="bg-gray-300 hover:bg-gray-400 h-7">Đã xác nhận</Badge>;
-      default:
-        return null;
-    }
-  };
-
-  const handleOpenTaskDialog = (task: any) => {
+const handleOpenTaskDialog = (task: any) => {
     setSelectedTask(task);
     setShowTaskDialog(true);
   };
@@ -190,44 +268,63 @@ export function Dashboard({ onNavigateToPatient }: DashboardProps) {
         <p className="text-[#333333]/60">Tổng quan công việc trong ngày của bạn</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main: Today's Appointments */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">        {/* Main: Today's Appointments */}
         <Card className="lg:col-span-2 rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#01304e]">
               <Calendar className="w-5 h-5 text-[#3FB5FF]" />
-              Lịch hẹn hôm nay
+              Lich hen hom nay
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {todayAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-center justify-between p-4 bg-white border border-[#e8e8e8] rounded-[10px] hover:border-[#3FB5FF] hover:shadow-[0px_4px_12px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer"
-                  onClick={() => onNavigateToPatient(appointment.patientId)}
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center gap-2 w-20">
-                      <Clock className="w-4 h-4 text-[#333333]/60" />
-                      <span className="text-[#333333]">{appointment.time}</span>
+            {loadingAppointments ? (
+              <div className="p-4 text-[#333333]/60">Dang tai lich hen hom nay...</div>
+            ) : appointmentError ? (
+              <div className="p-4 text-red-500">{appointmentError}</div>
+            ) : todayAppointments.length === 0 ? (
+              <div className="p-4 text-[#333333]/60">Hom nay khong co lich hen truoc nao</div>
+            ) : (
+              <div className="space-y-3">
+                {todayAppointments.map((appointment) => {
+                  const patientName =
+                    appointment.patient?.user?.fullName || 'Benh nhan';
+                  const phone =
+                    appointment.patient?.contactPhone ||
+                    appointment.patient?.user?.phone ||
+                    'N/A';
+
+                  return (
+                    <div
+                      key={appointment.id}
+                      className="flex items-center justify-between p-4 bg-white border border-[#e8e8e8] rounded-[10px] hover:border-[#3FB5FF] hover:shadow-[0px_4px_12px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer"
+                      onClick={() =>
+                        appointment.patientId &&
+                        onNavigateToPatient(appointment.patientId)
+                      }
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center gap-2 w-20">
+                          <Clock className="w-4 h-4 text-[#333333]/60" />
+                          <span className="text-[#333333]">
+                            {appointment.timeLabel}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[#333333]">{patientName}</p>
+                          <div className="flex items-center gap-2 text-sm text-[#333333]/60">
+                            <Phone className="w-4 h-4" />
+                            <span>{phone}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 h-10">
+                        {getStatusBadge(appointment.status)}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[#333333]">{appointment.patientName}</p>
-                      <p className="text-sm text-[#333333]/60">{appointment.service}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 h-10">
-                    {getStatusBadge(appointment.status)}
-                    {appointment.status === 'waiting' && (
-                      <Button size="sm" className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
-                        Bắt đầu khám
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 

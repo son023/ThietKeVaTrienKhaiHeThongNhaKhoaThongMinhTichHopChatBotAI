@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/doctor-service/doctors/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/doctor-service/doctors/**").hasAnyRole("DOCTOR", "RECEPTIONIST", "ADMIN", "PATIENT")
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Search, Phone } from 'lucide-react';
-import { Input } from '../ui/input';
-import { Card, CardContent } from '../ui/card';
+import { useEffect, useMemo, useState } from "react";
+import { Search, Phone } from "lucide-react";
+import { Input } from "../ui/input";
+import { Card, CardContent } from "../ui/card";
 import {
   Table,
   TableBody,
@@ -9,17 +9,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import { patientController, PatientWithUser } from '../../controllers/PatientController';
-import { appointmentController } from '../../controllers/AppointmentController';
-import { authController } from '../../controllers';
+} from "../ui/table";
+import {
+  patientController,
+  PatientWithUser,
+} from "../../controllers/PatientController";
+import { appointmentController } from "../../controllers/AppointmentController";
+import { authController } from "../../controllers";
 
 interface MyPatientsProps {
   onNavigateToPatient: (id: string) => void;
 }
 
 export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<PatientWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +35,14 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
 
         const currentUser = authController.getCurrentUser();
         if (!currentUser?.id) {
-          setError('Khong tim thay thong tin bac si dang dang nhap');
+          setError("Khong tim thay thong tin bac si dang dang nhap");
           setPatients([]);
           return;
         }
 
-        const appointments = await appointmentController.getByDoctorId(currentUser.id);
+        const appointments = await appointmentController.getByDoctorId(
+          currentUser.id
+        );
         const patientIds = Array.from(
           new Set(appointments.map((apt) => apt.patientId).filter(Boolean))
         );
@@ -52,7 +57,7 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
             try {
               return await patientController.getWithUserById(pid);
             } catch (err) {
-              console.error('Failed to load patient', pid, err);
+              console.error("Failed to load patient", pid, err);
               return null;
             }
           })
@@ -60,7 +65,9 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
 
         setPatients(patientData.filter(Boolean) as PatientWithUser[]);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+        setError(
+          err instanceof Error ? err.message : "An unexpected error occurred."
+        );
       } finally {
         setLoading(false);
       }
@@ -81,24 +88,24 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
   }, [patients, searchQuery]);
 
   const formatDob = (dob?: string) => {
-    if (!dob) return '-';
+    if (!dob) return "-";
     const date = new Date(dob);
-    return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('vi-VN');
+    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString("vi-VN");
   };
 
   const formatGender = (gender?: string) => {
-    if (!gender) return '-';
+    if (!gender) return "-";
     const g = gender.toLowerCase();
-    if (g === 'male') return 'Nam';
-    if (g === 'female') return 'Nu';
-    return 'Khac';
+    if (g === "nam") return "Nam";
+    if (g === "nữ") return "Nu";
+    return "Khac";
   };
 
   return (
     <div className="p-6 bg-[#fcfeff]">
       <div className="mb-6">
         <h1 className="text-[#01304e] mb-4">Benh nhan cua toi</h1>
-        
+
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
           <Input
@@ -133,7 +140,10 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-red-500">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-12 text-red-500"
+                  >
                     {error}
                   </TableCell>
                 </TableRow>
@@ -142,9 +152,10 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
                   const displayId =
                     patient.userId && patient.userId.length > 6
                       ? patient.userId.slice(-6)
-                      : patient.userId || 'N/A';
-                  const phone = patient.contactPhone || patient.user?.phone || 'N/A';
-                  const bloodType = patient.bloodType || '-';
+                      : patient.userId || "N/A";
+                  const phone =
+                    patient.contactPhone || patient.user?.phone || "N/A";
+                  const bloodType = patient.bloodType || "-";
 
                   return (
                     <TableRow
@@ -152,9 +163,11 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
                       className="cursor-pointer hover:bg-gray-50"
                       onClick={() => onNavigateToPatient(patient.userId)}
                     >
-                      <TableCell className="text-[#333333]/60">{displayId}</TableCell>
+                      <TableCell className="text-[#333333]/60">
+                        {displayId}
+                      </TableCell>
                       <TableCell className="text-[#333333]">
-                        {patient.user?.fullName || 'N/A'}
+                        {patient.user?.fullName || "N/A"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-[#333333]/60">
@@ -162,15 +175,24 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
                           {phone}
                         </div>
                       </TableCell>
-                      <TableCell className="text-[#333333]/60">{formatDob(patient.dob)}</TableCell>
-                      <TableCell className="text-[#333333]/60">{formatGender(patient.gender)}</TableCell>
-                      <TableCell className="text-[#333333]/60">{bloodType}</TableCell>
+                      <TableCell className="text-[#333333]/60">
+                        {formatDob(patient.dob)}
+                      </TableCell>
+                      <TableCell className="text-[#333333]/60">
+                        {formatGender(patient.gender)}
+                      </TableCell>
+                      <TableCell className="text-[#333333]/60">
+                        {bloodType}
+                      </TableCell>
                     </TableRow>
                   );
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-[#333333]/60">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-12 text-[#333333]/60"
+                  >
                     Khong tim thay benh nhan phu hop
                   </TableCell>
                 </TableRow>
@@ -182,4 +204,3 @@ export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
     </div>
   );
 }
-
