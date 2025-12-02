@@ -9,8 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface PaymentRepository extends JpaRepository<Payment, String> {
+public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     // Dùng để tra cứu khi Webhook gọi về
     Optional<Payment> findByTransactionId(String transactionId);
@@ -19,7 +20,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     Optional<Payment> findFirstByInvoiceIdOrderByCreateAtDesc(String invoiceId);
 
     //Tìm tất cả payments theo invoice ID
-    Optional<Payment> findByInvoiceIdAndId(String invoiceId, String paymentId);
+    Optional<Payment> findByInvoiceIdAndId(String invoiceId, UUID paymentId);
     
     // Tìm tất cả payments theo invoice ID
     List<Payment> findAllByInvoiceId(String invoiceId);

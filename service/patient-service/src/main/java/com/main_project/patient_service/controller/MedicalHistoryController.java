@@ -2,7 +2,7 @@ package com.main_project.patient_service.controller;
 
 import com.main_project.patient_service.dto.MedicalHistoryRequestDTO;
 import com.main_project.patient_service.dto.MedicalHistoryResponseDTO;
-import com.main_project.patient_service.service.IMedicalHistoryService;
+import com.main_project.patient_service.service.MedicalHistoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MedicalHistoryController {
 
-    private final IMedicalHistoryService medicalHistoryService;
+    private final MedicalHistoryService medicalHistoryService;
 
     @GetMapping
     public ResponseEntity<List<MedicalHistoryResponseDTO>> getAllMedicalHistories() {

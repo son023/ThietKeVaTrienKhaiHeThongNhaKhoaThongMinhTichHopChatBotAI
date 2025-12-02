@@ -3,6 +3,7 @@ package com.main_project.patient_service.controller;
 import com.main_project.patient_service.dto.PatientRequestDTO;
 import com.main_project.patient_service.dto.PatientResponseDTO;
 import com.main_project.patient_service.service.IPatientService;
+import com.main_project.patient_service.service.PatientService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PatientController {
 
-    private final IPatientService patientService;
+    private final PatientService patientService;
 
     @GetMapping
     public ResponseEntity<List<PatientResponseDTO>> getAllPatients() {

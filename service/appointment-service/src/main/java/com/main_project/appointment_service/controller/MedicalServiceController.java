@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MedicalServiceController {
 
-    private final IMedicalService service;
+    private final MedicalServiceService service;
 
     @GetMapping
     @Operation(summary = "Get all medical services")

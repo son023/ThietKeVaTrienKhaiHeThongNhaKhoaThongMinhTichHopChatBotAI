@@ -129,7 +129,6 @@ public class PaymentService {
         log.info("Xử lý thanh toán CASH cho Invoice: {}", request.getInvoiceId());
 
         Payment payment = Payment.builder()
-                .id(UUID.randomUUID().toString())
                 .invoiceId(request.getInvoiceId())
                 .totalAmount(request.getTotalAmount())
                 .paymentMethod(PaymentMethod.CASH)
@@ -192,7 +191,6 @@ public class PaymentService {
 
             // Lưu payment record
             Payment payment = Payment.builder()
-                    .id(UUID.randomUUID().toString())
                     .invoiceId(request.getInvoiceId())
                     .totalAmount(request.getTotalAmount())
                     .paymentMethod(PaymentMethod.BANK_TRANSFER)
@@ -305,7 +303,7 @@ public class PaymentService {
      */
     @Transactional(readOnly = true)
     public PaymentResponseDTO getPaymentById(String paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findById(UUID.fromString(paymentId))
                 .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy Payment ID: " + paymentId));
 
         return paymentMapper.toResponseDto(payment);
@@ -318,7 +316,7 @@ public class PaymentService {
     public PaymentResponseDTO updatePayment(String paymentId, UpdatePaymentRequestDTO request) {
         log.info("Cập nhật Payment: {}", paymentId);
         
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findById(UUID.fromString(paymentId))
                 .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy Payment ID: " + paymentId));
         
         // Kiểm tra nếu payment đã thành công thì không cho phép cập nhật một số trường
@@ -375,7 +373,7 @@ public class PaymentService {
     public void deletePayment(String paymentId) {
         log.info("Xóa Payment: {}", paymentId);
         
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findById(UUID.fromString(paymentId))
                 .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy Payment ID: " + paymentId));
         
         // Kiểm tra nếu payment đã thành công thì không cho phép xóa
