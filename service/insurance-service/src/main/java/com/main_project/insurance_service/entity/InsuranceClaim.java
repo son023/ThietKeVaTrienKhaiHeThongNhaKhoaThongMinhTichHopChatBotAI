@@ -19,7 +19,6 @@ import java.util.UUID;
 public class InsuranceClaim {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "status")
@@ -44,11 +43,11 @@ public class InsuranceClaim {
     private String notes;
 
     @CreationTimestamp
-    @Column(name = "create_at", nullable = false, updatable = false)
+    @Column(name = "create_at")
     private ZonedDateTime createAt;
 
     @UpdateTimestamp
-    @Column(name = "update_at", nullable = false)
+    @Column(name = "update_at")
     private ZonedDateTime updateAt;
 
     // Many-to-One relationship with PatientInsurance

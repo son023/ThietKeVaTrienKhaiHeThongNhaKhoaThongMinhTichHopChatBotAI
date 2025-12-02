@@ -2,3 +2,10 @@
 .gradle/
 fe/node_modules
 fe/package-lock.json
+
+
+/service/API_ENDPOINTS_GUIDE.md
+/service/CHANGES_SUMMARY.md
+/service/README_SAGA_UPDATED.md
+/service/SAGA_IMPLEMENTATION_SUMMARY.md
+/service/saga.txt

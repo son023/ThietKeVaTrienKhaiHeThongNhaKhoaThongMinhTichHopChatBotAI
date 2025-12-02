@@ -16,5 +16,7 @@ public class ReserveMedicineCommand {
     @TargetAggregateIdentifier
     private UUID dispenseOrderId;
     private UUID prescriptionId;
+    private UUID doctorId;
+    private UUID medicalHistoryId;
     private List<MedicineItem> items;
 }

@@ -1,8 +1,8 @@
 package com.main_project.insurance_service.controller;
 
+import com.do_an.common.model.InvoiceCheckerRequest;
 import com.main_project.insurance_service.dto.InsuranceClaimDTO;
 import com.main_project.insurance_service.dto.InsuranceClaimRequestDTO;
-import com.main_project.insurance_service.dto.InvoiceCheckerRequest;
 import com.main_project.insurance_service.dto.InvoiceDTO;
 import com.main_project.insurance_service.service.IInsuranceClaimService;
 import io.swagger.v3.oas.annotations.Operation;

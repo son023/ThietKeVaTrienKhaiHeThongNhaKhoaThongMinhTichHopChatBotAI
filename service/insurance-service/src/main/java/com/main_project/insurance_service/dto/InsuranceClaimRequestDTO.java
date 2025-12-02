@@ -1,6 +1,7 @@
 package com.main_project.insurance_service.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,14 +18,14 @@ public class InsuranceClaimRequestDTO {
     private String status;
     
     private Integer patientPayAmount;
-    
+
     private Integer totalClaimAmount;
-    
+
     private Integer totalInsurancePay;
-    
+
     @NotNull(message = "Claim date is required")
     private ZonedDateTime claimDate;
-    
+
     private ZonedDateTime approvalDate;
     
     private String notes;

@@ -14,6 +14,7 @@ import java.util.UUID;
 public class PrescriptionCreatedEvent {
     private UUID prescriptionId;
     private UUID patientId;
+    private UUID doctorId;
     private UUID medicalHistoryId;
     private List<MedicineItem> items;
 }
