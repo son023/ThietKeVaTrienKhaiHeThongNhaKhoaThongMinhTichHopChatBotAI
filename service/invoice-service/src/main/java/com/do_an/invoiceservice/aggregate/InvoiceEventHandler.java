@@ -3,13 +3,18 @@ package com.do_an.invoiceservice.aggregate;
 import com.do_an.common.event.*;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.common.model.InvoiceItemResponse;
+import com.do_an.common.model.MedicalServiceDTO;
 import com.do_an.common.model.MedicineItem;
+import com.do_an.invoiceservice.dto.request.CreateInvoiceItemRequestDTO;
+import com.do_an.invoiceservice.dto.request.CreateInvoiceRequestDTO;
+import com.do_an.invoiceservice.dto.response.InvoiceResponseDTO;
 import com.do_an.invoiceservice.entity.Invoice;
 import com.do_an.invoiceservice.entity.InvoiceItem;
 import com.do_an.invoiceservice.exception.InvoiceNotFoundException;
 import com.do_an.invoiceservice.mapper.InvoiceItemMapper;
 import com.do_an.invoiceservice.repository.InvoiceItemRepository;
 import com.do_an.invoiceservice.repository.InvoiceRepository;
+import com.do_an.invoiceservice.service.InvoiceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +25,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage;
 
 
 @Component
@@ -34,6 +41,8 @@ public class InvoiceEventHandler {
     private final InvoiceItemMapper invoiceItemMapper;
 
     private final EventBus eventBus;
+
+    private final InvoiceService invoiceService;
 
 
     @EventHandler
@@ -202,5 +211,61 @@ public class InvoiceEventHandler {
         }
     }
 
+    @EventHandler
+    @Transactional
+    public void on(InvoiceCreateEvent event) {
+        try {
+            CreateInvoiceRequestDTO requestDTO = buildInvoiceRequest(event);
+            InvoiceResponseDTO invoiceResponse = invoiceService.createInvoice(requestDTO);
+
+            log.info("Invoice {} created successfully for appointment {}, publishing InvoicePersistedEvent",
+                    invoiceResponse.getId(), event.getAppointmentId());
+            eventBus.publish(asEventMessage(new InvoicePersistedEvent(
+                    event.getClinicalId(),
+                    event.getAppointmentId(),
+                    event.getPatientId(),
+                    event.getMedicalHistoryId(),
+                    invoiceResponse.getId()
+            )));
+
+        } catch (Exception e) {
+            log.error("Không thể tạo hóa đơn: {}", e.getMessage(), e);
+            eventBus.publish(asEventMessage(new InvoicePersistenceFailedEvent(
+                    event.getClinicalId(),
+                    event.getAppointmentId(),
+                    event.getPatientId(),
+                    event.getMedicalHistoryId(),
+                    event.getInvoiceId(),
+                    e.getMessage()
+            )));
+        }
+    }
+
+    private CreateInvoiceRequestDTO buildInvoiceRequest(InvoiceCreateEvent command) {
+        CreateInvoiceRequestDTO dto = new CreateInvoiceRequestDTO();
+        dto.setAppointmentId(command.getAppointmentId());
+        dto.setReceptionistId(command.getDoctorId());
+        dto.setCurrency("VND");
+        dto.setInsuranceTotalPay(0);
+        dto.setPatientTotalPay(0);
+        dto.setItems(command.getMedicalServices().stream()
+                .map(this::toInvoiceItem)
+                .toList());
+        log.debug("Invoice payload built with {} items for appointment {}", dto.getItems().size(), command.getAppointmentId());
+        return dto;
+    }
+
+    private CreateInvoiceItemRequestDTO toInvoiceItem(MedicalServiceDTO serviceDTO) {
+        CreateInvoiceItemRequestDTO item = new CreateInvoiceItemRequestDTO();
+        item.setReferenceId(serviceDTO.getId());
+        item.setServiceType(serviceDTO.getServiceType() != null ? serviceDTO.getServiceType() : "MEDICAL_SERVICE");
+        item.setQuantity(1);
+        item.setDescription(serviceDTO.getServiceName());
+        int unitPrice = serviceDTO.getPrice() == null ? 0 : Math.round(serviceDTO.getPrice());
+        item.setUnitPrice(unitPrice);
+        item.setInsurancePayAmount(0);
+        item.setPatientPayAmount(unitPrice);
+        return item;
+    }
 
 }

@@ -3,7 +3,7 @@ package com.do_an.invoiceservice.aggregate;
 
 import com.do_an.common.command.AddMedicineChargesCommand;
 import com.do_an.common.command.ApplyInsuranceDiscountCommand;
-
+import com.do_an.common.command.CreateInvoiceCommand;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.invoiceservice.entity.Invoice;
@@ -63,12 +63,6 @@ public class InvoiceCommandHandler {
                             invoiceCheckerRequest
                     ));
         } catch (org.axonframework.modelling.command.AggregateNotFoundException e) {
-            invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
-                    command.getPrescriptionId(),
-                    command.getInvoiceId(),
-                    command.getMedicineItems(),
-                    invoiceCheckerRequest
-            ));
         }
     }
 
@@ -97,4 +91,24 @@ public class InvoiceCommandHandler {
                 ));
     }
 
+    @CommandHandler
+    @Transactional
+    public void handle(CreateInvoiceCommand command) throws Exception {
+        log.info("CreateInvoiceCommand clinicalId={}, appointmentId={}, services={}",
+                command.getClinicalId(), command.getAppointmentId(), command.getMedicalServices() != null ? command.getMedicalServices().size() : 0);
+
+        if (command.getMedicalServices() == null || command.getMedicalServices().isEmpty()) {
+            throw new IllegalStateException("Không có dịch vụ y tế để tạo hóa đơn");
+        }
+
+        invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
+                command.getClinicalId(),
+                command.getInvoiceId(),
+                command.getAppointmentId(),
+                command.getPatientId(),
+                command.getMedicalHistoryId(),
+                command.getDoctorId(),
+                command.getMedicalServices()
+        ));
+    }
 }

@@ -13,6 +13,7 @@ import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
 import com.main_project.appointment_service.util.EntityDTOMapper;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.main_project.appointment_service.exceptions.enums.ErrorCode.APPINTMENT_IS_NOT_CHECKIN_YET;
+import static com.main_project.appointment_service.exceptions.enums.ErrorCode.APPOINTMENT_NOT_EXISTED;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AppointmentService implements IAppointmentService {
     private final UserServiceClient userServiceClient;
     private final AppointmentRepository appointmentRepository;
@@ -220,6 +225,23 @@ public class AppointmentService implements IAppointmentService {
         appointment.setStatus(status);
         appointment.setUpdatedAt(ZonedDateTime.now());
         appointmentRepository.save(appointment);
+        return mapper.toAppointmentDTO(appointment);
+    }
+
+    @Override
+    public AppointmentDTO startAppointment(UUID id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new AppException(APPOINTMENT_NOT_EXISTED));
+
+        log.info("[AppointmentService] Start appointment request id={}, currentStatus={}", id, appointment.getStatus());
+        if (appointment.getStatus() != AppointmentStatus.CHECKED) {
+            throw new AppException(APPINTMENT_IS_NOT_CHECKIN_YET);
+        }
+
+        appointment.setStatus(AppointmentStatus.CHECKED);
+        appointment.setUpdatedAt(ZonedDateTime.now());
+        appointmentRepository.save(appointment);
+        log.info("[AppointmentService] Appointment {} moved to IN_PROGRESS at {}", id, appointment.getUpdatedAt());
         return mapper.toAppointmentDTO(appointment);
     }
 

@@ -1,41 +1,97 @@
 package com.main_project.appointment_service.controller;
 
+import com.do_an.common.command.StartAppointmentCommand;
+import com.do_an.common.model.MedicalServiceDTO;
+import com.main_project.appointment_service.aggregate.CheckInAppointmentCommand;
 import com.main_project.appointment_service.dto.AppointmentDTO;
 import com.main_project.appointment_service.dto.AppointmentRequestDTO;
 import com.main_project.appointment_service.dto.HoldSlotRequestDTO;
 import com.main_project.appointment_service.enums.AppointmentStatus;
 import com.main_project.appointment_service.service.AppointmentService;
-
 import com.main_project.appointment_service.service.SlotService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.ws.rs.GET;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-
-import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
-
-import static org.springframework.http.HttpStatus.CREATED;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/appointment-service/appointments")
 @RequiredArgsConstructor
+@Slf4j
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
     private final SlotService slotService;
+    private final CommandGateway commandGateway;
+    private final QueryGateway queryGateway;
+
+    @PostMapping("/{id}/check-in")
+    @Operation(summary = "Patient checks in for the appointment, creating the initial aggregate")
+    public ResponseEntity<Void> checkInAppointment(@PathVariable UUID id) {
+        log.info("[AppointmentController] Patient requests check-in for appointment {}", id);
+
+        AppointmentDTO appointment = appointmentService.updateAppointmentStatus(id, AppointmentStatus.CHECKED);
+        CheckInAppointmentCommand command = new CheckInAppointmentCommand(appointment.getId());
+
+        commandGateway.send(command)
+                .whenComplete((result, error) -> {
+                    if (error != null) {
+                        log.error("[AppointmentController] CheckInAppointmentCommand failed for appointment {}: {}", appointment.getId(), error.getMessage(), error);
+                    } else {
+                        log.info("[AppointmentController] CheckInAppointmentCommand accepted for appointment {}", appointment.getId());
+                    }
+                });
+
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/{id}/start")
+    @Operation(summary = "Doctor starts the consultation for a checked-in appointment")
+    public ResponseEntity<Void> startConsultation(@PathVariable UUID id) {
+        log.info("[AppointmentController] Doctor requests to start consultation for appointment {}", id);
+        AppointmentDTO appointment = appointmentService.startAppointment(id);
+
+        UUID clinicalId = UUID.randomUUID();
+        List<MedicalServiceDTO> medicalServicePayload = appointment.getMedicalServices() == null
+                ? List.of()
+                : appointment.getMedicalServices().stream()
+                .map(this::toCommonMedicalServiceDTO)
+                .toList();
+        List<MedicalServiceDTO> serializedServices = new ArrayList<>(medicalServicePayload);
+
+        log.info("[AppointmentController] Dispatch StartAppointmentCommand appointmentId={}, clinicalId={}, patientId={}, doctorId={}, services={}",
+                appointment.getId(), clinicalId, appointment.getPatientId(), appointment.getDoctorId(), medicalServicePayload.size());
+        StartAppointmentCommand command = new StartAppointmentCommand(
+                appointment.getId(),
+                clinicalId,
+                appointment.getPatientId(),
+                appointment.getDoctorId(),
+                serializedServices
+        );
+
+        commandGateway.send(command);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+
+    }
 
     @PostMapping("/slots/hold")
     @Operation(summary = "Giữ slot trong 10 phút trước khi tạo lịch hẹn")
@@ -179,6 +235,23 @@ public class AppointmentController {
 
 
 
+    private MedicalServiceDTO toCommonMedicalServiceDTO(com.main_project.appointment_service.dto.MedicalServiceDTO serviceDTO) {
+        if (serviceDTO == null) {
+            return null;
+        }
+        MedicalServiceDTO dto = new MedicalServiceDTO();
+        dto.setId(serviceDTO.getId());
+        dto.setServiceName(serviceDTO.getServiceName());
+        dto.setServiceType(serviceDTO.getServiceType());
+        dto.setServiceTime(serviceDTO.getServiceTime());
+        dto.setStatus(serviceDTO.getStatus() != null
+                ? com.do_an.common.model.MedicalServiceStatus.valueOf(serviceDTO.getStatus().name())
+                : null);
+        dto.setPrice(serviceDTO.getPrice());
+        dto.setDescription(serviceDTO.getDescription());
+        dto.setImgUrl(serviceDTO.getImgUrl());
+        return dto;
+    }
 }
 
 

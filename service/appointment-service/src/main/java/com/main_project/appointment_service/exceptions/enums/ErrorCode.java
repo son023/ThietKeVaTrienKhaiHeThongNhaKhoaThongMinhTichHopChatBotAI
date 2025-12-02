@@ -16,8 +16,9 @@ public enum ErrorCode {
     UNAUTHORIZATION(1005, "Unauthorization", HttpStatus.FORBIDDEN),
     PHONEANDPASSWONULL(1006, "phone và password không được để trống", HttpStatus.BAD_REQUEST),
     LIST_MEDICAL_SERVICE_EMPTY(1007, "At least one medical service must be provided", HttpStatus.BAD_REQUEST),
-    INVALID_MEDICAL_SERVICE_ID(1008, "The provided medical service ID is invalid", HttpStatus.BAD_REQUEST);
-
+    INVALID_MEDICAL_SERVICE_ID(1008, "The provided medical service ID is invalid", HttpStatus.BAD_REQUEST),
+    APPOINTMENT_NOT_EXISTED(1009, "Appointment not existed", HttpStatus.BAD_REQUEST),
+    APPINTMENT_IS_NOT_CHECKIN_YET(1010, "Appointment is not checked-in yet", HttpStatus.BAD_REQUEST);
     private int code;
     private String message;
     private HttpStatusCode httpStatusCode;

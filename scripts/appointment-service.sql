@@ -30,7 +30,7 @@ CREATE TABLE public.appointment
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT appointment_status_check
-    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','PROGRESSING'))
+    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','IN_PROGRESS'))
 );
 
 CREATE TABLE public.appointment_medical_service
@@ -184,7 +184,7 @@ VALUES (
                '11111111-0000-0000-0000-000000000001',
                NOW() + INTERVAL '1 hour',
                NOW() + INTERVAL '1 hour 30 minutes',
-               'CONFIRMED'
+               'CHECKED'
            );
     -- Lịch hẹn 2: Đang chờ (PENDING)
     INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status)
@@ -194,7 +194,7 @@ VALUES (
         '22222222-0000-0000-0000-000000000002',
         NOW() + INTERVAL '3 days 10 hours',
         NOW() + INTERVAL '3 days 10 hours 45 minutes',
-        'PROGRESSING'
+        'IN_PROGRESS'
     );
 
 INSERT INTO public.appointment_medical_service (appointment_id, medical_service_id)
