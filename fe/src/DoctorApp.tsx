@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AdminApp from './AdminApp';
 import PharmacistApp from './PharmacistApp';
 import { ReceptionistApp } from './ReceptionistApp';
 import PatientApp from './PatientApp';
 import PublicApp from './App';
 import { Toaster } from './components/ui/sonner';
+import { authController, doctorController } from './controllers';
+import type { DoctorWithUser } from './controllers/DoctorController';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -27,6 +29,28 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedTreatmentPlanId, setSelectedTreatmentPlanId] = useState<string | null>(null);
+  const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
+  const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
+  const currentUser = authController.getCurrentUser();
+  const doctorId = currentUser?.id || null;
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      if (!doctorId) {
+        setIsLoadingDoctor(false);
+        return;
+      }
+      try {
+        const data = await doctorController.getWithUserById(doctorId);
+        setDoctor(data);
+      } catch (error) {
+        console.error('Failed to load doctor profile', error);
+      } finally {
+        setIsLoadingDoctor(false);
+      }
+    };
+    fetchDoctor();
+  }, [doctorId]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -36,7 +60,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
           setCurrentPage('patient-detail');
         }} />;
       case 'appointments':
-        return <MyAppointments onNavigateToPatient={(id) => {
+        return <MyAppointments doctorId={doctorId} onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
           setCurrentPage('patient-detail');
         }} />;
@@ -80,7 +104,12 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     <div className="flex h-screen bg-[#fcfeff]">
       <DoctorSidebar currentPage={currentPage} onNavigate={setCurrentPage} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <DoctorHeader onLogout={onLogout} onGoHome={onGoHome} />
+        <DoctorHeader
+          onLogout={onLogout}
+          onGoHome={onGoHome}
+          doctor={doctor || undefined}
+          isLoading={isLoadingDoctor}
+        />
         <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
           {renderPage()}
         </main>
