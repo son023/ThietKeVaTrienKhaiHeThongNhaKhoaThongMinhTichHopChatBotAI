@@ -25,6 +25,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
     private final EntityMapper mapper;
 
     @Override
+    @Deprecated
     public DoctorDegreeResponseDTO createDoctorDegree(DoctorDegreeRequestDTO request) {
         Doctor doctor = getDoctor(request.getDoctorId());
         DoctorDegree degree = mapper.toDoctorDegreeEntity(request, doctor);
@@ -58,6 +59,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
     }
 
     @Override
+    @Deprecated
     public DoctorDegreeResponseDTO updateDoctorDegree(UUID id, DoctorDegreeRequestDTO request) {
         DoctorDegree existing = doctorDegreeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Doctor degree not found for id " + id));
@@ -67,6 +69,7 @@ public class DoctorDegreeService implements IDoctorDegreeService {
     }
 
     @Override
+    @Deprecated
     public void deleteDoctorDegree(UUID id) {
         if (!doctorDegreeRepository.existsById(id)) {
             throw new EntityNotFoundException("Doctor degree not found for id " + id);

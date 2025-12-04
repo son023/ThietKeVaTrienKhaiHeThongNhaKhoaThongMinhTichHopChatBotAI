@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import com.main_project.doctor_service.enums.SpecializationCodeEnum;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -23,4 +25,6 @@ public class DoctorRequestDTO {
     private String licenseNumber;
 
     private Integer consultationFeeAmount;
+
+    private List<DoctorDegreeRequestDTO> degrees = new ArrayList<>();
 }

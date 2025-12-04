@@ -12,9 +12,8 @@ CREATE TABLE IF NOT EXISTS public.doctor
     user_id                 UUID NOT NULL,
     consultation_fee_amount INTEGER,
     license_number          VARCHAR(100),
-    specialization_code     VARCHAR(100),
+    specialization_code     VARCHAR(50) NOT NULL,
     working_hospital        VARCHAR(255),
-    specialization_codes    VARCHAR(50),
 
     -- Khóa chính
     CONSTRAINT doctor_pkey PRIMARY KEY (user_id)
@@ -42,24 +41,24 @@ CREATE TABLE IF NOT EXISTS public.work_schedule
 -- ---------------------------------------------------------------------
 -- Bảng 3: doctor_degree
 -- Lưu trữ thông tin bằng cấp của từng bác sĩ (Liên kết 1-n với doctor)
+-- Composition relationship: degrees are managed through doctor operations
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.doctor_degree
 (
     id            UUID NOT NULL,
     degree_name   VARCHAR(255),
     institution   VARCHAR(255),
-    user_id       UUID, -- Cột này có thể là UUID tham chiếu đến người dùng chung (nếu có)
     year_obtained INTEGER,
-    doctor_id     UUID, -- Khóa ngoại tham chiếu đến bảng doctor
+    doctor_id     UUID NOT NULL, -- Khóa ngoại tham chiếu đến bảng doctor
 
--- Khóa chính
+    -- Khóa chính
     CONSTRAINT doctor_degree_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại: Liên kết với bảng doctor
     CONSTRAINT fk_doctor_degree_doctor
-    FOREIGN KEY (doctor_id)
-    REFERENCES public.doctor (user_id)
-    ON DELETE CASCADE
+        FOREIGN KEY (doctor_id)
+        REFERENCES public.doctor (user_id)
+        ON DELETE CASCADE
 );
 
 ---
@@ -101,11 +100,6 @@ CREATE INDEX idx_dws_work_schedule_id ON public.doctor_work_schedule (work_sched
 -- -------------------------
 -- Bảng doctor
 -- -------------------------
-INSERT INTO public.doctor (user_id, consultation_fee_amount, license_number, specialization_code, working_hospital)
-VALUES
-('d903022a-1000-4001-8001-000000000002', 500000, 'LIC-001', 'CARDIO', 'Bệnh viện A'),
-('d903022a-1000-4001-8001-000000000007', 400000, 'LIC-002', 'DERM', 'Bệnh viện B');
-
 INSERT INTO public.doctor (
     user_id,
     consultation_fee_amount,
@@ -114,7 +108,7 @@ INSERT INTO public.doctor (
     specialization_code
 )
 VALUES
--- Doctor 1: 2 specialization codes
+-- Doctor 1
 (
     'd903022a-1000-4001-8001-000000000002',
     250000,
@@ -123,7 +117,7 @@ VALUES
     'GEN'
 ),
 
--- Doctor 2: 3 specialization codes
+-- Doctor 2
 (
     'd903022a-1000-4001-8001-000000000007',
     350000,
@@ -132,7 +126,7 @@ VALUES
     'ORTHO'
 ),
 
--- Doctor 3: 3 specialization codes
+-- Doctor 3
 (
     'd903022a-1000-4001-8001-000000000012',
     400000,
