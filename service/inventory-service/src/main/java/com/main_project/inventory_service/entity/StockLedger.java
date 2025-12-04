@@ -22,8 +22,6 @@ public class StockLedger {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(length = 255)
-    private String lot;
 
     @Column(length = 255)
     private String type; // 'IN', 'OUT', 'ADJUST'

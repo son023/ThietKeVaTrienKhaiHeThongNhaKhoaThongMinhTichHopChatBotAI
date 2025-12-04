@@ -50,7 +50,30 @@ public class InvoiceCommandHandler {
         Optional<Invoice> existingInvoice = invoiceRepository.findById(command.getInvoiceId());
 
 
-        if (existingInvoice.isPresent()) {
+//        if (existingInvoice.isPresent()) {
+//            Invoice invoice = existingInvoice.get();
+//
+//            if (!"DRAFT".equals(invoice.getStatus()) && !"PENDING".equals(invoice.getStatus())) {
+//                throw new IllegalStateException("Không thể thêm thuốc vào hóa đơn đang ở trạng thái: " + invoice.getStatus());
+//            }
+//
+//            invoiceAggregateRepository.load(command.getInvoiceId().toString())
+//                    .execute(aggregate -> aggregate.addMedicineCharges(
+//                            command.getPrescriptionId(),
+//                            command.getInvoiceId(),
+//                            command.getMedicineItems(),
+//                            invoiceCheckerRequest
+//                    ));
+//        } else {
+//            invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
+//                    command.getPrescriptionId(),
+//                    command.getInvoiceId(),
+//                    command.getMedicineItems(),
+//                    invoiceCheckerRequest
+//            ));
+//        }
+
+        try{
             Invoice invoice = existingInvoice.get();
 
             if (!"DRAFT".equals(invoice.getStatus()) && !"PENDING".equals(invoice.getStatus())) {
@@ -64,7 +87,7 @@ public class InvoiceCommandHandler {
                             command.getMedicineItems(),
                             invoiceCheckerRequest
                     ));
-        } else {
+        } catch (org.axonframework.modelling.command.AggregateNotFoundException e) {
             invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
                     command.getPrescriptionId(),
                     command.getInvoiceId(),

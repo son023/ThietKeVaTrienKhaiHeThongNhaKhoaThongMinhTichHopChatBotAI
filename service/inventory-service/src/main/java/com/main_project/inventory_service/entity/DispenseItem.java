@@ -21,7 +21,6 @@ public class DispenseItem {
 
     private Integer priceAtDispense;
 
-
     @Column(length = 100)
     private String dosage;
 
