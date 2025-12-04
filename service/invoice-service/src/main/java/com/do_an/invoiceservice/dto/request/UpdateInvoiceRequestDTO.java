@@ -18,7 +18,7 @@ public class UpdateInvoiceRequestDTO {
     private UUID appointmentId;
 
     @NotEmpty
-    private UUID currency;
+    private String currency;
 
     // Danh sách "ĐẦY ĐỦ" các item mà hóa đơn NÊN CÓ
     @Valid
