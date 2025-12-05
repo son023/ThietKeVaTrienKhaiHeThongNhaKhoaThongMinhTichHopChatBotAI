@@ -18,6 +18,9 @@ public class LabTest {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
+    @Column(name = "appointment_id", columnDefinition = "uuid")
+    private UUID appointmentId;
+
     @Column(name = "medical_history_id", columnDefinition = "uuid")
     private UUID medicalHistoryId;
 

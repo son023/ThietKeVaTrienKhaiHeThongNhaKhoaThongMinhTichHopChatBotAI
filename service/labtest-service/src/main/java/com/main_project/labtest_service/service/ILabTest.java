@@ -8,7 +8,11 @@ import java.util.UUID;
 
 public interface ILabTest {
     LabTestDTO createLabTest(LabTestRequestDTO requestDTO);
+    LabTestDTO requestLabTest(LabTestRequestDTO requestDTO);
     LabTestDTO updateLabTest(UUID id, LabTestRequestDTO requestDTO);
+    LabTestDTO acceptLabTest(UUID id);
+    LabTestDTO startLabTest(UUID id);
+    LabTestDTO completeLabTest(UUID id);
     void deleteLabTest(UUID id);
     LabTestDTO getLabTestById(UUID id);
     List<LabTestDTO> getAllLabTests();
