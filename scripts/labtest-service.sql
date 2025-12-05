@@ -18,7 +18,7 @@ CREATE TABLE lab_test_type (
 
 CREATE TABLE lab_test (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
+    appointment_id     UUID,
     medical_history_id UUID,
     doctor_id          UUID,
 
@@ -86,11 +86,12 @@ InsertTypeLiver AS (
 ,
 InsertLabTestBlood AS (
     INSERT INTO lab_test (
-        id, medical_history_id, doctor_id, lab_technician_id, lab_test_type_id,
+        id,appointment_id, medical_history_id, doctor_id, lab_technician_id, lab_test_type_id,
         price, status, result_date, instructions, units, structure_json, abnormal_flag, reference_range
     )
     SELECT
-        'b1c1d1e1-1f2f-3000-4444-555566667777', -- ID Phiếu XN 1 cố định
+        'b1c1d1e1-1f2f-3000-4444-555566667777',
+        '44444444-0000-0000-0000-000000000001',
         gen_random_uuid(), -- ID Lịch sử Y tế giả lập
         gen_random_uuid(), -- ID Bác sĩ giả lập
         (SELECT tech_id FROM InsertTechnician),

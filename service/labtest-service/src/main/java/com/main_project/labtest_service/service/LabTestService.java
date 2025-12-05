@@ -1,5 +1,9 @@
 package com.main_project.labtest_service.service;
 
+import com.main_project.labtest_service.aggregate.AcceptLabTestCommand;
+import com.main_project.labtest_service.aggregate.CompleteLabTestCommand;
+import com.main_project.labtest_service.aggregate.RequestLabTestCommand;
+import com.main_project.labtest_service.aggregate.StartLabTestCommand;
 import com.main_project.labtest_service.dto.LabTestDTO;
 import com.main_project.labtest_service.dto.LabTestRequestDTO;
 import com.main_project.labtest_service.entity.LabTechnician;
@@ -10,6 +14,7 @@ import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
 import lombok.RequiredArgsConstructor;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -22,6 +27,7 @@ public class LabTestService implements ILabTest{
     private final LabTechnicianRepository labTechnicianRepository;
     private final LabTestTypeRepository labTestTypeRepository;
     private final EntityDTOMapper mapper;
+    private final CommandGateway commandGateway;
 
     @Override
     public LabTestDTO createLabTest(LabTestRequestDTO requestDTO) {
@@ -68,6 +74,50 @@ public class LabTestService implements ILabTest{
         return mapper.toLabTestDTO(existing);
     }
 
+
+    @Override
+    public LabTestDTO requestLabTest(LabTestRequestDTO dto) {
+        UUID labTestId = UUID.randomUUID();
+        RequestLabTestCommand cmd = new RequestLabTestCommand(
+                labTestId,
+                dto.getAppointmentId(),
+                dto.getMedicalHistoryId(),
+                dto.getDoctorId(),
+                dto.getLabTechnicianId(),
+                dto.getLabTestTypeId(),
+                dto.getPrice(),
+                dto.getInstructions()
+        );
+        commandGateway.send(cmd);
+        LabTestDTO res = new LabTestDTO();
+        res.setId(labTestId);
+        res.setAppointmentId(dto.getAppointmentId());
+        res.setMedicalHistoryId(dto.getMedicalHistoryId());
+        res.setDoctorId(dto.getDoctorId());
+        res.setPrice(dto.getPrice());
+        res.setInstructions(dto.getInstructions());
+        res.setStatus("REQUEST");
+        return res;
+    }
+
+    @Override
+    public LabTestDTO acceptLabTest(UUID id) {
+        commandGateway.sendAndWait(new AcceptLabTestCommand(id));
+        return mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+    }
+
+    @Override
+    public LabTestDTO startLabTest(UUID id) {
+        commandGateway.sendAndWait(new StartLabTestCommand(id));
+        return mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+    }
+
+    @Override
+    public LabTestDTO completeLabTest(UUID id) {
+        LabTestDTO labTestDTO = mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+        commandGateway.sendAndWait(new CompleteLabTestCommand(id, labTestDTO.getAppointmentId(), labTestDTO.getPrice()));
+        return labTestDTO;
+    }
     @Override
     public void deleteLabTest(UUID id) {
         if (!labTestRepository.existsById(id))

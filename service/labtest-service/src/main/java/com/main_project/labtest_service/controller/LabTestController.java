@@ -17,9 +17,9 @@ public class LabTestController {
 
     private final LabTestService labTestService;
 
-    @PostMapping
-    public ResponseEntity<LabTestDTO> createLabTest(@RequestBody LabTestRequestDTO dto) {
-        return ResponseEntity.ok(labTestService.createLabTest(dto));
+    @PostMapping("/request")
+    public ResponseEntity<LabTestDTO> requestLabTest(@RequestBody LabTestRequestDTO dto) {
+        return ResponseEntity.ok(labTestService.requestLabTest(dto));
     }
 
     @PutMapping("/{id}")
@@ -56,5 +56,20 @@ public class LabTestController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<LabTestDTO>> getByStatus(@PathVariable String status) {
         return ResponseEntity.ok(labTestService.getLabTestsByStatus(status));
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<LabTestDTO> acceptLabTest(@PathVariable UUID id) {
+        return ResponseEntity.ok(labTestService.acceptLabTest(id));
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<LabTestDTO> startLabTest(@PathVariable UUID id) {
+        return ResponseEntity.ok(labTestService.startLabTest(id));
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<LabTestDTO> completeLabTest(@PathVariable UUID id) {
+        return ResponseEntity.ok(labTestService.completeLabTest(id));
     }
 }

@@ -22,6 +22,7 @@ public class EntityDTOMapper {
 
         LabTestDTO dto = new LabTestDTO();
         dto.setId(entity.getId());
+        dto.setAppointmentId(entity.getAppointmentId());
         dto.setMedicalHistoryId(entity.getMedicalHistoryId());
         if (entity.getLabTechnician() != null) {
             dto.setLabTechnicianId(entity.getLabTechnician().getUserId());
@@ -59,6 +60,7 @@ public class EntityDTOMapper {
         if (requestDTO == null) return null;
 
         LabTest entity = new LabTest();
+        entity.setAppointmentId(requestDTO.getAppointmentId());
         entity.setMedicalHistoryId(requestDTO.getMedicalHistoryId());
         entity.setDoctorId(requestDTO.getDoctorId());
         entity.setPrice(requestDTO.getPrice());

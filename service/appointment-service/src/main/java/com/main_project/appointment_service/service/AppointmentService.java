@@ -238,7 +238,7 @@ public class AppointmentService implements IAppointmentService {
             throw new AppException(APPINTMENT_IS_NOT_CHECKIN_YET);
         }
 
-        appointment.setStatus(AppointmentStatus.CHECKED);
+        appointment.setStatus(AppointmentStatus.IN_PROGRESS);
         appointment.setUpdatedAt(ZonedDateTime.now());
         appointmentRepository.save(appointment);
         log.info("[AppointmentService] Appointment {} moved to IN_PROGRESS at {}", id, appointment.getUpdatedAt());
