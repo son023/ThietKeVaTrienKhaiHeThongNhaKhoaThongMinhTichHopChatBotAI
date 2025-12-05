@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.doctor
     license_number          VARCHAR(100),
     specialization_code     VARCHAR(100),
     working_hospital        VARCHAR(255),
-    specialization_codes    JSONB,
+    specialization_codes    VARCHAR(50),
 
     -- Khóa chính
     CONSTRAINT doctor_pkey PRIMARY KEY (user_id)
@@ -110,9 +110,8 @@ INSERT INTO public.doctor (
     user_id,
     consultation_fee_amount,
     license_number,
-    specialization_code,
     working_hospital,
-    specialization_codes
+    specialization_code
 )
 VALUES
 -- Doctor 1: 2 specialization codes
@@ -120,9 +119,8 @@ VALUES
     'd903022a-1000-4001-8001-000000000002',
     250000,
     'LIC-20240011',
-    'GEN',
     'Nha Khoa Sunshine',
-    '["GEN", "ENDO"]'::jsonb
+    'GEN'
 ),
 
 -- Doctor 2: 3 specialization codes
@@ -130,9 +128,8 @@ VALUES
     'd903022a-1000-4001-8001-000000000007',
     350000,
     'LIC-20240012',
-    'ORTHO',
     'Bệnh viện Răng Hàm Mặt Trung Ương',
-    '["ORTHO", "PEDO", "PROSTH"]'::jsonb
+    'ORTHO'
 ),
 
 -- Doctor 3: 3 specialization codes
@@ -140,9 +137,8 @@ VALUES
     'd903022a-1000-4001-8001-000000000012',
     400000,
     'LIC-20240013',
-    'IMPL',
     'Nha Khoa Paris',
-    '["IMPL", "PROSTH", "PERIO"]'::jsonb
+    'IMPL'
 );
 
 
@@ -158,11 +154,6 @@ VALUES
 -- -------------------------
 -- Bảng doctor_degree
 -- -------------------------
-INSERT INTO public.doctor_degree (id, degree_name, institution, year_obtained, doctor_id)
-VALUES
-('22222222-0000-0000-0000-000000000001', 'Bác sĩ Đa khoa', 'ĐH Y Hà Nội', 2015, 'd903022a-1000-4001-8001-000000000002'),
-('22222222-0000-0000-0000-000000000002', 'Bác sĩ Da liễu', 'ĐH Y Hà Nội', 2018, 'd903022a-1000-4001-8001-000000000007');
-
 INSERT INTO public.doctor_degree (
     id,
     degree_name,

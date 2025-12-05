@@ -180,7 +180,7 @@ VALUES (
     INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status)
     VALUES (
                '44444444-0000-0000-0000-000000000001', -- ID Lịch hẹn 1
-               '99999999-0000-0000-0000-000000000001',
+               '99999999-0000-0000-0000-000000000012',
                '11111111-0000-0000-0000-000000000001',
                NOW() + INTERVAL '1 hour',
                NOW() + INTERVAL '1 hour 30 minutes',
@@ -190,7 +190,7 @@ VALUES (
     INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status)
     VALUES (
         '44444444-0000-0000-0000-000000000002', -- ID Lịch hẹn 2
-        '99999999-0000-0000-0000-000000000002',
+        '99999999-0000-0000-0000-000000000012',
         '22222222-0000-0000-0000-000000000002',
         NOW() + INTERVAL '3 days 10 hours',
         NOW() + INTERVAL '3 days 10 hours 45 minutes',

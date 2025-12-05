@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Button } from '../ui/button';
-import { Calendar, Award, Briefcase, GraduationCap, Star, Clock } from 'lucide-react';
+import { Calendar, Award, Briefcase, GraduationCap, Clock, Star } from 'lucide-react';
+import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
+import { doctorDegreeController, DoctorDegreeDTO } from '../../controllers/DoctorDegreeController';
 
 interface DoctorDetailProps {
   doctorId: string;
@@ -46,8 +49,69 @@ const mockDoctorDetails = {
   // Add more doctor details as needed
 };
 
+const SPECIALIZATION_MAP: Record<string, string> = {
+  GEN: 'Nha khoa tổng quát',
+  ENDO: 'Nội nha',
+  ORTHO: 'Chỉnh nha',
+  PERIO: 'Nha chu',
+  PROSTH: 'Phục hình răng',
+  IMPL: 'Cấy ghép Implant',
+  OMFS: 'Phẫu thuật hàm mặt',
+  PEDO: 'Nha khoa trẻ em',
+  COS: 'Thẩm mỹ',
+  OMDIAG: 'Răng miệng tổng quát',
+  RAD: 'Chẩn đoán hình ảnh',
+};
+
+const doctorPlaceholder =
+  'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=800&q=80';
+
 export function DoctorDetail({ doctorId, onBack, onBooking }: DoctorDetailProps) {
-  const doctor = mockDoctorDetails[doctorId as keyof typeof mockDoctorDetails] || mockDoctorDetails['1'];
+  const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
+  const [degrees, setDegrees] = useState<DoctorDegreeDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      doctorController.getWithUserById(doctorId),
+      doctorDegreeController.getByDoctor(doctorId).catch(() => []),
+    ])
+      .then(([doctorRes, degreeRes]) => {
+        setDoctor(doctorRes);
+        setDegrees(degreeRes);
+        setError(null);
+      })
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : 'Không tải được bác sĩ')
+      )
+      .finally(() => setLoading(false));
+  }, [doctorId]);
+
+  const getSpecialtyLabel = () => {
+    const code = doctor?.specializationCodes?.[0] || '';
+    return SPECIALIZATION_MAP[code] || doctor?.workingHospital || 'Nha khoa tổng quát';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fcfeff] pt-[104px] flex items-center justify-center">
+        <p className="text-[#666]">Đang tải thông tin bác sĩ...</p>
+      </div>
+    );
+  }
+
+  if (error || !doctor) {
+    return (
+      <div className="min-h-screen bg-[#fcfeff] pt-[104px] flex flex-col items-center justify-center space-y-4">
+        <p className="text-red-500">{error || 'Không tìm thấy bác sĩ'}</p>
+        <Button onClick={onBack}>Quay lại</Button>
+      </div>
+    );
+  }
+
+  const doctorName = doctor.user?.fullName || 'Bác sĩ';
 
   return (
     <div className="min-h-screen bg-[#fcfeff] pt-[104px]">
@@ -70,25 +134,25 @@ export function DoctorDetail({ doctorId, onBack, onBooking }: DoctorDetailProps)
             <div className="bg-gradient-to-r from-[#ebf6fc] to-[#d6edfa] rounded-[24px] p-[40px] flex gap-[30px]">
               <div className="w-[200px] h-[200px] rounded-[20px] overflow-hidden flex-shrink-0">
                 <ImageWithFallback
-                  src={doctor.image}
-                  alt={doctor.name}
+                  src={doctor.user?.imageUrl || doctorPlaceholder}
+                  alt={doctorName}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 space-y-[16px]">
                 <div>
                   <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[36px] tracking-[0.5px]">
-                    {doctor.name}
+                    {doctorName}
                   </h1>
                   <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#3fb5ff] text-[20px] tracking-[0.5px]">
-                    {doctor.specialty}
+                    {getSpecialtyLabel()}
                   </p>
                 </div>
                 <div className="flex items-center gap-[20px]">
                   <div className="flex items-center gap-[8px]">
                     <Briefcase className="w-[20px] h-[20px] text-[#666666]" />
                     <span className="font-['Fz_Poppins:Regular',sans-serif] text-[#333333] text-[16px]">
-                      {doctor.experience}
+                      {doctor.workingHospital || 'Cơ sở khám chữa bệnh'}
                     </span>
                   </div>
                   <div className="flex items-center gap-[8px]">

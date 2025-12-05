@@ -6,10 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.main_project.doctor_service.enums.SpecializationEnum;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import org.hibernate.annotations.Type;
-
+import com.main_project.doctor_service.enums.SpecializationCodeEnum;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,9 +24,9 @@ public class Doctor {
     @Column(name = "user_id", length = 50, nullable = false)
     private UUID userId;
 
-    @Type(JsonBinaryType.class)
-    @Column(name = "specialization_codes", columnDefinition = "jsonb")
-    private List<SpecializationEnum> specializationCodes;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "specialization_code", length = 50, nullable = false)
+    private SpecializationCodeEnum specializationCode;
 
     @Column(name = "working_hospital", length = 255)
     private String workingHospital;
