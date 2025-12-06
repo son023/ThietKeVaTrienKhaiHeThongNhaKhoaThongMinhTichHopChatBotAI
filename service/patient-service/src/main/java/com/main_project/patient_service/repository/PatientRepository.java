@@ -1,10 +1,14 @@
 package com.main_project.patient_service.repository;
 
 import com.main_project.patient_service.entity.Patient;
+import com.main_project.patient_service.enums.BloodType;
+import com.main_project.patient_service.enums.Gender;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,9 +31,25 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
            "LEFT JOIN FETCH p.underlyingDiseases " +
            "LEFT JOIN FETCH p.toothIssues " +
            "WHERE p.id = :id")
-    Optional<Patient> findByIdWithDetails(UUID id);
+    Optional<Patient> findByIdWithDetails(@Param("id") UUID id);
 
-    // Query methods for filtering
-    @Query("SELECT p FROM Patient p WHERE LOWER(p.gender) = LOWER(:gender)")
-    java.util.List<Patient> findByGenderIgnoreCase(String gender);
+    /**
+     * Find all patients by gender
+     */
+    List<Patient> findByGender(Gender gender);
+
+    /**
+     * Find all patients by blood type
+     */
+    List<Patient> findByBloodType(BloodType bloodType);
+
+    /**
+     * Find patients by contact phone
+     */
+    Optional<Patient> findByContactPhone(String contactPhone);
+
+    /**
+     * Find patients by insurance number
+     */
+    Optional<Patient> findByInsuranceNumber(String insuranceNumber);
 }

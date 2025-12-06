@@ -1,13 +1,14 @@
 package com.main_project.patient_service.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,7 +16,7 @@ import java.util.UUID;
 /**
  * PatientRequestDTO - Request DTO for creating/updating Patient
  *
- * Contains patient basic info and all child entity lists
+ * Contains patient basic info and all child entity lists following the new schema design
  */
 @Data
 @Builder
@@ -24,36 +25,45 @@ import java.util.UUID;
 public class PatientRequestDTO {
 
     /**
-     * Patient ID (required for creation)
+     * Patient ID (required for creation - references Identity Service)
      */
-    @NotNull(message = "Patient ID is required")
+    @NotNull(message = "Patient ID (user_id) is required")
     private UUID id;
 
     /**
-     * Patient full name (required)
+     * Date of birth (must be in the past)
      */
-    @NotBlank(message = "Name is required")
-    private String name;
-
-    /**
-     * Date of birth
-     */
-    private LocalDate dob;
+    @Past(message = "Date of birth must be in the past")
+    private ZonedDateTime dob;
 
     /**
      * Gender (e.g., "MALE", "FEMALE", "OTHER")
      */
+    @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
     private String gender;
+
+    /**
+     * Patient address (free text)
+     */
+    private String address;
 
     /**
      * Contact phone number
      */
-    private String phone;
+    @Pattern(regexp = "^[0-9+\\-\\s()]*$", message = "Invalid phone number format")
+    private String contactPhone;
 
     /**
-     * Medical history notes
+     * Blood type (e.g., "A_POSITIVE", "O_NEGATIVE", etc.)
      */
-    private String medicalHistoryNote;
+    @Pattern(regexp = "A_POSITIVE|A_NEGATIVE|B_POSITIVE|B_NEGATIVE|AB_POSITIVE|AB_NEGATIVE|O_POSITIVE|O_NEGATIVE|UNKNOWN",
+            message = "Invalid blood type")
+    private String bloodType;
+
+    /**
+     * Insurance number
+     */
+    private String insuranceNumber;
 
     /**
      * List of patient allergies (managed through aggregate)

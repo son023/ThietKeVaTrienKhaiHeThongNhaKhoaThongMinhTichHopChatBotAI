@@ -1,16 +1,18 @@
 DROP TABLE IF EXISTS public.patient_allergy CASCADE;
+DROP TABLE IF EXISTS public.tooth_issue CASCADE;
+DROP TABLE IF EXISTS public.underlying_disease CASCADE;
 DROP TABLE IF EXISTS public.allergy CASCADE;
 DROP TABLE IF EXISTS public.medical_history CASCADE;
 DROP TABLE IF EXISTS public.patient CASCADE;
 
 CREATE TABLE IF NOT EXISTS public.patient
 (
-    user_id          UUID        NOT NULL, -- ĐÃ THAY ĐỔI: varchar(50) -> UUID
-    address          TEXT,
-    blood_type       VARCHAR(10),
-    contact_phone    VARCHAR(50),
-    dob              DATE,
+    user_id          UUID NOT NULL,
+    dob              TIMESTAMP WITH TIME ZONE,
     gender           VARCHAR(50),
+    address          TEXT,
+    contact_phone    VARCHAR(50),
+    blood_type       VARCHAR(10),
     insurance_number VARCHAR(100),
 
     CONSTRAINT patient_pkey PRIMARY KEY (user_id)
@@ -19,8 +21,65 @@ CREATE TABLE IF NOT EXISTS public.patient
 ---
 
 -- ---------------------------------------------------------------------
--- Bảng 2: medical_history (Hồ sơ bệnh án)
+-- Bảng 2: tooth_issue (Vấn đề răng miệng)
+-- Child entity of Patient aggregate - managed through Patient only
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.tooth_issue
+(
+    id             UUID NOT NULL,
+    tooth_number   INTEGER NOT NULL,
+    status         VARCHAR(50),       -- e.g., "ACTIVE", "TREATED", "PENDING"
+    description    TEXT,               -- e.g., "Cavity", "Root canal needed"
+    diagnosed_date DATE,
+    note           TEXT,
+    patient_id     UUID NOT NULL,      -- Khóa ngoại tham chiếu đến patient
+
+    CONSTRAINT tooth_issue_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại: Liên kết với bảng patient
+    CONSTRAINT fk_tooth_issue_patient
+        FOREIGN KEY (patient_id)
+        REFERENCES public.patient (user_id)
+        ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Thêm Index
+-- ---------------------------------------------------------------------
+CREATE INDEX idx_tooth_issue_patient_id ON public.tooth_issue (patient_id);
+
+-- ---------------------------------------------------------------------
+-- Bảng 3: underlying_disease (Bệnh nền)
+-- Child entity of Patient aggregate - managed through Patient only
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.underlying_disease
+(
+    id          UUID         NOT NULL,
+    name        VARCHAR(255) NOT NULL,  -- e.g., "Diabetes Type 2", "Hypertension"
+    status      VARCHAR(50),            -- e.g., "ACTIVE", "CONTROLLED", "RESOLVED"
+    severity    VARCHAR(50),            -- e.g., "MILD", "MODERATE", "SEVERE"
+    is_verified BOOLEAN,                -- Whether clinically verified
+    note        TEXT,
+    patient_id  UUID NOT NULL,          -- Khóa ngoại tham chiếu đến patient
+
+    CONSTRAINT underlying_disease_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại: Liên kết với bảng patient
+    CONSTRAINT fk_underlying_disease_patient
+        FOREIGN KEY (patient_id)
+        REFERENCES public.patient (user_id)
+        ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- Thêm Index
+-- ---------------------------------------------------------------------
+CREATE INDEX idx_underlying_disease_patient_id ON public.underlying_disease (patient_id);
+
+-- ---------------------------------------------------------------------
+-- Bảng 4: medical_history (Hồ sơ bệnh án)
 -- Composition relationship: medical history is managed through patient operations
+-- Kept for backward compatibility
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.medical_history
 (
@@ -49,7 +108,7 @@ CREATE TABLE IF NOT EXISTS public.medical_history
 CREATE INDEX idx_medical_history_patient_id ON public.medical_history (patient_profile_id);
 
 -- ---------------------------------------------------------------------
--- Bảng 3: allergy (Danh mục dị ứng - Master Data)
+-- Bảng 5: allergy (Danh mục dị ứng - Master Data)
 -- Independent catalog of allergens
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.allergy
@@ -63,7 +122,7 @@ CREATE TABLE IF NOT EXISTS public.allergy
 );
 
 -- ---------------------------------------------------------------------
--- Bảng 4: patient_allergy (Liên kết bệnh nhân và dị ứng)
+-- Bảng 6: patient_allergy (Liên kết bệnh nhân và dị ứng)
 -- Join table with additional fields (severity, reaction, note)
 -- Part of Patient aggregate
 -- ---------------------------------------------------------------------
@@ -102,28 +161,28 @@ CREATE INDEX idx_patient_allergy_allergy_id ON public.patient_allergy (allergy_i
 -- -------------------------
 WITH InsertPatient AS (
     -- 1. Tạo dữ liệu cho Bảng PATIENT (Bệnh nhân 1)
-    INSERT INTO public.patient (user_id, address, blood_type, contact_phone, dob, gender, insurance_number)
+    INSERT INTO public.patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number)
     VALUES (
         'd903022a-1000-4001-8001-000000000003',
+        '1990-05-15T00:00:00+07:00'::TIMESTAMP WITH TIME ZONE,
+        'MALE',
         '123 Đường Nguyễn Huệ, Quận 1, TP. HCM',
-        'A+',
         '0901234567',
-        '1990-05-15',
-        'Nam',
+        'A_POSITIVE',
         'BHXH-900515'
     )
     RETURNING user_id AS patient_id, NOW() AS current_ts
 ),
 InsertPatient2 AS (
     -- 2. Tạo dữ liệu cho Bảng PATIENT (Bệnh nhân 2)
-    INSERT INTO public.patient (user_id, address, blood_type, contact_phone, dob, gender, insurance_number)
+    INSERT INTO public.patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number)
     VALUES (
         'd903022a-1000-4001-8001-000000000008',
+        '1985-11-20T00:00:00+07:00'::TIMESTAMP WITH TIME ZONE,
+        'FEMALE',
         '456 Đường Lê Lợi, Quận 3, TP. HCM',
-        'B-',
         '0987654321',
-        '1985-11-20',
-        'Nữ',
+        'B_NEGATIVE',
         'BHXH-851120'
     )
     RETURNING user_id AS patient_id_2, NOW() AS current_ts_2
@@ -161,6 +220,30 @@ SELECT
     t2.current_ts_2 - INTERVAL '1 month',
     t2.patient_id_2
 FROM InsertPatient2 t2;
+
+-- -------------------------
+-- Insert sample data for tooth_issue
+-- -------------------------
+-- Patient 1 has tooth issues
+INSERT INTO public.tooth_issue (id, tooth_number, status, description, diagnosed_date, note, patient_id) VALUES
+    (gen_random_uuid(), 18, 'ACTIVE', 'Cavity on upper right molar', '2024-10-15', 'Requires filling treatment', 'd903022a-1000-4001-8001-000000000003'),
+    (gen_random_uuid(), 25, 'TREATED', 'Root canal completed', '2024-08-20', 'Follow-up checkup needed in 6 months', 'd903022a-1000-4001-8001-000000000003');
+
+-- Patient 2 has tooth issues
+INSERT INTO public.tooth_issue (id, tooth_number, status, description, diagnosed_date, note, patient_id) VALUES
+    (gen_random_uuid(), 14, 'PENDING', 'Wisdom tooth extraction needed', '2024-11-01', 'Scheduled for next month', 'd903022a-1000-4001-8001-000000000008');
+
+-- -------------------------
+-- Insert sample data for underlying_disease
+-- -------------------------
+-- Patient 1 has underlying diseases
+INSERT INTO public.underlying_disease (id, name, status, severity, is_verified, note, patient_id) VALUES
+    (gen_random_uuid(), 'Diabetes Type 2', 'CONTROLLED', 'MODERATE', true, 'Requires regular blood sugar monitoring', 'd903022a-1000-4001-8001-000000000003'),
+    (gen_random_uuid(), 'Hypertension', 'ACTIVE', 'MILD', true, 'Taking medication daily', 'd903022a-1000-4001-8001-000000000003');
+
+-- Patient 2 has underlying diseases
+INSERT INTO public.underlying_disease (id, name, status, severity, is_verified, note, patient_id) VALUES
+    (gen_random_uuid(), 'Asthma', 'CONTROLLED', 'MODERATE', true, 'Has rescue inhaler', 'd903022a-1000-4001-8001-000000000008');
 
 -- -------------------------
 -- Insert sample data for allergy (master data)

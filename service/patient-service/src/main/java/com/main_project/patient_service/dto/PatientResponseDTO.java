@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
  * PatientResponseDTO - Response DTO for Patient
  *
- * Contains patient basic info and all child entity lists for display
+ * Contains patient basic info and all child entity lists for display following the new schema
  */
 @Data
 @Builder
@@ -22,34 +22,39 @@ import java.util.UUID;
 public class PatientResponseDTO {
 
     /**
-     * Patient ID
+     * Patient ID (user_id from Identity Service)
      */
     private UUID id;
 
     /**
-     * Patient full name
-     */
-    private String name;
-
-    /**
      * Date of birth
      */
-    private LocalDate dob;
+    private ZonedDateTime dob;
 
     /**
-     * Gender
+     * Gender (MALE, FEMALE, OTHER)
      */
     private String gender;
 
     /**
-     * Contact phone number
+     * Patient address
      */
-    private String phone;
+    private String address;
 
     /**
-     * Medical history notes
+     * Contact phone number
      */
-    private String medicalHistoryNote;
+    private String contactPhone;
+
+    /**
+     * Blood type (e.g., A+, O-, AB+, etc.)
+     */
+    private String bloodType;
+
+    /**
+     * Insurance number
+     */
+    private String insuranceNumber;
 
     /**
      * List of patient allergies with allergy details
