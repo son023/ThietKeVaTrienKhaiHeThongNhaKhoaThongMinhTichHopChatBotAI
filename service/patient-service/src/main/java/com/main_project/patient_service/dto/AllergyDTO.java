@@ -25,12 +25,6 @@ public class AllergyDTO {
     private UUID id;
 
     /**
-     * Unique allergy code (required)
-     */
-    @NotBlank(message = "Allergy code is required")
-    private String code;
-
-    /**
      * Allergy name (required)
      */
     @NotBlank(message = "Allergy name is required")

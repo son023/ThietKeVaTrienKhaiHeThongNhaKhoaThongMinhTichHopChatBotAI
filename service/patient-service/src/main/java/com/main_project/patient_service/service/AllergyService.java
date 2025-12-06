@@ -27,7 +27,6 @@ public class AllergyService implements IAllergyService {
     @Override
     public AllergyDTO createAllergy(AllergyDTO dto) {
         Allergy allergy = Allergy.builder()
-                .code(dto.getCode())
                 .name(dto.getName())
                 .type(dto.getType())
                 .description(dto.getDescription())
@@ -42,7 +41,6 @@ public class AllergyService implements IAllergyService {
         Allergy allergy = allergyRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Allergy not found with id: " + id));
 
-        allergy.setCode(dto.getCode());
         allergy.setName(dto.getName());
         allergy.setType(dto.getType());
         allergy.setDescription(dto.getDescription());
@@ -81,7 +79,6 @@ public class AllergyService implements IAllergyService {
     private AllergyDTO mapToDTO(Allergy allergy) {
         return AllergyDTO.builder()
                 .id(allergy.getId())
-                .code(allergy.getCode())
                 .name(allergy.getName())
                 .type(allergy.getType())
                 .description(allergy.getDescription())

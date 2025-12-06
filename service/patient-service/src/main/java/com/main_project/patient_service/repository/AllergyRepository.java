@@ -15,6 +15,5 @@ import java.util.UUID;
  */
 @Repository
 public interface AllergyRepository extends JpaRepository<Allergy, UUID> {
-    Optional<Allergy> findByCode(String code);
     Optional<Allergy> findByName(String name);
 }

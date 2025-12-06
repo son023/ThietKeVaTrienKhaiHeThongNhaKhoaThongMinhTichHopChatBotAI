@@ -28,9 +28,6 @@ public class Allergy {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "code", length = 50, nullable = false, unique = true)
-    private String code;
-
     @Column(name = "name", length = 255, nullable = false)
     private String name;
 

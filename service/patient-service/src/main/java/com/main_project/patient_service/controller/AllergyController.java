@@ -33,7 +33,7 @@ public class AllergyController {
      *
      * Creates a new allergy entry that can be referenced by patients.
      *
-     * @param dto allergy data (code, name, type, description)
+     * @param dto allergy data (name, type, description)
      * @return 201 CREATED with allergy details
      */
     @PostMapping
