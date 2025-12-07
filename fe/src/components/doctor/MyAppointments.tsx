@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Calendar, Clock, Phone, Search, User } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -8,10 +8,10 @@ import {
   appointmentController,
   AppointmentDTO,
 } from "../../controllers/AppointmentController";
-import {
-  patientController,
-  PatientWithUser,
-} from "../../controllers/PatientController";
+import { patientController } from "../../controllers/PatientController";
+import { PatientWithUser } from "../../models/Patient";
+import { connectWebSocket, subscribeToAppointmentRollback } from "../../services/websocketService";
+import { toast } from "sonner";
 
 interface MyAppointmentsProps {
   doctorId?: string | null;
@@ -19,24 +19,36 @@ interface MyAppointmentsProps {
 }
 
 const statusMap: Record<string, { label: string; style: string }> = {
-  pending: {
-    label: "Cho xac nhan",
+  PENDING: {
+    label: "Chờ xác nhận",
     style: "bg-yellow-100 text-yellow-800 border-yellow-300",
   },
-  confirmed: {
-    label: "Da xac nhan",
+  CONFIRMED: {
+    label: "Đã xác nhận",
     style: "bg-green-100 text-green-800 border-green-300",
   },
-  completed: {
-    label: "Da hoan thanh",
+  CHECKED: {
+    label: "Đã check-in",
+    style: "bg-purple-100 text-purple-800 border-purple-300",
+  },
+  IN_PROGRESS: {
+    label: "Đang khám",
     style: "bg-blue-100 text-blue-800 border-blue-300",
   },
-  cancelled: {
-    label: "Da huy",
+  PROGRESSING: {
+    label: "Đang khám",
+    style: "bg-blue-100 text-blue-800 border-blue-300",
+  },
+  COMPLETED: {
+    label: "Đã hoàn thành",
+    style: "bg-gray-100 text-gray-800 border-gray-300",
+  },
+  CANCELLED: {
+    label: "Đã hủy",
     style: "bg-red-100 text-red-800 border-red-300",
   },
-  "no-show": {
-    label: "Khong den",
+  FAILED: {
+    label: "Không đến",
     style: "bg-gray-100 text-gray-800 border-gray-300",
   },
 };
@@ -52,6 +64,8 @@ export function MyAppointments({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const loadAppointments = async () => {
@@ -86,8 +100,11 @@ export function MyAppointments({
         );
 
         const map: Record<string, PatientWithUser> = {};
-        patients.forEach((p) => {
-          if (p) map[p.userId] = p;
+        patients.forEach((p, index) => {
+          if (p) {
+            const pid = patientIds[index];
+            if (pid) map[pid] = p;
+          }
         });
         setPatientMap(map);
       } catch (err) {
@@ -100,6 +117,13 @@ export function MyAppointments({
     };
 
     loadAppointments();
+    
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
   }, [doctorId]);
 
   const filteredAppointments = useMemo(() => {
@@ -140,6 +164,77 @@ export function MyAppointments({
   const renderStatus = (status: string) => {
     const meta = statusMap[status] || statusMap["pending"];
     return <Badge className={meta.style}>{meta.label}</Badge>;
+  };
+
+  const isCheckedIn = (status: string) => {
+    return status === "checked_in" || status === "CHECKED";
+  };
+
+  const isInProgress = (status: string) => {
+    return status === "in_progress" || status === "IN_PROGRESS" || status === "PROGRESSING";
+  };
+
+  const isViewOnly = (status: string) => {
+    return (
+      status === "COMPLETED" ||
+      status === "CANCELLED" ||
+      status === "FAILED"
+    );
+  };
+
+  const handleStartExamination = async (appointmentId: string, patientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      setProcessingId(appointmentId);
+
+      console.log(`[MyAppointments] Starting examination for appointment: ${appointmentId}`);
+
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+
+      console.log(`[MyAppointments] Connecting WebSocket and subscribing...`);
+      connectWebSocket();
+
+      localStorage.setItem('currentAppointmentId', appointmentId);
+
+      const unsubscribe = subscribeToAppointmentRollback(appointmentId, (notification) => {
+        console.log('[MyAppointments] Appointment rollback received:', notification);
+        toast.error(notification.message || 'Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn.');
+        localStorage.removeItem('currentAppointmentId');
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      });
+      unsubscribeRef.current = unsubscribe;
+      
+      console.log(`[MyAppointments] Subscribed to rollback notifications, now starting appointment...`);
+      
+      await appointmentController.startAppointment(appointmentId);
+      onNavigateToPatient(patientId);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Khong the bat dau kham"
+      );
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+      localStorage.removeItem('currentAppointmentId');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleContinueExamination = (appointmentId: string, patientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onNavigateToPatient(patientId);
+  };
+
+  const handleView = (patientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onNavigateToPatient(patientId);
   };
 
   return (
@@ -205,10 +300,7 @@ export function MyAppointments({
                 return (
                   <Card
                     key={apt.id}
-                    className="cursor-pointer hover:border-[#3FB5FF] transition-all rounded-[12px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]"
-                    onClick={() =>
-                      apt.patientId && onNavigateToPatient(apt.patientId)
-                    }
+                    className="rounded-[12px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]"
                   >
                     <CardContent className="p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
@@ -226,18 +318,51 @@ export function MyAppointments({
                       </div>
                       <div className="flex items-center gap-3">
                         {renderStatus(apt.status)}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (apt.patientId)
-                              onNavigateToPatient(apt.patientId);
-                          }}
-                        >
-                          Xem ho so
-                        </Button>
+                        {isCheckedIn(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="rounded-[10px] bg-[#3FB5FF] text-white hover:bg-[#2ea3e6]"
+                            onClick={(e) => apt.patientId && handleStartExamination(apt.id, apt.patientId, e)}
+                            disabled={processingId === apt.id || !apt.patientId}
+                          >
+                            {processingId === apt.id ? "Đang xử lý..." : "Bắt đầu khám"}
+                          </Button>
+                        )}
+                        {isInProgress(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="rounded-[10px] bg-[#3FB5FF] text-white hover:bg-[#2ea3e6]"
+                            onClick={(e) => apt.patientId && handleContinueExamination(apt.id, apt.patientId, e)}
+                          >
+                            Tiếp tục khám
+                          </Button>
+                        )}
+                        {isViewOnly(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
+                            onClick={(e) => apt.patientId && handleView(apt.patientId, e)}
+                          >
+                            Xem
+                          </Button>
+                        )}
+                        {!isCheckedIn(apt.status) && !isInProgress(apt.status) && !isViewOnly(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (apt.patientId)
+                                onNavigateToPatient(apt.patientId);
+                            }}
+                          >
+                            Xem ho so
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

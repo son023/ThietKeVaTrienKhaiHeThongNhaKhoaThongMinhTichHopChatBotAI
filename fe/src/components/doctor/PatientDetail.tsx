@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, AlertTriangle, Calendar, FileText, Image as ImageIcon, Save, Plus, X, Printer, FileCheck, Clock, User, Phone, Mail, MapPin, CreditCard } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -12,14 +12,17 @@ import { DentalChart } from '../DentalChart';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { connectWebSocket, subscribeToAppointmentRollback } from '../../services/websocketService';
+import { toast } from 'sonner';
 
 interface PatientDetailProps {
   patientId: string | null;
   onBack: () => void;
   onNavigateToTreatmentPlan: (planId: string) => void;
+  onNavigateToAppointments?: () => void;
 }
 
-export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: PatientDetailProps) {
+export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, onNavigateToAppointments }: PatientDetailProps) {
   const [currentNote, setCurrentNote] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
@@ -28,6 +31,47 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan }: 
   const [isTreatmentPlanDialogOpen, setIsTreatmentPlanDialogOpen] = useState(false);
   const [internalNote, setInternalNote] = useState('');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const appointmentId = localStorage.getItem('currentAppointmentId');
+    
+    console.log(`[PatientDetail] Mounted, appointmentId from localStorage:`, appointmentId);
+    
+    if (appointmentId) {
+      console.log(`[PatientDetail] Subscribing to rollback for appointment: ${appointmentId}`);
+      console.log(`[PatientDetail] onNavigateToAppointments available:`, !!onNavigateToAppointments);
+
+      connectWebSocket();
+
+      const navigateCallback = onNavigateToAppointments;
+
+      const unsubscribe = subscribeToAppointmentRollback(appointmentId, (notification) => {
+        console.log('[PatientDetail] Appointment rollback received:', notification);
+        toast.error(notification.message || 'Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn.');
+
+        if (navigateCallback) {
+          console.log('[PatientDetail] Navigating to appointments page...');
+          localStorage.removeItem('currentAppointmentId');
+          navigateCallback();
+        } else {
+          console.error('[PatientDetail] onNavigateToAppointments is not defined!');
+        }
+      });
+      
+      unsubscribeRef.current = unsubscribe;
+
+      return () => {
+        if (unsubscribeRef.current) {
+          unsubscribeRef.current();
+          unsubscribeRef.current = null;
+        }
+      };
+    } else {
+      console.log('[PatientDetail] No appointmentId found in localStorage');
+    }
+
+  }, []);
 
   // Mock patient data
   const patient = {
