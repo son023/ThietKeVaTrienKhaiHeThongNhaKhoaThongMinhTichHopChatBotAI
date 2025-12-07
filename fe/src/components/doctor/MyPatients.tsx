@@ -19,9 +19,10 @@ import { authController } from "../../controllers";
 
 interface MyPatientsProps {
   onNavigateToPatient: (id: string) => void;
+  onNavigateToAppointments?: () => void;
 }
 
-export function MyPatients({ onNavigateToPatient }: MyPatientsProps) {
+export function MyPatients({ onNavigateToPatient, onNavigateToAppointments }: MyPatientsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<PatientWithUser[]>([]);
   const [loading, setLoading] = useState(true);

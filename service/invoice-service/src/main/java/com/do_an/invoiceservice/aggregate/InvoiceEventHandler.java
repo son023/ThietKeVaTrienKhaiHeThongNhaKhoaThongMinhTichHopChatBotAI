@@ -298,6 +298,7 @@ public class InvoiceEventHandler {
 
     private CreateInvoiceItemRequestDTO toInvoiceItem(MedicalServiceDTO serviceDTO) {
         CreateInvoiceItemRequestDTO item = new CreateInvoiceItemRequestDTO();
+        item.setId(UUID.randomUUID());
         item.setReferenceId(serviceDTO.getId());
         item.setServiceType(serviceDTO.getServiceType() != null ? serviceDTO.getServiceType() : "MEDICAL_SERVICE");
         item.setQuantity(1);

@@ -2,7 +2,8 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Clock, User, Phone, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
 
 interface Appointment {
   id: string;
@@ -19,15 +20,61 @@ interface ReceptionistDashboardProps {
 }
 
 export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboardProps = {}) {
-  const [appointments] = useState<Appointment[]>([
-    { id: '1', patientName: 'Nguyễn Văn A', time: '09:00', doctor: 'BS. Phạm Mai', phone: '0901234567', status: 'waiting_confirm', service: 'Khám tổng quát' },
-    { id: '2', patientName: 'Trần Thị B', time: '09:30', doctor: 'BS. Lê Anh', phone: '0902345678', status: 'waiting_confirm', service: 'Trám răng' },
-    { id: '3', patientName: 'Lê Văn C', time: '10:00', doctor: 'BS. Phạm Mai', phone: '0903456789', status: 'waiting_checkin', service: 'Tẩy trắng răng' },
-    { id: '4', patientName: 'Phạm Thị D', time: '10:30', doctor: 'BS. Lê Anh', phone: '0904567890', status: 'waiting_checkin', service: 'Nhổ răng khôn' },
-    { id: '5', patientName: 'Hoàng Văn E', time: '11:00', doctor: 'BS. Phạm Mai', phone: '0905678901', status: 'checked_in', service: 'Cạo vôi' },
-    { id: '6', patientName: 'Võ Thị F', time: '14:00', doctor: 'BS. Lê Anh', phone: '0906789012', status: 'in_treatment', service: 'Niềng răng' },
-    { id: '7', patientName: 'Đặng Văn G', time: '14:30', doctor: 'BS. Phạm Mai', phone: '0907890123', status: 'waiting_payment', service: 'Bọc răng sứ' },
-  ]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const mapStatus = (status: string): Appointment['status'] => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'waiting_checkin';
+      case 'CHECKED':
+        return 'checked_in';
+      case 'IN_PROGRESS':
+        return 'in_treatment';
+      default:
+        return 'waiting_confirm';
+    }
+  };
+
+  const transformAppointment = (apt: AppointmentDTO): Appointment => {
+    const startTime = new Date(apt.appointmentStartTime);
+    const timeStr = startTime.toLocaleTimeString('vi-VN', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
+    return {
+      id: apt.id,
+      patientName: `Bệnh nhân ${apt.patientId.substring(0, 8)}`,
+      time: timeStr,
+      doctor: `BS. ${apt.doctorId.substring(0, 8)}`,
+      phone: 'N/A',
+      status: mapStatus(apt.status),
+      service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
+    };
+  };
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        setLoading(true);
+        const today = new Date();
+        const appointmentDTOs = await appointmentController.getByDate(today);
+        
+        const transformed = appointmentDTOs.map(transformAppointment);
+        setAppointments(transformed);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading appointments:', err);
+        setError('Không thể tải danh sách lịch hẹn');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAppointments();
+  }, []);
 
   const statusConfig = {
     waiting_confirm: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', count: 2 },
@@ -42,11 +89,26 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
     return appointments.filter(apt => apt.status === status);
   };
 
-  const handleAction = (appointmentId: string, action: string) => {
-    console.log(`Action ${action} on appointment ${appointmentId}`);
-    
-    if (action === 'invoice' && onCreateInvoice) {
-      onCreateInvoice(appointmentId);
+  const handleAction = async (appointmentId: string, action: string) => {
+    try {
+      if (action === 'checkin') {
+        await appointmentController.checkInWithValidation(appointmentId);
+
+        setAppointments(prev => prev.map(apt => 
+          apt.id === appointmentId 
+            ? { ...apt, status: 'checked_in' }
+            : apt
+        ));
+        
+        alert('Check-in thành công!');
+      } else if (action === 'invoice' && onCreateInvoice) {
+        onCreateInvoice(appointmentId);
+      } else {
+        console.log(`Action ${action} on appointment ${appointmentId}`);
+      }
+    } catch (err) {
+      console.error('Error performing action:', err);
+      alert(`Lỗi: ${err instanceof Error ? err.message : 'Có lỗi xảy ra'}`);
     }
   };
 
@@ -79,8 +141,23 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
       {/* DoctorHeader */}
       <div>
         <h1 className="text-2xl text-[#01304e] mb-2">Luồng Bệnh nhân hôm nay</h1>
-        <p className="text-gray-600">Thứ Ba, 28 tháng 10, 2025</p>
+        <p className="text-gray-600">
+          {new Date().toLocaleDateString('vi-VN', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          })}
+        </p>
       </div>
+
+      {loading && (
+        <div className="p-4 text-center text-gray-600">Đang tải dữ liệu...</div>
+      )}
+
+      {error && (
+        <div className="p-4 text-center text-red-600">{error}</div>
+      )}
 
       {/* Kanban Board */}
       <div className="grid grid-cols-6 gap-3 overflow-x-auto pb-4">

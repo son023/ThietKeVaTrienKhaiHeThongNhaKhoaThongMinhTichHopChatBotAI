@@ -31,7 +31,7 @@ public class AppointmentEventHandler {
         }
 
         Appointment appointment = appointmentOpt.get();
-        appointment.setStatus(AppointmentStatus.FAILED);
+        appointment.setStatus(AppointmentStatus.CHECKED);
         appointment.setUpdatedAt(ZonedDateTime.now());
         appointmentRepository.save(appointment);
 

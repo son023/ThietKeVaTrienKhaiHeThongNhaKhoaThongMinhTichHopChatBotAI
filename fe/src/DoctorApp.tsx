@@ -65,14 +65,18 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
           setCurrentPage('patient-detail');
         }} />;
       case 'patients':
-        return <MyPatients onNavigateToPatient={(id) => {
-          setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
-        }} />;
+        return <MyPatients 
+          onNavigateToPatient={(id) => {
+            setSelectedPatientId(id);
+            setCurrentPage('patient-detail');
+          }}
+          onNavigateToAppointments={() => setCurrentPage('appointments')}
+        />;
       case 'patient-detail':
         return <PatientDetail 
           patientId={selectedPatientId} 
           onBack={() => setCurrentPage('patients')}
+          onNavigateToAppointments={() => setCurrentPage('appointments')}
           onNavigateToTreatmentPlan={(planId) => {
             setSelectedTreatmentPlanId(planId);
             setCurrentPage('treatment-plan-detail');

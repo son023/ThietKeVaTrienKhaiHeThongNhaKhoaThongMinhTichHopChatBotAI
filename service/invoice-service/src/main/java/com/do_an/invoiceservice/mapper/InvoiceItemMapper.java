@@ -22,7 +22,6 @@ public interface InvoiceItemMapper {
     // --- Chiều 2: CreateDTO -> Entity ---
     // (ĐÂY LÀ PHẦN SỬA LỖI)
     @Mappings({
-            @Mapping(target = "id", ignore = true), // Bỏ qua ID khi TẠO MỚI
             @Mapping(target = "invoice", ignore = true),
             @Mapping(target = "insurancePayAmount", ignore = true),
             @Mapping(target = "patientPayAmount", ignore = true)
