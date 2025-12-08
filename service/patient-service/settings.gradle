@@ -1,0 +1,3 @@
+rootProject.name = 'patient-service'
+include ':service:common'
+project(':service:common').projectDir = new File(settingsDir, '../common')

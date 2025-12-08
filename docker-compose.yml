@@ -1,0 +1,402 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - microservices-network
+    restart: always
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Axon Server
+  axon-server:
+    image: axoniq/axonserver:latest
+    container_name: axon-server
+    ports:
+      - "8024:8024"
+      - "8124:8124"
+    networks:
+      - microservices-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8024/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Registry (Eureka Server)
+  registry-service:
+    build:
+      context: ./service
+      dockerfile: registry-service/Dockerfile
+    container_name: registry-service
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # API Gateway
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # User Service
+  user-service:
+    build:
+      context: ./service
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/user-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Patient Service
+  patient-service:
+    build:
+      context: ./service
+      dockerfile: patient-service/Dockerfile
+    container_name: patient-service
+    ports:
+      - "8089:8089"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/patient-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Doctor Service
+  doctor-service:
+    build:
+      context: ./service
+      dockerfile: doctor-service/Dockerfile
+    container_name: doctor-service
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/doctor-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Appointment Service
+  appointment-service:
+    build:
+      context: ./service
+      dockerfile: appointment-service/Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appointment-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Lab Test Service
+  labtest-service:
+    build:
+      context: ./service
+      dockerfile: labtest-service/Dockerfile
+    container_name: labtest-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/labtest-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./service
+      dockerfile: payment-service/Dockerfile
+    container_name: payment-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/payment-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Invoice Service
+  invoice-service:
+    build:
+      context: ./service
+      dockerfile: invoice-service/Dockerfile
+    container_name: invoice-service
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/invoice-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Prescription Service
+  prescription-service:
+    build:
+      context: ./service
+      dockerfile: prescription-service/Dockerfile
+    container_name: prescription-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/prescription-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: ./service
+      dockerfile: inventory-service/Dockerfile
+    container_name: inventory-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/inventory-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Insurance Service
+  insurance-service:
+    build:
+      context: ./service
+      dockerfile: insurance-service/Dockerfile
+    container_name: insurance-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/insurance-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Clinical Service
+  clinical-service:
+    build:
+      context: ./service
+      dockerfile: clinical-service/Dockerfile
+    container_name: clinical-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/clinical-service
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      postgres:
+        condition: service_healthy
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./service
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8094:8094"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-service:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      registry-service:
+        condition: service_healthy
+      axon-server:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: always
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  pgdata:

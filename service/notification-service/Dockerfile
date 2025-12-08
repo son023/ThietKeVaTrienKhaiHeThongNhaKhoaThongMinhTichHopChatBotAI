@@ -1,9 +1,11 @@
 FROM gradle:7.6.1-jdk17 AS build
 WORKDIR /app
-COPY . .
+COPY common ./common
+COPY notification-service ./notification-service
+WORKDIR /app/notification-service
 RUN gradle clean bootJar --no-daemon
 
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/notification-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
