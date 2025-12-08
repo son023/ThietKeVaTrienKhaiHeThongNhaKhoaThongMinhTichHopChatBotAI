@@ -122,6 +122,7 @@ public class PrescriptionBillingSaga {
         log.info("✅ STEP 3 OK: Bảo hiểm hợp lệ. -> STEP 4: Cập nhật giảm giá vào Invoice.");
 
         commandGateway.send(new ApplyInsuranceDiscountCommand(
+                this.insuranceClaimId,
                 this.invoiceId,
                 event.getPrescriptionId(),
                 event.getCoverageAmount(),
@@ -195,6 +196,7 @@ public class PrescriptionBillingSaga {
 
 
     //Validate Fail
+    @EndSaga
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InsuranceRejectedEvent event) {
 //        log.warn("🛑 FAILURE (STEP 3): Bảo hiểm từ chối. Lý do: {}. -> Bắt đầu Rollback: Xóa phí thuốc.", event.getReason());
@@ -248,8 +250,8 @@ public class PrescriptionBillingSaga {
     private void triggerRollbackInventory(UUID prescriptionId) {
         commandGateway.send(new ReleaseMedicineReservationCommand(
                 this.dispenseOrderId,
-                prescriptionId,
-                this.medicineItems
+                prescriptionId
+                //this.medicineItems
         ));
     }
 
@@ -274,5 +276,8 @@ public class PrescriptionBillingSaga {
             ));
         }
     }
+
+
+
 
 }

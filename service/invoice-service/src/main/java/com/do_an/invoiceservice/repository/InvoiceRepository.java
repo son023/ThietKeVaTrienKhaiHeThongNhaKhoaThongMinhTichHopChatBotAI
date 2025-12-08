@@ -36,4 +36,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     
     // API sắp xếp theo thời gian tạo tăng dần
     List<Invoice> findAllByOrderByIssueAtAsc();
+
+
+    List<Invoice> findAllByStatusAndIssueAtBefore(String status, LocalDateTime issueAt);
 }

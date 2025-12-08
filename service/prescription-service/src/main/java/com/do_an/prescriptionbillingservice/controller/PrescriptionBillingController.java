@@ -2,6 +2,7 @@ package com.do_an.prescriptionbillingservice.controller;
 
 import com.do_an.common.command.CreatePrescriptionCommand;
 import com.do_an.prescriptionbillingservice.dto.CreatePrescriptionRequest;
+import lombok.RequiredArgsConstructor;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,13 +12,11 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/prescription-billing-service/prescription-billings")
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class PrescriptionBillingController {
     private final CommandGateway commandGateway;
 
-    public PrescriptionBillingController(CommandGateway commandGateway) {
-        this.commandGateway = commandGateway;
-    }
 
     @PostMapping
     public CompletableFuture<String> createPrescription(@RequestBody CreatePrescriptionRequest request) {

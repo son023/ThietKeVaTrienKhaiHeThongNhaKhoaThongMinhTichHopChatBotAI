@@ -25,7 +25,6 @@ public class PrescriptionAggregate {
         if (command.getItems() == null || command.getItems().isEmpty()) {
             throw new IllegalArgumentException("Đơn thuốc không được rỗng");
         }
-
         //Kích hoạt Saga
         AggregateLifecycle.apply(new PrescriptionCreatedEvent(
                 command.getPrescriptionId(),
@@ -34,7 +33,6 @@ public class PrescriptionAggregate {
                 command.getMedicalHistoryId(),
                 command.getItems()
         ));
-
     }
 
     @EventSourcingHandler
@@ -42,4 +40,5 @@ public class PrescriptionAggregate {
         this.prescriptionId = event.getPrescriptionId();
         this.status = "CREATED";
     }
+
 }

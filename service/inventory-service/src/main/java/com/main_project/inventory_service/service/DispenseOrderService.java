@@ -95,6 +95,23 @@ public class DispenseOrderService implements IDispenseOrderService {
                 dispenseOrder.getUpdateAt()
         );
     }
+
+
+    @Override
+    public DispenseOrderResponse markAsSold(UUID id) {
+        DispenseOrder order = dispenseOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc có DispenseOrder: " + id));
+
+        order.setStatus("SOLD");
+        dispenseOrderRepository.save(order);
+        return mapToResponse(order);
+    }
+
+    @Override
+    public DispenseOrderResponse getByPrescriptionId(UUID id) {
+        DispenseOrder order = dispenseOrderRepository.findByPrescription(id).get();
+        return mapToResponse(order);
+    }
 }
 
 

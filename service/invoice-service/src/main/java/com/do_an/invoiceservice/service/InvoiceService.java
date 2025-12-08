@@ -43,7 +43,7 @@ public class InvoiceService {
         //String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
         //invoice.setId(UUID.fromString(invoiceId));
 
-        invoice.setStatus("DRAFT"); // <-- THAY ĐỔI: Bắt đầu là DRAFT
+        invoice.setStatus("PENDING"); // <-- THAY ĐỔI: Bắt đầu là PENDING
         invoice.setIssueAt(LocalDateTime.now());
 
         int totalAmount = 0;
@@ -59,7 +59,7 @@ public class InvoiceService {
     }
 
     /**
-     * HÀM MỚI: Cập nhật Hóa đơn (chỉ khi là DRAFT)
+     * HÀM MỚI: Cập nhật Hóa đơn (chỉ khi là PENDING)
      */
     @Transactional
     public InvoiceResponseDTO updateInvoice(UUID invoiceId, CreateInvoiceRequestDTO request) {
@@ -67,8 +67,8 @@ public class InvoiceService {
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn"));
 
         // Chỉ cho phép sửa khi là DRAFT
-        if (!"DRAFT".equals(invoice.getStatus())) {
-            throw new IllegalStateException("Chỉ các hóa đơn DRAFT mới có thể được cập nhật.");
+        if (!"PENDING".equals(invoice.getStatus())) {
+            throw new IllegalStateException("Chỉ các hóa đơn PENDING mới có thể được cập nhật.");
         }
 
         // 1. Cập nhật header
@@ -129,21 +129,7 @@ public class InvoiceService {
         }
     }
 
-    /**
-     * HÀM MỚI: "Chốt" hóa đơn, chuyển từ DRAFT -> ISSUED
-     */
-    @Transactional
-    public InvoiceResponseDTO finalizeInvoice(UUID invoiceId) {
-        Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn"));
 
-        if (!"DRAFT".equals(invoice.getStatus())) {
-            throw new IllegalStateException("Chỉ các hóa đơn DRAFT mới có thể được hoàn tất.");
-        }
-        invoice.setStatus("PENDING");
-        Invoice savedInvoice = invoiceRepository.save(invoice);
-        return invoiceMapper.toResponseDto(savedInvoice);
-    }
 
     /**
      * CHỨC NĂNG 2: Đánh dấu Đã thanh toán
@@ -172,8 +158,8 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn"));
 
-        if (!List.of("DRAFT", "PENDING").contains(invoice.getStatus())) { // <-- Sửa
-            throw new IllegalStateException("Chỉ hoá đơn DRAFT hoặc PENDING có thể CANCELLED.");
+        if (!List.of( "PENDING").contains(invoice.getStatus())) { // <-- Sửa
+            throw new IllegalStateException("Chỉ hoá đơn PENDING có thể CANCELLED.");
         }
         invoice.setStatus("CANCELLED");
         Invoice savedInvoice = invoiceRepository.save(invoice);

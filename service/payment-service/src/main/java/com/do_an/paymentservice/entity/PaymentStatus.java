@@ -6,6 +6,8 @@ public enum PaymentStatus {
     SUCCESSFUL("Thanh toán thành công"),
     FAILED("Thanh toán thất bại"),
     CANCELLED("Thanh toán đã hủy"),
+    TIMEOUT("Quá thời gian"),
+
     REFUNDED("Đã hoàn tiền");
     private final String description;
 

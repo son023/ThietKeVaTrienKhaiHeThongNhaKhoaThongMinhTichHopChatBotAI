@@ -39,7 +39,7 @@ public class InsuranceClaim {
     @Column(name = "approval_date")
     private ZonedDateTime approvalDate;
 
-    @Column(name = "notes")
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @CreationTimestamp

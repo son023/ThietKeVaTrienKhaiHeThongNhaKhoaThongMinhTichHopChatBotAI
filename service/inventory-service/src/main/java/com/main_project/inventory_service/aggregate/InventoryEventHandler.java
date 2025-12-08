@@ -149,11 +149,11 @@ public class InventoryEventHandler {
         Integer quantityToRestore = dispenseItem.getQuantity();
 
 
-        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
-                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
-                        "OUT".equals(ledger.getType()) &&
-                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
-                .toList();
+//        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
+//                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
+//                        "OUT".equals(ledger.getType()) &&
+//                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
+//                .toList();
 
         int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
         lot.setQuantityOnHand(currentQuantity + quantityToRestore);
