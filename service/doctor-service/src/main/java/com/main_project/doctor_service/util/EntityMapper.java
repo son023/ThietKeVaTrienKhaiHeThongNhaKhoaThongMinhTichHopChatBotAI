@@ -4,6 +4,8 @@ import com.main_project.doctor_service.dto.*;
 import com.main_project.doctor_service.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class EntityMapper {
 
@@ -16,26 +18,64 @@ public class EntityMapper {
         dto.setWorkingHospital(entity.getWorkingHospital());
         dto.setLicenseNumber(entity.getLicenseNumber());
         dto.setConsultationFeeAmount(entity.getConsultationFeeAmount());
+
+        if (entity.getDegrees() != null) {
+            entity.getDegrees().forEach(degree ->
+                dto.getDegrees().add(toDoctorDegreeResponse(degree))
+            );
+        }
+
         return dto;
     }
 
     public Doctor toDoctorEntity(DoctorRequestDTO request) {
         if (request == null) return null;
-        return Doctor.builder()
+        Doctor doctor = Doctor.builder()
                 .userId(request.getUserId())
                 .specializationCode(request.getSpecializationCode())
                 .workingHospital(request.getWorkingHospital())
                 .licenseNumber(request.getLicenseNumber())
                 .consultationFeeAmount(request.getConsultationFeeAmount())
                 .build();
+
+        // Use aggregate root method to add degrees
+        if (request.getDegrees() != null && !request.getDegrees().isEmpty()) {
+            request.getDegrees().forEach(degreeDTO ->
+                doctor.addDegree(
+                    degreeDTO.getDegreeName(),
+                    degreeDTO.getInstitution(),
+                    degreeDTO.getYearObtained()
+                )
+            );
+        }
+
+        return doctor;
     }
 
     public void updateDoctorEntity(Doctor entity, DoctorRequestDTO request) {
         if (entity == null || request == null) return;
-        entity.setSpecializationCode(request.getSpecializationCode());
-        entity.setWorkingHospital(request.getWorkingHospital());
-        entity.setLicenseNumber(request.getLicenseNumber());
-        entity.setConsultationFeeAmount(request.getConsultationFeeAmount());
+
+        // Update basic info using aggregate method
+        entity.updateBasicInfo(
+            request.getSpecializationCode(),
+            request.getWorkingHospital(),
+            request.getLicenseNumber(),
+            request.getConsultationFeeAmount()
+        );
+
+        // Update degrees using aggregate method
+        if (request.getDegrees() != null) {
+            List<Doctor.DegreeData> degreeDataList = request.getDegrees().stream()
+                .map(dto -> new Doctor.DegreeData(
+                    dto.getDegreeName(),
+                    dto.getInstitution(),
+                    dto.getYearObtained()
+                ))
+                .toList();
+            entity.updateDegrees(degreeDataList);
+        } else {
+            entity.clearDegrees();
+        }
     }
 
     // DoctorDegree

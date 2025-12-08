@@ -1,86 +1,273 @@
 package com.main_project.patient_service.service;
 
-import com.main_project.patient_service.dto.PatientRequestDTO;
-import com.main_project.patient_service.dto.PatientResponseDTO;
-import com.main_project.patient_service.entity.Patient;
+import com.main_project.patient_service.dto.*;
+import com.main_project.patient_service.entity.*;
+import com.main_project.patient_service.repository.AllergyRepository;
 import com.main_project.patient_service.repository.PatientRepository;
-import com.main_project.patient_service.util.EntityMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+/**
+ * PatientService - Application Service for Patient Aggregate
+ *
+ * Implements DDD principles:
+ * - Patient is the Aggregate Root
+ * - All child operations through Patient entity methods
+ * - Only PatientRepository and AllergyRepository used
+ * - Smart list synchronization for updates (clear + add to trigger orphanRemoval)
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PatientService implements IPatientService {
 
     private final PatientRepository patientRepository;
-    private final EntityMapper mapper;
+    private final AllergyRepository allergyRepository;
 
+    /**
+     * Creates a new patient with all child entities.
+     * Uses aggregate methods and cascading.
+     */
     @Override
     public PatientResponseDTO createPatient(PatientRequestDTO request) {
-        if (patientRepository.existsById(request.getUserId())) {
-            throw new DataIntegrityViolationException("Patient already exists for user " + request.getUserId());
+        // Create patient aggregate root
+        Patient patient = Patient.builder()
+                .id(request.getId())
+                .name(request.getName())
+                .dob(request.getDob())
+                .gender(request.getGender())
+                .phone(request.getPhone())
+                .medicalHistoryNote(request.getMedicalHistoryNote())
+                .build();
+
+        // Add patient allergies using aggregate method
+        if (request.getPatientAllergies() != null) {
+            for (PatientAllergyDTO allergyDTO : request.getPatientAllergies()) {
+                // IMPORTANT: Fetch Allergy master data
+                Allergy allergy = allergyRepository.findById(allergyDTO.getAllergyId())
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Allergy not found with id: " + allergyDTO.getAllergyId()));
+
+                // Add using aggregate method
+                patient.addPatientAllergy(
+                        allergy,
+                        allergyDTO.getSeverity(),
+                        allergyDTO.getReaction(),
+                        allergyDTO.getNote()
+                );
+            }
         }
 
-        Patient patient = mapper.toPatientEntity(request);
-        return mapper.toPatientResponse(patientRepository.save(patient));
+        // Add underlying diseases using aggregate method
+        if (request.getUnderlyingDiseases() != null) {
+            for (UnderlyingDiseaseDTO diseaseDTO : request.getUnderlyingDiseases()) {
+                patient.addUnderlyingDisease(
+                        diseaseDTO.getName(),
+                        diseaseDTO.getStatus(),
+                        diseaseDTO.getSeverity(),
+                        diseaseDTO.getIsVerified(),
+                        diseaseDTO.getNote()
+                );
+            }
+        }
+
+        // Add tooth issues using aggregate method
+        if (request.getToothIssues() != null) {
+            for (ToothIssueDTO toothDTO : request.getToothIssues()) {
+                patient.addToothIssue(
+                        toothDTO.getToothNumber(),
+                        toothDTO.getStatus(),
+                        toothDTO.getDescription(),
+                        toothDTO.getDiagnosedDate(),
+                        toothDTO.getNote()
+                );
+            }
+        }
+
+        // Save patient (cascades to all children)
+        Patient saved = patientRepository.save(patient);
+
+        return mapToResponseDTO(saved);
+    }
+
+    /**
+     * Updates an existing patient.
+     * IMPORTANT: Uses smart list sync (clear + add) to trigger orphanRemoval.
+     */
+    @Override
+    public PatientResponseDTO updatePatient(UUID id, PatientRequestDTO request) {
+        Patient patient = patientRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
+
+        // Update basic info using aggregate method
+        patient.updateBasicInfo(
+                request.getName(),
+                request.getDob(),
+                request.getGender(),
+                request.getPhone(),
+                request.getMedicalHistoryNote()
+        );
+
+        // Smart List Sync for PatientAllergies
+        syncPatientAllergies(patient, request.getPatientAllergies());
+
+        // Smart List Sync for UnderlyingDiseases
+        syncUnderlyingDiseases(patient, request.getUnderlyingDiseases());
+
+        // Smart List Sync for ToothIssues
+        syncToothIssues(patient, request.getToothIssues());
+
+        // Save (orphanRemoval will delete removed items)
+        Patient saved = patientRepository.save(patient);
+
+        return mapToResponseDTO(saved);
+    }
+
+    /**
+     * Smart sync for patient allergies.
+     * Clears existing and adds new ones to trigger orphanRemoval.
+     */
+    private void syncPatientAllergies(Patient patient, List<PatientAllergyDTO> allergyDTOs) {
+        // Clear existing (triggers orphanRemoval for deleted items)
+        patient.clearPatientAllergies();
+
+        // Add new/updated items using aggregate method
+        if (allergyDTOs != null) {
+            for (PatientAllergyDTO dto : allergyDTOs) {
+                Allergy allergy = allergyRepository.findById(dto.getAllergyId())
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Allergy not found with id: " + dto.getAllergyId()));
+
+                patient.addPatientAllergy(
+                        allergy,
+                        dto.getSeverity(),
+                        dto.getReaction(),
+                        dto.getNote()
+                );
+            }
+        }
+    }
+
+    /**
+     * Smart sync for underlying diseases.
+     */
+    private void syncUnderlyingDiseases(Patient patient, List<UnderlyingDiseaseDTO> diseaseDTOs) {
+        patient.clearUnderlyingDiseases();
+
+        if (diseaseDTOs != null) {
+            for (UnderlyingDiseaseDTO dto : diseaseDTOs) {
+                patient.addUnderlyingDisease(
+                        dto.getName(),
+                        dto.getStatus(),
+                        dto.getSeverity(),
+                        dto.getIsVerified(),
+                        dto.getNote()
+                );
+            }
+        }
+    }
+
+    /**
+     * Smart sync for tooth issues.
+     */
+    private void syncToothIssues(Patient patient, List<ToothIssueDTO> toothDTOs) {
+        patient.clearToothIssues();
+
+        if (toothDTOs != null) {
+            for (ToothIssueDTO dto : toothDTOs) {
+                patient.addToothIssue(
+                        dto.getToothNumber(),
+                        dto.getStatus(),
+                        dto.getDescription(),
+                        dto.getDiagnosedDate(),
+                        dto.getNote()
+                );
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientById(UUID id) {
+        Patient patient = patientRepository.findByIdWithDetails(id)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
+        return mapToResponseDTO(patient);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PatientResponseDTO> getAllPatients() {
-        return patientRepository.findAll()
-                .stream()
-                .map(mapper::toPatientResponse)
-                .toList();
+        return patientRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PatientResponseDTO getPatientById(UUID userId) {
-        return patientRepository.findById(userId)
-                .map(mapper::toPatientResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found for user " + userId));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PatientResponseDTO> getPatientsByGender(String gender) {
-        return patientRepository.findByGenderIgnoreCase(gender)
-                .stream()
-                .map(mapper::toPatientResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PatientResponseDTO> getPatientsByBloodType(String bloodType) {
-        return patientRepository.findByBloodTypeIgnoreCase(bloodType)
-                .stream()
-                .map(mapper::toPatientResponse)
-                .toList();
-    }
-
-    @Override
-    public PatientResponseDTO updatePatient(UUID userId, PatientRequestDTO request) {
-        Patient patient = patientRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Patient not found for user " + userId));
-
-        mapper.updatePatientEntity(patient, request);
-        return mapper.toPatientResponse(patientRepository.save(patient));
-    }
-
-    @Override
-    public void deletePatient(UUID userId) {
-        if (!patientRepository.existsById(userId)) {
-            throw new EntityNotFoundException("Patient not found for user " + userId);
+    public void deletePatient(UUID id) {
+        if (!patientRepository.existsById(id)) {
+            throw new EntityNotFoundException("Patient not found with id: " + id);
         }
-        patientRepository.deleteById(userId);
+        patientRepository.deleteById(id);
+        // Cascade delete will remove all children
+    }
+
+    /**
+     * Maps Patient entity to PatientResponseDTO.
+     */
+    private PatientResponseDTO mapToResponseDTO(Patient patient) {
+        return PatientResponseDTO.builder()
+                .id(patient.getId())
+                .name(patient.getName())
+                .dob(patient.getDob())
+                .gender(patient.getGender())
+                .phone(patient.getPhone())
+                .medicalHistoryNote(patient.getMedicalHistoryNote())
+                .patientAllergies(mapPatientAllergiesToDTO(patient.getPatientAllergies()))
+                .underlyingDiseases(mapUnderlyingDiseasesToDTO(patient.getUnderlyingDiseases()))
+                .toothIssues(mapToothIssuesToDTO(patient.getToothIssues()))
+                .build();
+    }
+
+    private List<PatientAllergyDTO> mapPatientAllergiesToDTO(List<PatientAllergy> allergies) {
+        return allergies.stream()
+                .map(pa -> PatientAllergyDTO.builder()
+                        .allergyId(pa.getAllergy().getId())
+                        .allergyCode(pa.getAllergy().getCode())
+                        .allergyName(pa.getAllergy().getName())
+                        .severity(pa.getSeverity())
+                        .reaction(pa.getReaction())
+                        .note(pa.getNote())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<UnderlyingDiseaseDTO> mapUnderlyingDiseasesToDTO(List<UnderlyingDisease> diseases) {
+        return diseases.stream()
+                .map(d -> UnderlyingDiseaseDTO.builder()
+                        .name(d.getName())
+                        .status(d.getStatus())
+                        .severity(d.getSeverity())
+                        .isVerified(d.getIsVerified())
+                        .note(d.getNote())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<ToothIssueDTO> mapToothIssuesToDTO(List<ToothIssue> toothIssues) {
+        return toothIssues.stream()
+                .map(t -> ToothIssueDTO.builder()
+                        .toothNumber(t.getToothNumber())
+                        .status(t.getStatus())
+                        .description(t.getDescription())
+                        .diagnosedDate(t.getDiagnosedDate())
+                        .note(t.getNote())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

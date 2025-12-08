@@ -14,6 +14,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * DoctorService - Application Service for the Doctor Aggregate
+ *
+ * This service follows DDD principles:
+ * - Doctor is the Aggregate Root
+ * - All operations on DoctorDegree go through the Doctor entity methods
+ * - Only DoctorRepository is used (no DoctorDegreeRepository for write operations)
+ * - Cascade and orphanRemoval ensure consistency
+ *
+ * Usage:
+ * - Create doctor with degrees: Uses doctor.addDegree() internally
+ * - Update doctor: Uses doctor.updateBasicInfo() and doctor.updateDegrees()
+ * - Delete doctor: Cascades to all degrees automatically
+ * - All changes persisted via doctorRepository.save(doctor)
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -22,6 +37,11 @@ public class DoctorService implements IDoctorService {
     private final DoctorRepository doctorRepository;
     private final EntityMapper mapper;
 
+    /**
+     * Creates a new doctor with degrees.
+     * Degrees are added using doctor.addDegree() aggregate method.
+     * All data is persisted via doctorRepository.save(doctor).
+     */
     @Override
     public DoctorResponseDTO createDoctor(DoctorRequestDTO request) {
         if (doctorRepository.existsById(request.getUserId())) {
@@ -48,6 +68,11 @@ public class DoctorService implements IDoctorService {
                 .orElseThrow(() -> new EntityNotFoundException("Doctor not found for user " + userId));
     }
 
+    /**
+     * Updates a doctor and its degrees.
+     * Uses doctor.updateBasicInfo() and doctor.updateDegrees() aggregate methods.
+     * Orphaned degrees are automatically removed due to orphanRemoval=true.
+     */
     @Override
     public DoctorResponseDTO updateDoctor(UUID userId, DoctorRequestDTO request) {
         Doctor doctor = doctorRepository.findById(userId)
@@ -57,6 +82,10 @@ public class DoctorService implements IDoctorService {
         return mapper.toDoctorResponse(doctorRepository.save(doctor));
     }
 
+    /**
+     * Deletes a doctor and all associated degrees.
+     * Cascade delete handles removal of all degrees automatically.
+     */
     @Override
     public void deleteDoctor(UUID userId) {
         if (!doctorRepository.existsById(userId)) {
