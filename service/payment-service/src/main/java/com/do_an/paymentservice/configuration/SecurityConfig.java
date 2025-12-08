@@ -21,7 +21,8 @@ public class SecurityConfig {
         return http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+              .requestMatchers("/payment-service/payments/**").permitAll()
+                .requestMatchers("/api/payments/webhook/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(customRequestFilter, UsernamePasswordAuthenticationFilter.class)

@@ -12,6 +12,10 @@ public interface IDispenseOrderService {
     DispenseOrderResponse getById(UUID id);
     List<DispenseOrderResponse> getAll();
     void delete(UUID id);
+
+    DispenseOrderResponse markAsSold(UUID id);
+
+    DispenseOrderResponse getByPrescriptionId(UUID id);
 }
 
 

@@ -59,7 +59,8 @@ public class InsuranceEventHandler {
             insuranceClaim.setTotalInsurancePay(totalInsurancePay);
             insuranceClaim.setPatientPayAmount(totalPatientPay);
             insuranceClaim.setClaimDate(ZonedDateTime.now());
-            insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
+
+            //insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
 
             insuranceClaimRepository.save(insuranceClaim);
 

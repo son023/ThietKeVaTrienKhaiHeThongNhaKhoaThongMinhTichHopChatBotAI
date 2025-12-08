@@ -23,6 +23,7 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,7 +89,7 @@ public class InvoiceEventHandler {
 
             //COMPENSATION: PHÁT SỰ KIỆN LỖI ĐỂ SAGA ROLLBACK
             //Nếu lưu DB thất bại, Saga cần biết để rollback bước Inventory trước đó
-            eventBus.publish(GenericEventMessage.asEventMessage(
+            eventBus.publish(asEventMessage(
                     new ChargesAdditionFailedEvent(
                             event.getPrescriptionId(),
                             event.getInvoiceId(),
@@ -139,7 +140,7 @@ public class InvoiceEventHandler {
 
             invoiceItemRepository.saveAll(itemsToUpdate);
 
-                eventBus.publish(GenericEventMessage.asEventMessage(
+                eventBus.publish(asEventMessage(
                         new InvoiceDiscountAppliedSuccessEvent(
                                 event.getPrescriptionId(),
                                 event.getInvoiceId()
@@ -149,7 +150,7 @@ public class InvoiceEventHandler {
         } catch (Exception e) {
             log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
             // 4. COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
-            eventBus.publish(GenericEventMessage.asEventMessage(
+            eventBus.publish(asEventMessage(
                     new InvoiceDiscountAppliedFailedEvent(
                             event.getPrescriptionId(),
                             event.getInvoiceId(),
@@ -246,7 +247,7 @@ public class InvoiceEventHandler {
     public void on(ServiceChargeAddedEvent event) {
         try {
             log.info("=== ServiceChargeAddedEvent RECEIVED ===");
-            log.info("Event details: labTestId={}, appointmentId={}, price={}", 
+            log.info("Event details: labTestId={}, appointmentId={}, price={}",
                     event.getLabTestId(), event.getAppointmentId(), event.getPrice());
             log.info("add invoice item LABTEST");
             List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(event.getAppointmentId());
@@ -309,5 +310,46 @@ public class InvoiceEventHandler {
         item.setPatientPayAmount(unitPrice);
         return item;
     }
+    @EventHandler
+    public void on(InvoiceCancelledEvent event){
+        try {
+            Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
+            invoice.setStatus("CANCELLED");
+            invoiceRepository.save(invoice);
+            log.info("Đã cập nhật Invoice DB {} thành công sang trạng thái CANCELLED.", invoice.getId());
+        }
+        catch (Exception e){
+            log.error("Không tìm thấy Invoice {} trong DB để hủy.", event.getInvoiceId());
+        }
+    }
+
+    @EventHandler
+    @Transactional
+    public void on(InvoicePaidEvent event) {
+        try {
+            log.info("Nhận sự kiện InvoicePaidEvent. Cập nhật trạng thái PAID cho Invoice: {}", event.getInvoiceId());
+
+            // Tìm Invoice
+            Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
+
+
+            // Cập nhật trạng thái PAID
+            invoice.setStatus("PAID");
+            invoice.setPaidAt(LocalDateTime.now());
+            invoiceRepository.save(invoice);
+
+            //Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
+            //inventoryClient.markAsSold()
+
+            log.info("Đã cập nhật Invoice {} thành công (PAID).", invoice.getId());
+
+        } catch (Exception e) {
+            log.error("Lỗi khi xử lý InvoicePaidEvent cho Invoice {}: {}",
+                    event.getInvoiceId(), e.getMessage(), e);
+        }
+    }
+
+
+
 
 }

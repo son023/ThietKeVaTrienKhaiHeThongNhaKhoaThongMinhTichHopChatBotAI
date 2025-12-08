@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/payment-service/payments")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Payment Management", description = "API quản lý thanh toán hóa đơn. Hỗ trợ thanh toán tiền mặt và chuyển khoản qua PayOS.")
