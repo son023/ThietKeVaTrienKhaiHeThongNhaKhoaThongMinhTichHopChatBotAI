@@ -2,6 +2,8 @@ package com.main_project.patient_service.service;
 
 import com.main_project.patient_service.dto.*;
 import com.main_project.patient_service.entity.*;
+import com.main_project.patient_service.enums.BloodType;
+import com.main_project.patient_service.enums.Gender;
 import com.main_project.patient_service.repository.AllergyRepository;
 import com.main_project.patient_service.repository.PatientRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,12 +40,13 @@ public class PatientService implements IPatientService {
     public PatientResponseDTO createPatient(PatientRequestDTO request) {
         // Create patient aggregate root
         Patient patient = Patient.builder()
-                .id(request.getId())
-                .name(request.getName())
+                .userId(request.getId())
                 .dob(request.getDob())
-                .gender(request.getGender())
-                .phone(request.getPhone())
-                .medicalHistoryNote(request.getMedicalHistoryNote())
+                .gender(Gender.fromString(request.getGender()))
+                .address(request.getAddress())
+                .contactPhone(request.getContactPhone())
+                .bloodType(BloodType.fromString(request.getBloodType()))
+                .insuranceNumber(request.getInsuranceNumber())
                 .build();
 
         // Add patient allergies using aggregate method
@@ -107,11 +110,12 @@ public class PatientService implements IPatientService {
 
         // Update basic info using aggregate method
         patient.updateBasicInfo(
-                request.getName(),
                 request.getDob(),
-                request.getGender(),
-                request.getPhone(),
-                request.getMedicalHistoryNote()
+                Gender.fromString(request.getGender()),
+                request.getAddress(),
+                request.getContactPhone(),
+                BloodType.fromString(request.getBloodType()),
+                request.getInsuranceNumber()
         );
 
         // Smart List Sync for PatientAllergies
@@ -222,12 +226,13 @@ public class PatientService implements IPatientService {
      */
     private PatientResponseDTO mapToResponseDTO(Patient patient) {
         return PatientResponseDTO.builder()
-                .id(patient.getId())
-                .name(patient.getName())
+                .id(patient.getUserId())
                 .dob(patient.getDob())
-                .gender(patient.getGender())
-                .phone(patient.getPhone())
-                .medicalHistoryNote(patient.getMedicalHistoryNote())
+                .gender(patient.getGender() != null ? patient.getGender().name() : null)
+                .address(patient.getAddress())
+                .contactPhone(patient.getContactPhone())
+                .bloodType(patient.getBloodType() != null ? patient.getBloodType().name() : null)
+                .insuranceNumber(patient.getInsuranceNumber())
                 .patientAllergies(mapPatientAllergiesToDTO(patient.getPatientAllergies()))
                 .underlyingDiseases(mapUnderlyingDiseasesToDTO(patient.getUnderlyingDiseases()))
                 .toothIssues(mapToothIssuesToDTO(patient.getToothIssues()))
@@ -238,7 +243,6 @@ public class PatientService implements IPatientService {
         return allergies.stream()
                 .map(pa -> PatientAllergyDTO.builder()
                         .allergyId(pa.getAllergy().getId())
-                        .allergyCode(pa.getAllergy().getCode())
                         .allergyName(pa.getAllergy().getName())
                         .severity(pa.getSeverity())
                         .reaction(pa.getReaction())

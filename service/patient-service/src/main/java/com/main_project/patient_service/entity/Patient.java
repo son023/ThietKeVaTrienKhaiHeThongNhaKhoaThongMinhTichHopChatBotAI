@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Patient {
 
     @Id
     @Column(name = "user_id")
-    private UUID id;
+    private UUID userId;
 
     @Column(name = "dob")
     private ZonedDateTime dob;

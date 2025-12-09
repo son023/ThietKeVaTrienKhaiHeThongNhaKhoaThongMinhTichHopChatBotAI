@@ -1,6 +1,5 @@
 rootProject.name = 'doantotnghiep2025'
 include 'gateway'
-include 'service:auth-service'
 include 'service:notification-service'
 include 'service:registry-service'
 include 'service:user-service'
