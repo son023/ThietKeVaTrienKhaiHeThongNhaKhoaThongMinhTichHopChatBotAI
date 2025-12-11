@@ -25,6 +25,7 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -48,7 +49,7 @@ dependencies {
     implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
     
     // Thêm dependency vào common module
-    implementation project(':service:common')
+    implementation 'com.do_an:common:1.0.0'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'

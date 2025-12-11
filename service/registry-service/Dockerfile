@@ -1,12 +1,22 @@
-FROM gradle:7.6.1-jdk17 AS builder
-WORKDIR /app
-COPY . .
-# Xóa thư mục cache và thực hiện build lại
-RUN rm -rf /home/gradle/.gradle/caches/ && \
-    gradle bootJar --refresh-dependencies --no-daemon --info
+FROM gradle:8.1.1-jdk17 AS build
 
-FROM openjdk:17-jdk-slim
+WORKDIR /workspace
+
+# Build and publish common module to mavenLocal inside the build container
+COPY service/common /workspace/common
+RUN cd /workspace/common && gradle --no-daemon publishToMavenLocal -x test
+
+# Copy registry-service sources
+COPY service/registry-service /workspace/app
+WORKDIR /workspace/app
+
+# Build the bootable jar (tests skipped for speed in container builds)
+RUN gradle --no-daemon bootJar -x test
+
+FROM eclipse-temurin:17-jdk-jammy
+
 WORKDIR /app
-COPY --from=builder /app/build/libs/*.jar app.jar
-EXPOSE 8761
+
+COPY --from=build /workspace/app/build/libs/*.jar app.jar
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
