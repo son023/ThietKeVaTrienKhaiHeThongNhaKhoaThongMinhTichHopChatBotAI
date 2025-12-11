@@ -25,6 +25,7 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -49,7 +50,7 @@ dependencies {
     implementation 'com.github.kagkarlsson:db-scheduler-spring-boot-starter:14.0.0'
     
     // Thêm dependency vào common module
-    implementation project(':service:common')
+    implementation 'com.do_an:common:1.0.0'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
