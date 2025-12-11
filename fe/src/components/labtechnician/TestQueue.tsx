@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Filter, Upload, Clock, AlertCircle, User, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Upload, Clock, AlertCircle, User, FileText } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { toast } from 'sonner';
+import { labTestController } from '../../controllers/LabTestController';
+import { LabTestDTO } from '../../models/LabTest';
+import { medicalAttachmentController } from '../../controllers/MedicalAttachmentController';
 
 interface TestQueueProps {
     selectedTestId?: string | null;
@@ -18,99 +21,162 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [showUploadDialog, setShowUploadDialog] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [testNotes, setTestNotes] = useState('');
+    const [resultUnits, setResultUnits] = useState('');
+    const [resultRange, setResultRange] = useState('');
+    const [resultAbnormal, setResultAbnormal] = useState('');
+    const [resultStructure, setResultStructure] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [tests, setTests] = useState<LabTestDTO[]>([]);
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const tests = [
-        {
-            id: '1',
-            patientName: 'Nguyễn Văn An',
-            patientId: 'BN001',
-            testType: 'X-quang răng',
-            requestedBy: 'BS. Trần Minh',
-            requestedAt: '10/11/2025 08:30',
-            priority: 'normal',
-            status: 'pending',
-            notes: 'Kiểm tra răng số 6 phải trên',
-        },
-        {
-            id: '2',
-            patientName: 'Lê Thị Bình',
-            patientId: 'BN002',
-            testType: 'CT Scan hàm mặt',
-            requestedBy: 'BS. Nguyễn Hà',
-            requestedAt: '10/11/2025 09:15',
-            priority: 'urgent',
-            status: 'pending',
-            notes: 'Chuẩn bị phẫu thuật implant',
-        },
-        {
-            id: '3',
-            patientName: 'Phạm Minh Châu',
-            patientId: 'BN003',
-            testType: 'Xét nghiệm máu',
-            requestedBy: 'BS. Trần Minh',
-            requestedAt: '10/11/2025 10:00',
-            priority: 'normal',
-            status: 'in-progress',
-            notes: 'Xét nghiệm trước phẫu thuật',
-        },
-        {
-            id: '4',
-            patientName: 'Hoàng Thị Dung',
-            patientId: 'BN004',
-            testType: 'Panoramic X-ray',
-            requestedBy: 'BS. Lê Thu',
-            requestedAt: '10/11/2025 10:30',
-            priority: 'normal',
-            status: 'pending',
-            notes: 'Kiểm tra tổng quát',
-        },
-        {
-            id: '5',
-            patientName: 'Nguyễn Minh Khải',
-            patientId: 'BN005',
-            testType: 'Cephalometric X-ray',
-            requestedBy: 'BS. Phạm Lan',
-            requestedAt: '10/11/2025 11:00',
-            priority: 'urgent',
-            status: 'pending',
-            notes: 'Lập kế hoạch chỉnh nha',
-        },
-    ];
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+                const data = await labTestController.getAll();
+                setTests(data);
+            } catch (err) {
+                toast.error(err instanceof Error ? err.message : 'Không tải được danh sách lab test');
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setUploadedFile(e.target.files[0]);
-        }
+    const applyLocalStatus = (id: string, status: string) => {
+        setTests((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, status } : t))
+        );
     };
 
-    const handleSubmitResult = () => {
-        if (!uploadedFile) {
-            toast.error('Vui lòng tải lên file kết quả');
+    const refreshTest = async (id: string, updated?: LabTestDTO, fallbackStatus?: string) => {
+        if (updated) {
+            setTests((prev) => prev.map((t) => (t.id === id ? updated : t)));
             return;
         }
-        toast.success('Kết quả xét nghiệm đã được gửi thành công');
-        setShowUploadDialog(false);
-        setUploadedFile(null);
-        setTestNotes('');
+        if (fallbackStatus) {
+            applyLocalStatus(id, fallbackStatus);
+        }
+        try {
+            const data = await labTestController.getAll();
+            setTests(data);
+        } catch {
+            // ignore refresh error
+        }
     };
 
-    const handleStartTest = (testId: string) => {
-        toast.success('Đã bắt đầu thực hiện xét nghiệm');
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files);
+            console.log('Selected files:', newFiles.length, newFiles.map(f => f.name));
+            setUploadedFiles(prev => {
+                const combined = [...prev];
+                newFiles.forEach(newFile => {
+                    if (!combined.some(f => f.name === newFile.name && f.size === newFile.size)) {
+                        combined.push(newFile);
+                    }
+                });
+                console.log('Total files after selection:', combined.length, combined.map(f => f.name));
+                return combined;
+            });
+        }
+        e.target.value = '';
     };
 
-    const filteredTests = tests.filter(test => {
-        const matchesSearch = test.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            test.patientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            test.testType.toLowerCase().includes(searchQuery.toLowerCase());
+    const handleAccept = async (id: string) => {
+        try {
+            setProcessingId(id);
+            const res = await labTestController.accept(id);
+    
+            console.log("SERVER RETURN:", res);
+    
+            toast.success('Đã nhận yêu cầu');
+    
+            if (res && res.id) {
+                setTests(prev => prev.map(t => t.id === id ? res : t));
+            }
+    
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Không nhận được yêu cầu');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+    
 
-        if (selectedFilter === 'all') return matchesSearch;
-        return matchesSearch && test.status === selectedFilter;
-    });
+    const handleStartTest = async (id: string) => {
+        try {
+            setProcessingId(id);
+            const res = await labTestController.start(id);
+            toast.success('Đã bắt đầu xét nghiệm');
+            refreshTest(id, res, 'IN_PROGRESS');
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Không bắt đầu được');
+        } finally {
+            setProcessingId(null);
+        }
+    };
 
-    const getPriorityColor = (priority: string) => {
-        return priority === 'urgent' ? 'bg-[#ff4444]' : 'bg-[#3fb5ff]';
+    const handleSubmitResult = async (id: string) => {
+        try {
+            setProcessingId(id);
+
+            if (uploadedFiles.length > 0) {
+                await medicalAttachmentController.uploadMultipleFiles(uploadedFiles, id);
+            }
+
+            const payload = {
+                units: resultUnits || undefined,
+                referenceRange: resultRange || undefined,
+                abnormalFlag: resultAbnormal || undefined,
+                structureJson: resultStructure || undefined,
+                instructions: testNotes || undefined,
+            };
+            const res = await labTestController.complete(id, payload);
+            toast.success('Đã hoàn tất và gửi kết quả');
+            setShowUploadDialog(false);
+            setUploadedFiles([]);
+            setTestNotes('');
+            setResultUnits('');
+            setResultRange('');
+            setResultAbnormal('');
+            setResultStructure('');
+            refreshTest(id, res, 'COMPLETE');
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Không thể gửi kết quả');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const filteredTests = useMemo(() => {
+        return tests.filter((test) => {
+                const keyText =
+                    `${test.labTestType?.name || ''} ${test.appointmentId || ''} ${test.doctorName || test.doctorId || ''} ${test.patientName || ''} ${test.labTechnicianName || ''}`.toLowerCase();
+                const matchesSearch = keyText.includes(searchQuery.toLowerCase());
+
+            if (!matchesSearch) return false;
+
+            const st = test.status;
+            if (selectedFilter === 'all') return true;
+            if (selectedFilter === 'pending') return st === 'REQUEST';
+            if (selectedFilter === 'in-progress') return st === 'IN_PROGRESS';
+            if (selectedFilter === 'completed') return st === 'COMPLETE';
+            return true;
+        });
+    }, [tests, searchQuery, selectedFilter]);
+
+    const getStatusBadge = (status?: string) => {
+        const st = status;
+        if (st === 'COMPLETE') return { label: 'COMPLETE', className: 'border-[#2ecc71] text-[#2ecc71]' };
+        if (st === 'IN_PROGRESS') return { label: 'IN_PROGRESS', className: 'border-[#3fb5ff] text-[#3fb5ff]' };
+        if (st === 'ACCEPTED') return { label: 'ACCEPTED', className: 'border-[#1e8bc3] text-[#1e8bc3]' };
+        if (st === 'REQUEST') return { label: 'REQUEST', className: 'border-[#ff9f43] text-[#ff9f43]' };
+        return { label: st || 'UNKNOWN', className: 'border-[#ff9f43] text-[#ff9f43]' };
     };
 
     return (
@@ -161,35 +227,36 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
                                             <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[16px]">
-                                                {test.patientName}
+                                                {test.labTestType?.name || 'Lab test'}
                                             </h3>
                                             <Badge variant="outline" className="text-[11px]">
-                                                {test.patientId}
+                                                {test.appointmentId || 'N/A'}
                                             </Badge>
-                                            {test.priority === 'urgent' && (
-                                                <Badge className="bg-[#ffe6e6] text-[#ff4444] hover:bg-[#ffe6e6]">
-                                                    <AlertCircle className="w-3 h-3 mr-1" />
-                                                    Khẩn cấp
-                                                </Badge>
-                                            )}
                                         </div>
                                         <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[15px] mb-2">
-                                            {test.testType}
+                                            Bác sĩ: {test.doctorName || test.doctorId || 'N/A'}
+                                        </p>
+                                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#2ecc71] text-[14px] mb-2">
+                                            Bệnh nhân: {test.patientName || (test.appointmentId ? `Appointment: ${test.appointmentId.substring(0, 8)}...` : 'Chưa có thông tin')}
                                         </p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px] text-[#666666]">
                                             <div className="flex items-center gap-2">
                                                 <User className="w-4 h-4" />
-                                                <span>Yêu cầu: {test.requestedBy}</span>
+                                                <span>Technician: {test.labTechnicianName || test.labTechnicianId || 'Chưa gán'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-4 h-4" />
-                                                <span>{test.requestedAt}</span>
+                                                <span>
+                                                    {test.createdAt
+                                                        ? new Date(test.createdAt).toLocaleString('vi-VN')
+                                                        : 'N/A'}
+                                                </span>
                                             </div>
                                         </div>
-                                        {test.notes && (
+                                        {test.instructions && (
                                             <div className="mt-3 p-3 bg-[#f8fcff] rounded-lg">
                                                 <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
-                                                    <span className="font-['Fz_Poppins:Medium',sans-serif]">Ghi chú:</span> {test.notes}
+                                                    <span className="font-['Fz_Poppins:Medium',sans-serif]">Ghi chú:</span> {test.instructions}
                                                 </p>
                                             </div>
                                         )}
@@ -197,16 +264,27 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    {test.status === 'pending' && (
+                                    {test.status === 'REQUEST' && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleAccept(test.id)}
+                                            disabled={processingId === test.id}
+                                            className="bg-[#ff9f43] hover:bg-[#fb8c00]"
+                                        >
+                                            Nhận
+                                        </Button>
+                                    )}
+                                    {test.status === 'ACCEPTED' && (
                                         <Button
                                             size="sm"
                                             onClick={() => handleStartTest(test.id)}
+                                            disabled={processingId === test.id}
                                             className="bg-[#3fb5ff] hover:bg-[#1e8bc3]"
                                         >
                                             Bắt đầu
                                         </Button>
                                     )}
-                                    {test.status === 'in-progress' && (
+                                    {test.status === 'IN_PROGRESS' && (
                                         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                                             <DialogTrigger asChild>
                                                 <Button size="sm" className="bg-[#2ecc71] hover:bg-[#27ae60]">
@@ -214,28 +292,127 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                                     Tải kết quả
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="max-w-[500px]">
+                                            <DialogContent className="max-w-[640px] bg-white">
                                                 <DialogHeader>
                                                     <DialogTitle className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e]">
                                                         Tải lên kết quả xét nghiệm
                                                     </DialogTitle>
                                                 </DialogHeader>
                                                 <div className="space-y-4 py-4">
-                                                    <div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
                                                             File hình ảnh/kết quả
                                                         </Label>
-                                                        <Input
-                                                            type="file"
-                                                            accept="image/*,.pdf"
-                                                            onChange={handleFileUpload}
-                                                            className="border-[#ebf6fc]"
-                                                        />
-                                                        {uploadedFile && (
-                                                            <p className="text-[13px] text-[#2ecc71] mt-2">
-                                                                ✓ Đã chọn: {uploadedFile.name}
-                                                            </p>
-                                                        )}
+                                                        <div className="md:col-span-2">
+                                                            <Input
+                                                                type="file"
+                                                                accept="image/*,.pdf"
+                                                                multiple
+                                                                onChange={handleFileUpload}
+                                                                className="border-[#ebf6fc]"
+                                                            />
+                                                            {uploadedFiles.length > 0 && (
+                                                                <div className="mt-2 space-y-1">
+                                                                    <p className="text-[13px] text-[#2ecc71] font-medium">
+                                                                        ✓ Đã chọn {uploadedFiles.length} file:
+                                                                    </p>
+                                                                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                                        {uploadedFiles.map((file, index) => (
+                                                                            <div key={index} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
+                                                                                <span className="text-[#333333] truncate flex-1">{file.name}</span>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                                                                                    }}
+                                                                                    className="ml-2 text-red-500 hover:text-red-700"
+                                                                                >
+                                                                                    ✕
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setUploadedFiles([])}
+                                                                        className="text-xs text-red-500 hover:text-red-700 mt-1"
+                                                                    >
+                                                                        Xóa tất cả
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                                Đơn vị (units)
+                                                            </Label>
+                                                        <select
+                                                            value={resultUnits}
+                                                            onChange={(e) => setResultUnits(e.target.value)}
+                                                            className="w-full h-10 rounded-md border border-[#ebf6fc] bg-white px-3 text-sm"
+                                                        >
+                                                            <option value="">Chọn đơn vị</option>
+                                                            <option value="mg/dL">mg/dL</option>
+                                                            <option value="mmol/L">mmol/L</option>
+                                                            <option value="g/L">g/L</option>
+                                                            <option value="IU/L">IU/L</option>
+                                                            <option value="ng/mL">ng/mL</option>
+                                                        </select>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                                Khoảng tham chiếu
+                                                            </Label>
+                                                            <Input
+                                                                value={resultRange}
+                                                                onChange={(e) => setResultRange(e.target.value)}
+                                                                placeholder="70 - 110"
+                                                                className="border-[#ebf6fc]"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                                Cờ bất thường
+                                                            </Label>
+                                                        <select
+                                                            value={resultAbnormal}
+                                                            onChange={(e) => setResultAbnormal(e.target.value)}
+                                                            className="w-full h-10 rounded-md border border-[#ebf6fc] bg-white px-3 text-sm"
+                                                        >
+                                                            <option value="">Chọn</option>
+                                                            <option value="HIGH">HIGH</option>
+                                                            <option value="LOW">LOW</option>
+                                                            <option value="NORMAL">NORMAL</option>
+                                                        </select>
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                                Cấu trúc kết quả (JSON)
+                                                            </Label>
+                                                        <div className="space-y-2">
+                                                            <Textarea
+                                                                placeholder='{"glucose": 90}'
+                                                                value={resultStructure}
+                                                                onChange={(e) => setResultStructure(e.target.value)}
+                                                                className="min-h-[80px] border-[#ebf6fc]"
+                                                            />
+                                                            <Input
+                                                                type="file"
+                                                                accept="application/json"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (!file) return;
+                                                                    const reader = new FileReader();
+                                                                    reader.onload = (ev) => {
+                                                                        const text = ev.target?.result as string;
+                                                                        setResultStructure(text || "");
+                                                                    };
+                                                                    reader.readAsText(file);
+                                                                }}
+                                                                className="border-[#ebf6fc]"
+                                                            />
+                                                        </div>
+                                                        </div>
                                                     </div>
                                                     <div>
                                                         <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
@@ -249,24 +426,32 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                                         />
                                                     </div>
                                                     <Button
-                                                        onClick={handleSubmitResult}
+                                                        onClick={() => handleSubmitResult(test.id)}
+                                                        disabled={processingId === test.id}
                                                         className="w-full bg-[#3fb5ff] hover:bg-[#1e8bc3]"
                                                     >
-                                                        Gửi kết quả
+                                                        {processingId === test.id ? 'Đang gửi...' : 'Gửi kết quả'}
                                                     </Button>
                                                 </div>
                                             </DialogContent>
                                         </Dialog>
                                     )}
+                                    {test.status === 'IN_PROGRESS' && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleSubmitResult(test.id)}
+                                            disabled={processingId === test.id}
+                                            className="border-[#2ecc71] text-[#2ecc71]"
+                                        >
+                                            {processingId === test.id ? 'Đang hoàn thành...' : 'Hoàn thành'}
+                                        </Button>
+                                    )}
                                     <Badge
                                         variant="outline"
-                                        className={`${
-                                            test.status === 'in-progress'
-                                                ? 'border-[#3fb5ff] text-[#3fb5ff]'
-                                                : 'border-[#ff9f43] text-[#ff9f43]'
-                                        }`}
+                                        className={getStatusBadge(test.status).className}
                                     >
-                                        {test.status === 'in-progress' ? 'Đang thực hiện' : 'Chờ xử lý'}
+                                        {getStatusBadge(test.status).label}
                                     </Badge>
                                 </div>
                             </div>

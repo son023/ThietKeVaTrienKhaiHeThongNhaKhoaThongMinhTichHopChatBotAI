@@ -42,7 +42,7 @@ public class LabTestService implements ILabTest{
 
         LabTest entity = mapper.toLabTestEntity(requestDTO, type, technician);
         labTestRepository.save(entity);
-        return mapper.toLabTestDTO(entity);
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(entity.getId()).orElseThrow());
     }
 
     @Override
@@ -71,7 +71,7 @@ public class LabTestService implements ILabTest{
             existing.setResultDate(requestDTO.getResultDate());
 
         labTestRepository.save(existing);
-        return mapper.toLabTestDTO(existing);
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }
 
 
@@ -103,20 +103,41 @@ public class LabTestService implements ILabTest{
     @Override
     public LabTestDTO acceptLabTest(UUID id) {
         commandGateway.sendAndWait(new AcceptLabTestCommand(id));
-        return mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }
 
     @Override
     public LabTestDTO startLabTest(UUID id) {
         commandGateway.sendAndWait(new StartLabTestCommand(id));
-        return mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }
 
     @Override
     public LabTestDTO completeLabTest(UUID id) {
-        LabTestDTO labTestDTO = mapper.toLabTestDTO(labTestRepository.findById(id).orElseThrow());
+        LabTestDTO labTestDTO = mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
         commandGateway.sendAndWait(new CompleteLabTestCommand(id, labTestDTO.getAppointmentId(), labTestDTO.getPrice()));
-        return labTestDTO;
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
+    }
+
+    public LabTestDTO completeLabTest(UUID id, LabTestRequestDTO dto) {
+        LabTest existing = labTestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("LabTest not found"));
+        
+        // Update result fields if provided
+        if (dto != null) {
+            if (dto.getUnits() != null) existing.setUnits(dto.getUnits());
+            if (dto.getReferenceRange() != null) existing.setReferenceRange(dto.getReferenceRange());
+            if (dto.getAbnormalFlag() != null) existing.setAbnormalFlag(dto.getAbnormalFlag());
+            if (dto.getStructureJson() != null) existing.setStructureJson(dto.getStructureJson());
+            if (dto.getInstructions() != null) existing.setInstructions(dto.getInstructions());
+            if (dto.getResultDate() != null) existing.setResultDate(dto.getResultDate());
+            existing.setUpdatedAt(java.time.ZonedDateTime.now());
+            labTestRepository.save(existing);
+        }
+        
+        LabTestDTO labTestDTO = mapper.toLabTestDTO(existing);
+        commandGateway.sendAndWait(new CompleteLabTestCommand(id, labTestDTO.getAppointmentId(), labTestDTO.getPrice()));
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }
     @Override
     public void deleteLabTest(UUID id) {
@@ -127,14 +148,14 @@ public class LabTestService implements ILabTest{
 
     @Override
     public LabTestDTO getLabTestById(UUID id) {
-        return labTestRepository.findById(id)
+        return labTestRepository.findByIdWithRelations(id)
                 .map(mapper::toLabTestDTO)
                 .orElseThrow(() -> new RuntimeException("LabTest not found"));
     }
 
     @Override
     public List<LabTestDTO> getAllLabTests() {
-        return labTestRepository.findAll()
+        return labTestRepository.findAllWithRelations()
                 .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
     }
 

@@ -18,7 +18,16 @@ export const API_CONFIG = {
     DOCTORS: '/doctor-service/doctors',
 
     // Patient Service
-    PATIENTS: '/patient-service/patients'
+    PATIENTS: '/patient-service/patients',
+    MEDICAL_HISTORIES: '/patient-service/medical-histories',
+
+    // Lab Test Service
+    LAB_TESTS: '/labtest-service/lab-tests',
+    LAB_TEST_TYPES: '/labtest-service/lab-test-types',
+    MEDICAL_ATTACHMENTS: '/labtest-service/medical-attachments',
+
+    // Notification Service
+    NOTIFICATIONS: '/notification-service/notifications'
   }
 };
 

@@ -13,6 +13,20 @@ export interface AppointmentDTO {
   medicalServices?: MedicalServiceDTO[];
 }
 
+export interface CreateAppointmentRequest {
+  doctorId: string;
+  patientId: string;
+  appointmentStartTime: string;
+  medicalServiceIds: string[];
+}
+
+export interface HoldSlotRequest {
+  doctorId: string;
+  patientId: string;
+  appointmentStartTime: string;
+  medicalServiceIds: string[];
+}
+
 class AppointmentController {
   private baseUrl = API_CONFIG.ENDPOINTS.APPOINTMENTS;
 
@@ -27,7 +41,20 @@ class AppointmentController {
       }
       throw new Error(msg);
     }
-    return res.json();
+    const contentLength = res.headers.get('content-length');
+    const isNoContent = res.status === 204 || res.status === 202 || contentLength === '0';
+    if (isNoContent) {
+      return undefined as T;
+    }
+    const text = await res.text();
+    if (!text) {
+      return undefined as T;
+    }
+    try {
+      return JSON.parse(text) as T;
+    } catch (_) {
+      return text as unknown as T;
+    }
   }
 
   async getAll(): Promise<AppointmentDTO[]> {
@@ -35,6 +62,24 @@ class AppointmentController {
       headers: getApiHeaders(true),
     });
     return this.handleResponse<AppointmentDTO[]>(res);
+  }
+
+  async create(payload: CreateAppointmentRequest): Promise<AppointmentDTO> {
+    const res = await fetch(createApiUrl(this.baseUrl), {
+      method: 'POST',
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<AppointmentDTO>(res);
+  }
+
+  async holdSlot(payload: HoldSlotRequest): Promise<void> {
+    const res = await fetch(createApiUrl(this.baseUrl, 'slots', 'hold'), {
+      method: 'POST',
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    await this.handleResponse<void>(res);
   }
 
   async getByDoctorId(doctorId: string): Promise<AppointmentDTO[]> {

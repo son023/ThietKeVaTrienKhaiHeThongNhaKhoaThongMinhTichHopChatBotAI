@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-interface ToothCondition {
-  [key: string]: string[];
+interface DentalChartProps {
+  value?: Record<string, string[]>;
+  onChange?: (value: Record<string, string[]>) => void;
 }
 
-export function DentalChart() {
+export function DentalChart({ value, onChange }: DentalChartProps) {
   const [selectedTool, setSelectedTool] = useState<string>('');
-  const [toothConditions, setToothConditions] = useState<ToothCondition>({
-    '16': ['cavity', 'filling'],
-    '17': ['cavity', 'filling'],
-    '26': ['root-canal', 'filling'],
-  });
+  const [toothConditions, setToothConditions] = useState<Record<string, string[]>>(value || {});
+
+  useEffect(() => {
+    if (value) {
+      setToothConditions(value);
+    }
+  }, [value]);
 
   const tools = [
     { id: 'cavity', name: 'Sâu răng', color: '#fb2c36' },
@@ -19,6 +22,7 @@ export function DentalChart() {
     { id: 'extraction', name: 'Nhổ', color: '#6a7282' },
     { id: 'implant', name: 'Implant', color: '#00c950' },
     { id: 'crown', name: 'Răng sứ', color: '#f0b100' },
+    { id: 'issue', name: 'Vấn đề khác', color: '#94a3b8' },
   ];
 
   const upperTeeth = [
@@ -36,26 +40,30 @@ export function DentalChart() {
 
     const toothKey = toothNum.toString();
     const current = toothConditions[toothKey] || [];
-    
+    let next: Record<string, string[]> = {};
+
     if (current.includes(selectedTool)) {
       // Remove condition
       const newConditions = current.filter(c => c !== selectedTool);
       if (newConditions.length === 0) {
         const { [toothKey]: _, ...rest } = toothConditions;
-        setToothConditions(rest);
+        next = rest;
       } else {
-        setToothConditions({
+        next = {
           ...toothConditions,
           [toothKey]: newConditions,
-        });
+        };
       }
     } else {
       // Add condition
-      setToothConditions({
+      next = {
         ...toothConditions,
         [toothKey]: [...current, selectedTool],
-      });
+      };
     }
+
+    setToothConditions(next);
+    onChange?.(next);
   };
 
   const getToothConditions = (toothNum: number) => {

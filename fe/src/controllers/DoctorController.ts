@@ -41,7 +41,7 @@ class DoctorController {
 
   async getAll(): Promise<DoctorDTO[]> {
     const res = await fetch(createApiUrl(this.baseUrl), {
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
     });
     return this.handleResponse<DoctorDTO[]>(res);
   }
