@@ -16,6 +16,7 @@ import com.main_project.patient_service.enums.BloodType;
 import com.main_project.patient_service.enums.Gender;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class EntityMapper {
         if (entity == null) return null;
 
         PatientResponseDTO dto = new PatientResponseDTO();
-        dto.setId(entity.getUserId());
+        dto.setUserId(entity.getUserId());
         dto.setDob(entity.getDob());
         dto.setGender(entity.getGender() != null ? entity.getGender().name() : null);
         dto.setAddress(entity.getAddress());
@@ -43,7 +44,7 @@ public class EntityMapper {
         if (request == null) return null;
 
         return Patient.builder()
-                .userId(request.getId())
+                .userId(request.getUserId())
                 .dob(request.getDob())
                 .gender(Gender.fromString(request.getGender()))
                 .address(request.getAddress())
@@ -108,7 +109,7 @@ public class EntityMapper {
         entity.setPatient(patient);
     }
 
-    private List<PatientAllergyDTO> mapPatientAllergiesToDTO(List<PatientAllergy> allergies) {
+    private List<PatientAllergyDTO> mapPatientAllergiesToDTO(Collection<PatientAllergy> allergies) {
         if (allergies == null) return null;
         return allergies.stream()
                 .map(pa -> PatientAllergyDTO.builder()
@@ -121,7 +122,7 @@ public class EntityMapper {
                 .collect(Collectors.toList());
     }
 
-    private List<UnderlyingDiseaseDTO> mapUnderlyingDiseasesToDTO(List<UnderlyingDisease> diseases) {
+    private List<UnderlyingDiseaseDTO> mapUnderlyingDiseasesToDTO(Collection<UnderlyingDisease> diseases) {
         if (diseases == null) return null;
         return diseases.stream()
                 .map(d -> UnderlyingDiseaseDTO.builder()
@@ -134,7 +135,7 @@ public class EntityMapper {
                 .collect(Collectors.toList());
     }
 
-    private List<ToothIssueDTO> mapToothIssuesToDTO(List<ToothIssue> toothIssues) {
+    private List<ToothIssueDTO> mapToothIssuesToDTO(Collection<ToothIssue> toothIssues) {
         if (toothIssues == null) return null;
         return toothIssues.stream()
                 .map(t -> ToothIssueDTO.builder()

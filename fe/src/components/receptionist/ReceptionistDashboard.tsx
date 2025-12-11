@@ -1,12 +1,14 @@
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Clock, User, Phone, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react';
+import { User, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import CheckinDialog from './CheckinDialog';
 
 interface Appointment {
   id: string;
+  patientId: string;
   patientName: string;
   time: string;
   doctor: string;
@@ -23,6 +25,8 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkinOpen, setCheckinOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const mapStatus = (status: string): Appointment['status'] => {
     switch (status) {
@@ -46,6 +50,7 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
     
     return {
       id: apt.id,
+      patientId: apt.patientId,
       patientName: `Bệnh nhân ${apt.patientId.substring(0, 8)}`,
       time: timeStr,
       doctor: `BS. ${apt.doctorId.substring(0, 8)}`,
@@ -92,15 +97,10 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
   const handleAction = async (appointmentId: string, action: string) => {
     try {
       if (action === 'checkin') {
-        await appointmentController.checkInWithValidation(appointmentId);
-
-        setAppointments(prev => prev.map(apt => 
-          apt.id === appointmentId 
-            ? { ...apt, status: 'checked_in' }
-            : apt
-        ));
-        
-        alert('Check-in thành công!');
+        const target = appointments.find((apt) => apt.id === appointmentId);
+        if (!target) return;
+        setSelectedAppointment(target);
+        setCheckinOpen(true);
       } else if (action === 'invoice' && onCreateInvoice) {
         onCreateInvoice(appointmentId);
       } else {
@@ -160,7 +160,7 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
       )}
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-6 gap-3 overflow-x-auto pb-4">
+        <div className="grid grid-cols-6 gap-3 overflow-x-auto pb-4">
         {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((status) => {
           const config = statusConfig[status];
           const statusAppointments = getAppointmentsByStatus(status);
@@ -261,6 +261,32 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
           );
         })}
       </div>
+
+      <CheckinDialog
+        open={checkinOpen}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAppointment(null);
+          setCheckinOpen(open);
+        }}
+        appointment={
+          selectedAppointment
+            ? {
+                id: selectedAppointment.id,
+                patientId: selectedAppointment.patientId,
+                patientName: selectedAppointment.patientName,
+                serviceName: selectedAppointment.service,
+              }
+            : null
+        }
+        onCheckedIn={() => {
+          if (!selectedAppointment) return;
+          setAppointments((prev) =>
+            prev.map((apt) =>
+              apt.id === selectedAppointment.id ? { ...apt, status: 'checked_in' } : apt
+            )
+          );
+        }}
+      />
 
       {/* Tasks Section */}
       <div className="mt-8">

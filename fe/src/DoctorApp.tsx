@@ -14,7 +14,7 @@ import { DoctorHeader } from './components/DoctorHeader';
 import { Dashboard } from './components/doctor/Dashboard';
 import { MyAppointments } from './components/doctor/MyAppointments';
 import { MyPatients } from './components/doctor/MyPatients';
-import { PatientDetail } from './components/doctor/PatientDetail';
+import { PatientExamination } from './components/doctor/PatientExamination';
 import { TreatmentPlans } from './components/doctor/TreatmentPlans';
 import { TreatmentPlanDetail } from './components/doctor/TreatmentPlanDetail';
 import { PersonalPerformance } from './components/doctor/PersonalPerformance';
@@ -57,25 +57,25 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       case 'dashboard':
         return <Dashboard onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
       case 'appointments':
         return <MyAppointments doctorId={doctorId} onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
       case 'patients':
         return <MyPatients 
           onNavigateToPatient={(id) => {
             setSelectedPatientId(id);
-            setCurrentPage('patient-detail');
+            setCurrentPage('patient-examination');
           }}
           onNavigateToAppointments={() => setCurrentPage('appointments')}
         />;
-      case 'patient-detail':
-        return <PatientDetail 
+      case 'patient-examination':
+        return <PatientExamination 
           patientId={selectedPatientId} 
-          onBack={() => setCurrentPage('patients')}
+          onBack={() => setCurrentPage('appointments')}
           onNavigateToAppointments={() => setCurrentPage('appointments')}
           onNavigateToTreatmentPlan={(planId) => {
             setSelectedTreatmentPlanId(planId);
@@ -99,7 +99,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       default:
         return <Dashboard onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
     }
   };

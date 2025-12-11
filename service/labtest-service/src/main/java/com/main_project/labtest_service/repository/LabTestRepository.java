@@ -19,4 +19,10 @@ public interface LabTestRepository extends JpaRepository<LabTest, UUID> {
 
         @Query("SELECT l FROM LabTest l WHERE l.abnormalFlag = 'Abnormal' AND l.resultDate BETWEEN :from AND :to")
         List<LabTest> findAbnormalResultsWithinRange(ZonedDateTime from, ZonedDateTime to);
+
+        @Query("SELECT DISTINCT l FROM LabTest l LEFT JOIN FETCH l.labTestType LEFT JOIN FETCH l.medicalAttachments WHERE l.id = :id")
+        java.util.Optional<LabTest> findByIdWithRelations(UUID id);
+
+        @Query("SELECT DISTINCT l FROM LabTest l LEFT JOIN FETCH l.labTestType LEFT JOIN FETCH l.medicalAttachments")
+        List<LabTest> findAllWithRelations();
 }

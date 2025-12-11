@@ -11,6 +11,13 @@ export interface AppointmentRollbackNotification {
   message: string;
 }
 
+export interface LabTestCompletedNotification {
+  type: string;
+  labTestId: string;
+  appointmentId: string;
+  message: string;
+}
+
 export const connectWebSocket = (): Client | null => {
   if (stompClient?.connected) {
     console.log('[WebSocket] Already connected');
@@ -164,4 +171,87 @@ export const disconnectWebSocket = () => {
 
 export const isConnected = (): boolean => {
   return stompClient?.connected || false;
+};
+
+export const subscribeToDoctorNotifications = (
+  doctorId: string,
+  onNotification: (notification: LabTestCompletedNotification) => void
+): () => void => {
+  console.log(`[WebSocket] Subscribing to doctor notifications for: ${doctorId}`);
+  
+  if (!stompClient) {
+    console.log('[WebSocket] No client found, creating new connection...');
+    connectWebSocket();
+  }
+
+  const topic = `/topic/notifications/${doctorId}`;
+  console.log(`[WebSocket] Topic: ${topic}`);
+
+  const subscriptionKey = `doctor-notifications-${doctorId}`;
+  if (activeSubscriptions.has(subscriptionKey)) {
+    console.log(`[WebSocket] Unsubscribing from existing subscription for: ${subscriptionKey}`);
+    const existingSub = activeSubscriptions.get(subscriptionKey);
+    existingSub?.unsubscribe();
+    activeSubscriptions.delete(subscriptionKey);
+  }
+
+  let retryCount = 0;
+  const maxRetries = 50;
+
+  const subscribe = () => {
+    if (stompClient && stompClient.connected) {
+      try {
+        const subscription = stompClient.subscribe(topic, (message: IMessage) => {
+          console.log(`[WebSocket] Message received on topic ${topic}:`, message.body);
+          try {
+            const notification: LabTestCompletedNotification = JSON.parse(message.body);
+            console.log('[WebSocket] Parsed notification:', notification);
+            onNotification(notification);
+          } catch (error) {
+            console.error('[WebSocket] Error parsing websocket message:', error);
+          }
+        });
+        
+        activeSubscriptions.set(subscriptionKey, subscription);
+        console.log(`[WebSocket] Successfully subscribed to ${topic}`);
+        console.log(`[WebSocket] Total active subscriptions: ${activeSubscriptions.size}`);
+      } catch (error) {
+        console.error('[WebSocket] Error subscribing:', error);
+      }
+    } else {
+      retryCount++;
+      if (retryCount < maxRetries) {
+        console.log(`[WebSocket] Waiting for connection... (${retryCount}/${maxRetries})`);
+        setTimeout(subscribe, 100);
+      } else {
+        console.error('[WebSocket] Failed to subscribe: Connection timeout');
+      }
+    }
+  };
+
+  if (stompClient?.connected) {
+    console.log('[WebSocket] Already connected, subscribing immediately');
+    subscribe();
+  } else {
+    console.log('[WebSocket] Not connected yet, waiting for connection...');
+    const checkConnection = setInterval(() => {
+      if (stompClient?.connected) {
+        clearInterval(checkConnection);
+        console.log('[WebSocket] Connection established, subscribing now');
+        subscribe();
+      } else if (retryCount >= maxRetries) {
+        clearInterval(checkConnection);
+        console.error('[WebSocket] Connection timeout');
+      }
+    }, 100);
+  }
+
+  return () => {
+    const subscription = activeSubscriptions.get(subscriptionKey);
+    if (subscription) {
+      subscription.unsubscribe();
+      activeSubscriptions.delete(subscriptionKey);
+      console.log(`[WebSocket] Unsubscribed from doctor notifications for doctor: ${doctorId}`);
+    }
+  };
 };

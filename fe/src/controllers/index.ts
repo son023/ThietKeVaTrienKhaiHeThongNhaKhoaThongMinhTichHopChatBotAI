@@ -5,3 +5,7 @@ export * from './PatientController';
 export * from './AppointmentController';
 export * from './UserController';
 export * from './DoctorDegreeController';
+export * from './MedicalHistoryController';
+export * from './LabTestController';
+export * from './LabTestTypeController';
+export * from './MedicalAttachmentController';

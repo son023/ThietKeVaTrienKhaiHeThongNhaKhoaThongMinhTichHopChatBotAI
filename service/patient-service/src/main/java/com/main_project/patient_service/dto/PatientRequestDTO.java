@@ -20,7 +20,7 @@ import java.util.UUID;
 public class PatientRequestDTO {
 
     @NotNull(message = "Patient ID (user_id) is required")
-    private UUID id;
+    private UUID userId;
 
     @Past(message = "Date of birth must be in the past")
     private ZonedDateTime dob;

@@ -8,11 +8,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -51,7 +53,7 @@ public class Patient {
     private String contactPhone;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "blood_type", length = 10)
+    @Column(name = "blood_type", length = 20)
     private BloodType bloodType;
 
     @Column(name = "insurance_number", length = 100)
@@ -60,20 +62,23 @@ public class Patient {
     // Composition relationships - all use cascade ALL and orphanRemoval
     @Builder.Default
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PatientAllergy> patientAllergies = new ArrayList<>();
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<PatientAllergy> patientAllergies = new HashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UnderlyingDisease> underlyingDiseases = new ArrayList<>();
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<UnderlyingDisease> underlyingDiseases = new HashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ToothIssue> toothIssues = new ArrayList<>();
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<ToothIssue> toothIssues = new HashSet<>();
 
     // Kept for backward compatibility (if exists)
     @Builder.Default
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MedicalHistory> medicalHistories = new ArrayList<>();
+    private Set<MedicalHistory> medicalHistories = new HashSet<>();
 
     // ========== Aggregate Root Business Methods ==========
 

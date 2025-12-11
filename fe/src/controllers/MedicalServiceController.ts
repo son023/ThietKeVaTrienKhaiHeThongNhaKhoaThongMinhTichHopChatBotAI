@@ -14,6 +14,28 @@ export interface MedicalServiceDTO {
 export type CreateMedicalServiceRequest = Omit<MedicalServiceDTO, 'id'>;
 export type UpdateMedicalServiceRequest = Partial<CreateMedicalServiceRequest>;
 
+export interface AllergyDTO {
+  id: string;
+  name: string;
+  type?: string;
+  description?: string;
+}
+
+export interface MedicalHistoryRequest {
+  appointmentId: string;
+  patientId: string;
+  symptoms?: string;
+  treatment?: string;
+  diagnosis?: string;
+  disease?: string;
+}
+
+export interface MedicalHistoryResponse extends MedicalHistoryRequest {
+  id: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 class MedicalServiceController {
   private baseUrl = API_CONFIG.ENDPOINTS.MEDICAL_SERVICES;
 
@@ -93,6 +115,35 @@ class MedicalServiceController {
     if (!res.ok && res.status !== 204) {
       await this.handleResponse(res);
     }
+  }
+
+  async getAllergies(): Promise<AllergyDTO[]> {
+    const url = createApiUrl('patient', '/patient-service/allergies');
+    const res = await fetch(url, { headers: getApiHeaders(true) });
+    return this.handleResponse<AllergyDTO[]>(res);
+  }
+
+  async createMedicalHistory(
+    payload: MedicalHistoryRequest
+  ): Promise<MedicalHistoryResponse> {
+    const url = createApiUrl('patient', '/patient-service/medical-histories');
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<MedicalHistoryResponse>(res);
+  }
+
+  async getMedicalHistoriesByAppointment(
+    appointmentId: string
+  ): Promise<MedicalHistoryResponse[]> {
+    const url = createApiUrl(
+      'patient',
+      `/patient-service/medical-histories/appointment/${appointmentId}`
+    );
+    const res = await fetch(url, { headers: getApiHeaders(true) });
+    return this.handleResponse<MedicalHistoryResponse[]>(res);
   }
 }
 

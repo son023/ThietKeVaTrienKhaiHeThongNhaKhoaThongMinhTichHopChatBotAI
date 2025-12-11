@@ -28,5 +28,15 @@ public class LabTestCompletedProcessor {
         ));
         log.info("ServiceChargeAddedEvent published for labTestId: {}, appointmentId: {}", 
                 e.getLabTestId(), e.getAppointmentId());
+        eventBus.publish(asEventMessage(
+                new com.do_an.common.event.LabTestCompletedEvent(
+                        e.getLabTestId(),
+                        e.getAppointmentId(),
+                        e.getDoctorId(),
+                        e.getPrice()
+                )
+        ));
+        log.info("CommonLabTestCompletedEvent published for labTestId: {}, appointmentId: {}, doctorId: {}", 
+                e.getLabTestId(), e.getAppointmentId(), e.getDoctorId());
     }
 }
