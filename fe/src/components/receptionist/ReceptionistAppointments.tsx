@@ -2,8 +2,10 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronLeft, ChevronRight, ClipboardPlus, ShieldCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { appointmentController } from '../../controllers/AppointmentController';
+import CheckinDialog from './CheckinDialog';
 
 interface Doctor {
   id: string;
@@ -13,17 +15,26 @@ interface Doctor {
 
 interface Appointment {
   id: string;
+  patientId: string;
   patientName: string;
   time: string;
   duration: number;
   doctorId: string;
-  status: 'waiting_confirm' | 'confirmed' | 'checked_in' | 'in_treatment' | 'completed';
+  status:
+    | 'waiting_confirm'
+    | 'waiting_checkin'
+    | 'checked_in'
+    | 'in_treatment'
+    | 'waiting_payment'
+    | 'completed';
   service: string;
 }
 
 export function ReceptionistAppointments() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   
   const doctors: Doctor[] = [
     { id: '1', name: 'BS. Phạm Thị Ngọc Mai', color: '#3FB5FF' },
@@ -33,22 +44,18 @@ export function ReceptionistAppointments() {
 
   const [selectedDoctors, setSelectedDoctors] = useState<string[]>(doctors.map(d => d.id));
 
-  const appointments: Appointment[] = [
-    { id: '1', patientName: 'Nguyễn Văn A', time: '09:00', duration: 60, doctorId: '1', status: 'confirmed', service: 'Khám tổng quát' },
-    { id: '2', patientName: 'Trần Thị B', time: '09:30', duration: 30, doctorId: '2', status: 'waiting_confirm', service: 'Trám răng' },
-    { id: '3', patientName: 'Lê Văn C', time: '10:00', duration: 90, doctorId: '1', status: 'confirmed', service: 'Tẩy trắng răng' },
-    { id: '4', patientName: 'Phạm Thị D', time: '10:30', duration: 45, doctorId: '3', status: 'checked_in', service: 'Nhổ răng khôn' },
-    { id: '5', patientName: 'Hoàng Văn E', time: '14:00', duration: 30, doctorId: '2', status: 'confirmed', service: 'Cạo vôi' },
-    { id: '6', patientName: 'Võ Thị F', time: '14:30', duration: 60, doctorId: '1', status: 'in_treatment', service: 'Niềng răng' },
-  ];
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
 
   const timeSlots = Array.from({ length: 13 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`);
 
   const statusColors = {
     waiting_confirm: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    confirmed: 'bg-blue-100 text-blue-800 border-blue-300',
+    waiting_checkin: 'bg-blue-100 text-blue-800 border-blue-300',
     checked_in: 'bg-purple-100 text-purple-800 border-purple-300',
     in_treatment: 'bg-green-100 text-green-800 border-green-300',
+    waiting_payment: 'bg-orange-100 text-orange-800 border-orange-300',
     completed: 'bg-gray-100 text-gray-800 border-gray-300',
   };
 
@@ -60,7 +67,63 @@ export function ReceptionistAppointments() {
     );
   };
 
-  const filteredAppointments = appointments.filter(apt => selectedDoctors.includes(apt.doctorId));
+  const openCheckInDialog = async (apt: Appointment) => {
+    setSelectedAppointment(apt);
+    setCheckInDialogOpen(true);
+  };
+
+  const filteredAppointments = useMemo(
+    () => appointments.filter(apt => selectedDoctors.includes(apt.doctorId)),
+    [appointments, selectedDoctors]
+  );
+
+  const mapStatus = (status: string): Appointment['status'] => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'waiting_checkin';
+      case 'CHECKED':
+        return 'checked_in';
+      case 'IN_PROGRESS':
+        return 'in_treatment';
+      case 'COMPLETED':
+        return 'completed';
+      default:
+        return 'waiting_confirm';
+    }
+  };
+
+  const loadAppointments = async () => {
+    try {
+      setLoadingAppointments(true);
+      setAppointmentsError(null);
+      const today = selectedDate;
+      const data = await appointmentController.getByDate(today);
+      const mapped: Appointment[] = data.map((apt) => {
+        const start = new Date(apt.appointmentStartTime);
+        return {
+          id: apt.id,
+          patientId: apt.patientId,
+          patientName: `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`,
+          time: start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          duration: 60,
+          doctorId: apt.doctorId,
+          status: mapStatus(apt.status),
+          service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
+        };
+      });
+      setAppointments(mapped);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Không thể tải lịch hẹn';
+      setAppointmentsError(msg);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   return (
     <div className="p-8 space-y-6">
@@ -110,6 +173,13 @@ export function ReceptionistAppointments() {
           </Button>
         </div>
       </Card>
+
+      {loadingAppointments && (
+        <div className="text-sm text-gray-600 px-1">Đang tải lịch hẹn...</div>
+      )}
+      {appointmentsError && (
+        <div className="text-sm text-red-600 px-1">{appointmentsError}</div>
+      )}
 
       {/* Doctor Filter */}
       <Card className="p-4">
@@ -177,6 +247,23 @@ export function ReceptionistAppointments() {
                               height: `${(apt.duration / 30) * 32}px`,
                             }}
                           >
+                            {apt.status !== 'checked_in' && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="absolute top-1 right-1 h-7 px-2 text-[11px] bg-white/80 hover:bg-white shadow-sm"
+                                onClick={() => openCheckInDialog(apt)}
+                              >
+                                <ClipboardPlus className="w-3 h-3 mr-1" />
+                                Check-in
+                              </Button>
+                            )}
+                            {apt.status === 'checked_in' && (
+                              <div className="absolute top-1 right-1 flex items-center gap-1 text-green-700 text-[11px] bg-white/80 px-2 py-1 rounded">
+                                <ShieldCheck className="w-3 h-3" />
+                                Đã check-in
+                              </div>
+                            )}
                             <p className="text-xs line-clamp-1">{apt.patientName}</p>
                             <p className="text-xs text-gray-600">{apt.service}</p>
                             <p className="text-xs mt-1">{apt.time} ({apt.duration}p)</p>
@@ -190,6 +277,32 @@ export function ReceptionistAppointments() {
             ))}
         </div>
       </Card>
+
+      <CheckinDialog
+        open={checkInDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAppointment(null);
+          setCheckInDialogOpen(open);
+        }}
+        appointment={
+          selectedAppointment
+            ? {
+                id: selectedAppointment.id,
+                patientId: selectedAppointment.patientId,
+                patientName: selectedAppointment.patientName,
+                serviceName: selectedAppointment.service,
+              }
+            : null
+        }
+        onCheckedIn={() => {
+          if (!selectedAppointment) return;
+          setAppointments((prev) =>
+            prev.map((apt) =>
+              apt.id === selectedAppointment.id ? { ...apt, status: 'checked_in' } : apt
+            )
+          );
+        }}
+      />
 
       {/* Legend */}
       <div className="flex items-center gap-6 text-xs">
