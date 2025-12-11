@@ -11,5 +11,6 @@ import java.util.UUID;
 public class LabTestCompletedEvent {
     private UUID labTestId;
     private UUID appointmentId;
+    private UUID doctorId;
     private int price;
 }

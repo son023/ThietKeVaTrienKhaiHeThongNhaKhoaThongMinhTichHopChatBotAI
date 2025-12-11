@@ -5,6 +5,9 @@ import com.main_project.labtest_service.entity.LabTechnician;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
 import com.main_project.labtest_service.entity.MedicalAttachment;
+import com.main_project.labtest_service.feignclient.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
@@ -12,8 +15,14 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class EntityDTOMapper {
+    private final UserServiceClient userServiceClient;
+    private final DoctorServiceClient doctorServiceClient;
+    private final AppointmentServiceClient appointmentServiceClient;
+    private final PatientServiceClient patientServiceClient;
     // ===================
     // LabTest
     // ===================
@@ -26,8 +35,29 @@ public class EntityDTOMapper {
         dto.setMedicalHistoryId(entity.getMedicalHistoryId());
         if (entity.getLabTechnician() != null) {
             dto.setLabTechnicianId(entity.getLabTechnician().getUserId());
+            try {
+                var user = userServiceClient.getUserById(entity.getLabTechnician().getUserId());
+                if (user != null && user.getFullname() != null) {
+                    dto.setLabTechnicianName(user.getFullname());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch lab technician name for userId: {}", entity.getLabTechnician().getUserId(), e);
+            }
         }
         dto.setDoctorId(entity.getDoctorId());
+        if (entity.getDoctorId() != null) {
+            try {
+                var doctor = doctorServiceClient.getDoctorById(entity.getDoctorId());
+                if (doctor != null && doctor.getUserId() != null) {
+                    var user = userServiceClient.getUserById(doctor.getUserId());
+                    if (user != null && user.getFullname() != null) {
+                        dto.setDoctorName(user.getFullname());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch doctor name for doctorId: {}", entity.getDoctorId(), e);
+            }
+        }
         dto.setPrice(entity.getPrice());
         dto.setInstructions(entity.getInstructions());
         dto.setStatus(entity.getStatus());
@@ -39,15 +69,49 @@ public class EntityDTOMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
-        if (entity.getLabTestType() != null) {
-            dto.setLabTestTypeId(entity.getLabTestType().getId());
+        if (entity.getAppointmentId() != null) {
+            try {
+                log.debug("Fetching appointment for appointmentId: {}", entity.getAppointmentId());
+                var appointment = appointmentServiceClient.getAppointmentById(entity.getAppointmentId());
+                if (appointment != null && appointment.getPatientId() != null) {
+                    log.debug("Appointment found, patientId (userId): {}", appointment.getPatientId());
+                    var user = userServiceClient.getUserById(appointment.getPatientId());
+                    if (user != null && user.getFullname() != null) {
+                        dto.setPatientName(user.getFullname());
+                        log.debug("Patient name set: {}", user.getFullname());
+                    } else {
+                        log.warn("User not found or fullname is null for patientId (userId): {}", appointment.getPatientId());
+                    }
+                } else {
+                    if (appointment == null) {
+                        log.warn("Appointment not found for appointmentId: {}", entity.getAppointmentId());
+                    } else {
+                        log.warn("Appointment has no patientId for appointmentId: {}", entity.getAppointmentId());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to fetch patient name for appointmentId: {}", entity.getAppointmentId(), e);
+            }
+        } else {
+            log.debug("LabTest has no appointmentId, skipping patient name fetch");
         }
 
-        if (entity.getMedicalAttachments() != null) {
+        if (entity.getLabTestType() != null) {
+            dto.setLabTestTypeId(entity.getLabTestType().getId());
+            dto.setLabTestType(toLabTestTypeDTO(entity.getLabTestType()));
+        }
+
+        if (entity.getMedicalAttachments() != null && !entity.getMedicalAttachments().isEmpty()) {
             dto.setMedicalAttachmentIds(
                     entity.getMedicalAttachments().stream()
                             .filter(Objects::nonNull)
                             .map(MedicalAttachment::getId)
+                            .collect(Collectors.toList())
+            );
+            dto.setMedicalAttachments(
+                    entity.getMedicalAttachments().stream()
+                            .filter(Objects::nonNull)
+                            .map(this::toMedicalAttachmentDTO)
                             .collect(Collectors.toList())
             );
         }
