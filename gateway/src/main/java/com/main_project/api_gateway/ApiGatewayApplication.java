@@ -11,7 +11,6 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @EnableFeignClients
 @EnableWebFlux
 public class ApiGatewayApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(ApiGatewayApplication.class, args);
 	}
