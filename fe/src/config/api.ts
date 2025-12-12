@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080',
+  BASE_URL: 'http://localhost:8079',
 
   ENDPOINTS: {
     // User Service
@@ -18,7 +18,20 @@ export const API_CONFIG = {
     DOCTORS: '/doctor-service/doctors',
 
     // Patient Service
-    PATIENTS: '/patient-service/patients'
+    PATIENTS: '/patient-service/patients',
+    MEDICAL_HISTORIES: '/patient-service/medical-histories',
+
+    // Payment Service
+    PAYMENTS: '/payment-service/payments',
+
+    // Invoice Service
+    INVOICES: '/invoice-service/invoices',
+
+    //Inventory Service
+    INVENTORIES: '/inventory-service',
+
+    //Prescription Billing Service
+    PRESCRIPTION_BILLINGS: '/prescription-billing-service/prescription-billings',
   }
 };
 

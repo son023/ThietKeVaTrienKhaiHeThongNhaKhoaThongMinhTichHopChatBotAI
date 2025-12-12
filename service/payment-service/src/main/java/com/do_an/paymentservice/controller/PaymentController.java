@@ -180,4 +180,32 @@ public class PaymentController {
         
         return ResponseEntity.ok(response);
     }
+
+    @Operation(
+        summary = "Xử lý callback từ PayOS redirect",
+        description = "Endpoint này được gọi từ frontend sau khi PayOS redirect về. Dùng để cập nhật trạng thái payment cho cả trường hợp CANCELLED."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cập nhật thành công"),
+        @ApiResponse(responseCode = "404", description = "Không tìm thấy payment")
+    })
+    @PostMapping("/callback")
+    public ResponseEntity<PaymentResponseDTO> handlePaymentCallback(
+        @Parameter(description = "Order code từ PayOS", required = true)
+        @RequestParam Long orderCode,
+        @Parameter(description = "Status từ PayOS: PAID, CANCELLED, etc.")
+        @RequestParam(required = false) String status,
+        @Parameter(description = "Code từ PayOS: 00 = success")
+        @RequestParam(required = false) String code,
+        @Parameter(description = "Cancel flag")
+        @RequestParam(required = false) Boolean cancel) {
+    
+        log.info("Nhận callback từ PayOS - OrderCode: {}, Status: {}, Code: {}, Cancel: {}", 
+                orderCode, status, code, cancel);
+        
+        PaymentResponseDTO response = paymentService.handlePaymentCallback(
+                String.valueOf(orderCode), status, code, cancel);
+        
+        return ResponseEntity.ok(response);
+    }
 }

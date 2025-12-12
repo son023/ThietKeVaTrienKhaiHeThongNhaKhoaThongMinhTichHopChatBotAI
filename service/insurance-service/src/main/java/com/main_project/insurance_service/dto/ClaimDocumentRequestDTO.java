@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -24,7 +25,7 @@ public class ClaimDocumentRequestDTO {
     private String status;
     
     @NotNull(message = "Upload time is required")
-    private ZonedDateTime uploadAt;
+    private LocalDateTime uploadAt;
     
     @NotNull(message = "Insurance claim ID is required")
     private UUID insuranceClaimId;

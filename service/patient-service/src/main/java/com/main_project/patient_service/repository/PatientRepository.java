@@ -21,6 +21,8 @@ import java.util.UUID;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
 
+    Optional<Patient> findByUserId(UUID id);
+
     /**
      * Find patient with all relationships eagerly loaded.
      * Avoids N+1 query problem.
@@ -30,7 +32,7 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
            "LEFT JOIN FETCH pa.allergy " +
            "LEFT JOIN FETCH p.underlyingDiseases " +
            "LEFT JOIN FETCH p.toothIssues " +
-           "WHERE p.id = :id")
+           "WHERE p.userId = :id")
     Optional<Patient> findByIdWithDetails(@Param("id") UUID id);
 
     /**

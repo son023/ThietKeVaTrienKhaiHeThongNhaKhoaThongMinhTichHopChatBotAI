@@ -12,6 +12,8 @@ public interface IDispenseItemService {
     DispenseItemResponse getById(UUID id);
     List<DispenseItemResponse> getAll();
     void delete(UUID id);
+
+    List<DispenseItemResponse> getAllByDispenseOrderId(UUID dispenseOrderId);
 }
 
 

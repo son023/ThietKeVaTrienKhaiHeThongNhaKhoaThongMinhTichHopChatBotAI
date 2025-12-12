@@ -3,6 +3,7 @@ package com.main_project.insurance_service.dto;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -18,8 +19,8 @@ public class InsurancePolicyDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
-    private ZonedDateTime createAt;
-    private ZonedDateTime updateAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
 }
 
 

@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface DispenseItemRepository extends JpaRepository<DispenseItem, UUID> {
     // Find all DispenseItems by DispenseOrder
     List<DispenseItem> findByDispenseOrderId(UUID dispenseOrderId);
+
+    List<DispenseItem> findAllByDispenseOrderId(UUID dispenseOrderId);
 }
 
 

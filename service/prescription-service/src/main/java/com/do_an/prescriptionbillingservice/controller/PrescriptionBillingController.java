@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/prescription-billing-service/prescription-billings")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class PrescriptionBillingController {
     private final CommandGateway commandGateway;
 

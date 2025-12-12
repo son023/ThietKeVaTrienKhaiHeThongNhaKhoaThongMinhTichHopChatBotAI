@@ -1,112 +1,202 @@
-DROP TABLE IF EXISTS claim_item CASCADE;
-DROP TABLE IF EXISTS bhyt_catalogue CASCADE;
 
 DROP TABLE IF EXISTS claim_document CASCADE;
+DROP TABLE IF EXISTS claim_item CASCADE;
 DROP TABLE IF EXISTS insurance_claim CASCADE;
-
 DROP TABLE IF EXISTS patient_insurance CASCADE;
+DROP TABLE IF EXISTS bhyt_catalogue CASCADE;
 DROP TABLE IF EXISTS insurance_policy CASCADE;
 
-CREATE TABLE insurance_policy (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    policy_number VARCHAR(255) UNIQUE NOT NULL,
-    policy_type VARCHAR(255),
-    coverage_amount INT,
-    deductible INT,
-    start_date DATE,
-    end_date DATE,
-    status VARCHAR(255),
-    create_at TIMESTAMPTZ DEFAULT now(),
-    update_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE TABLE patient_insurance (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    patient_id UUID UNIQUE NOT NULL,
-    issue_date DATE,
-    expiry_date DATE,
-    status VARCHAR(255),
-    create_at TIMESTAMPTZ DEFAULT now(),
-    update_at TIMESTAMPTZ DEFAULT now(),
-    insurance_policy_id UUID REFERENCES insurance_policy(id) -- Khóa ngoại
-);
-CREATE TABLE insurance_claim (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    status VARCHAR(255),
-    claim_date TIMESTAMPTZ,
-    approval_date TIMESTAMPTZ,
-    notes VARCHAR(255),
-    create_at TIMESTAMPTZ DEFAULT now(),
-    update_at TIMESTAMPTZ DEFAULT now(),
+-- ---------------------------------------------------------------------
+-- Bảng 1: insurance_policy
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.insurance_policy
+(
+    id              UUID         NOT NULL,
+    coverage_amount INTEGER,
+    create_at       TIMESTAMP,
+    deductible      INTEGER,
+    end_date        DATE,
+    policy_number   VARCHAR(255) NOT NULL,
+    policy_type     VARCHAR(255),
+    start_date      DATE,
+    status          VARCHAR(255),
+    update_at       TIMESTAMP,
 
-    patient_pay_amount INT,    -- Số tiền bệnh nhân phải trả
-    total_claim_amount INT,    -- Tổng số tiền yêu cầu bồi thường
-    total_insurance_pay INT,   -- Tổng số tiền bảo hiểm trả
+-- Khóa chính
+    CONSTRAINT insurance_policy_pkey PRIMARY KEY (id),
+    -- Ràng buộc duy nhất
+    CONSTRAINT uk_policy_number UNIQUE (policy_number)
+    );
 
-    patient_insurance_id UUID REFERENCES patient_insurance(id)
-);
-CREATE TABLE claim_document (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    file_path VARCHAR(255),
-    document_type VARCHAR(255),
-    status VARCHAR(255),
-    upload_at TIMESTAMPTZ,
-    insurance_claim_id UUID REFERENCES insurance_claim(id)
-);
+---
 
-CREATE TABLE bhyt_catalogue (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    service_code VARCHAR(50),
-    service_name VARCHAR(255),
-    service_type VARCHAR(50),
-    is_covered BOOLEAN,
-    max_coverage_amount INT
-);
+-- ---------------------------------------------------------------------
+-- Bảng 2: bhyt_catalogue
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.bhyt_catalogue
+(
+    id                  UUID NOT NULL,
+    is_covered          BOOLEAN,
+    max_coverage_amount INTEGER,
+    service_code        VARCHAR(50),
+    service_name        VARCHAR(255),
+    service_type        VARCHAR(50),
 
-CREATE TABLE claim_item (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    quantity INT,
-    unit_price INT,
-    total_amount INT,
-    insurance_pay_ratio FLOAT,
-    insurance_pay_amount INT,
-    patient_pay_amount INT,
-    insurance_claim_id UUID REFERENCES insurance_claim(id),
-    bhyt_catalogue_id UUID REFERENCES bhyt_catalogue(id)
-);
+    -- Khóa chính
+    CONSTRAINT bhyt_catalogue_pkey PRIMARY KEY (id)
+    );
 
--- 1. Thêm chính sách
-INSERT INTO insurance_policy (id, policy_number, policy_type, coverage_amount, deductible, start_date, end_date, status)
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 3: patient_insurance
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.patient_insurance
+(
+    id                  UUID NOT NULL,
+    create_at           TIMESTAMP,
+    expiry_date         DATE,
+    issue_date          DATE,
+    patient_id          UUID NOT NULL,
+    status              VARCHAR(255),
+    update_at           TIMESTAMP,
+    insurance_policy_id UUID,
+
+    -- Khóa chính
+    CONSTRAINT patient_insurance_pkey PRIMARY KEY (id),
+    -- Ràng buộc duy nhất
+    CONSTRAINT uk_patient_id UNIQUE (patient_id),
+
+    -- Khóa ngoại
+    CONSTRAINT fk_patient_insurance_policy
+    FOREIGN KEY (insurance_policy_id)
+    REFERENCES public.insurance_policy (id)
+    ON DELETE CASCADE
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 4: insurance_claim
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.insurance_claim
+(
+    id                   UUID NOT NULL,
+    approval_date        TIMESTAMP,
+    claim_date           TIMESTAMP,
+    create_at            TIMESTAMP,
+    notes                TEXT,
+    patient_pay_amount   INTEGER,
+    status               VARCHAR(255),
+    total_claim_amount   INTEGER,
+    total_insurance_pay  INTEGER,
+    update_at            TIMESTAMP,
+    patient_insurance_id UUID,
+
+    -- Khóa chính
+    CONSTRAINT insurance_claim_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại
+    CONSTRAINT fk_claim_patient_insurance
+    FOREIGN KEY (patient_insurance_id)
+    REFERENCES public.patient_insurance (id)
+    ON DELETE CASCADE
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 5: claim_item
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.claim_item
+(
+    id                   UUID NOT NULL,
+    insurance_pay_amount INTEGER,
+    insurance_pay_ratio  REAL,
+    patient_pay_amount   INTEGER,
+    quantity             INTEGER,
+    total_amount         INTEGER,
+    unit_price           INTEGER,
+    bhyt_catalogue_id    UUID,
+    insurance_claim_id   UUID,
+
+    -- Khóa chính
+    CONSTRAINT claim_item_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại 1
+    CONSTRAINT fk_item_claim
+    FOREIGN KEY (insurance_claim_id)
+    REFERENCES public.insurance_claim (id)
+    ON DELETE CASCADE,
+
+    -- Khóa ngoại 2
+    CONSTRAINT fk_item_catalogue
+    FOREIGN KEY (bhyt_catalogue_id)
+    REFERENCES public.bhyt_catalogue (id)
+    ON DELETE SET NULL
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 6: claim_document
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.claim_document
+(
+    id                 UUID NOT NULL,
+    document_type      VARCHAR(255),
+    file_path          VARCHAR(255),
+    status             VARCHAR(255),
+    upload_at          TIMESTAMP,
+    insurance_claim_id UUID,
+
+    -- Khóa chính
+    CONSTRAINT claim_document_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại
+    CONSTRAINT fk_document_claim
+    FOREIGN KEY (insurance_claim_id)
+    REFERENCES public.insurance_claim (id)
+    ON DELETE CASCADE
+    );
+
+-- ---------------------------------------------------------------------
+-- Tạo Index
+-- ---------------------------------------------------------------------
+CREATE INDEX idx_patient_insurance_policy_id ON public.patient_insurance (insurance_policy_id);
+CREATE INDEX idx_claim_patient_insurance_id ON public.insurance_claim (patient_insurance_id);
+CREATE INDEX idx_item_claim_id ON public.claim_item (insurance_claim_id);
+CREATE INDEX idx_item_catalogue_id ON public.claim_item (bhyt_catalogue_id);
+CREATE INDEX idx_document_claim_id ON public.claim_document (insurance_claim_id);
+
+
+-- =====================================================================
+-- INSERT DATA (Dữ liệu mẫu)
+-- =====================================================================
+
+-- 1. Insert Insurance Policy
+INSERT INTO public.insurance_policy
+(coverage_amount, deductible, end_date, start_date, create_at, update_at, id, policy_number, policy_type, status)
 VALUES
-('a1a1a1a1-1111-4111-8111-111111111111', 'PVI-GOLD-2025', 'Gold', 95, 2000000, '2025-01-01', '2026-01-01', 'ACTIVE'),
-('b2b2b2b2-2222-4222-8222-222222222222', 'BAOVIET-SILVER-2025', 'Silver', 80, 1000000, '2025-01-01', '2026-01-01', 'ACTIVE');
+    (95, 2000000, '2026-01-01', '2025-01-01', NULL, NULL, 'a1a1a1a1-1111-4111-8111-111111111111', 'PVI-GOLD-2025', 'Gold', 'ACTIVE'),
+    (80, 1000000, '2026-01-01', '2025-01-01', NULL, NULL, 'b2b2b2b2-2222-4222-8222-222222222222', 'BAOVIET-SILVER-2025', 'Silver', 'ACTIVE'),
+    (100, 0, '2026-12-31', '2024-01-01', '2025-11-23 08:51:04.15516+00', '2025-11-23 08:51:04.15516+00', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'POL-2025-TEST', 'FULL', 'ACTIVE');
 
--- 2. Thêm bảo hiểm bệnh nhân
-INSERT INTO patient_insurance (id, patient_id, issue_date, expiry_date, status, insurance_policy_id)
-VALUES
-('c3c3c3c3-3333-4333-8333-333333333333', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '2025-02-15', '2026-02-15', 'ACTIVE', 'a1a1a1a1-1111-4111-8111-111111111111');
 
--- 3. Thêm yêu cầu bồi thường (Cập nhật thêm các field tiền mới)
-INSERT INTO insurance_claim (id, patient_pay_amount, total_claim_amount, total_insurance_pay, status, claim_date, notes, patient_insurance_id)
+-- 2. Insert Bhyt Catalogue
+INSERT INTO public.bhyt_catalogue
+(is_covered, max_coverage_amount, id, service_code, service_type, service_name)
 VALUES
-('d4d4d4d4-4444-4444-8444-444444444444', 500000, 3500000, 3000000, 'PENDING', '2025-06-10T09:00:00Z', 'Yêu cầu bồi thường chi phí khám răng', 'c3c3c3c3-3333-4333-8333-333333333333');
+    (true, 10000, '5473aed8-4c33-48b4-a01e-415e3ce75bd6', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'MEDICINE', 'Paracetamol BHYT'),
+    (true, 20000, '59ae9a49-8d32-41ee-bcb7-c5da19ffc01d', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'MEDICINE', 'Amoxicillin BHYT'),
+    (true, 30000, 'f5f5f5f5-5555-4555-8555-555555555555', 'f5f5f5f5-5555-4555-8555-555555555556', 'DENTAL', 'Nhổ răng khôn'),
+    (true, 40000, 'f6f6f6f6-6666-4666-8666-666666666666', 'f6f6f6f6-6666-4666-8666-666666666667', 'DENTAL', 'Trám răng composite');
 
--- 4. Thêm tài liệu
-INSERT INTO claim_document (file_path, document_type, status, upload_at, insurance_claim_id)
-VALUES
-('/uploads/claims/hoa_don.pdf', 'INVOICE', 'UPLOADED', '2025-06-10T09:05:00Z', 'd4d4d4d4-4444-4444-8444-444444444444'),
-('/uploads/claims/don_thuoc.jpg', 'PRESCRIPTION', 'UPLOADED', '2025-06-10T09:06:00Z', 'd4d4d4d4-4444-4444-8444-444444444444');
 
--- 5. Thêm danh mục BHYT (Dữ liệu mẫu)
-INSERT INTO bhyt_catalogue (id, service_code, service_name, service_type, is_covered, max_coverage_amount)
+-- 3. Insert Patient Insurance
+INSERT INTO public.patient_insurance
+(expiry_date, issue_date, create_at, update_at, id, insurance_policy_id, patient_id, status)
 VALUES
-('f5f5f5f5-5555-4555-8555-555555555555', 'f5f5f5f5-5555-4555-8555-555555555556', 'Nhổ răng khôn', 'DENTAL', true, 200000000),
-('f6f6f6f6-6666-4666-8666-666666666666', 'f6f6f6f6-6666-4666-8666-666666666667', 'Trám răng composite', 'DENTAL', true, 200000000);
+    ('2026-02-15', '2025-02-15', NULL, NULL, 'c3c3c3c3-3333-4333-8333-333333333333', 'a1a1a1a1-1111-4111-8111-111111111111', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'ACTIVE'),
+    ('2026-12-31', '2024-01-01', '2025-11-23 08:51:39.841424+00', '2025-11-23 08:51:39.841424+00', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'ACTIVE');
 
--- 6. Thêm chi tiết claim (Claim Item)
--- Ví dụ: Claim 2 mục, 1 cái nhổ răng và 2 cái trám răng
-INSERT INTO claim_item (quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount, insurance_claim_id, bhyt_catalogue_id)
-VALUES
--- Item 1: Nhổ răng khôn
-(1, 2500000, 2500000, 0.8, 2000000, 500000, 'd4d4d4d4-4444-4444-8444-444444444444', 'f5f5f5f5-5555-4555-8555-555555555555'),
--- Item 2: Trám răng
-(2, 500000, 1000000, 1.0, 1000000, 0, 'd4d4d4d4-4444-4444-8444-444444444444', 'f6f6f6f6-6666-4666-8666-666666666666');

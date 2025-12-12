@@ -1,7 +1,9 @@
 package com.do_an.invoiceservice.service;
 
+import com.do_an.invoiceservice.client.AppointmentClient;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceItemRequestDTO;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceRequestDTO;
+import com.do_an.invoiceservice.dto.response.AppointmentDTO;
 import com.do_an.invoiceservice.dto.response.InvoiceResponseDTO;
 import com.do_an.invoiceservice.entity.Invoice;
 import com.do_an.invoiceservice.entity.InvoiceItem;
@@ -12,6 +14,7 @@ import com.do_an.invoiceservice.repository.InvoiceItemRepository;
 import com.do_an.invoiceservice.repository.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +31,10 @@ import java.util.stream.Collectors;
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
-    private final InvoiceItemRepository invoiceItemRepository; // <-- INJECT MỚI
-    private final InvoiceMapper invoiceMapper; // <-- INJECT MỚI
-    private final InvoiceItemMapper invoiceItemMapper; // <-- INJECT MỚI
+    private final InvoiceItemRepository invoiceItemRepository;
+    private final InvoiceMapper invoiceMapper;
+    private final InvoiceItemMapper invoiceItemMapper;
+    private final AppointmentClient appointmentClient;
 
 
     /**
@@ -189,5 +193,67 @@ public class InvoiceService {
             return invoiceMapper.toResponseDtoList(invoiceRepository.findAllByStatus(status));
         }
         return invoiceMapper.toResponseDtoList(invoiceRepository.findAll());
+    }
+
+    /**
+     * Lấy danh sách invoices theo patientId
+     * Query qua appointmentId -> patientId
+     */
+    @Transactional(readOnly = true)
+    public List<InvoiceResponseDTO> getInvoicesByPatientId(UUID patientId, String status) {
+        log.info("Lấy invoices cho patient: {}", patientId);
+        
+        try {
+            // 1. Gọi appointment-service để lấy danh sách appointments của patient
+            List<AppointmentDTO> appointments = appointmentClient.getAppointmentsByPatientId(patientId);
+            
+            log.info("Tìm thấy {} appointments cho patient {}", appointments.size(), patientId);
+            
+            // 2. Extract danh sách appointmentIds
+            List<UUID> appointmentIds = appointments.stream()
+                    .map(AppointmentDTO::getId)
+                    .collect(Collectors.toList());
+            
+            // 3. Nếu không có appointment nào, return empty list
+            if (appointmentIds.isEmpty()) {
+                log.info("Patient {} không có appointment nào", patientId);
+                return List.of();
+            }
+            
+            log.info("Tìm invoices cho {} appointmentIds", appointmentIds.size());
+            
+            // 4. Query invoices theo appointmentIds (và status nếu có)
+            List<Invoice> invoices;
+            if (status != null && !status.isEmpty()) {
+                invoices = invoiceRepository.findAllByAppointmentIdInAndStatusOrderByIssueAtDesc(
+                    appointmentIds, status
+                );
+            } else {
+                invoices = invoiceRepository.findAllByAppointmentIdInOrderByIssueAtDesc(
+                    appointmentIds
+                );
+            }
+            
+            log.info("Tìm thấy {} invoices cho patient {}", invoices.size(), patientId);
+            
+            // 5. Map sang DTO và return
+            return invoices.stream()
+                    .map(invoice -> {
+                        // Load items nếu cần
+                        invoice.getItems().size();
+                        return invoiceMapper.toResponseDto(invoice);
+                    })
+                    .collect(Collectors.toList());
+                    
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy invoices cho patient {}: {}", patientId, e.getMessage(), e);
+            throw new RuntimeException("Không thể lấy danh sách hóa đơn của bệnh nhân: " + e.getMessage(), e);
+        }
+    }
+
+    public List<InvoiceResponseDTO> getInvoicesByAppointmentId(UUID appointmentId){
+        List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(appointmentId);
+        return invoiceMapper.toResponseDtoList(invoices);
+
     }
 }

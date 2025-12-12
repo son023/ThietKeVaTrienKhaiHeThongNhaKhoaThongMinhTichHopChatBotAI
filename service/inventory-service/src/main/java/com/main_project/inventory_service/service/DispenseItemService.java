@@ -98,6 +98,14 @@ public class DispenseItemService implements IDispenseItemService {
         dispenseItemRepository.deleteById(id);
     }
 
+    @Override
+    public List<DispenseItemResponse> getAllByDispenseOrderId(UUID dispenseOrderId) {
+        return dispenseItemRepository.findAllByDispenseOrderId(dispenseOrderId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private DispenseItemResponse mapToResponse(DispenseItem dispenseItem) {
         InventoryLot inventoryLot = dispenseItem.getInventoryLot();
         DispenseOrder dispenseOrder = dispenseItem.getDispenseOrder();

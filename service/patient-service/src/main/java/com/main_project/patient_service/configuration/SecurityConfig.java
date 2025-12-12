@@ -25,6 +25,7 @@ public class SecurityConfig {
 //                .requestMatchers(HttpMethod.GET, "/patient-service/patients/**").hasAnyRole("DOCTOR", "RECEPTIONIST", "ADMIN")
 //                .requestMatchers(HttpMethod.POST, "/patient-service/patients/**").hasAnyRole("RECEPTIONIST", "ADMIN")
 //                .requestMatchers(HttpMethod.PUT, "/patient-service/patients/**").hasAnyRole("RECEPTIONIST", "ADMIN", "PATIENT")
+                .requestMatchers("/patient-service/medical-histories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/patient-service/patients/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/patient-service/patients/**").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/patient-service/patients/**").permitAll()

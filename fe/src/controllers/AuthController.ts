@@ -19,6 +19,7 @@ class AuthController {
       }
 
       const createUserRequest: CreateUserRequest = {
+        
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,

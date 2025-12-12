@@ -37,40 +37,43 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
   // Appointment data and status helpers
 
     const statusMeta: Record<string, { label: string; className: string }> = {
-    pending: {
-      label: 'Cho xac nhan',
+      progressing: {
+      label: 'Chờ xác nhận',
       className: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
     },
     confirmed: {
-      label: 'Da xac nhan',
+      label: 'Đã xác nhận',
       className: 'bg-blue-100 text-blue-800 border border-blue-300',
     },
-    'checked-in': {
-      label: 'Da check-in',
+    checked: {
+      label: 'Đã check-in',
       className: 'bg-yellow-500 text-white',
     },
-    'in-progress': {
-      label: 'Dang kham',
+    'in_progress': {
+      label: 'Đang khám',
       className: 'bg-[#3FB5FF] text-white',
     },
     completed: {
-      label: 'Hoan thanh',
+      label: 'Hoàn thành',
       className: 'bg-green-500 text-white',
     },
     cancelled: {
-      label: 'Da huy',
+      label: 'Đã huỷ',
       className: 'bg-red-100 text-red-800 border border-red-300',
     },
-    'no-show': {
-      label: 'Khong den',
+    'no_show': {
+      label: 'Không đến',
       className: 'bg-gray-200 text-gray-800 border border-gray-300',
     },
   };
 
   const getStatusBadge = (status: string) => {
-    const meta = statusMeta[status] || statusMeta.pending;
+    const meta = statusMeta[status.toLowerCase()] || statusMeta.progressing;
     return <Badge className={`${meta.className} h-7`}>{meta.label}</Badge>;
   };
+
+ 
+
 
   useEffect(() => {
     const loadAppointments = async () => {
@@ -88,6 +91,7 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
         const data = await appointmentController.getByDoctorId(doctorId);
         setAppointments(data);
 
+   
         const patientIds = Array.from(
           new Set(data.map((apt) => apt.patientId).filter(Boolean))
         );
@@ -95,6 +99,8 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           setPatientMap({});
           return;
         }
+
+      
 
         const patients = await Promise.all(
           patientIds.map(async (pid) => {
@@ -107,6 +113,8 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           })
         );
 
+
+
         const map: Record<string, PatientWithUser> = {};
         patients.forEach((p) => {
           if (p?.userId) {
@@ -114,6 +122,7 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           }
         });
         setPatientMap(map);
+        
       } catch (err) {
         setAppointmentError(
           err instanceof Error ? err.message : 'Khong tai duoc lich hen'
@@ -273,7 +282,7 @@ const handleOpenTaskDialog = (task: any) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#01304e]">
               <Calendar className="w-5 h-5 text-[#3FB5FF]" />
-              Lich hen hom nay
+              Lịch hẹn hôm nay
             </CardTitle>
           </CardHeader>
           <CardContent>

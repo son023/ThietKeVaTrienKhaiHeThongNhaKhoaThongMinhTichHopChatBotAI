@@ -19,5 +19,5 @@ public class MedicineItem {
     private String dosage;       // Liều dùng
     private String frequency;    // Tần suất uống
     private String duration;     // Số ngày dùng thuốc
-    private String instruction;  // Hướng dẫn chi tiết
+    private String usageInstructions;  // Hướng dẫn chi tiết
 }

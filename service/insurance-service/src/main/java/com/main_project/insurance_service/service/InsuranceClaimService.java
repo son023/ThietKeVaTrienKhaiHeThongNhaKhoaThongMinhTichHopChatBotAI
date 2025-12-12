@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -143,7 +144,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
         insuranceClaim.setTotalClaimAmount(requestDTO.getTotalAmount());
         insuranceClaim.setTotalInsurancePay(totalInsurancePay);
         insuranceClaim.setPatientPayAmount(totalPatientPay);
-        insuranceClaim.setClaimDate(ZonedDateTime.now());
+        insuranceClaim.setClaimDate(LocalDateTime.now());
 
         //insuranceClaim.setNotes("Claim created from invoice checker request");
 
@@ -274,7 +275,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
                 .orElseThrow(() -> new RuntimeException("Insurance claim not found with id: " + id));
 
         existingEntity.setStatus("APPROVED");
-        existingEntity.setApprovalDate(ZonedDateTime.now());
+        existingEntity.setApprovalDate(LocalDateTime.now());
         // Note: approvedAmount parameter is ignored as approvedAmount field was removed
 
         InsuranceClaim updatedEntity = insuranceClaimRepository.save(existingEntity);
@@ -287,7 +288,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu bảo hiểm với ID: " + id));
 
         existingEntity.setStatus("REJECTED");
-        existingEntity.setApprovalDate(ZonedDateTime.now());
+        existingEntity.setApprovalDate(LocalDateTime.now());
         //existingEntity.setNotes(existingEntity.getNotes() + (existingEntity.getNotes() != null ? " | " : "") + "Lí do từ chối: " + reason);
         existingEntity.setNotes( "Lí do từ chối: " + reason);
         InsuranceClaim updatedEntity = insuranceClaimRepository.save(existingEntity);

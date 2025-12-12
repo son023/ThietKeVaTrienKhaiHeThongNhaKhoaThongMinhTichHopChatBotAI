@@ -22,12 +22,21 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.do_an.invoiceservice.repository.InvoiceRepository;
+import com.do_an.invoiceservice.mapper.InvoiceMapper;
+
 @RestController
 @RequestMapping("/invoice-service/invoices")
 @RequiredArgsConstructor
 @Tag(name = "Invoice Management", description = "API quản lý hóa đơn và chi tiết hóa đơn")
 public class InvoiceController {
+    private static final Logger log = LoggerFactory.getLogger(InvoiceController.class);
+
     private final InvoiceService invoiceService;
+    private final InvoiceRepository invoiceRepository;
+    private final InvoiceMapper invoiceMapper;
 
     private final CommandGateway commandGateway;
 
@@ -104,6 +113,27 @@ public class InvoiceController {
     }
 
     @Operation(
+            summary = "Lấy danh sách hóa đơn theo Patient ID",
+            description = "Lấy tất cả hóa đơn của một bệnh nhân cụ thể"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lấy danh sách thành công")
+    })
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<InvoiceResponseDTO>> getInvoicesByPatientId(
+            @Parameter(description = "ID của bệnh nhân", required = true)
+            @PathVariable UUID patientId,
+            @Parameter(description = "Trạng thái hóa đơn (optional)")
+            @RequestParam(required = false) String status) {
+
+        log.info("Lấy danh sách hóa đơn cho patient: {}, status: {}", patientId, status);
+
+        List<InvoiceResponseDTO> invoices = invoiceService.getInvoicesByPatientId(patientId, status);
+
+        return ResponseEntity.ok(invoices);
+    }
+
+    @Operation(
             summary = "Đánh dấu hóa đơn đã thanh toán",
             description = "Chuyển trạng thái hóa đơn từ PENDING sang PAID. Chỉ có thể thực hiện khi hóa đơn ở trạng thái PENDING."
     )
@@ -144,4 +174,12 @@ public class InvoiceController {
     public CompletableFuture<String> cancelInvoice(@PathVariable UUID id, @RequestParam String reason) {
         return commandGateway.send(new CancelInvoiceCommand(id, reason));
     }
+
+    @GetMapping("/appointment/{appointmentId}")
+    public ResponseEntity<List<InvoiceResponseDTO>> getInvoicesByAppointmentId(
+            @PathVariable UUID appointmentId) {
+        List<InvoiceResponseDTO> invoices = invoiceService.getInvoicesByAppointmentId(appointmentId);
+        return ResponseEntity.ok(invoices);
+    }
+
 }

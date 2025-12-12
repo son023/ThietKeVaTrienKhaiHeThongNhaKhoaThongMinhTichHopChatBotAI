@@ -10,6 +10,7 @@ export function DoctorSidebar({ currentPage, onNavigate }: SidebarProps) {
     { id: 'dashboard', label: 'Bảng điều khiển', icon: Home },
     { id: 'appointments', label: 'Lịch hẹn của tôi', icon: Calendar },
     { id: 'patients', label: 'Bệnh nhân của tôi', icon: Users },
+    { id: 'create-prescription', label: 'Tạo đơn thuốc', icon: FileText },
     // { id: 'treatment-plans', label: 'Kế hoạch điều trị', icon: FileText },
     { id: 'performance', label: 'Hiệu suất cá nhân', icon: TrendingUp },
     { id: 'account', label: 'Tài khoản của tôi', icon: Settings },

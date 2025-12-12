@@ -1,5 +1,6 @@
 package com.main_project.notification_service.service;
 
+import com.main_project.notification_service.dto.NotificationMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -31,49 +32,25 @@ public class WebSocketNotificationService {
         log.info("Appointment rollback notification sent to topic {} for appointment {}", topic, appointmentId);
     }
 
-    public static class NotificationMessage {
-        private String type;
-        private String appointmentId;
-        private String reason;
-        private String message;
+    public void sendInvoicePaidNotification(UUID invoiceId, UUID appointmentId, String message) {
+        log.info("Sending invoice paid notification for invoice {} appointment={}", invoiceId, appointmentId);
 
-        public NotificationMessage(String type, String appointmentId, String reason, String message) {
-            this.type = type;
-            this.appointmentId = appointmentId;
-            this.reason = reason;
-            this.message = message;
-        }
+        // Tạo notification message mở rộng
+        NotificationMessage notification = NotificationMessage.builder()
+                 .type("INVOICE_PAID")
+            .appointmentId(appointmentId != null ? appointmentId.toString() : null)
+            .invoiceId(invoiceId.toString())
+            .reason(invoiceId.toString()) // Dùng reason để chứa invoiceId (backward compatible)
+            .message(message != null ? message : "Hóa đơn đã được thanh toán thành công. Có thể cấp phát đơn thuốc.")
+            .timestamp(System.currentTimeMillis())
+            .build();
 
-        public String getType() {
-            return type;
-        }
+        // Gửi tới topic chung cho tất cả pharmacists
+        String topic = "/topic/invoice-paid";
+        messagingTemplate.convertAndSend(topic, notification);
 
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public String getAppointmentId() {
-            return appointmentId;
-        }
-
-        public void setAppointmentId(String appointmentId) {
-            this.appointmentId = appointmentId;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
+        log.info("Invoice paid notification sent to topic {} for invoice {}", topic, invoiceId);
     }
+
+
 }

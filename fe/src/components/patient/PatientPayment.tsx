@@ -1,105 +1,378 @@
-import { useState } from 'react';
-import { CreditCard, Download, Clock, CheckCircle, AlertCircle, Filter, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CreditCard, Download, Clock, CheckCircle, AlertCircle, Search, Loader2, Shield, Wallet } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { toast } from 'sonner';
+import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
+import { paymentController } from '../../controllers/PaymentController';
+import { authController } from '../../controllers/AuthController';
+
+// Mock data - Pending Invoices
+const pendingInvoices = [
+  {
+    id: 'HD001234',
+    date: '01/11/2024',
+    service: 'Khám tổng quát + Cạo vôi',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 2500000,
+    dueDate: '30/11/2024',
+    status: 'pending',
+    items: [
+      { name: 'Khám tổng quát', quantity: 1, price: 200000 },
+      { name: 'Cạo vôi răng', quantity: 1, price: 500000 },
+      { name: 'Đánh bóng răng', quantity: 1, price: 300000 },
+      { name: 'Chụp X-quang', quantity: 2, price: 1500000 }
+    ]
+  },
+  {
+    id: 'HD001235',
+    date: '05/11/2024',
+    service: 'Tái khám niềng răng (Đợt 2)',
+    doctor: 'BS. Trần Thị B',
+    amount: 5000000,
+    dueDate: '20/11/2024',
+    status: 'pending',
+    items: [
+      { name: 'Tái khám niềng răng', quantity: 1, price: 1000000 },
+      { name: 'Thay khay invisalign mới', quantity: 1, price: 4000000 }
+    ]
+  }
+];
+
+// Mock data - Paid Invoices
+const paidInvoices = [
+  {
+    id: 'HD001233',
+    date: '15/10/2024',
+    service: 'Tẩy trắng răng',
+    doctor: 'BS. Phạm Thị D',
+    amount: 3500000,
+    paidDate: '16/10/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid'
+  },
+  {
+    id: 'HD001232',
+    date: '01/10/2024',
+    service: 'Cạo vôi răng',
+    doctor: 'BS. Lê Văn C',
+    amount: 500000,
+    paidDate: '01/10/2024',
+    paymentMethod: 'Tiền mặt',
+    status: 'paid'
+  },
+  {
+    id: 'HD001231',
+    date: '15/09/2024',
+    service: 'Khám định kỳ + Chụp X-quang',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 300000,
+    paidDate: '15/09/2024',
+    paymentMethod: 'Tiền mặt',
+    status: 'paid'
+  },
+  {
+    id: 'HD001230',
+    date: '01/09/2024',
+    service: 'Điều trị tủy răng (Đợt 3)',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 2500000,
+    paidDate: '02/09/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid'
+  },
+  {
+    id: 'HD001229',
+    date: '15/08/2024',
+    service: 'Niềng răng (Đợt 1)',
+    doctor: 'BS. Trần Thị B',
+    amount: 20000000,
+    paidDate: '16/08/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid'
+  }
+];
+
+// Mock data - InvoiceDisplay
+const mockInvoices: InvoiceDisplay[] = [
+  {
+    id: 'HD001234',
+    date: '01/11/2024',
+    service: 'Khám tổng quát + Cạo vôi',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 2500000,
+    dueDate: '30/11/2024',
+    status: 'pending',
+    items: [
+      { name: 'Khám tổng quát', quantity: 1, price: 200000 },
+      { name: 'Cạo vôi răng', quantity: 1, price: 500000 },
+      { name: 'Đánh bóng răng', quantity: 1, price: 300000 },
+      { name: 'Chụp X-quang', quantity: 2, price: 1500000 }
+    ],
+    patientId: 'PAT001'
+  },
+  {
+    id: 'HD001235',
+    date: '05/11/2024',
+    service: 'Tái khám niềng răng (Đợt 2)',
+    doctor: 'BS. Trần Thị B',
+    amount: 5000000,
+    dueDate: '20/11/2024',
+    status: 'pending',
+    items: [
+      { name: 'Tái khám niềng răng', quantity: 1, price: 1000000 },
+      { name: 'Thay khay invisalign mới', quantity: 1, price: 4000000 }
+    ],
+    patientId: 'PAT001'
+  },
+  {
+    id: 'HD001233',
+    date: '15/10/2024',
+    service: 'Tẩy trắng răng',
+    doctor: 'BS. Phạm Thị D',
+    amount: 3500000,
+    paidDate: '16/10/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid',
+    items: [
+      { name: 'Tẩy trắng răng', quantity: 1, price: 3500000 }
+    ],
+    patientId: 'PAT002'
+  },
+  {
+    id: 'HD001232',
+    date: '01/10/2024',
+    service: 'Cạo vôi răng',
+    doctor: 'BS. Lê Văn C',
+    amount: 500000,
+    paidDate: '01/10/2024',
+    paymentMethod: 'Tiền mặt',
+    status: 'paid',
+    items: [
+      { name: 'Cạo vôi răng', quantity: 1, price: 500000 }
+    ],
+    patientId: 'PAT002'
+  },
+  {
+    id: 'HD001231',
+    date: '15/09/2024',
+    service: 'Khám định kỳ + Chụp X-quang',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 300000,
+    paidDate: '15/09/2024',
+    paymentMethod: 'Tiền mặt',
+    status: 'paid',
+    items: [
+      { name: 'Khám định kỳ', quantity: 1, price: 100000 },
+      { name: 'Chụp X-quang', quantity: 1, price: 200000 }
+    ],
+    patientId: 'PAT001'
+  },
+  {
+    id: 'HD001230',
+    date: '01/09/2024',
+    service: 'Điều trị tủy răng (Đợt 3)',
+    doctor: 'BS. Nguyễn Văn A',
+    amount: 2500000,
+    paidDate: '02/09/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid',
+    items: [
+      { name: 'Điều trị tủy răng', quantity: 1, price: 2500000 }
+    ],
+    patientId: 'PAT001'
+  },
+  {
+    id: 'HD001229',
+    date: '15/08/2024',
+    service: 'Niềng răng (Đợt 1)',
+    doctor: 'BS. Trần Thị B',
+    amount: 20000000,
+    paidDate: '16/08/2024',
+    paymentMethod: 'Chuyển khoản',
+    status: 'paid',
+    items: [
+      { name: 'Niềng răng', quantity: 1, price: 20000000 }
+    ],
+    patientId: 'PAT002'
+  }
+];
+
+// Mock data - PaymentMethod
+const mockPaymentMethods = [
+  { id: 'bank_transfer', name: 'Chuyển khoản ngân hàng' },
+  { id: 'credit_card', name: 'Thẻ tín dụng/ghi nợ' },
+  { id: 'cash', name: 'Tiền mặt tại phòng khám' }
+];
+
+// Mock data - InvoiceDisplay
+interface InvoiceDisplay {
+  id: string;
+  date: string;
+  service: string;
+  doctor: string;
+  amount: number;
+  dueDate?: string;
+  paidDate?: string;
+  paymentMethod?: string;
+  status: string;
+  items: { name: string; quantity: number; price: number }[];
+  patientId: string;
+  insurancePays?: number; // Added for backend mapping
+  patientPays?: number; // Added for backend mapping
+}
+
+// Mock data - PaymentMethod
+interface PaymentMethod {
+  id: string;
+  name: string;
+}
+
+// Mock data - InvoiceDTO
+interface InvoiceDTO {
+  id: string;
+  date: string;
+  service: string;
+  doctor: string;
+  amount: number;
+  dueDate?: string;
+  status: string;
+  items: { name: string; quantity: number; price: number }[];
+  patientId: string;
+  issueAt: string; // Added for backend mapping
+  paidAt?: string; // Added for backend mapping
+  totalAmount?: number; // Added for backend mapping
+  insuranceTotalPay?: number; // Added for backend mapping
+  patientTotalPay?: number; // Added for backend mapping
+  appointmentId?: string; // Added for backend mapping
+}
+
+// Mock data - InvoiceResponseDTO
+interface InvoiceResponseDTO {
+  id: string;
+  date: string;
+  service: string;
+  doctor: string;
+  amount: number;
+  paidDate?: string;
+  paymentMethod?: string;
+  status: string;
+  items: { name: string; quantity: number; price: number }[];
+  patientId: string;
+}
+
+// Map backend invoice to display format
+const mapInvoiceFromBackend = (invoice: InvoiceDTO): InvoiceDisplay => {
+  const status: 'pending' | 'paid' | 'cancelled' =
+    invoice.status === 'PAID' ? 'paid' :
+      invoice.status === 'CANCELLED' ? 'cancelled' : 'pending';
+
+  return {
+    id: invoice.id.substring(0, 8).toUpperCase(),
+    date: new Date(invoice.issueAt).toLocaleDateString('vi-VN'),
+    service: invoice.items.map(item => item.description || item.serviceType).join(', '),
+    doctor: 'BS. Đang cập nhật', // TODO: Get from appointment
+    amount: invoice.totalAmount || 0, // ← Thêm || 0
+    patientId: invoice.appointmentId || '', // TODO: Map properly
+    insurancePays: invoice.insuranceTotalPay || 0, // ← Thêm || 0
+    patientPays: invoice.patientTotalPay || 0, // ← Thêm || 0
+    paidDate: invoice.paidAt ? new Date(invoice.paidAt).toLocaleDateString('vi-VN') : undefined,
+    status,
+    items: invoice.items.map(item => ({
+      name: item.description || item.serviceType || 'Dịch vụ', // ← Thêm fallback
+      quantity: item.quantity || 1, // ← Thêm fallback
+      price: item.unitPrice || 0, // ← MAP unitPrice -> price, thêm fallback
+      insurancePayAmount: item.insurancePayAmount || 0, // ← Thêm || 0
+      patientPayAmount: item.patientPayAmount || 0, // ← Thêm || 0
+    })),
+  };
+};
+
+
+
+// Mock data - getMockInvoices
+const getMockInvoices = (): InvoiceDisplay[] => {
+  return mockInvoices;
+};
 
 export function PatientPayment() {
   const [selectedTab, setSelectedTab] = useState('pending');
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDisplay | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock data - Pending Invoices
-  const pendingInvoices = [
-    {
-      id: 'HD001234',
-      date: '01/11/2024',
-      service: 'Khám tổng quát + Cạo vôi',
-      doctor: 'BS. Nguyễn Văn A',
-      amount: 2500000,
-      dueDate: '30/11/2024',
-      status: 'pending',
-      items: [
-        { name: 'Khám tổng quát', quantity: 1, price: 200000 },
-        { name: 'Cạo vôi răng', quantity: 1, price: 500000 },
-        { name: 'Đánh bóng răng', quantity: 1, price: 300000 },
-        { name: 'Chụp X-quang', quantity: 2, price: 1500000 }
-      ]
-    },
-    {
-      id: 'HD001235',
-      date: '05/11/2024',
-      service: 'Tái khám niềng răng (Đợt 2)',
-      doctor: 'BS. Trần Thị B',
-      amount: 5000000,
-      dueDate: '20/11/2024',
-      status: 'pending',
-      items: [
-        { name: 'Tái khám niềng răng', quantity: 1, price: 1000000 },
-        { name: 'Thay khay invisalign mới', quantity: 1, price: 4000000 }
-      ]
-    }
-  ];
+  // Backend data
+  const [invoices, setInvoices] = useState<InvoiceDisplay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
-  // Mock data - Paid Invoices
-  const paidInvoices = [
-    {
-      id: 'HD001233',
-      date: '15/10/2024',
-      service: 'Tẩy trắng răng',
-      doctor: 'BS. Phạm Thị D',
-      amount: 3500000,
-      paidDate: '16/10/2024',
-      paymentMethod: 'Chuyển khoản',
-      status: 'paid'
-    },
-    {
-      id: 'HD001232',
-      date: '01/10/2024',
-      service: 'Cạo vôi răng',
-      doctor: 'BS. Lê Văn C',
-      amount: 500000,
-      paidDate: '01/10/2024',
-      paymentMethod: 'Tiền mặt',
-      status: 'paid'
-    },
-    {
-      id: 'HD001231',
-      date: '15/09/2024',
-      service: 'Khám định kỳ + Chụp X-quang',
-      doctor: 'BS. Nguyễn Văn A',
-      amount: 300000,
-      paidDate: '15/09/2024',
-      paymentMethod: 'Tiền mặt',
-      status: 'paid'
-    },
-    {
-      id: 'HD001230',
-      date: '01/09/2024',
-      service: 'Điều trị tủy răng (Đợt 3)',
-      doctor: 'BS. Nguyễn Văn A',
-      amount: 2500000,
-      paidDate: '02/09/2024',
-      paymentMethod: 'Chuyển khoản',
-      status: 'paid'
-    },
-    {
-      id: 'HD001229',
-      date: '15/08/2024',
-      service: 'Niềng răng (Đợt 1)',
-      doctor: 'BS. Trần Thị B',
-      amount: 20000000,
-      paidDate: '16/08/2024',
-      paymentMethod: 'Chuyển khoản',
-      status: 'paid'
-    }
-  ];
+  // Get current patient
+  const [currentPatientId, setCurrentPatientId] = useState<string | null>(null);
 
-  const handlePayNow = (invoice: any) => {
+  // Get patient ID on mount
+  useEffect(() => {
+    const user = authController.getCurrentUser();
+    if (user) {
+      // Giả sử patientId = userId cho patient role
+      // Nếu cần mapping khác, có thể gọi thêm API
+      setCurrentPatientId(user.id);
+      console.log('Current patient ID:', user.id);
+    } else {
+      toast.error('Vui lòng đăng nhập để xem hóa đơn');
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load invoices when patientId is available
+  useEffect(() => {
+    if (currentPatientId) {
+      loadInvoices();
+    }
+  }, [currentPatientId]);
+
+  const loadInvoices = async () => {
+    if (!currentPatientId) {
+      console.error('No patient ID available');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Gọi API lấy invoices của patient này
+      const data = await invoiceController.getInvoicesByPatient(currentPatientId);
+
+      const mappedInvoices: InvoiceDisplay[] = data.map(mapInvoiceFromBackend);
+      setInvoices(mappedInvoices);
+
+      console.log(`✅ Loaded ${mappedInvoices.length} invoices for patient ${currentPatientId}`);
+    } catch (error) {
+      console.error('Error loading patient invoices:', error);
+
+      // Nếu endpoint chưa có, fallback về list all và filter client-side
+      try {
+        console.log('⚠️ Fallback: Trying to load all invoices and filter...');
+        const allInvoices = await invoiceController.listInvoices();
+
+        // TODO: Filter by patientId - cần field patientId trong InvoiceDTO
+        // Hiện tại fallback về mock data
+        const mappedInvoices: InvoiceDisplay[] = allInvoices.map(mapInvoiceFromBackend);
+        setInvoices(mappedInvoices);
+
+        toast.warning('Đang sử dụng chế độ dev (hiển thị tất cả hóa đơn)');
+      } catch (fallbackError) {
+        toast.error('Không thể tải danh sách hóa đơn');
+        // Fallback to mock data
+        setInvoices(getMockInvoices());
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePayNow = (invoice: InvoiceDisplay) => {
     setSelectedInvoice(invoice);
     setShowPaymentDialog(true);
   };
@@ -114,23 +387,61 @@ export function PatientPayment() {
     setSelectedInvoice(null);
   };
 
-  const totalPending = pendingInvoices.reduce((sum, inv) => sum + inv.amount, 0);
-  const totalPaid = paidInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  // ===== FILTER INVOICES THEO STATUS TỪ BACKEND =====
 
+  // Filter theo search query
+  const searchFilteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch =
+      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.service.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
+
+  // Split invoices theo status từ backend
+  const pendingInvoices = searchFilteredInvoices.filter(inv => inv.status === 'pending');
+  const paidInvoices = searchFilteredInvoices.filter(inv => inv.status === 'paid');
+  const cancelledInvoices = searchFilteredInvoices.filter(inv => inv.status === 'cancelled');
+
+  // Tính tổng tiền
+  const totalPending = pendingInvoices.reduce((sum, inv) => sum + (inv.patientPays || inv.amount || 0), 0);
+  const totalPaid = paidInvoices.reduce((sum, inv) => sum + (inv.patientPays || inv.amount || 0), 0);
+
+  // ===== LOADING STATE =====
+  if (isLoading) {
+    return (
+      <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Đang tải danh sách hóa đơn...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== RENDER =====
   return (
     <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
       <div className="max-w-[1440px] mx-auto">
-        {/* DoctorHeader */}
+        {/* Header */}
         <div className="mb-[32px]">
-          <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px] mb-[8px]">
-            Thanh toán & Hóa đơn
-          </h1>
+          <div className="flex items-center justify-between mb-[8px]">
+            <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px]">
+              Thanh toán & Hóa đơn
+            </h1>
+            {currentPatientId && (
+              <span className="px-[12px] py-[6px] bg-blue-50 text-blue-700 rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px]">
+                ID: {currentPatientId.substring(0, 8).toUpperCase()}
+              </span>
+            )}
+          </div>
           <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[16px]">
             Quản lý các hóa đơn và thanh toán của bạn
           </p>
         </div>
 
-        {/* Summary Cards */}
+        {/* Summary Cards - CẬP NHẬT ĐỂ DÙNG FILTERED DATA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px] mb-[32px]">
           <Card className="p-[24px] border-[#ffc107] bg-gradient-to-br from-[#fffbf0] to-white">
             <div className="flex items-start justify-between mb-[16px]">
@@ -191,7 +502,7 @@ export function PatientPayment() {
             </div>
           </div>
 
-          {/* Pending Invoices Tab */}
+          {/* Pending Invoices Tab - CHỈ HIỂN THỊ PENDING */}
           <TabsContent value="pending" className="space-y-[20px]">
             {pendingInvoices.length === 0 ? (
               <Card className="p-[40px] text-center border-[#ebf6fc]">
@@ -297,79 +608,93 @@ export function PatientPayment() {
             )}
           </TabsContent>
 
-          {/* Paid Invoices Tab */}
+          {/* Paid Invoices Tab - CHỈ HIỂN THỊ PAID */}
           <TabsContent value="paid" className="space-y-[20px]">
-            {paidInvoices.map((invoice) => (
-              <Card key={invoice.id} className="p-[24px] md:p-[32px] border-[#ebf6fc] hover:shadow-[0px_4px_20px_0px_rgba(63,181,255,0.15)] transition-all">
-                <div className="flex flex-col lg:flex-row gap-[24px]">
-                  {/* Left side - Invoice details */}
-                  <div className="flex-1 space-y-[16px]">
-                    <div className="flex items-start justify-between gap-[16px] flex-wrap">
-                      <div>
-                        <div className="flex items-center gap-[12px] mb-[8px]">
-                          <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
-                            Hóa đơn #{invoice.id}
-                          </h3>
-                          <span className="px-[12px] py-[6px] bg-[#e8f5e9] text-[#4caf50] rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px] flex items-center gap-[6px]">
-                            <CheckCircle className="w-[14px] h-[14px]" />
-                            Đã thanh toán
-                          </span>
-                        </div>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
-                          {invoice.service}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[20px] mb-[4px]">
-                          {invoice.amount.toLocaleString('vi-VN')}đ
-                        </p>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
-                          {invoice.paymentMethod}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-[12px]">
-                      <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
-                          Ngày khám
-                        </p>
-                        <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
-                          {invoice.date}
-                        </p>
-                      </div>
-                      <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
-                          Ngày thanh toán
-                        </p>
-                        <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
-                          {invoice.paidDate}
-                        </p>
-                      </div>
-                      <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
-                          Bác sĩ
-                        </p>
-                        <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
-                          {invoice.doctor}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right side - Download button */}
-                  <div className="flex lg:flex-col gap-[12px] lg:w-[160px] lg:justify-center">
-                    <button
-                      onClick={() => handleDownloadInvoice(invoice.id)}
-                      className="flex-1 lg:flex-none bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] px-[20px] py-[14px] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[15px] hover:bg-[#ebf6fc] transition-all flex items-center justify-center gap-[8px]"
-                    >
-                      <Download className="w-[18px] h-[18px]" />
-                      Tải xuống
-                    </button>
-                  </div>
-                </div>
+            {paidInvoices.length === 0 ? (
+              <Card className="p-[40px] text-center border-[#ebf6fc]">
+                <AlertCircle className="w-[64px] h-[64px] text-gray-300 mx-auto mb-[16px]" />
+                <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-[8px]">
+                  Chưa có hóa đơn đã thanh toán
+                </h3>
+                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                  Bạn chưa thanh toán hóa đơn nào
+                </p>
               </Card>
-            ))}
+            ) : (
+              <>
+                {paidInvoices.map((invoice) => (
+                  <Card key={invoice.id} className="p-[24px] md:p-[32px] border-[#ebf6fc] hover:shadow-[0px_4px_20px_0px_rgba(63,181,255,0.15)] transition-all">
+                    <div className="flex flex-col lg:flex-row gap-[24px]">
+                      {/* Left side - Invoice details */}
+                      <div className="flex-1 space-y-[16px]">
+                        <div className="flex items-start justify-between gap-[16px] flex-wrap">
+                          <div>
+                            <div className="flex items-center gap-[12px] mb-[8px]">
+                              <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
+                                Hóa đơn #{invoice.id}
+                              </h3>
+                              <span className="px-[12px] py-[6px] bg-[#e8f5e9] text-[#4caf50] rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px] flex items-center gap-[6px]">
+                                <CheckCircle className="w-[14px] h-[14px]" />
+                                Đã thanh toán
+                              </span>
+                            </div>
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                              {invoice.service}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[20px] mb-[4px]">
+                              {invoice.amount.toLocaleString('vi-VN')}đ
+                            </p>
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                              {invoice.paymentMethod}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-[12px]">
+                          <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
+                              Ngày khám
+                            </p>
+                            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
+                              {invoice.date}
+                            </p>
+                          </div>
+                          <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
+                              Ngày thanh toán
+                            </p>
+                            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
+                              {invoice.paidDate}
+                            </p>
+                          </div>
+                          <div className="bg-[#f5fbff] rounded-[10px] p-[12px]">
+                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[12px] mb-[4px]">
+                              Bác sĩ
+                            </p>
+                            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
+                              {invoice.doctor}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right side - Download button */}
+                      <div className="flex lg:flex-col gap-[12px] lg:w-[160px] lg:justify-center">
+                        <button
+                          onClick={() => handleDownloadInvoice(invoice.id)}
+                          className="flex-1 lg:flex-none bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] px-[20px] py-[14px] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[15px] hover:bg-[#ebf6fc] transition-all flex items-center justify-center gap-[8px]"
+                        >
+                          <Download className="w-[18px] h-[18px]" />
+                          Tải xuống
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -425,7 +750,7 @@ export function PatientPayment() {
                   <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[15px] mb-[12px]">
                     Phương thức thanh toán
                   </p>
-                  
+
                   <button className="w-full bg-white border-2 border-[#3fb5ff] rounded-[12px] p-[16px] hover:bg-[#ebf6fc] transition-all text-left">
                     <div className="flex items-center gap-[12px]">
                       <div className="w-[40px] h-[40px] bg-[#3fb5ff] rounded-[10px] flex items-center justify-center">

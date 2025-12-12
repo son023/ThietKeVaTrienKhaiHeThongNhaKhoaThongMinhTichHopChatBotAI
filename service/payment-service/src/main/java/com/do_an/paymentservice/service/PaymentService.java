@@ -524,5 +524,58 @@ public class PaymentService {
             throw new RuntimeException("Không thể lấy thông tin Invoice: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Xử lý callback từ PayOS redirect URL
+     * Đặc biệt xử lý trường hợp CANCELLED vì PayOS không gửi webhook
+     */
+    @Transactional
+    public PaymentResponseDTO handlePaymentCallback(String orderCode, String status, String code, Boolean cancel) {
+        log.info("Xử lý callback redirect - OrderCode: {}, Status: {}, Code: {}, Cancel: {}", 
+                orderCode, status, code, cancel);
+        
+        Payment payment = paymentRepository.findByTransactionId(orderCode)
+                .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy payment với orderCode: " + orderCode));
+        
+        // Nếu payment đã xử lý xong thì return luôn
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            log.info("Payment đã được xử lý: {}", payment.getStatus());
+            return paymentMapper.toResponseDto(payment);
+        }
+        
+        // Xác định trạng thái mới
+        PaymentStatus newStatus;
+        String reason;
+        
+        if (Boolean.TRUE.equals(cancel) || "CANCELLED".equals(status)) {
+            newStatus = PaymentStatus.CANCELLED;
+            reason = "Khách hàng đã hủy thanh toán";
+        } else if ("00".equals(code) || "PAID".equals(status)) {
+            newStatus = PaymentStatus.SUCCESSFUL;
+            reason = "Thanh toán thành công qua PayOS";
+        } else {
+            newStatus = PaymentStatus.FAILED;
+            reason = "Thanh toán thất bại - Code: " + code;
+        }
+        
+        log.info("Cập nhật payment {} từ {} sang {}", payment.getId(), payment.getStatus(), newStatus);
+        
+        // Gửi command để cập nhật status (trigger Saga)
+        commandGateway.send(new UpdatePaymentStatusCommand(
+                payment.getId(),
+                newStatus.toString(),
+                reason
+        ));
+        
+        // Cập nhật local để return ngay
+        payment.setStatus(newStatus);
+        if (newStatus == PaymentStatus.SUCCESSFUL) {
+            payment.setPaidAt(LocalDateTime.now());
+        }
+        payment.setDescription(reason);
+        paymentRepository.save(payment);
+        
+        return paymentMapper.toResponseDto(payment);
+    }
 }
 

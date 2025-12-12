@@ -4,6 +4,10 @@ import { userController } from "./UserController";
 import { UserDTO, UserRole } from "../models";
 import { PatientDTO, PatientWithUser } from "../models/Patient";
 
+
+// ✅ THÊM Interface cho allergy và patient response
+
+
 class PatientController {
   private baseUrl = API_CONFIG.ENDPOINTS.PATIENTS;
 
@@ -37,11 +41,10 @@ class PatientController {
 
   async getWithUserById(id: string): Promise<PatientWithUser> {
     const patient = await this.getById(id); // id = patientId
-    const user = patient.userId
-      ? await userController.getById(patient.userId) // lấy user theo userId
-      : undefined;
-    return { ...patient, user };
+      const user = await userController.getById(id);
+    return { ...patient, userId: patient.id, user };
   }
+  
 }
 
 export const patientController = new PatientController();

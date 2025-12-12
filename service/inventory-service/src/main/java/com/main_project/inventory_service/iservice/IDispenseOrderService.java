@@ -4,6 +4,7 @@ import com.main_project.inventory_service.dto.DispenseOrderRequest;
 import com.main_project.inventory_service.dto.DispenseOrderResponse;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IDispenseOrderService {
@@ -13,9 +14,14 @@ public interface IDispenseOrderService {
     List<DispenseOrderResponse> getAll();
     void delete(UUID id);
 
-    DispenseOrderResponse markAsSold(UUID id);
+    DispenseOrderResponse markAsSold(UUID id, UUID pharmacistId);
 
     DispenseOrderResponse getByPrescriptionId(UUID id);
+
+    List<DispenseOrderResponse> getAllByStatus(String status);
+    List<DispenseOrderResponse> getAllByStatuses(List<String> statuses);
+
+    Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId);
 }
 
 

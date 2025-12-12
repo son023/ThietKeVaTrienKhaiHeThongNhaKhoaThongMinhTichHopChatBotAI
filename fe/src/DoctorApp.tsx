@@ -7,6 +7,7 @@ import PublicApp from './App';
 import { Toaster } from './components/ui/sonner';
 import { authController, doctorController } from './controllers';
 import type { DoctorWithUser } from './controllers/DoctorController';
+import { PrescriptionManagement } from './components/doctor/PrescriptionManagement';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -31,8 +32,26 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   const [selectedTreatmentPlanId, setSelectedTreatmentPlanId] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
   const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
+  // thêm bên cạnh các state khác
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [selectedMedicalHistoryId, setSelectedMedicalHistoryId] = useState<string | null>(null);
+
+
+
   const currentUser = authController.getCurrentUser();
   const doctorId = currentUser?.id || null;
+
+  // hàm tiện ích để mở màn tạo đơn thuốc
+  const goCreatePrescription = (payload: {
+    appointmentId?: string;
+    medicalHistoryId?: string;
+    patientId?: string;
+  }) => {
+    setSelectedAppointmentId(payload.appointmentId || null);
+    setSelectedMedicalHistoryId(payload.medicalHistoryId || null);
+    setSelectedPatientId(payload.patientId || null);
+    setCurrentPage('create-prescription');
+  };
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -55,40 +74,64 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onNavigateToPatient={(id) => {
-          setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
-        }} />;
+        return <Dashboard
+          doctorId={doctorId}
+          onNavigateToPatient={(id) => {
+            setSelectedPatientId(id);
+            setCurrentPage('patient-detail');
+          }} />;
       case 'appointments':
         return <MyAppointments doctorId={doctorId} onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
           setCurrentPage('patient-detail');
         }} />;
       case 'patients':
-        return <MyPatients 
+        return <MyPatients
           onNavigateToPatient={(id) => {
             setSelectedPatientId(id);
             setCurrentPage('patient-detail');
           }}
           onNavigateToAppointments={() => setCurrentPage('appointments')}
         />;
+      // case 'patient-detail':
+      //   return <PatientDetail 
+      //     patientId={selectedPatientId} 
+      //     onBack={() => setCurrentPage('patients')}
+      //     onNavigateToAppointments={() => setCurrentPage('appointments')}
+      //     onNavigateToTreatmentPlan={(planId) => {
+      //       setSelectedTreatmentPlanId(planId);
+      //       setCurrentPage('treatment-plan-detail');
+      //     }}
+
+      //   />;
       case 'patient-detail':
-        return <PatientDetail 
-          patientId={selectedPatientId} 
-          onBack={() => setCurrentPage('patients')}
-          onNavigateToAppointments={() => setCurrentPage('appointments')}
-          onNavigateToTreatmentPlan={(planId) => {
-            setSelectedTreatmentPlanId(planId);
-            setCurrentPage('treatment-plan-detail');
-          }}
-        />;
+        return (
+          <PatientDetail
+            patientId={selectedPatientId}
+            onBack={() => setCurrentPage('patients')}
+            onNavigateToAppointments={() => setCurrentPage('appointments')}
+            onNavigateToTreatmentPlan={(planId) => {
+              setSelectedTreatmentPlanId(planId);
+              setCurrentPage('treatment-plan-detail');
+            }}
+            onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
+              goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
+            }
+          />
+        );
+      case 'create-prescription':
+        return (
+          <PrescriptionManagement
+            onBack={() => setCurrentPage('dashboard')}
+          />
+        );
       case 'treatment-plans':
         return <TreatmentPlans onNavigateToPlan={(id) => {
           setSelectedTreatmentPlanId(id);
           setCurrentPage('treatment-plan-detail');
         }} />;
       case 'treatment-plan-detail':
-        return <TreatmentPlanDetail 
+        return <TreatmentPlanDetail
           planId={selectedTreatmentPlanId}
           onBack={() => setCurrentPage('treatment-plans')}
         />;
@@ -103,6 +146,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         }} />;
     }
   };
+
 
   return (
     <div className="flex h-screen bg-[#fcfeff]">

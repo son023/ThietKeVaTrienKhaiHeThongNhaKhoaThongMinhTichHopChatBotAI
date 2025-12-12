@@ -5,103 +5,176 @@ DROP TABLE IF EXISTS inventory_lot CASCADE;
 DROP TABLE IF EXISTS pharmacist CASCADE;
 DROP TABLE IF EXISTS medicine CASCADE;
 
--- 1. Bảng medicine (Thuốc)
-CREATE TABLE medicine (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    unit VARCHAR(100),
-    description VARCHAR(255),
-    sale_price INT
-);
-
-CREATE TABLE pharmacist (
-    user_id UUID PRIMARY KEY,
-    degree VARCHAR(255),
-    certificate VARCHAR(255)
-);
-
--- 2. Bảng inventory_lot (Lô thuốc trong kho)
-CREATE TABLE inventory_lot (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lot_no VARCHAR(100) UNIQUE NOT NULL,
-    expire_date DATE,
-    quantity_on_hand INT DEFAULT 0,
-    cost_price INT,
-    medicine_id UUID REFERENCES medicine(id)
-);
-
--- 3. Bảng stock_ledger (Sổ kho)
-CREATE TABLE stock_ledger (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    type VARCHAR(255), -- 'IN', 'OUT', 'ADJUST'
-    quantity INT,
-    reference_type VARCHAR(255), -- Ví dụ: 'PURCHASE_ORDER', 'DISPENSE'
-    reference_id UUID,    -- ID của phiếu nhập hoặc đơn thuốc liên quan
-    inventory_lot_id UUID REFERENCES inventory_lot(id),
-    create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    update_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE dispense_order (
-    id UUID PRIMARY KEY,
-    pharmacist_id UUID REFERENCES pharmacist(user_id),
-    prescription UUID,
-    status VARCHAR(255),
-    medical_history_id UUID,
-    doctor_id UUID,
-    create_at TIMESTAMPTZ DEFAULT now(),
-    update_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 5. Bảng dispense_item (Chi tiết đơn cấp phát)
-CREATE TABLE dispense_item (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    quantity INT,
-    price_at_dispense INT,
-    dosage VARCHAR(100),            -- Thêm mới: Liều lượng (VD: 1 viên)
-    frequency VARCHAR(50),          -- Thêm mới: Tần suất (VD: 2 lần/ngày)
-    duration VARCHAR(50),           -- Thêm mới: Thời gian (VD: 5 ngày)
-    usage_instructions VARCHAR(255),-- Thêm mới: Hướng dẫn (VD: Uống sau ăn)
-    inventory_lot_id UUID REFERENCES inventory_lot(id),
-    dispense_order_id UUID REFERENCES dispense_order(id)
-);
-INSERT INTO pharmacist (user_id, degree, certificate)
-VALUES
-('4c84022a-1111-4001-8001-000000000004', 'Cử nhân Dược', 'Chứng chỉ hành nghề Dược');
-
--- 1. Thêm thuốc
-INSERT INTO medicine (id, name, unit, description, sale_price)
-VALUES
-('aaaa1111-aaaa-4aaa-8aaa-111111111111', 'Paracetamol 500mg', 'Viên', 'Giảm đau, hạ sốt', 1000);
-
--- 2. Thêm lô thuốc
-INSERT INTO inventory_lot (id, lot_no, expire_date, quantity_on_hand, cost_price, medicine_id)
-VALUES
-('bbbb2222-bbbb-4bbb-8bbb-222222222222', 'LOTA100-2025', '2027-10-01', 1000, 700, 'aaaa1111-aaaa-4aaa-8aaa-111111111111');
-
--- 3. Ghi sổ kho (Nhập kho)
--- Cập nhật: Bỏ cột 'lot', thêm 'reference_id' (ví dụ mã phiếu nhập)
-INSERT INTO stock_ledger (type, quantity, reference_type, reference_id, inventory_lot_id)
-VALUES
-('IN', 1000, 'PURCHASE_ORDER', 'dddd4444-dddd-4ddd-8ddd-444444444444', 'bbbb2222-bbbb-4bbb-8bbb-222222222222');
-
--- 4. Tạo đơn cấp phát
--- Cập nhật: Thêm medical_history_id và doctor_id
-INSERT INTO dispense_order (id, pharmacist_id, prescription, status, medical_history_id, doctor_id)
-VALUES
-('cccc3333-cccc-4ccc-8ccc-333333333333', '4c84022a-1111-4001-8001-000000000004', 'eeee5555-eeee-4eee-8eee-555555555555', 'PENDING', 'ffff6666-ffff-4fff-8fff-666666666666', 'aaaa7777-aaaa-4aaa-8aaa-777777777777');
-
--- 5. Thêm chi tiết cấp phát
--- Cập nhật: Thêm dosage, frequency, duration, usage_instructions
-INSERT INTO dispense_item (quantity, price_at_dispense, dosage, frequency, duration, usage_instructions, inventory_lot_id, dispense_order_id)
-VALUES
+-- ---------------------------------------------------------------------
+-- Bảng 1: medicine
+-- Danh mục thuốc (Gốc)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.medicine
 (
-    20,
-    1000,
-    '1 viên',
-    '2 lần/ngày',
-    '5 ngày',
-    'Uống sau khi ăn no',
-    'bbbb2222-bbbb-4bbb-8bbb-222222222222',
-    'cccc3333-cccc-4ccc-8ccc-333333333333'
-);
+    id          UUID          NOT NULL,
+    description VARCHAR(255),
+    name        VARCHAR(100)  NOT NULL,
+    sale_price  INTEGER,
+    unit        VARCHAR(100),
+
+    -- Khóa chính
+    CONSTRAINT medicine_pkey PRIMARY KEY (id)
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 2: pharmacist
+-- Thông tin dược sĩ (Gốc)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.pharmacist
+(
+    user_id     UUID NOT NULL,
+    certificate VARCHAR(255),
+    degree      VARCHAR(255),
+
+    -- Khóa chính
+    CONSTRAINT pharmacist_pkey PRIMARY KEY (user_id)
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 3: inventory_lot
+-- Lô thuốc trong kho (Liên kết với Medicine)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.inventory_lot
+(
+    id               UUID         NOT NULL,
+    cost_price       INTEGER,
+    expire_date      DATE,
+    lot_no           VARCHAR(100) NOT NULL,
+    quantity_on_hand INTEGER DEFAULT 0,
+    medicine_id      UUID,
+
+    -- Khóa chính
+    CONSTRAINT inventory_lot_pkey PRIMARY KEY (id),
+    -- Ràng buộc duy nhất
+    CONSTRAINT uk_lot_no UNIQUE (lot_no),
+
+    -- Khóa ngoại: Liên kết với medicine
+    CONSTRAINT fk_inventory_lot_medicine
+    FOREIGN KEY (medicine_id)
+    REFERENCES public.medicine (id)
+    ON DELETE CASCADE
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 4: stock_ledger
+-- Sổ cái kho - Lịch sử xuất nhập tồn (Liên kết với Inventory Lot)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.stock_ledger
+(
+    id               UUID NOT NULL,
+    create_at        TIMESTAMP,
+    quantity         INTEGER,
+    reference_id     UUID,          -- ID tham chiếu (ví dụ: ID đơn nhập, ID đơn thuốc)
+    reference_type   VARCHAR(255),  -- Loại tham chiếu
+    type             VARCHAR(255),  -- 'IN', 'OUT',
+    update_at        TIMESTAMP,
+    inventory_lot_id UUID,
+
+    -- Khóa chính
+    CONSTRAINT stock_ledger_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại: Liên kết với inventory_lot
+    CONSTRAINT fk_stock_ledger_inventory_lot
+    FOREIGN KEY (inventory_lot_id)
+    REFERENCES public.inventory_lot (id)
+    ON DELETE CASCADE
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 5: dispense_order
+-- Đơn cấp phát thuốc (Liên kết với Pharmacist)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.dispense_order
+(
+    id                 UUID NOT NULL,
+    create_at          TIMESTAMP,
+    doctor_id          UUID,
+    medical_history_id UUID,
+    prescription       UUID,
+    status             VARCHAR(255),  -- PENDING, COMPLETED, CANCELLED
+    update_at          TIMESTAMP,
+    pharmacist_id      UUID,
+
+    -- Khóa chính
+    CONSTRAINT dispense_order_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại: Liên kết với pharmacist
+    CONSTRAINT fk_dispense_order_pharmacist
+    FOREIGN KEY (pharmacist_id)
+    REFERENCES public.pharmacist (user_id)
+    ON DELETE SET NULL
+    );
+
+---
+
+-- ---------------------------------------------------------------------
+-- Bảng 6: dispense_item
+-- Chi tiết thuốc trong đơn cấp phát
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.dispense_item
+(
+    id                 UUID NOT NULL,
+    dosage             VARCHAR(100), -- Liều lượng (vd: 500mg)
+    duration           VARCHAR(50),  -- Thời gian dùng (vd: 5 ngày)
+    frequency          VARCHAR(50),  -- Tần suất (vd: 2 lần/ngày)
+    price_at_dispense  INTEGER,
+    quantity           INTEGER,
+    usage_instructions VARCHAR(255),
+    dispense_order_id  UUID,
+    inventory_lot_id   UUID,
+
+    -- Khóa chính
+    CONSTRAINT dispense_item_pkey PRIMARY KEY (id),
+
+    -- Khóa ngoại 1: Liên kết với dispense_order
+    CONSTRAINT fk_item_dispense_order
+    FOREIGN KEY (dispense_order_id)
+    REFERENCES public.dispense_order (id)
+    ON DELETE CASCADE,
+
+    -- Khóa ngoại 2: Liên kết với inventory_lot
+    CONSTRAINT fk_item_inventory_lot
+    FOREIGN KEY (inventory_lot_id)
+    REFERENCES public.inventory_lot (id)
+    ON DELETE SET NULL
+    );
+
+-- ---------------------------------------------------------------------
+-- Tạo Index để tối ưu hóa truy vấn
+-- ---------------------------------------------------------------------
+CREATE INDEX idx_inventory_lot_medicine_id ON public.inventory_lot (medicine_id);
+CREATE INDEX idx_stock_ledger_inventory_lot_id ON public.stock_ledger (inventory_lot_id);
+CREATE INDEX idx_dispense_order_pharmacist_id ON public.dispense_order (pharmacist_id);
+CREATE INDEX idx_dispense_item_order_id ON public.dispense_item (dispense_order_id);
+CREATE INDEX idx_dispense_item_lot_id ON public.dispense_item (inventory_lot_id);
+
+
+-- =====================================================================
+-- INSERT DATA (Dữ liệu mẫu)
+-- =====================================================================
+
+-- 1. Insert Medicine (Danh mục thuốc)
+INSERT INTO public.medicine (id, name, unit, description, sale_price)
+VALUES
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Paracetamol 500mg', 'Viên', 'Thuốc giảm đau hạ sốt', 1000),
+    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Amoxicillin 500mg', 'Viên', 'Thuốc kháng sinh', 2000);
+
+-- 2. Insert Inventory Lot (Lô thuốc)
+INSERT INTO public.inventory_lot (id, lot_no, expire_date, quantity_on_hand, cost_price, medicine_id)
+VALUES
+    ('2f989fbe-5479-4d63-a929-1e42833dcbeb', 'LOT2025_A', '2026-12-31', 1000, 800, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+    ('db3ca0f0-9d9a-4664-b8a6-f86e62d98756', 'LOT2025_B', '2026-12-31', 1000, 1500, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+

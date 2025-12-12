@@ -37,8 +37,6 @@ public class InvoiceAggregate {
     private boolean insuranceApplied;
 
 
-
-
     private String status;
 
     public InvoiceAggregate(UUID clinicalId, UUID invoiceId, UUID appointmentId, UUID patientId, UUID medicalHistoryId, UUID doctorId, List<MedicalServiceDTO> medicalServices) {

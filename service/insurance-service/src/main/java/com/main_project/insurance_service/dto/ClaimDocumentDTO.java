@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public class ClaimDocumentDTO {
     private String filePath;
     private String documentType;
     private String status;
-    private ZonedDateTime uploadAt;
+    private LocalDateTime uploadAt;
     private UUID insuranceClaimId;
     private InsuranceClaimDTO insuranceClaim;
 }

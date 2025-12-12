@@ -20,9 +20,10 @@ interface PatientDetailProps {
   onBack: () => void;
   onNavigateToTreatmentPlan: (planId: string) => void;
   onNavigateToAppointments?: () => void;
+  onNavigateToCreatePrescription?: (appointmentId?: string, medicalHistoryId?: string) => void;
 }
 
-export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, onNavigateToAppointments }: PatientDetailProps) {
+export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, onNavigateToAppointments, onNavigateToCreatePrescription }: PatientDetailProps) {
   const [currentNote, setCurrentNote] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
@@ -35,9 +36,9 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
 
   useEffect(() => {
     const appointmentId = localStorage.getItem('currentAppointmentId');
-    
+
     console.log(`[PatientDetail] Mounted, appointmentId from localStorage:`, appointmentId);
-    
+
     if (appointmentId) {
       console.log(`[PatientDetail] Subscribing to rollback for appointment: ${appointmentId}`);
       console.log(`[PatientDetail] onNavigateToAppointments available:`, !!onNavigateToAppointments);
@@ -58,7 +59,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
           console.error('[PatientDetail] onNavigateToAppointments is not defined!');
         }
       });
-      
+
       unsubscribeRef.current = unsubscribe;
 
       return () => {
@@ -215,6 +216,16 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
             </p>
           </div>
           <div className="flex gap-2">
+            {onNavigateToCreatePrescription && (
+              <Button
+                size="sm"
+                className="rounded-[10px] bg-[#3FB5FF] text-white hover:bg-[#35a4e6]"
+                onClick={() => onNavigateToCreatePrescription(localStorage.getItem('currentAppointmentId') || undefined, undefined)}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Tạo đơn thuốc
+              </Button>
+            )}
             <Button variant="outline" size="sm" className="rounded-[10px] border-[#e8e8e8]">
               <Printer className="w-4 h-4 mr-2" />
               In hồ sơ
@@ -483,31 +494,31 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
                 </Card>
 
                 <div className="space-y-2">
-                  <Button 
+                  <Button
                     className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
                     onClick={handleSaveComplete}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Lưu & Hoàn tất khám
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full rounded-[10px] border-[#e8e8e8]"
                     onClick={handleSaveDraft}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Lưu nháp
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full rounded-[10px] border-[#e8e8e8]"
                     onClick={() => setIsTreatmentPlanDialogOpen(true)}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     Tạo Kế hoạch điều trị
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full rounded-[10px] border-[#e8e8e8]"
                     onClick={() => setIsAppointmentDialogOpen(true)}
                   >
@@ -532,7 +543,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
               Thông tin chi tiết về lần khám bệnh
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedVisit && (
             <div className="space-y-4 mt-4">
               {/* Visit Info */}
@@ -631,7 +642,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
               Tạo lịch hẹn tái khám cho bệnh nhân {patient.name}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -721,7 +732,7 @@ export function PatientDetail({ patientId, onBack, onNavigateToTreatmentPlan, on
               Lập kế hoạch điều trị cho bệnh nhân {patient.name}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 mt-4">
             <div>
               <Label htmlFor="plan-name">Tên kế hoạch</Label>

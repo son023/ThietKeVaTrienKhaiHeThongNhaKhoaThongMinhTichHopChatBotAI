@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Patient {
 
     @Id
     @Column(name = "user_id")
-    private UUID id;
+    private UUID userId;
 
     @Column(name = "dob")
     private ZonedDateTime dob;
@@ -58,20 +59,20 @@ public class Patient {
 
     // Composition relationships - all use cascade ALL and orphanRemoval
     @Builder.Default
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PatientAllergy> patientAllergies = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UnderlyingDisease> underlyingDiseases = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ToothIssue> toothIssues = new ArrayList<>();
 
     // Kept for backward compatibility (if exists)
     @Builder.Default
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MedicalHistory> medicalHistories = new ArrayList<>();
 
     // ========== Aggregate Root Business Methods ==========
@@ -199,7 +200,7 @@ public class Patient {
      * @return the newly created ToothIssue
      */
     public ToothIssue addToothIssue(Integer toothNumber, String status, String description,
-                                     LocalDate diagnosedDate, String note) {
+                                    LocalDate diagnosedDate, String note) {
         ToothIssue toothIssue = ToothIssue.builder()
                 .toothNumber(toothNumber)
                 .status(status)

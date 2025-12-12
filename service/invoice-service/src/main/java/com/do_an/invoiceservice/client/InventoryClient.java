@@ -12,6 +12,7 @@ import java.util.UUID;
         name = "inventory-service",
         url = "${inventory.service.url:http://localhost:8084}"
 )
+
 public interface InventoryClient {
 
     @PatchMapping("/inventory-service/dispense-orders/{id}/sold")
