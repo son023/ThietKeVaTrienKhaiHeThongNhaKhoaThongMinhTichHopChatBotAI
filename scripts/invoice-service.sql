@@ -93,21 +93,21 @@ VALUES ('3fa85f64-5717-4562-b3fc-2c963f66afa6', -- id
         'a42319f1-9e54-43fe-98d4-aae2264c030c', -- insurance_claim_id
         '2025-12-08 17:44:47.154003' -- update_at
        ),
-    (
-        '4ca85f64-5717-4562-b3fc-2c963f66afa6', -- id
-        NULL,
-        '44444444-0000-0000-0000-000000000002', -- appointment_id
-        NULL,
-        'VND',
-        'PENDING',
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL
+       (
+           '4ca85f64-5717-4562-b3fc-2c963f66afa6', -- id
+           NULL,
+           '44444444-0000-0000-0000-000000000002', -- appointment_id
+           NULL,
+           'VND',
+           'PENDING',
+           NULL,
+           NULL,
+           NULL,
+           NULL,
+           NULL,
+           NULL
 
-    );
+       );
 
 -- 2. Insert Invoice Item (Chi tiết hóa đơn)
 INSERT INTO public.invoice_item (

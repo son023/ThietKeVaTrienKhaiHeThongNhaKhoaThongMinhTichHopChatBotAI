@@ -78,6 +78,8 @@ export function MyAppointments({
         }
 
         const data = await appointmentController.getByDoctorId(doctorId);
+
+
         setAppointments(data);
 
         const patientIds = Array.from(
@@ -92,6 +94,8 @@ export function MyAppointments({
           patientIds.map(async (pid) => {
             try {
               return await patientController.getWithUserById(pid);
+
+
             } catch (err) {
               console.error("Failed to load patient", pid, err);
               return null;

@@ -197,6 +197,6 @@ VALUES
 INSERT INTO public.patient_insurance
 (expiry_date, issue_date, create_at, update_at, id, insurance_policy_id, patient_id, status)
 VALUES
-    ('2026-02-15', '2025-02-15', NULL, NULL, 'c3c3c3c3-3333-4333-8333-333333333333', 'a1a1a1a1-1111-4111-8111-111111111111', 'd903022a-1000-4001-8001-000000000003', 'ACTIVE'),
+    ('2026-02-15', '2025-02-15', NULL, NULL, 'c3c3c3c3-3333-4333-8333-333333333333', 'a1a1a1a1-1111-4111-8111-111111111111', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'ACTIVE'),
     ('2026-12-31', '2024-01-01', '2025-11-23 08:51:39.841424+00', '2025-11-23 08:51:39.841424+00', 'dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'ACTIVE');
 

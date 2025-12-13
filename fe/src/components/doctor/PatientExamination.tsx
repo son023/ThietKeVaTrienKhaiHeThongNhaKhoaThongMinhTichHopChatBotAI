@@ -387,7 +387,6 @@ export function PatientExamination({
       const doctorDTO = await doctorController.getWithUserById(
           appointmentDTO.doctorId
       );
-      console.log("doctor: ", doctorDTO);
 
       // 2️⃣ merge dữ liệu mới
       setSelectedVisit((prev: any) => {
@@ -398,7 +397,7 @@ export function PatientExamination({
           doctorName: doctorDTO.user?.fullName ?? "Chưa có thông tin bác sĩ",
         };
 
-        console.log("SelectedVisit sau khi gộp:", merged);
+
         return merged;
       });
     } catch (error) {

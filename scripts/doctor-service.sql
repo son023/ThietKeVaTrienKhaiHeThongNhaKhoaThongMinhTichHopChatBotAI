@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.work_schedule
 
     -- Khóa chính
     CONSTRAINT work_schedule_pkey PRIMARY KEY (id)
-);
+    );
 
 ---
 
@@ -51,15 +51,15 @@ CREATE TABLE IF NOT EXISTS public.doctor_degree
     year_obtained INTEGER,
     doctor_id     UUID NOT NULL, -- Khóa ngoại tham chiếu đến bảng doctor
 
-    -- Khóa chính
+-- Khóa chính
     CONSTRAINT doctor_degree_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại: Liên kết với bảng doctor
     CONSTRAINT fk_doctor_degree_doctor
-        FOREIGN KEY (doctor_id)
-        REFERENCES public.doctor (user_id)
-        ON DELETE CASCADE
-);
+    FOREIGN KEY (doctor_id)
+    REFERENCES public.doctor (user_id)
+    ON DELETE CASCADE
+    );
 
 ---
 
@@ -73,24 +73,24 @@ CREATE TABLE IF NOT EXISTS public.doctor_work_schedule
     created_at       TIMESTAMP WITH TIME ZONE,
     status           VARCHAR(255),
     updated_at       TIMESTAMP WITH TIME ZONE,
-    doctor_id        UUID, -- Khóa ngoại tham chiếu đến doctor
-    work_schedule_id UUID, -- Khóa ngoại tham chiếu đến work_schedule
+                                   doctor_id        UUID, -- Khóa ngoại tham chiếu đến doctor
+                                   work_schedule_id UUID, -- Khóa ngoại tham chiếu đến work_schedule
 
 -- Khóa chính
-    CONSTRAINT doctor_work_schedule_pkey PRIMARY KEY (id),
+                                   CONSTRAINT doctor_work_schedule_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại 1: Liên kết với bảng doctor
     CONSTRAINT fk_dws_doctor
     FOREIGN KEY (doctor_id)
     REFERENCES public.doctor (user_id)
-    ON DELETE CASCADE,
+                               ON DELETE CASCADE,
 
     -- Khóa ngoại 2: Liên kết với bảng work_schedule
     CONSTRAINT fk_dws_work_schedule
     FOREIGN KEY (work_schedule_id)
     REFERENCES public.work_schedule (id)
-    ON DELETE CASCADE
-);
+                               ON DELETE CASCADE
+    );
 
 -- Tạo Index để tăng tốc độ truy vấn trên các cột Khóa ngoại
 CREATE INDEX idx_doctor_degree_doctor_id ON public.doctor_degree (doctor_id);
@@ -141,9 +141,9 @@ VALUES
 -- -------------------------
 INSERT INTO public.work_schedule (id, start_time, end_time, work_date)
 VALUES
-('11111111-0000-0000-0000-000000000001', '2025-11-26 08:00:00+07', '2025-11-26 12:00:00+07', '2025-11-26'),
-('11111111-0000-0000-0000-000000000002', '2025-11-26 13:00:00+07', '2025-11-26 17:00:00+07', '2025-11-26'),
-('11111111-0000-0000-0000-000000000003', '2025-11-27 08:00:00+07', '2025-11-27 12:00:00+07', '2025-11-27');
+    ('11111111-0000-0000-0000-000000000001', '2025-11-26 08:00:00+07', '2025-11-26 12:00:00+07', '2025-11-26'),
+    ('11111111-0000-0000-0000-000000000002', '2025-11-26 13:00:00+07', '2025-11-26 17:00:00+07', '2025-11-26'),
+    ('11111111-0000-0000-0000-000000000003', '2025-11-27 08:00:00+07', '2025-11-27 12:00:00+07', '2025-11-27');
 
 -- -------------------------
 -- Bảng doctor_degree
@@ -187,9 +187,9 @@ VALUES
 -- -------------------------
 INSERT INTO public.doctor_work_schedule (id, created_at, updated_at, status, doctor_id, work_schedule_id)
 VALUES
-('33333333-0000-0000-0000-000000000001', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000001'),
-('33333333-0000-0000-0000-000000000002', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000002'),
-('33333333-0000-0000-0000-000000000003', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000003'),
-('33333333-0000-0000-0000-000000000004', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000002'),
-('33333333-0000-0000-0000-000000000005', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000012', '11111111-0000-0000-0000-000000000001');
+    ('33333333-0000-0000-0000-000000000001', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000001'),
+    ('33333333-0000-0000-0000-000000000002', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000002', '11111111-0000-0000-0000-000000000002'),
+    ('33333333-0000-0000-0000-000000000003', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000003'),
+    ('33333333-0000-0000-0000-000000000004', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000007', '11111111-0000-0000-0000-000000000002'),
+    ('33333333-0000-0000-0000-000000000005', NOW(), NOW(), 'ACTIVE', 'd903022a-1000-4001-8001-000000000012', '11111111-0000-0000-0000-000000000001');
 

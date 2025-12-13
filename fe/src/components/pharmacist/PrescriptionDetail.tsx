@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle, XCircle, Flag, Printer, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +7,6 @@ import { patientController } from '../../controllers/PatientController';
 import { PatientWithUser } from '../../models/Patient';
 import { doctorController } from '../../controllers/DoctorController';
 import { authController } from '../../controllers/AuthController';
-import { subscribeToInvoicePaid, InvoicePaidNotification } from '../../services/websocketService';
 import { useNotifications } from '../../contexts/NotificationContext';
 
 interface PrescriptionDetailProps {
@@ -79,6 +76,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
       // 3) Lấy thông tin bệnh nhân kèm allergies
       try {
         const patientData = await patientController.getWithUserById(patientId);
+
 
         setPatient(patientData);
 
@@ -311,7 +309,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
   // Computed values
   const patientName = patient?.user?.fullName || patient?.user?.username || 'N/A';
-  const patientId = patient?.id?.substring(0, 8) || '---';
+  const patientId = patient?.userId?.substring(0, 8) || '---';
   const patientPhone = patient?.contactPhone || '---';
   const patientGender = patient?.gender === 'MALE' ? 'Nam' : patient?.gender === 'FEMALE' ? 'Nữ' : '---';
   const patientAge = patient?.dob
