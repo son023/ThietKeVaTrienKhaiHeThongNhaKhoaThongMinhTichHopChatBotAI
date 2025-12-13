@@ -1,4 +1,21 @@
-import { UserDTO, UserRole } from "../models";
+import { UserDTO } from "../models";
+
+
+export interface UnderlyingDisease {
+  name?: string;
+  status?: string;
+  severity?: string;
+  isVerified?: boolean;
+  note?: string;
+}
+
+export interface ToothIssue {
+  toothNumber?: number;
+  status?: string;
+  description?: string;
+  diagnosedDate?: string;
+  note?: string;
+}
 
 export interface PatientDTO {
   userId: string;
@@ -9,9 +26,14 @@ export interface PatientDTO {
   bloodType?: string;
   allergy?: string;
   insuranceNumber?: string;
+  patientAllergies?: PatientAllergy[];
+  underlyingDiseases?: UnderlyingDisease[];
+  toothIssues?: ToothIssue[];
+
+
 }
 
-export interface PatientAllergyDTO {
+export interface PatientAllergy {
   allergyId: string;
   allergyCode?: string;
   allergyName?: string;
@@ -22,5 +44,4 @@ export interface PatientAllergyDTO {
 
 export interface PatientWithUser extends PatientDTO {
   user?: UserDTO;
-  patientAllergies?: PatientAllergyDTO[];
 }

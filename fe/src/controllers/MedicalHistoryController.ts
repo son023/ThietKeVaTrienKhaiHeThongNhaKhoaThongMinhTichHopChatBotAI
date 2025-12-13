@@ -31,7 +31,9 @@ class MedicalHistoryController {
       try {
         const data = await res.json();
         if (data?.message) msg = data.message;
-      } catch (_) {}
+      } catch (error) {
+        // ignore parse error
+      }
       throw new Error(msg);
     }
     return res.json();
@@ -73,6 +75,7 @@ class MedicalHistoryController {
     return this.handleResponse<MedicalHistoryDTO[]>(res);
   }
 
+
   async create(payload: MedicalHistoryRequest): Promise<MedicalHistoryDTO> {
     const res = await fetch(createApiUrl(this.baseUrl), {
       method: "POST",
@@ -109,3 +112,4 @@ class MedicalHistoryController {
 
 export const medicalHistoryController = new MedicalHistoryController();
 export default MedicalHistoryController;
+

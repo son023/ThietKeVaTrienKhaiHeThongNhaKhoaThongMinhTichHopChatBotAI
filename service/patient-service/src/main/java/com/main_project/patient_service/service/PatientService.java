@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class PatientService implements IPatientService {
     public PatientResponseDTO createPatient(PatientRequestDTO request) {
         // Create patient aggregate root
         Patient patient = Patient.builder()
-                .userId(request.getId())
+                .userId(request.getUserId())
                 .dob(request.getDob())
                 .gender(Gender.fromString(request.getGender()))
                 .address(request.getAddress())
@@ -109,15 +110,24 @@ public class PatientService implements IPatientService {
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
 
         // Update basic info using aggregate method
-        patient.updateBasicInfo(
-                request.getDob(),
-                Gender.fromString(request.getGender()),
-                request.getAddress(),
-                request.getContactPhone(),
-                BloodType.fromString(request.getBloodType()),
-                request.getInsuranceNumber()
-
-        );
+        if (request.getDob() != null) {
+            patient.setDob(request.getDob());
+        }
+        if (request.getGender() != null) {
+            patient.setGender(Gender.fromString(request.getGender()));
+        }
+        if (request.getAddress() != null) {
+            patient.setAddress(request.getAddress());
+        }
+        if (request.getContactPhone() != null) {
+            patient.setContactPhone(request.getContactPhone());
+        }
+        if (request.getBloodType() != null) {
+            patient.setBloodType(BloodType.fromString(request.getBloodType()));
+        }
+        if (request.getInsuranceNumber() != null) {
+            patient.setInsuranceNumber(request.getInsuranceNumber());
+        }
 
         // Smart List Sync for PatientAllergies
         syncPatientAllergies(patient, request.getPatientAllergies());
@@ -140,22 +150,24 @@ public class PatientService implements IPatientService {
      */
     private void syncPatientAllergies(Patient patient, List<PatientAllergyDTO> allergyDTOs) {
         // Clear existing (triggers orphanRemoval for deleted items)
+        if (allergyDTOs == null) {
+            return;
+        }
+
         patient.clearPatientAllergies();
 
         // Add new/updated items using aggregate method
-        if (allergyDTOs != null) {
-            for (PatientAllergyDTO dto : allergyDTOs) {
-                Allergy allergy = allergyRepository.findById(dto.getAllergyId())
-                        .orElseThrow(() -> new EntityNotFoundException(
-                                "Allergy not found with id: " + dto.getAllergyId()));
+        for (PatientAllergyDTO dto : allergyDTOs) {
+            Allergy allergy = allergyRepository.findById(dto.getAllergyId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Allergy not found with id: " + dto.getAllergyId()));
 
-                patient.addPatientAllergy(
-                        allergy,
-                        dto.getSeverity(),
-                        dto.getReaction(),
-                        dto.getNote()
-                );
-            }
+            patient.addPatientAllergy(
+                    allergy,
+                    dto.getSeverity(),
+                    dto.getReaction(),
+                    dto.getNote()
+            );
         }
     }
 
@@ -163,18 +175,20 @@ public class PatientService implements IPatientService {
      * Smart sync for underlying diseases.
      */
     private void syncUnderlyingDiseases(Patient patient, List<UnderlyingDiseaseDTO> diseaseDTOs) {
+        if (diseaseDTOs == null) {
+            return;
+        }
+
         patient.clearUnderlyingDiseases();
 
-        if (diseaseDTOs != null) {
-            for (UnderlyingDiseaseDTO dto : diseaseDTOs) {
-                patient.addUnderlyingDisease(
-                        dto.getName(),
-                        dto.getStatus(),
-                        dto.getSeverity(),
-                        dto.getIsVerified(),
-                        dto.getNote()
-                );
-            }
+        for (UnderlyingDiseaseDTO dto : diseaseDTOs) {
+            patient.addUnderlyingDisease(
+                    dto.getName(),
+                    dto.getStatus(),
+                    dto.getSeverity(),
+                    dto.getIsVerified(),
+                    dto.getNote()
+            );
         }
     }
 
@@ -182,26 +196,27 @@ public class PatientService implements IPatientService {
      * Smart sync for tooth issues.
      */
     private void syncToothIssues(Patient patient, List<ToothIssueDTO> toothDTOs) {
+        if (toothDTOs == null) {
+            return; // keep existing if not provided
+        }
+
         patient.clearToothIssues();
 
-        if (toothDTOs != null) {
-            for (ToothIssueDTO dto : toothDTOs) {
-                patient.addToothIssue(
-                        dto.getToothNumber(),
-                        dto.getStatus(),
-                        dto.getDescription(),
-                        dto.getDiagnosedDate(),
-                        dto.getNote()
-                );
-            }
+        for (ToothIssueDTO dto : toothDTOs) {
+            patient.addToothIssue(
+                    dto.getToothNumber(),
+                    dto.getStatus(),
+                    dto.getDescription(),
+                    dto.getDiagnosedDate(),
+                    dto.getNote()
+            );
         }
     }
 
     @Override
     @Transactional(readOnly = true)
     public PatientResponseDTO getPatientById(UUID id) {
-        //Patient patient = patientRepository.findByIdWithDetails(id)
-        Patient patient = patientRepository.findByUserId(id)
+        Patient patient = patientRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
         return mapToResponseDTO(patient);
     }
@@ -228,7 +243,7 @@ public class PatientService implements IPatientService {
      */
     private PatientResponseDTO mapToResponseDTO(Patient patient) {
         return PatientResponseDTO.builder()
-                .id(patient.getUserId())
+                .userId(patient.getUserId())
                 .dob(patient.getDob())
                 .gender(patient.getGender() != null ? patient.getGender().name() : null)
                 .address(patient.getAddress())
@@ -241,7 +256,7 @@ public class PatientService implements IPatientService {
                 .build();
     }
 
-    private List<PatientAllergyDTO> mapPatientAllergiesToDTO(List<PatientAllergy> allergies) {
+    private List<PatientAllergyDTO> mapPatientAllergiesToDTO(Collection<PatientAllergy> allergies) {
         return allergies.stream()
                 .map(pa -> PatientAllergyDTO.builder()
                         .allergyId(pa.getAllergy().getId())
@@ -253,7 +268,7 @@ public class PatientService implements IPatientService {
                 .collect(Collectors.toList());
     }
 
-    private List<UnderlyingDiseaseDTO> mapUnderlyingDiseasesToDTO(List<UnderlyingDisease> diseases) {
+    private List<UnderlyingDiseaseDTO> mapUnderlyingDiseasesToDTO(Collection<UnderlyingDisease> diseases) {
         return diseases.stream()
                 .map(d -> UnderlyingDiseaseDTO.builder()
                         .name(d.getName())
@@ -265,7 +280,7 @@ public class PatientService implements IPatientService {
                 .collect(Collectors.toList());
     }
 
-    private List<ToothIssueDTO> mapToothIssuesToDTO(List<ToothIssue> toothIssues) {
+    private List<ToothIssueDTO> mapToothIssuesToDTO(Collection<ToothIssue> toothIssues) {
         return toothIssues.stream()
                 .map(t -> ToothIssueDTO.builder()
                         .toothNumber(t.getToothNumber())

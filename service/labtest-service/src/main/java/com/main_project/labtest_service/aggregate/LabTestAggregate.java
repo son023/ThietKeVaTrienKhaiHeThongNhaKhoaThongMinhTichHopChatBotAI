@@ -60,7 +60,7 @@ public class LabTestAggregate {
         if (!"IN_PROGRESS".equals(status)) {
             throw new IllegalStateException("Chỉ COMPLETE được từ IN_PROGRESS, current=" + status);
         }
-        AggregateLifecycle.apply(new LabTestCompletedEvent(cmd.getLabTestId(), cmd.getAppointmentId(), cmd.getPrice()));
+        AggregateLifecycle.apply(new LabTestCompletedEvent(cmd.getLabTestId(), cmd.getAppointmentId(), this.doctorId, cmd.getPrice()));
     }
 
     @EventSourcingHandler

@@ -22,7 +22,8 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers("/labtest-service/medical-attachments/file").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(customRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

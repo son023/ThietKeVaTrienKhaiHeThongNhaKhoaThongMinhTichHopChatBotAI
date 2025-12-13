@@ -15,7 +15,7 @@ import { DoctorHeader } from './components/DoctorHeader';
 import { Dashboard } from './components/doctor/Dashboard';
 import { MyAppointments } from './components/doctor/MyAppointments';
 import { MyPatients } from './components/doctor/MyPatients';
-import { PatientDetail } from './components/doctor/PatientDetail';
+import {PatientExamination} from './components/doctor/PatientExamination';
 import { TreatmentPlans } from './components/doctor/TreatmentPlans';
 import { TreatmentPlanDetail } from './components/doctor/TreatmentPlanDetail';
 import { PersonalPerformance } from './components/doctor/PersonalPerformance';
@@ -32,6 +32,8 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   const [selectedTreatmentPlanId, setSelectedTreatmentPlanId] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
   const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
+
+
   // thêm bên cạnh các state khác
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [selectedMedicalHistoryId, setSelectedMedicalHistoryId] = useState<string | null>(null);
@@ -75,55 +77,44 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard
-          doctorId={doctorId}
-          onNavigateToPatient={(id) => {
-            setSelectedPatientId(id);
-            setCurrentPage('patient-detail');
-          }} />;
+            doctorId={doctorId}
+            onNavigateToPatient={(id) => {
+              setSelectedPatientId(id);
+              setCurrentPage('patient-examination');
+            }} />;
       case 'appointments':
         return <MyAppointments doctorId={doctorId} onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
       case 'patients':
         return <MyPatients
-          onNavigateToPatient={(id) => {
-            setSelectedPatientId(id);
-            setCurrentPage('patient-detail');
-          }}
-          onNavigateToAppointments={() => setCurrentPage('appointments')}
-        />;
-      // case 'patient-detail':
-      //   return <PatientDetail 
-      //     patientId={selectedPatientId} 
-      //     onBack={() => setCurrentPage('patients')}
-      //     onNavigateToAppointments={() => setCurrentPage('appointments')}
-      //     onNavigateToTreatmentPlan={(planId) => {
-      //       setSelectedTreatmentPlanId(planId);
-      //       setCurrentPage('treatment-plan-detail');
-      //     }}
-
-      //   />;
-      case 'patient-detail':
-        return (
-          <PatientDetail
-            patientId={selectedPatientId}
-            onBack={() => setCurrentPage('patients')}
-            onNavigateToAppointments={() => setCurrentPage('appointments')}
-            onNavigateToTreatmentPlan={(planId) => {
-              setSelectedTreatmentPlanId(planId);
-              setCurrentPage('treatment-plan-detail');
+            onNavigateToPatient={(id) => {
+              setSelectedPatientId(id);
+              setCurrentPage('patient-examination');
             }}
-            onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
-              goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
-            }
-          />
+            onNavigateToAppointments={() => setCurrentPage('appointments')}
+        />;
+      case 'patient-examination':
+        return (
+            <PatientExamination
+                patientId={selectedPatientId}
+                onBack={() => setCurrentPage('patients')}
+                onNavigateToAppointments={() => setCurrentPage('appointments')}
+                onNavigateToTreatmentPlan={(planId) => {
+                  setSelectedTreatmentPlanId(planId);
+                  setCurrentPage('treatment-plan-detail');
+                }}
+                onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
+                    goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
+                }
+            />
         );
       case 'create-prescription':
         return (
-          <PrescriptionManagement
-            onBack={() => setCurrentPage('dashboard')}
-          />
+            <PrescriptionManagement
+                onBack={() => setCurrentPage('dashboard')}
+            />
         );
       case 'treatment-plans':
         return <TreatmentPlans onNavigateToPlan={(id) => {
@@ -132,8 +123,8 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         }} />;
       case 'treatment-plan-detail':
         return <TreatmentPlanDetail
-          planId={selectedTreatmentPlanId}
-          onBack={() => setCurrentPage('treatment-plans')}
+            planId={selectedTreatmentPlanId}
+            onBack={() => setCurrentPage('treatment-plans')}
         />;
       case 'performance':
         return <PersonalPerformance />;
@@ -142,26 +133,26 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       default:
         return <Dashboard onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
     }
   };
 
 
   return (
-    <div className="flex h-screen bg-[#fcfeff]">
-      <DoctorSidebar currentPage={currentPage} onNavigate={setCurrentPage} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DoctorHeader
-          onLogout={onLogout}
-          onGoHome={onGoHome}
-          doctor={doctor || undefined}
-          isLoading={isLoadingDoctor}
-        />
-        <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
-          {renderPage()}
-        </main>
+      <div className="flex h-screen bg-[#fcfeff]">
+        <DoctorSidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <DoctorHeader
+              onLogout={onLogout}
+              onGoHome={onGoHome}
+              doctor={doctor || undefined}
+              isLoading={isLoadingDoctor}
+          />
+          <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
+            {renderPage()}
+          </main>
+        </div>
       </div>
-    </div>
   );
 }

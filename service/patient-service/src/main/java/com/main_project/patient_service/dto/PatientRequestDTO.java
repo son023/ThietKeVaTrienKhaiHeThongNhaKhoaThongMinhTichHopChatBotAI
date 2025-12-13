@@ -13,11 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * PatientRequestDTO - Request DTO for creating/updating Patient
- *
- * Contains patient basic info and all child entity lists following the new schema design
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,7 +20,7 @@ import java.util.UUID;
 public class PatientRequestDTO {
 
     @NotNull(message = "Patient ID (user_id) is required")
-    private UUID id;
+    private UUID userId;
 
     @Past(message = "Date of birth must be in the past")
     private ZonedDateTime dob;

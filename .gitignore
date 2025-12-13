@@ -12,3 +12,8 @@ prescription-fe/package-lock.json
 /service/README_SAGA_UPDATED.md
 /service/SAGA_IMPLEMENTATION_SUMMARY.md
 /service/saga.txt
+
+
+__pycache__/
+venv/
+.vscode/

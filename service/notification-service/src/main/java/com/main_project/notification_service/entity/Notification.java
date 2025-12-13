@@ -1,44 +1,57 @@
-//package com.main_project.notification_service.entity;
-//
-//
-//import jakarta.persistence.*;
-//import lombok.*;
-//import java.time.LocalDateTime;
-//import java.util.UUID;
-//
-//@Entity
-//@Table(name = "notification")
-//@Getter
-//@Setter
-//@NoArgsConstructor
-//@AllArgsConstructor
-//@Builder
-//public class Notification {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO)
-//    private UUID id;
-//
-//    @Column(length = 255)
-//    private String chanel;
-//
-//    @Column(name = "template_id", length = 255)
-//    private String templateId;
-//
-//    @Column(columnDefinition = "text")
-//    private String message;
-//
-//    @Column(length = 50)
-//    private String status;
-//
-//    @Column(name = "error_message", columnDefinition = "text")
-//    private String errorMessage;
-//
-//    private Integer rentryCount;
-//
-//    private LocalDateTime createAt;
-//
-//    private LocalDateTime updateAt;
-//
-//    @Column(name = "user_id")
-//    private UUID userId;
-//}
+package com.main_project.notification_service.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "notification")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Notification {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    @Column(name = "channel", nullable = false)
+    private String channel;
+    
+    @Column(name = "template_id")
+    private String templateId;
+    
+    @Column(name = "message", columnDefinition = "TEXT")
+    private String message;
+    
+    @Column(name = "status", nullable = false)
+    private String status;
+    
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+    
+    @Column(name = "retry_count")
+    private int retryCount;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+}
+

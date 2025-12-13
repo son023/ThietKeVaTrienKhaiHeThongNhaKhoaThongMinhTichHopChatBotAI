@@ -29,6 +29,7 @@ public class SecurityConfig {
                                 "/booking-websocket/sockjs-websocket/**").permitAll()
                         .pathMatchers("/auth/**").permitAll()
                        .pathMatchers("/users/register").permitAll()
+                        .pathMatchers("/chatbot-service/**").permitAll()
                         .anyExchange().permitAll()
                 )
                 .build();

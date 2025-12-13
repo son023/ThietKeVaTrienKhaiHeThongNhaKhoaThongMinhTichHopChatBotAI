@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8079',
+  BASE_URL: 'http://localhost:8080',
 
   ENDPOINTS: {
     // User Service
@@ -32,6 +32,14 @@ export const API_CONFIG = {
 
     //Prescription Billing Service
     PRESCRIPTION_BILLINGS: '/prescription-billing-service/prescription-billings',
+
+    // Lab Test Service
+    LAB_TESTS: '/labtest-service/lab-tests',
+    LAB_TEST_TYPES: '/labtest-service/lab-test-types',
+    MEDICAL_ATTACHMENTS: '/labtest-service/medical-attachments',
+
+    // Notification Service
+    NOTIFICATIONS: '/notification-service/notifications'
   }
 };
 

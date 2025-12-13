@@ -14,7 +14,10 @@ public class LabTestDTO {
     private UUID appointmentId;
     private UUID medicalHistoryId;
     private UUID labTechnicianId;
+    private String labTechnicianName;
     private UUID doctorId;
+    private String doctorName;
+    private String patientName;
     private int price;
     private String instructions;
     private String status;

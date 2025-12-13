@@ -16,7 +16,7 @@ public class EntityMapper {
         if (entity == null) return null;
 
         PatientResponseDTO dto = new PatientResponseDTO();
-        dto.setId(entity.getUserId());
+        dto.setUserId(entity.getUserId());
         dto.setDob(entity.getDob());
         dto.setGender(entity.getGender() != null ? entity.getGender().name() : null);
         dto.setAddress(entity.getAddress());
@@ -33,7 +33,7 @@ public class EntityMapper {
         if (request == null) return null;
 
         return Patient.builder()
-                .userId(request.getId())
+                .userId(request.getUserId())
                 .dob(request.getDob())
                 .gender(Gender.fromString(request.getGender()))
                 .address(request.getAddress())

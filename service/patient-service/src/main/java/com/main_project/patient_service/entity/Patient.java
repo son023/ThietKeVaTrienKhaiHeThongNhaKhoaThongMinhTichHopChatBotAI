@@ -51,7 +51,7 @@ public class Patient {
     private String contactPhone;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "blood_type", length = 10)
+    @Column(name = "blood_type", length = 20)
     private BloodType bloodType;
 
     @Column(name = "insurance_number", length = 100)
@@ -200,7 +200,7 @@ public class Patient {
      * @return the newly created ToothIssue
      */
     public ToothIssue addToothIssue(Integer toothNumber, String status, String description,
-                                    LocalDate diagnosedDate, String note) {
+                                     LocalDate diagnosedDate, String note) {
         ToothIssue toothIssue = ToothIssue.builder()
                 .toothNumber(toothNumber)
                 .status(status)

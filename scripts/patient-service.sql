@@ -193,8 +193,8 @@ InsertMedicalHistory1 AS (
         id, appointment_id, created_at, diagnosis, disease, symptoms, treatment, updated_at, patient_profile_id
     )
     SELECT
-        gen_random_uuid(),
-        gen_random_uuid(),
+        'bcd61a06-8bc2-49c8-b99f-f656974ddb65',
+        '44444444-0000-0000-0000-000000000002',
         t1.current_ts - INTERVAL '2 months',
         'Viêm họng cấp',
         'J02.9 - Acute pharyngitis, unspecified',
@@ -210,8 +210,8 @@ INSERT INTO public.medical_history (
     id, appointment_id, created_at, diagnosis, disease, symptoms, treatment, updated_at, patient_profile_id
 )
 SELECT
-    gen_random_uuid(),
-    gen_random_uuid(),
+    'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+    '44444444-0000-0000-0000-000000000001',
     t2.current_ts_2 - INTERVAL '1 month',
     'Đau dạ dày',
     'K29.7 - Gastritis, unspecified',

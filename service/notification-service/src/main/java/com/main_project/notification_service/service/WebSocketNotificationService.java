@@ -1,5 +1,6 @@
 package com.main_project.notification_service.service;
 
+import com.main_project.notification_service.dto.LabTestCompletedNotificationMessage;
 import com.main_project.notification_service.dto.NotificationMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -19,12 +20,12 @@ public class WebSocketNotificationService {
 
     public void sendAppointmentRollbackNotification(UUID appointmentId, String reason) {
         log.info("Sending appointment rollback notification for appointment {} reason={}", appointmentId, reason);
-        
+
         NotificationMessage message = new NotificationMessage(
-            "APPOINTMENT_ROLLBACK",
-            appointmentId.toString(),
-            reason,
-            "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
+                "APPOINTMENT_ROLLBACK",
+                appointmentId.toString(),
+                reason,
+                "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
         );
 
         String topic = "/topic/appointment-rollback/" + appointmentId.toString();
@@ -37,19 +38,49 @@ public class WebSocketNotificationService {
 
         // Tạo notification message mở rộng
         NotificationMessage notification = NotificationMessage.builder()
-                 .type("INVOICE_PAID")
-            .appointmentId(appointmentId != null ? appointmentId.toString() : null)
-            .invoiceId(invoiceId.toString())
-            .reason(invoiceId.toString()) // Dùng reason để chứa invoiceId (backward compatible)
-            .message(message != null ? message : "Hóa đơn đã được thanh toán thành công. Có thể cấp phát đơn thuốc.")
-            .timestamp(System.currentTimeMillis())
-            .build();
+                .type("INVOICE_PAID")
+                .appointmentId(appointmentId != null ? appointmentId.toString() : null)
+                .invoiceId(invoiceId.toString())
+                .reason(invoiceId.toString()) // Dùng reason để chứa invoiceId (backward compatible)
+                .message(message != null ? message : "Hóa đơn đã được thanh toán thành công. Có thể cấp phát đơn thuốc.")
+                .timestamp(System.currentTimeMillis())
+                .build();
 
         // Gửi tới topic chung cho tất cả pharmacists
         String topic = "/topic/invoice-paid";
         messagingTemplate.convertAndSend(topic, notification);
 
         log.info("Invoice paid notification sent to topic {} for invoice {}", topic, invoiceId);
+    }
+
+    public void sendLabTestCompletedNotification(UUID doctorId, UUID labTestId, UUID appointmentId, String message) {
+        log.info("=== Sending lab test completed notification ===");
+        log.info("Doctor ID: {}, LabTest ID: {}, Appointment ID: {}",
+                doctorId, labTestId, appointmentId);
+        log.info("Message: {}", message);
+
+        LabTestCompletedNotificationMessage notificationMessage = new LabTestCompletedNotificationMessage(
+                "LAB_TEST_COMPLETED",
+                labTestId.toString(),
+                appointmentId.toString(),
+                message
+        );
+
+        String topic = "/topic/notifications/" + doctorId.toString();
+        log.info("Sending to topic: {}", topic);
+        log.info("Notification message object: type={}, labTestId={}, appointmentId={}, message={}",
+                notificationMessage.getType(),
+                notificationMessage.getLabTestId(),
+                notificationMessage.getAppointmentId(),
+                notificationMessage.getMessage());
+
+        try {
+            messagingTemplate.convertAndSend(topic, notificationMessage);
+            log.info("Lab test completed notification sent successfully to topic {} for doctor {}", topic, doctorId);
+        } catch (Exception e) {
+            log.error("Failed to send websocket notification to topic {}: {}", topic, e.getMessage(), e);
+            throw e;
+        }
     }
 
 

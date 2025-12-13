@@ -24,7 +24,7 @@ public class PatientResponseDTO {
     /**
      * Patient ID (user_id from Identity Service)
      */
-    private UUID id;
+    private UUID userId;
 
     /**
      * Date of birth

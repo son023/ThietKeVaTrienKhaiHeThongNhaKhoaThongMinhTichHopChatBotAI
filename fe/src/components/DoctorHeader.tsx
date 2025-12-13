@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Bell, LogOut, User, Settings, Home } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import type { DoctorWithUser } from "../controllers/DoctorController";
+import { notificationController, type NotificationDTO } from "../controllers/NotificationController";
+import { connectWebSocket, subscribeToDoctorNotifications } from "../services/websocketService";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -26,11 +28,86 @@ export function DoctorHeader({
   doctor,
   isLoading,
 }: HeaderProps = {}) {
-  const [notifications] = useState([
-    { id: 1, message: "Thong bao he thong", time: "Vua xong", unread: true },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationDTO[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const loadNotifications = async (userId: string) => {
+    try {
+      console.log("Loading notifications for userId:", userId);
+      const [notifs, unread] = await Promise.all([
+        notificationController.getByUserId(userId),
+        notificationController.getUnreadCount(userId),
+      ]);
+      console.log("Notifications loaded:", notifs.length, "total,", unread, "unread");
+      setNotifications(notifs);
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Failed to load notifications:", error);
+    }
+  };
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  useEffect(() => {
+    if (!doctor?.userId) {
+      console.log("Doctor userId not available yet, waiting...");
+      return;
+    }
+
+    const userId = doctor.userId;
+    console.log("Setting up notifications for doctor userId:", userId);
+
+    loadNotifications(userId);
+
+    console.log("Connecting to websocket...");
+    connectWebSocket();
+
+    const subscribeTimeout = setTimeout(() => {
+      console.log("Subscribing to websocket notifications for userId:", userId);
+      const unsubscribe = subscribeToDoctorNotifications(userId, (notification) => {
+        console.log("New notification received via websocket:", notification);
+        setTimeout(() => {
+          console.log("Reloading notifications after websocket message...");
+          loadNotifications(userId);
+        }, 1000);
+      });
+      unsubscribeRef.current = unsubscribe;
+    }, 1000);
+
+    return () => {
+      clearTimeout(subscribeTimeout);
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [doctor?.userId]);
+
+  const handleNotificationClick = async (notification: NotificationDTO) => {
+    if (notification.status === "sent") {
+      try {
+        await notificationController.markAsRead(notification.id);
+        if (doctor?.userId) {
+          loadNotifications(doctor.userId);
+        }
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+      }
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Vừa xong";
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
   const displayName = useMemo(() => doctor?.user?.fullName, [doctor]);
   const subtitle = useMemo(() => {
     const specialization = doctor?.specializationCodes?.[0];
@@ -76,29 +153,43 @@ export function DoctorHeader({
             <PopoverContent
               className="w-96 p-0 rounded-[15px] border-[#e8e8e8]"
               align="end"
+              onOpenAutoFocus={() => {
+                // Reload notifications when popover opens
+                if (doctor?.userId) {
+                  console.log("🔄 Popover opened, reloading notifications...");
+                  loadNotifications(doctor.userId);
+                }
+              }}
             >
               <div className="p-4 border-b border-[#e8e8e8]">
                 <h3 className="text-[#01304e]">Thong bao</h3>
               </div>
               <div className="max-h-96 overflow-y-auto">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`p-4 border-b border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors ${
-                      notif.unread ? "bg-[#d8f0ff]/50" : ""
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm text-[#333333]">{notif.message}</p>
-                      {notif.unread && (
-                        <div className="w-2 h-2 bg-[#3FB5FF] rounded-full flex-shrink-0 mt-1" />
-                      )}
-                    </div>
-                    <p className="text-xs text-[#333333]/60 mt-1">
-                      {notif.time}
-                    </p>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-[#333333]/60 text-sm">
+                    Không có thông báo
                   </div>
-                ))}
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      onClick={() => handleNotificationClick(notif)}
+                      className={`p-4 border-b border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors cursor-pointer ${
+                        notif.status === "sent" ? "bg-[#d8f0ff]/50" : ""
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm text-[#333333]">{notif.message}</p>
+                        {notif.status === "sent" && (
+                          <div className="w-2 h-2 bg-[#3FB5FF] rounded-full flex-shrink-0 mt-1" />
+                        )}
+                      </div>
+                      <p className="text-xs text-[#333333]/60 mt-1">
+                        {formatTime(notif.createdAt)}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </PopoverContent>
           </Popover>
