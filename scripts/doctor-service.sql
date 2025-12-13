@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.doctor_degree
     year_obtained INTEGER,
     doctor_id     UUID NOT NULL, -- Khóa ngoại tham chiếu đến bảng doctor
 
--- Khóa chính
+    -- Khóa chính
     CONSTRAINT doctor_degree_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại: Liên kết với bảng doctor
@@ -73,23 +73,23 @@ CREATE TABLE IF NOT EXISTS public.doctor_work_schedule
     created_at       TIMESTAMP WITH TIME ZONE,
     status           VARCHAR(255),
     updated_at       TIMESTAMP WITH TIME ZONE,
-                                   doctor_id        UUID, -- Khóa ngoại tham chiếu đến doctor
-                                   work_schedule_id UUID, -- Khóa ngoại tham chiếu đến work_schedule
+    doctor_id        UUID, -- Khóa ngoại tham chiếu đến doctor
+    work_schedule_id UUID, -- Khóa ngoại tham chiếu đến work_schedule
 
 -- Khóa chính
-                                   CONSTRAINT doctor_work_schedule_pkey PRIMARY KEY (id),
+    CONSTRAINT doctor_work_schedule_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại 1: Liên kết với bảng doctor
     CONSTRAINT fk_dws_doctor
     FOREIGN KEY (doctor_id)
     REFERENCES public.doctor (user_id)
-                               ON DELETE CASCADE,
+    ON DELETE CASCADE,
 
     -- Khóa ngoại 2: Liên kết với bảng work_schedule
     CONSTRAINT fk_dws_work_schedule
     FOREIGN KEY (work_schedule_id)
     REFERENCES public.work_schedule (id)
-                               ON DELETE CASCADE
+    ON DELETE CASCADE
     );
 
 -- Tạo Index để tăng tốc độ truy vấn trên các cột Khóa ngoại

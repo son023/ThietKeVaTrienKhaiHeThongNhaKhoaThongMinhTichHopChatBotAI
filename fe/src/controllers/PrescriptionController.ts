@@ -14,6 +14,7 @@ export interface PrescriptionItemInput {
 
 export interface CreatePrescriptionRequest {
     medicalHistoryId: string;
+    appointmentId: string;
     patientId: string;
     doctorId: string;
     items: PrescriptionItemInput[];
@@ -40,7 +41,6 @@ class PrescriptionController {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.message || "Tạo đơn thuốc thất bại");
         }
-        return res.json();
     }
 }
 

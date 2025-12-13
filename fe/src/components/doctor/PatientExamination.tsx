@@ -36,6 +36,7 @@ import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} fro
 
 interface PatientExaminationProps {
   patientId: string | null;
+  appointmentId: string | null;
   onBack: () => void;
   onNavigateToTreatmentPlan: (planId: string) => void;
   onNavigateToAppointments?: () => void;

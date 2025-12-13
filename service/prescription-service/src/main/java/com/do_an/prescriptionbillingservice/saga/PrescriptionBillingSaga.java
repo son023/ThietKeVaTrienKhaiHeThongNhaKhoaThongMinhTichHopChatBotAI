@@ -45,14 +45,8 @@ public class PrescriptionBillingSaga {
         this.doctorId = event.getDoctorId().toString();
         this.patientId = event.getPatientId();
         this.medicineItems = event.getItems();
+        this.invoiceId = event.getInvoiceId();
 
-        //Từ medicalHistoryId trong request có appointmentId, sau đó tìm kiến appointmentId trong invoice
-        //Labtest.getMedicalHistory(event.getMedicalHistoryId())-->MedicalHistory.getAppointmentId()
-        //Invoice.getInvoice(MedicalHistory.getAppointmentId())-->Invoice()
-
-        this.invoiceId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
-
-        //this.invoiceId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa1");
 
         SagaLifecycle.associateWith("invoiceId", String.valueOf(this.invoiceId));
         this.dispenseOrderId = UUID.randomUUID();

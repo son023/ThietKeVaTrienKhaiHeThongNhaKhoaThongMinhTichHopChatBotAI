@@ -15,7 +15,7 @@ CREATE TABLE public.medical_service
     description  TEXT,
 
     CONSTRAINT medical_service_status_check
-        CHECK (status IN ('ACTIVE', 'INACTIVE'))
+    CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 
 CREATE TABLE public.appointment
@@ -30,7 +30,7 @@ CREATE TABLE public.appointment
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT appointment_status_check
-        CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','IN_PROGRESS'))
+    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','IN_PROGRESS'))
 );
 
 CREATE TABLE public.appointment_medical_service
@@ -41,14 +41,14 @@ CREATE TABLE public.appointment_medical_service
     CONSTRAINT appointment_medical_service_pkey PRIMARY KEY (appointment_id, medical_service_id),
 
     CONSTRAINT fk_ams_appointment
-        FOREIGN KEY (appointment_id)
-            REFERENCES public.appointment (id)
-            ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id)
+    REFERENCES public.appointment (id)
+    ON DELETE CASCADE,
 
     CONSTRAINT fk_ams_medical_service
-        FOREIGN KEY (medical_service_id)
-            REFERENCES public.medical_service (id)
-            ON DELETE RESTRICT
+    FOREIGN KEY (medical_service_id)
+    REFERENCES public.medical_service (id)
+    ON DELETE RESTRICT
 );
 
 INSERT INTO public.medical_service (

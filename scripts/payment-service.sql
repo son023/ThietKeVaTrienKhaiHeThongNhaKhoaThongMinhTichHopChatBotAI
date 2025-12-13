@@ -61,24 +61,3 @@ CREATE INDEX idx_payment_method ON public.payment (payment_method);
 -- Index kết hợp cho truy vấn phổ biến: Tìm payment của invoice theo thời gian
 CREATE INDEX idx_payment_invoice_create_at ON public.payment (invoice_id, create_at DESC);
 
-
--- =====================================================================
--- INSERT DATA (Dữ liệu mẫu)
--- =====================================================================
-
--- 1. Insert Payment (Giao dịch mẫu)
-INSERT INTO public.payment (
-    id,
-    invoice_id,
-    total_amount,
-    payment_method,
-    status,
-    transaction_id,
-    description,
-    payment_url,
-    paid_at,
-    expired_at,
-    create_at,
-    update_at
-)
-VALUES

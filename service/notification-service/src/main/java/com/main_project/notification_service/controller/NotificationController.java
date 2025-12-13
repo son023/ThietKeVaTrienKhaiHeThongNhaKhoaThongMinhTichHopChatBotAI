@@ -1,6 +1,7 @@
 package com.main_project.notification_service.controller;
 
-
+import com.main_project.notification_service.dto.NotificationDTO;
+import com.main_project.notification_service.entity.Notification;
 import com.do_an.common.event.InvoicePaidNotificationEvent;
 import com.main_project.notification_service.dto.request.InvoicePaidRequest;
 import com.main_project.notification_service.repository.NotificationRepository;
@@ -11,9 +12,11 @@ import org.axonframework.eventhandling.EventBus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage;
 
@@ -27,18 +30,7 @@ public class NotificationController {
     private final EventBus eventBus;
     private final WebSocketNotificationService webSocketNotificationService;
     private final NotificationRepository notificationRepository;
-    /**
-     * API giả lập để phát InvoicePaidNotificationEvent
-     * Dùng để test WebSocket notification cho Pharmacist
-     *
-     * POST /notification-service/test/invoice-paid
-     * Body:
-     * {
-     *   "invoiceId": "uuid",
-     *   "appointmentId": "uuid",
-     *   "message": "Hóa đơn đã được thanh toán thành công"
-     * }
-     */
+
     @PostMapping("/test/invoice-paid")
     public ResponseEntity<Map<String, Object>> simulateInvoicePaid(
             @RequestBody(required = false) InvoicePaidRequest request) {
@@ -68,55 +60,46 @@ public class NotificationController {
     }
 
 
-   //TẠM THỜI CHƯA DÙNG
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<NotificationDTO>> getNotificationsByUserId(@PathVariable UUID userId) {
+        log.info("Getting notifications for userId: {}", userId);
+        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        log.info("Found {} notifications for userId: {}", notifications.size(), userId);
+        List<NotificationDTO> dtos = notifications.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
 
-//    @GetMapping("/user/{userId}")
-//    public ResponseEntity<List<NotificationDTO>> getNotificationsByUserId(@PathVariable UUID userId) {
-//        log.info("Getting notifications for userId: {}", userId);
-//        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
-//        log.info("Found {} notifications for userId: {}", notifications.size(), userId);
-//        List<NotificationDTO> dtos = notifications.stream()
-//                .map(this::toDTO)
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(dtos);
-//    }
-//
-//    @GetMapping("/user/{userId}/unread-count")
-//    public ResponseEntity<Long> getUnreadCount(@PathVariable UUID userId) {
-//        log.info("Getting unread count for userId: {}", userId);
-//        long count = notificationRepository.countByUserIdAndStatus(userId, "sent");
-//        log.info("Unread count for userId {}: {}", userId, count);
-//        return ResponseEntity.ok(count);
-//    }
-//
-//    @PutMapping("/{id}/read")
-//    public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
-//        notificationRepository.findById(id).ifPresent(notification -> {
-//            notification.setStatus("read");
-//            notificationRepository.save(notification);
-//        });
-//        return ResponseEntity.ok().build();
-//    }
-//
-//    private NotificationDTO toDTO(Notification notification) {
-//        return NotificationDTO.builder()
-//                .id(notification.getId())
-//                .userId(notification.getUserId())
-//                .channel(notification.getChannel())
-//                .templateId(notification.getTemplateId())
-//                .message(notification.getMessage())
-//                .status(notification.getStatus())
-//                .errorMessage(notification.getErrorMessage())
-//                .retryCount(notification.getRetryCount())
-//                .createdAt(notification.getCreatedAt())
-//                .updatedAt(notification.getUpdatedAt())
-//                .build();
-//    }
+    @GetMapping("/user/{userId}/unread-count")
+    public ResponseEntity<Long> getUnreadCount(@PathVariable UUID userId) {
+        log.info("Getting unread count for userId: {}", userId);
+        long count = notificationRepository.countByUserIdAndStatus(userId, "sent");
+        log.info("Unread count for userId {}: {}", userId, count);
+        return ResponseEntity.ok(count);
+    }
 
+    @PutMapping("/{id}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
+        notificationRepository.findById(id).ifPresent(notification -> {
+            notification.setStatus("read");
+            notificationRepository.save(notification);
+        });
+        return ResponseEntity.ok().build();
+    }
 
-
-
+    private NotificationDTO toDTO(Notification notification) {
+        return NotificationDTO.builder()
+                .id(notification.getId())
+                .userId(notification.getUserId())
+                .channel(notification.getChannel())
+                .templateId(notification.getTemplateId())
+                .message(notification.getMessage())
+                .status(notification.getStatus())
+                .errorMessage(notification.getErrorMessage())
+                .retryCount(notification.getRetryCount())
+                .createdAt(notification.getCreatedAt())
+                .updatedAt(notification.getUpdatedAt())
+                .build();
+    }
 }
-
-
-

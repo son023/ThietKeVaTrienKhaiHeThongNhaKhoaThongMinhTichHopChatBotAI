@@ -173,6 +173,7 @@ export function CreatePrescriptionEnhanced({
 
         const payload = {
             medicalHistoryId,
+            appointmentId,
             patientId,
             doctorId,
             items: items.map(i => ({
@@ -191,7 +192,7 @@ export function CreatePrescriptionEnhanced({
         try {
             const res = await prescriptionController.createPrescription(payload);
             toast.success("Đã tạo đơn thuốc thành công");
-            onCreated?.(res.id);
+            onCreated?.();
         } catch (e: any) {
             toast.error(e.message || "Lỗi tạo đơn thuốc");
         }

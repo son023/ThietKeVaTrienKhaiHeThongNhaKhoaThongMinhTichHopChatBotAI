@@ -12,7 +12,7 @@ export interface UserDTO {
 }
 
 export interface CreateUserRequest {
-  // username: string;
+  username: string;
   email: string;
   password: string;
   fullName: string;
