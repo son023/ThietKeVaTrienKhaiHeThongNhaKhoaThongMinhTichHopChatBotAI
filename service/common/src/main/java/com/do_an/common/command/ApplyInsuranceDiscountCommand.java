@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ApplyInsuranceDiscountCommand {
     @TargetAggregateIdentifier
+    private UUID insuranceClaimId;
     private UUID invoiceId;
     private UUID prescriptionId;
     private Integer discountAmount;

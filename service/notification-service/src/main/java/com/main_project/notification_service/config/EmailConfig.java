@@ -1,4 +1,4 @@
-package com.main_project.notification_service.configuration;
+package com.main_project.notification_service.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -21,6 +21,7 @@ public class SecurityConfig {
         return http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
+                                .requestMatchers("/invoice-service/invoices/**").permitAll() // mở public
 //                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                 )

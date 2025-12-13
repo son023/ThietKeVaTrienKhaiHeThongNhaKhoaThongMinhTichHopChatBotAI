@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -24,7 +25,6 @@ public class DispenseOrder {
     @JoinColumn(name = "pharmacist_id")
     private Pharmacist pharmacist;
 
-
     private UUID prescription;
 
     @Column(length = 255)
@@ -38,11 +38,11 @@ public class DispenseOrder {
 
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
-    private ZonedDateTime createAt;
+    private LocalDateTime createAt;
 
     @UpdateTimestamp
     @Column(name = "update_at")
-    private ZonedDateTime updateAt;
+    private LocalDateTime updateAt;
 }
 
 

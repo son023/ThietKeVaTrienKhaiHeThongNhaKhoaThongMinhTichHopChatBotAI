@@ -16,7 +16,6 @@ import java.util.UUID;
 @RequestMapping("/inventory-service/inventory-lots")
 @RequiredArgsConstructor
 public class InventoryLotController {
-
     private final IInventoryLotService inventoryLotService;
 
     @PostMapping

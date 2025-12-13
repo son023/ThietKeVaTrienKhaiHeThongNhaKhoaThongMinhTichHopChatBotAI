@@ -3,6 +3,9 @@
 fe/node_modules
 fe/package-lock.json
 
+prescription-fe/node_modules
+prescription-fe/package-lock.json
+
 
 /service/API_ENDPOINTS_GUIDE.md
 /service/CHANGES_SUMMARY.md

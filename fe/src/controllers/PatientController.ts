@@ -75,8 +75,8 @@ class PatientController {
   async getWithUserById(id: string): Promise<PatientWithUser> {
     const patient = await this.getById(id); // id = patientId
     const user = patient.userId
-      ? await userController.getById(patient.userId) // lấy user theo userId
-      : undefined;
+        ? await userController.getById(patient.userId) // lấy user theo userId
+        : undefined;
     return { ...patient, user };
   }
 

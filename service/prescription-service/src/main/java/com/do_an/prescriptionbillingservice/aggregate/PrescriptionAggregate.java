@@ -20,20 +20,17 @@ public class PrescriptionAggregate {
     private UUID prescriptionId;
     private String status;
 
-    @CommandHandler
-    public PrescriptionAggregate(CreatePrescriptionCommand command) {
-        if (command.getItems() == null || command.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Đơn thuốc không được rỗng");
-        }
-
+    public PrescriptionAggregate(UUID prescriptionId, UUID invoiceId, UUID patientId, UUID doctorId, UUID medicalHistoryId, List<MedicineItem> items) {
         //Kích hoạt Saga
         AggregateLifecycle.apply(new PrescriptionCreatedEvent(
-                command.getPrescriptionId(),
-                command.getPatientId(),
-                command.getDoctorId(),
-                command.getMedicalHistoryId(),
-                command.getItems()
+                prescriptionId,
+                invoiceId,
+                patientId,
+                doctorId,
+                medicalHistoryId,
+                items
         ));
+
 
     }
 
@@ -42,4 +39,5 @@ public class PrescriptionAggregate {
         this.prescriptionId = event.getPrescriptionId();
         this.status = "CREATED";
     }
+
 }

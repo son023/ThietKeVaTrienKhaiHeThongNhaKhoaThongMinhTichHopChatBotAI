@@ -18,6 +18,7 @@ import AdminApp from "./AdminApp";
 import LabTechnicianApp from "./LabTechnicianApp";
 import { authController } from "./controllers";
 import { UserRole } from "./models";
+import { PaymentResultPage } from "./components/public/PaymentResultPage";
 
 type Page =
   | "home"
@@ -29,7 +30,8 @@ type Page =
   | "contact"
   | "login"
   | "signup"
-  | "booking";
+  | "booking"
+  | "payment-result";
 
 interface PublicAppProps {
   onLogin?: (
@@ -330,6 +332,13 @@ function PublicApp({ onLogin }: PublicAppProps) {
           </div>
         );
 
+      case "payment-result":
+        return (
+          <PaymentResultPage
+            onNavigate={handleNavigate}
+          />
+        );
+
       default:
         return null;
     }
@@ -396,7 +405,7 @@ export default function App() {
     if (currentUser) {
       let role:
         | "doctor"
-        | "admin" 
+        | "admin"
         | "pharmacist"
         | "receptionist"
         | "patient"
@@ -424,7 +433,7 @@ export default function App() {
           break;
       }
 
-      setUserPhone(currentUser.phone );
+      setUserPhone(currentUser.phone);
       setUserRole(role);
       setIsAuthenticated(true);
     }
@@ -519,7 +528,7 @@ export default function App() {
   return (
     <>
       <PublicApp onLogin={handleLogin} />
-      {/* <PatientApp onLogout={handleLogout} onGoHome={handleGoHome} /> */}
+      {/* <PharmacistApp onLogout={handleLogout} onGoHome={handleGoHome} /> */}
       <Toaster position="top-center" />
     </>
   );

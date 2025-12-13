@@ -1,4 +1,4 @@
-package com.main_project.notification_service.event;
+package com.main_project.notification_service.handler;
 
 import com.do_an.common.event.AppointmentRolledBackEvent;
 import com.main_project.notification_service.service.WebSocketNotificationService;

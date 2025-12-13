@@ -2,8 +2,10 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Search, Plus, DollarSign, FileText, Calendar, User, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Plus, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
 import {
   Table,
   TableBody,
@@ -20,6 +22,9 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import { UserDTO } from '../../models/User';
+import { userController } from '../../controllers/UserController';
 
 interface Invoice {
   id: string;
@@ -42,8 +47,30 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('today');
+  
+  // Backend data state
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [useRealData, setUseRealData] = useState(false);
 
-  const invoices: Invoice[] = [
+  const appointmentCache: Record<string, AppointmentDTO> = {};
+  const userCache: Record<string, UserDTO> = {};
+
+  const getAppointment = async (id?: string) => {
+    if (!id) return undefined;
+    if (!appointmentCache[id]) appointmentCache[id] = await appointmentController.getById(id);
+    return appointmentCache[id];
+  };
+
+  const getUser = async (id?: string) => {
+    if (!id) return undefined;
+    if (!userCache[id]) userCache[id] = await userController.getById(id);
+    return userCache[id];
+  };
+
+  // Mock data fallback
+  const mockInvoices: Invoice[] = [
     {
       id: '1',
       code: 'HD0123',
@@ -99,6 +126,132 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
     },
   ];
 
+  // Load invoices from backend
+  useEffect(() => {
+    loadInvoices();
+  }, [statusFilter]);
+
+  const loadInvoices = async (showRefreshIndicator = false) => {
+    if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
+    try {
+      // Get status filter for API (convert 'all' to undefined)
+      const apiStatusFilter = statusFilter === 'all' ? undefined : mapStatusToBackend(statusFilter);
+      
+      const data = await invoiceController.listInvoices(apiStatusFilter);
+
+      
+      // Map backend data to frontend format
+      const mappedInvoices = await Promise.all(data.map(mapInvoiceFromBackend));
+      
+      setInvoices(mappedInvoices);
+      setUseRealData(true);
+      
+      if (showRefreshIndicator) {
+        toast.success('Đã làm mới danh sách hóa đơn');
+      }
+      
+      console.log(`Loaded ${mappedInvoices.length} invoices from backend`);
+    } catch (error) {
+      console.error('Error loading invoices:', error);
+      
+      if (!useRealData) {
+        // First time load failed, use mock data
+        setInvoices(mockInvoices);
+        toast.info('Sử dụng dữ liệu mẫu (không kết nối được backend)');
+      } else {
+        // Refresh failed, keep existing data
+        toast.error('Không thể làm mới dữ liệu');
+      }
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Map backend status to frontend status
+  const mapStatusToFrontend = (backendStatus: string): Invoice['status'] => {
+    switch (backendStatus) {
+      case 'PENDING':
+      case 'DRAFT':
+        return 'unpaid';
+      case 'PAID':
+        return 'paid';
+      case 'CANCELLED':
+        return 'cancelled';
+      default:
+        return 'unpaid';
+    }
+  };
+
+  // Map frontend status to backend status
+  const mapStatusToBackend = (frontendStatus: string): string => {
+    switch (frontendStatus) {
+      case 'unpaid':
+        return 'PENDING';
+      case 'paid':
+        return 'PAID';
+      case 'cancelled':
+        return 'CANCELLED';
+      case 'partial':
+        return 'PENDING';
+      default:
+        return 'PENDING';
+    }
+  };
+
+  // Map backend invoice to frontend invoice
+  // const mapInvoiceFromBackend = (invoice: InvoiceDTO): Invoice => {
+  //   return {
+  //     id: invoice.id,
+  //     code: invoice.id.substring(0, 8).toUpperCase(),
+  //     patientName: 'Bệnh nhân', // TODO: Get from patient service
+  //     patientCode: `BN${invoice.id.substring(0, 4).toUpperCase()}`, // TODO: Get from patient service
+  //     date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
+  //       day: '2-digit',
+  //       month: '2-digit',
+  //       year: 'numeric',
+  //       hour: '2-digit',
+  //       minute: '2-digit',
+  //     }),
+  //     doctor: 'BS. Đang cập nhật', // TODO: Get from appointment service
+  //     amount: invoice.patientTotalPay, // Amount patient needs to pay
+  //     status: mapStatusToFrontend(invoice.status),
+  //     paymentMethod: invoice.status === 'PAID' ? 'Đã thanh toán' : undefined,
+  //   };
+  // };
+
+
+  const mapInvoiceFromBackend = async (invoice: InvoiceDTO): Promise<Invoice> => {
+    const appointment = await getAppointment(invoice.appointmentId);
+    const patientUser = await getUser(appointment?.patientId);
+    const doctorUser = await getUser(appointment?.doctorId);
+  
+    return {
+      id: invoice.id,
+      code: invoice.id.substring(0, 8).toUpperCase(),
+      patientName: patientUser?.fullName || 'Bệnh nhân',
+      patientCode: patientUser?.id
+        ? `BN${patientUser.id.substring(0, 4).toUpperCase()}`
+        : patientUser?.username || '—',
+      date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
+      amount: invoice.patientTotalPay ?? 0,
+      status: mapStatusToFrontend(invoice.status),
+      paymentMethod: invoice.status === 'PAID' ? 'Đã thanh toán' : undefined,
+    };
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'unpaid':
@@ -132,21 +285,60 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const totalUnpaid = unpaidInvoices.reduce((sum, inv) => sum + inv.amount, 0);
   const totalPaid = paidInvoices.reduce((sum, inv) => sum + inv.amount, 0);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Đang tải danh sách hóa đơn...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 space-y-6">
-      {/* DoctorHeader */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl text-[#01304e] mb-2">Thanh toán & Hóa đơn</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl text-[#01304e]">Thanh toán & Hóa đơn</h1>
+            {useRealData && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                ✓ Dữ liệu thực
+              </Badge>
+            )}
+            {!useRealData && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                ⚠ Dữ liệu mẫu
+              </Badge>
+            )}
+          </div>
           <p className="text-gray-600">Quản lý hóa đơn và thanh toán</p>
         </div>
-        <Button
-          onClick={onCreateInvoice}
-          className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tạo Hóa đơn mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => loadInvoices(true)}
+            disabled={isRefreshing}
+            className="gap-2"
+          >
+            {isRefreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            Làm mới
+          </Button>
+          <Button
+            onClick={onCreateInvoice}
+            className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Tạo Hóa đơn mới
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

@@ -21,6 +21,8 @@ import java.util.UUID;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
 
+    Optional<Patient> findByUserId(UUID id);
+
     /**
      * Find patient with all relationships eagerly loaded.
      * Avoids N+1 query problem.

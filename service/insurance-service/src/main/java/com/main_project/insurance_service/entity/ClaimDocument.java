@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public class ClaimDocument {
     private String status;
 
     @Column(name = "upload_at")
-    private ZonedDateTime uploadAt;
+    private LocalDateTime uploadAt;
 
     // Many-to-One relationship with InsuranceClaim
     @ManyToOne(fetch = FetchType.LAZY)

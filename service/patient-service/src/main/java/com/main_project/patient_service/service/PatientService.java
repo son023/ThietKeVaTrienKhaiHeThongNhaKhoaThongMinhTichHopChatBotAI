@@ -109,6 +109,7 @@ public class PatientService implements IPatientService {
         Patient patient = patientRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
 
+        // Update basic info using aggregate method
         if (request.getDob() != null) {
             patient.setDob(request.getDob());
         }
@@ -215,7 +216,9 @@ public class PatientService implements IPatientService {
     @Override
     @Transactional(readOnly = true)
     public PatientResponseDTO getPatientById(UUID id) {
-        Patient patient = patientRepository.findByIdWithDetails(id)
+//        Patient patient = patientRepository.findByIdWithDetails(id)
+//                .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
+        Patient patient = patientRepository.findByUserId(id)
                 .orElseThrow(() -> new EntityNotFoundException("Patient not found with id: " + id));
         return mapToResponseDTO(patient);
     }

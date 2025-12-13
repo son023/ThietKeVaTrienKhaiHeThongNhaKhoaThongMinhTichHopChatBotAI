@@ -79,7 +79,6 @@ public class Patient {
     @Builder.Default
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MedicalHistory> medicalHistories = new HashSet<>();
-
     // ========== Aggregate Root Business Methods ==========
 
     // ==================== PatientAllergy Management ====================

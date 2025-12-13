@@ -1,13 +1,5 @@
 import { UserDTO } from "../models";
 
-export interface PatientAllergy {
-  allergyId?: string;
-  allergyCode?: string;
-  allergyName?: string;
-  severity?: string;
-  reaction?: string;
-  note?: string;
-}
 
 export interface UnderlyingDisease {
   name?: string;
@@ -37,6 +29,17 @@ export interface PatientDTO {
   patientAllergies?: PatientAllergy[];
   underlyingDiseases?: UnderlyingDisease[];
   toothIssues?: ToothIssue[];
+
+
+}
+
+export interface PatientAllergy {
+  allergyId: string;
+  allergyCode?: string;
+  allergyName?: string;
+  severity?: string;
+  reaction?: string;
+  note?: string;
 }
 
 export interface PatientWithUser extends PatientDTO {

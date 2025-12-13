@@ -21,6 +21,18 @@ export const API_CONFIG = {
     PATIENTS: '/patient-service/patients',
     MEDICAL_HISTORIES: '/patient-service/medical-histories',
 
+    // Payment Service
+    PAYMENTS: '/payment-service/payments',
+
+    // Invoice Service
+    INVOICES: '/invoice-service/invoices',
+
+    //Inventory Service
+    INVENTORIES: '/inventory-service',
+
+    //Prescription Billing Service
+    PRESCRIPTION_BILLINGS: '/prescription-billing-service/prescription-billings',
+
     // Lab Test Service
     LAB_TESTS: '/labtest-service/lab-tests',
     LAB_TEST_TYPES: '/labtest-service/lab-test-types',

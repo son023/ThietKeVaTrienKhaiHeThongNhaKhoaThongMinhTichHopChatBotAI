@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -24,9 +25,9 @@ public class InsuranceClaimRequestDTO {
     private Integer totalInsurancePay;
 
     @NotNull(message = "Claim date is required")
-    private ZonedDateTime claimDate;
+    private LocalDateTime claimDate;
 
-    private ZonedDateTime approvalDate;
+    private LocalDateTime approvalDate;
     
     private String notes;
     

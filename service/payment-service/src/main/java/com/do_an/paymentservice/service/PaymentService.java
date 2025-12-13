@@ -1,5 +1,7 @@
 package com.do_an.paymentservice.service;
 
+import com.do_an.common.command.CreatePaymentCommand;
+import com.do_an.common.command.UpdatePaymentStatusCommand;
 import com.do_an.paymentservice.client.InvoiceClient;
 import com.do_an.paymentservice.dto.request.CreatePaymentRequestDTO;
 import com.do_an.paymentservice.dto.request.UpdatePaymentRequestDTO;
@@ -14,6 +16,7 @@ import com.do_an.paymentservice.mapper.PaymentMapper;
 import com.do_an.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,8 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final InvoiceClient invoiceClient;
 
+    private final CommandGateway commandGateway;
+
     @Value("${payos.return-url}")
     private String returnUrl;
 
@@ -47,6 +52,7 @@ public class PaymentService {
      * CHỨC NĂNG 1: Khởi tạo Thanh toán (CASH hoặc BANK_TRANSFER)
      * Tính tổng tiền từ InvoiceItem của Invoice
      */
+
     @Transactional
     public PaymentResponseDTO initiatePayment(CreatePaymentRequestDTO request) {
         log.info("Khởi tạo thanh toán cho Invoice: {}, Phương thức: {}", 
@@ -70,7 +76,10 @@ public class PaymentService {
             }
             
             // Tính tổng tiền từ InvoiceItem
-            int calculatedTotalAmount = calculateTotalAmountFromItems(invoice.getItems());
+            //int calculatedTotalAmount = calculateTotalAmountFromItems(invoice.getItems());
+
+            int calculatedTotalAmount = invoice.getPatientTotalPay();
+
             log.info("Tổng tiền tính từ InvoiceItem: {}", calculatedTotalAmount);
             
             // Nếu client gửi totalAmount, kiểm tra khớp
@@ -139,13 +148,29 @@ public class PaymentService {
 
         paymentRepository.save(payment);
 
+        // GỬI LỆNH ĐỂ ĐỒNG BỘ TRẠNG THÁI QUA AXON (Dù đã thành công)
+        // Việc này giúp Saga nhận biết và có thể bắn event notification thống nhất
+        commandGateway.send(new CreatePaymentCommand(
+                payment.getId(),
+                payment.getInvoiceId(),
+                payment.getTotalAmount()
+        ));
+
+        // Vì tiền mặt là thành công ngay, ta gửi tiếp lệnh Update Status luôn
+        // Hoặc để PaymentAggregate tự xử lý nếu logic của bạn cho phép
+        commandGateway.send(new UpdatePaymentStatusCommand(
+                payment.getId(),
+                "SUCCESSFUL",
+                "Đã thanh toán đầy đủ tiền mặt"
+        ));
+
         // Báo cho Invoice Service - Đánh dấu đã thanh toán
-        try {
-            InvoiceResponseDTO updatedInvoice = invoiceClient.markAsPaid(request.getInvoiceId());
-            log.info("Đã cập nhật Invoice {} thành PAID", request.getInvoiceId());
-        } catch (Exception e) {
-            log.error("Lỗi khi gọi Invoice Service để đánh dấu đã thanh toán: {}", e.getMessage(), e);
-        }
+//        try {
+//            InvoiceResponseDTO updatedInvoice = invoiceClient.markAsPaid(request.getInvoiceId());
+//            log.info("Đã cập nhật Invoice {} thành PAID", request.getInvoiceId());
+//        } catch (Exception e) {
+//            log.error("Lỗi khi gọi Invoice Service để đánh dấu đã thanh toán: {}", e.getMessage(), e);
+//        }
 
         return paymentMapper.toResponseDto(payment);
     }
@@ -172,17 +197,20 @@ public class PaymentService {
                     .mapToInt(item -> item.getPrice() * item.getQuantity())
                     .sum();
 
+            String invoiceId = request.getInvoiceId().toString();
+            invoiceId = invoiceId.substring(invoiceId.length() - 17);
+
             // Chuẩn bị dữ liệu thanh toán cho payOS
-            LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(10);
-            long expiredAtUnix = (System.currentTimeMillis() / 1000) + 600;
+            LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(15);
+            long expiredAtUnix = (System.currentTimeMillis() / 1000) + 900;
             PaymentData paymentData = PaymentData.builder()
                     .orderCode(orderCode)
                     .amount(totalAmountInt)
-                    .description("HĐ: " + request.getInvoiceId())
+                    .description("HĐ: " + invoiceId)
                     .items(payosItems)
                     .returnUrl(returnUrl)
                     .cancelUrl(cancelUrl)
-                    .expiredAt(expiredAtUnix) // 10 minute expiry
+                    .expiredAt(expiredAtUnix) // 15 minute expiry
                     .build();
 
             // Gọi payOS SDK để tạo link thanh toán
@@ -201,9 +229,19 @@ public class PaymentService {
                     .expiredAt(expiredAt)
                     .build();
 
-            paymentRepository.save(payment);
+            Payment paymentSaved =  paymentRepository.save(payment);
 
-            return paymentMapper.toResponseDto(payment);
+            commandGateway.send(new CreatePaymentCommand(
+                    payment.getId(),          // ID của Payment vừa tạo
+                    payment.getInvoiceId(),   // ID hóa đơn
+                    payment.getTotalAmount()
+            ));
+
+
+
+            log.info("--> Đã gửi CreatePaymentCommand để kích hoạt PaymentSaga. ID: {}", payment.getId());
+
+            return paymentMapper.toResponseDto(paymentSaved);
 
         } catch (Exception e) {
             log.error("Lỗi khi tạo link thanh toán payOS: {}", e.getMessage(), e);
@@ -222,13 +260,32 @@ public class PaymentService {
         return invoiceItems.stream()
                 .map(item -> {
                     // Tính giá từ itemTotal hoặc quantity * unitPrice
-                    int itemPrice = item.getUnitPrice().intValue();
+                    int itemPrice = item.getPatientPayAmount().intValue();
 
                     // Tên item: serviceType hoặc description
-                    String itemName = item.getServiceType() != null && !item.getServiceType().isEmpty()
-                            ? item.getServiceType()
-                            : (item.getDescription() != null ? item.getDescription() : "Dịch vụ y tế");
-                    
+                    String serviceType = item.getServiceType();
+                    String description = item.getDescription() != null ? item.getDescription() : "";
+
+                    String itemName;
+
+                    switch (serviceType) {
+                        case "Medicine":
+                            itemName = "Thuốc " + description;
+                            break;
+                        case "Dental":
+                            itemName = "Dịch vụ y tế " + description;
+                            break;
+                        default:
+                            if (serviceType != null && !serviceType.isEmpty()) {
+                                itemName = serviceType; // serviceType khác Medicine/Dental
+                            } else {
+                                itemName = description.isEmpty() ? "Dịch vụ y tế" : description; // fallback
+                            }
+                            break;
+                    }
+
+
+
                     return ItemData.builder()
                             .name(itemName)
                             .quantity(item.getQuantity() != null ? item.getQuantity() : 1)
@@ -248,38 +305,40 @@ public class PaymentService {
         Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy payment với Transaction ID: " + transactionId));
 
+        // Kiểm tra xem payment có đang ở trạng thái chờ không (tránh xử lý trùng)
         if (payment.getStatus() == PaymentStatus.PENDING) {
+
+            PaymentStatus newStatus = isSuccess ? PaymentStatus.SUCCESSFUL : PaymentStatus.FAILED;
+            String reason = isSuccess ? "Thanh toán qua payOS - Thành công" : "Thanh toán thất bại";
+
+            // 1. CẬP NHẬT DB TRỰC TIẾP (Để response nhanh cho Webhook)
+//            payment.setStatus(newStatus);
+//            if (isSuccess) {
+//                payment.setPaidAt(LocalDateTime.now());
+//            }
+//            payment.setDescription(reason);
+//            paymentRepository.save(payment);
+
+            // 2. GỬI LỆNH UPDATE STATUS VÀO AXON (KÍCH HOẠT SAGA)
+            // Đây là phần BỔ SUNG QUAN TRỌNG
+            commandGateway.send(new UpdatePaymentStatusCommand(
+                    payment.getId(),
+                    newStatus.toString(),
+                    reason
+            ));
+
+            log.info("--> Đã gửi UpdatePaymentStatusCommand ({}) cho Payment Saga. ID: {}", newStatus, payment.getId());
+
+            // 3. (Optional) Gọi trực tiếp Invoice Service nếu muốn fail-safe (nhưng nên để Saga làm)
+            /*
             if (isSuccess) {
-                payment.setStatus(PaymentStatus.SUCCESSFUL);
-                payment.setPaidAt(LocalDateTime.now());
-                
-                // Lấy thông tin Invoice để tạo description chi tiết
                 try {
-                    InvoiceResponseDTO invoice = invoiceClient.getInvoiceById(payment.getInvoiceId());
-                    payment.setDescription("Thanh toán qua payOS - Thành công");
+                    invoiceClient.markAsPaid(payment.getInvoiceId());
                 } catch (Exception e) {
-                    log.warn("Không thể lấy thông tin Invoice để tạo description: {}", e.getMessage());
-                    payment.setDescription("Thanh toán qua payOS - Thành công");
+                    log.error("Lỗi gọi Invoice Service direct call: {}", e.getMessage());
                 }
-
-                paymentRepository.save(payment);
-
-                // Báo cho Invoice Service - Đánh dấu đã thanh toán
-                try {
-                    InvoiceResponseDTO updatedInvoice = invoiceClient.markAsPaid(payment.getInvoiceId());
-                    log.info("Đã cập nhật Invoice {} thành PAID", payment.getInvoiceId());
-                } catch (Exception e) {
-                    log.error("Lỗi khi gọi Invoice Service để đánh dấu đã thanh toán: {}", e.getMessage(), e);
-                }
-
-                log.info("Payment {} đã THÀNH CÔNG", transactionId);
-            } else {
-                payment.setStatus(PaymentStatus.FAILED);
-                payment.setDescription("Thanh toán thất bại");
-                paymentRepository.save(payment);
-
-                log.warn("Payment {} THẤT BẠI", transactionId);
             }
+            */
         } else {
             log.warn("Payment {} đã được xử lý trước đó (Status: {}). Bỏ qua.", transactionId, payment.getStatus());
         }
@@ -464,6 +523,59 @@ public class PaymentService {
             log.error("Lỗi khi kiểm tra Invoice: {}", e.getMessage(), e);
             throw new RuntimeException("Không thể lấy thông tin Invoice: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Xử lý callback từ PayOS redirect URL
+     * Đặc biệt xử lý trường hợp CANCELLED vì PayOS không gửi webhook
+     */
+    @Transactional
+    public PaymentResponseDTO handlePaymentCallback(String orderCode, String status, String code, Boolean cancel) {
+        log.info("Xử lý callback redirect - OrderCode: {}, Status: {}, Code: {}, Cancel: {}", 
+                orderCode, status, code, cancel);
+        
+        Payment payment = paymentRepository.findByTransactionId(orderCode)
+                .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy payment với orderCode: " + orderCode));
+        
+        // Nếu payment đã xử lý xong thì return luôn
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            log.info("Payment đã được xử lý: {}", payment.getStatus());
+            return paymentMapper.toResponseDto(payment);
+        }
+        
+        // Xác định trạng thái mới
+        PaymentStatus newStatus;
+        String reason;
+        
+        if (Boolean.TRUE.equals(cancel) || "CANCELLED".equals(status)) {
+            newStatus = PaymentStatus.CANCELLED;
+            reason = "Khách hàng đã hủy thanh toán";
+        } else if ("00".equals(code) || "PAID".equals(status)) {
+            newStatus = PaymentStatus.SUCCESSFUL;
+            reason = "Thanh toán thành công qua PayOS";
+        } else {
+            newStatus = PaymentStatus.FAILED;
+            reason = "Thanh toán thất bại - Code: " + code;
+        }
+        
+        log.info("Cập nhật payment {} từ {} sang {}", payment.getId(), payment.getStatus(), newStatus);
+        
+        // Gửi command để cập nhật status (trigger Saga)
+        commandGateway.send(new UpdatePaymentStatusCommand(
+                payment.getId(),
+                newStatus.toString(),
+                reason
+        ));
+        
+        // Cập nhật local để return ngay
+        payment.setStatus(newStatus);
+        if (newStatus == PaymentStatus.SUCCESSFUL) {
+            payment.setPaidAt(LocalDateTime.now());
+        }
+        payment.setDescription(reason);
+        paymentRepository.save(payment);
+        
+        return paymentMapper.toResponseDto(payment);
     }
 }
 

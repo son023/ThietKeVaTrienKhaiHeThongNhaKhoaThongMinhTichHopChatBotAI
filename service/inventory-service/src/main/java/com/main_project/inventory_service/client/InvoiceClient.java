@@ -1,0 +1,20 @@
+package com.main_project.inventory_service.client;
+
+
+import com.main_project.inventory_service.dto.InvoiceResponseDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
+import java.util.UUID;
+
+@FeignClient(
+        name = "invoice-service",
+        url = "${invoice.service.url:http://localhost:8091}" // URL của invoice-service
+)
+public interface InvoiceClient {
+    @GetMapping("/invoice-service/invoices/appointment/{appointmentId}")
+    List<InvoiceResponseDTO> getInvoicesByAppointmentId(@PathVariable UUID appointmentId);
+
+}

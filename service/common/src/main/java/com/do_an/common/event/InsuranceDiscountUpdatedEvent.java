@@ -12,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InsuranceDiscountUpdatedEvent {
+    private UUID insuranceClaimId;
     private UUID prescriptionId;
     private UUID invoiceId;
     private Integer discountAmount;

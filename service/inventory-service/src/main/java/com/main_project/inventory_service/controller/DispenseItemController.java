@@ -49,6 +49,13 @@ public class DispenseItemController {
         dispenseItemService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/by-dispense-order/{dispenseOrderId}")
+    public ResponseEntity<List<DispenseItemResponse>> getByDispenseOrderId(
+            @PathVariable UUID dispenseOrderId) {
+        List<DispenseItemResponse> responses = dispenseItemService.getAllByDispenseOrderId(dispenseOrderId);
+        return ResponseEntity.ok(responses);
+    }
 }
 
 

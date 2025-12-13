@@ -1,7 +1,11 @@
 package com.main_project.inventory_service.service;
 
+import com.main_project.inventory_service.client.InvoiceClient;
+import com.main_project.inventory_service.client.PatientClient;
 import com.main_project.inventory_service.dto.DispenseOrderRequest;
 import com.main_project.inventory_service.dto.DispenseOrderResponse;
+import com.main_project.inventory_service.dto.InvoiceResponseDTO;
+import com.main_project.inventory_service.dto.MedicalHistoryResponseDTO;
 import com.main_project.inventory_service.entity.DispenseOrder;
 import com.main_project.inventory_service.entity.Pharmacist;
 import com.main_project.inventory_service.iservice.IDispenseOrderService;
@@ -11,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,6 +27,9 @@ public class DispenseOrderService implements IDispenseOrderService {
 
     private final DispenseOrderRepository dispenseOrderRepository;
     private final PharmacistRepository pharmacistRepository;
+
+    private final InvoiceClient invoiceClient;
+    private final PatientClient patientClient;
 
     @Override
     @Transactional
@@ -95,6 +104,80 @@ public class DispenseOrderService implements IDispenseOrderService {
                 dispenseOrder.getUpdateAt()
         );
     }
+
+
+    @Override
+    public DispenseOrderResponse markAsSold(UUID id, UUID pharmacistId) {
+        DispenseOrder order = dispenseOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc có DispenseOrder: " + id));
+
+ // ✅ KIỂM TRA THANH TOÁN
+    Map<String, Object> paymentStatus = getPaymentStatusOfPrescription(id);
+    boolean isPaid = (Boolean) paymentStatus.get("isPaid");
+    
+    if (!isPaid) {
+        throw new IllegalStateException(
+            "Không thể cấp phát đơn thuốc. Hóa đơn chưa được thanh toán. " +
+            "Trạng thái: " + paymentStatus.get("invoiceStatus")
+        );
+    }
+
+        // Gán pharmacist vào đơn
+        Pharmacist pharmacist = pharmacistRepository.findById(pharmacistId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dược sĩ: " + pharmacistId));
+
+        order.setPharmacist(pharmacist);
+        order.setStatus("SOLD");
+
+        dispenseOrderRepository.save(order);
+        return mapToResponse(order);
+    }
+
+    @Override
+    public DispenseOrderResponse getByPrescriptionId(UUID id) {
+        DispenseOrder order = dispenseOrderRepository.findByPrescription(id).get();
+        return mapToResponse(order);
+    }
+
+    @Override
+    public List<DispenseOrderResponse> getAllByStatus(String status) {
+        return dispenseOrderRepository.findAllByStatusOrderByCreateAtDesc(status)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DispenseOrderResponse> getAllByStatuses(List<String> statuses) {
+        return dispenseOrderRepository.findAllByStatusInOrderByCreateAtDesc(statuses)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+@Transactional(readOnly = true)
+public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) {
+    DispenseOrder order = dispenseOrderRepository.findById(dispenseOrderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc: " + dispenseOrderId));
+    
+    // Lấy appointmentId từ medicalHistory
+    MedicalHistoryResponseDTO mh = patientClient.getMedicalHistory(order.getMedicalHistoryId());
+    UUID appointmentId = mh.getAppointmentId();
+    
+    // Lấy invoice theo appointmentId
+    List<InvoiceResponseDTO> invoices = invoiceClient.getInvoicesByAppointmentId(appointmentId);
+    
+    boolean isPaid = invoices.stream()
+            .anyMatch(inv -> "PAID".equals(inv.getStatus()));
+    
+    Map<String, Object> result = new HashMap<>();
+    result.put("isPaid", isPaid);
+    result.put("invoiceId", invoices.isEmpty() ? null : invoices.get(0).getId());
+    result.put("invoiceStatus", invoices.isEmpty() ? "NOT_FOUND" : invoices.get(0).getStatus());
+    
+    return result;
+}
 }
 
 
