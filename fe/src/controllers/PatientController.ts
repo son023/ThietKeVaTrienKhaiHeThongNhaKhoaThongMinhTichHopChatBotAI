@@ -1,11 +1,46 @@
 import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
-import { authController } from "./AuthController";
 import { userController } from "./UserController";
-import { UserDTO, UserRole } from "../models";
 import { PatientDTO, PatientWithUser } from "../models/Patient";
 
 
-// ✅ THÊM Interface cho allergy và patient response
+
+export interface PatientAllergyInput {
+  allergyId: string;
+  severity?: string;
+  reaction?: string;
+  note?: string;
+}
+
+export interface UnderlyingDiseaseInput {
+  name?: string;
+  status?: string;
+  severity?: string;
+  isVerified?: boolean;
+  note?: string;
+}
+
+export interface ToothIssueInput {
+  toothNumber?: number;
+  status?: string;
+  description?: string;
+  diagnosedDate?: string;
+  note?: string;
+}
+
+export interface PatientProfileRequest {
+  userId: string;
+  dob?: string;
+  gender?: string;
+  address?: string;
+  contactPhone?: string;
+  bloodType?: string;
+  insuranceNumber?: string;
+  patientAllergies?: PatientAllergyInput[];
+  underlyingDiseases?: UnderlyingDiseaseInput[];
+  toothIssues?: ToothIssueInput[];
+}
+
+export type PatientProfileResponse = PatientProfileRequest;
 
 
 class PatientController {
@@ -44,7 +79,39 @@ class PatientController {
       const user = await userController.getById(id);
     return { ...patient, userId: patient.id, user };
   }
-  
+
+  async createProfile(payload: PatientProfileRequest): Promise<PatientProfileResponse> {
+    const res = await fetch(createApiUrl(this.baseUrl), {
+      method: "POST",
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<PatientProfileResponse>(res);
+  }
+
+  async updateProfile(
+      id: string,
+      payload: PatientProfileRequest
+  ): Promise<PatientProfileResponse> {
+    const res = await fetch(createApiUrl(this.baseUrl, id), {
+      method: "PUT",
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<PatientProfileResponse>(res);
+  }
+
+  async upsertProfile(
+      userId: string,
+      payload: Omit<PatientProfileRequest, "userId">
+  ): Promise<PatientProfileResponse> {
+    const enrichedPayload: PatientProfileRequest = { ...payload, userId };
+    try {
+      return this.updateProfile(userId, enrichedPayload);
+    } catch (error) {
+      return this.createProfile(enrichedPayload);
+    }
+  }
 }
 
 export const patientController = new PatientController();

@@ -15,7 +15,7 @@ import { DoctorHeader } from './components/DoctorHeader';
 import { Dashboard } from './components/doctor/Dashboard';
 import { MyAppointments } from './components/doctor/MyAppointments';
 import { MyPatients } from './components/doctor/MyPatients';
-import { PatientDetail } from './components/doctor/PatientDetail';
+import {PatientExamination} from './components/doctor/PatientExamination';
 import { TreatmentPlans } from './components/doctor/TreatmentPlans';
 import { TreatmentPlanDetail } from './components/doctor/TreatmentPlanDetail';
 import { PersonalPerformance } from './components/doctor/PersonalPerformance';
@@ -32,6 +32,8 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   const [selectedTreatmentPlanId, setSelectedTreatmentPlanId] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
   const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
+
+
   // thêm bên cạnh các state khác
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [selectedMedicalHistoryId, setSelectedMedicalHistoryId] = useState<string | null>(null);
@@ -78,35 +80,24 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
           doctorId={doctorId}
           onNavigateToPatient={(id) => {
             setSelectedPatientId(id);
-            setCurrentPage('patient-detail');
+            setCurrentPage('patient-examination');
           }} />;
       case 'appointments':
         return <MyAppointments doctorId={doctorId} onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
       case 'patients':
         return <MyPatients
           onNavigateToPatient={(id) => {
             setSelectedPatientId(id);
-            setCurrentPage('patient-detail');
+            setCurrentPage('patient-examination');
           }}
           onNavigateToAppointments={() => setCurrentPage('appointments')}
         />;
-      // case 'patient-detail':
-      //   return <PatientDetail 
-      //     patientId={selectedPatientId} 
-      //     onBack={() => setCurrentPage('patients')}
-      //     onNavigateToAppointments={() => setCurrentPage('appointments')}
-      //     onNavigateToTreatmentPlan={(planId) => {
-      //       setSelectedTreatmentPlanId(planId);
-      //       setCurrentPage('treatment-plan-detail');
-      //     }}
-
-      //   />;
-      case 'patient-detail':
+      case 'patient-examination':
         return (
-          <PatientDetail
+          <PatientExamination
             patientId={selectedPatientId}
             onBack={() => setCurrentPage('patients')}
             onNavigateToAppointments={() => setCurrentPage('appointments')}
@@ -142,7 +133,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       default:
         return <Dashboard onNavigateToPatient={(id) => {
           setSelectedPatientId(id);
-          setCurrentPage('patient-detail');
+          setCurrentPage('patient-examination');
         }} />;
     }
   };
