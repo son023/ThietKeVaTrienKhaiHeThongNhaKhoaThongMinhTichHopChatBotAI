@@ -185,7 +185,7 @@ public class PaymentService {
 
         try {
             // Tạo orderCode duy nhất
-            Long orderCode = System.currentTimeMillis() / 1000;
+            Long orderCode = System.currentTimeMillis();
 
             // Tạo danh sách ItemData từ InvoiceItem
             List<ItemData> payosItems = convertInvoiceItemsToPayOSItems(invoice.getItems());
@@ -206,7 +206,7 @@ public class PaymentService {
             PaymentData paymentData = PaymentData.builder()
                     .orderCode(orderCode)
                     .amount(totalAmountInt)
-                    .description("HĐ: " + invoiceId)
+                    .description("Hoa don: " + invoiceId)
                     .items(payosItems)
                     .returnUrl(returnUrl)
                     .cancelUrl(cancelUrl)

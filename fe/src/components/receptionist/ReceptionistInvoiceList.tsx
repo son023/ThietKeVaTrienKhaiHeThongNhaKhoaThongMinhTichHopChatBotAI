@@ -6,6 +6,7 @@ import { Search, Plus, DollarSign, FileText, Calendar, User, Filter, Loader2, Re
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
+import { paymentController, PaymentMethod } from '../../controllers/PaymentController';
 import {
   Table,
   TableBody,
@@ -39,7 +40,7 @@ interface Invoice {
 }
 
 interface ReceptionistInvoiceListProps {
-  onViewInvoice: (invoiceId: string) => void;
+  onViewInvoice: (invoiceId: string, mode?: 'view' | 'payment') => void;
   onCreateInvoice: () => void;
 }
 
@@ -47,12 +48,11 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('today');
-  
+
   // Backend data state
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [useRealData, setUseRealData] = useState(false);
 
   const appointmentCache: Record<string, AppointmentDTO> = {};
   const userCache: Record<string, UserDTO> = {};
@@ -69,62 +69,6 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
     return userCache[id];
   };
 
-  // Mock data fallback
-  const mockInvoices: Invoice[] = [
-    {
-      id: '1',
-      code: 'HD0123',
-      patientName: 'Nguyễn Văn A',
-      patientCode: 'BN001',
-      date: '28/10/2025 09:30',
-      doctor: 'BS. Phạm Mai',
-      amount: 800000,
-      status: 'unpaid',
-    },
-    {
-      id: '2',
-      code: 'HD0124',
-      patientName: 'Trần Thị B',
-      patientCode: 'BN002',
-      date: '28/10/2025 10:00',
-      doctor: 'BS. Lê Anh',
-      amount: 1500000,
-      status: 'paid',
-      paymentMethod: 'Tiền mặt',
-    },
-    {
-      id: '3',
-      code: 'HD0125',
-      patientName: 'Lê Văn C',
-      patientCode: 'BN003',
-      date: '28/10/2025 14:00',
-      doctor: 'BS. Phạm Mai',
-      amount: 2500000,
-      status: 'unpaid',
-    },
-    {
-      id: '4',
-      code: 'HD0122',
-      patientName: 'Phạm Thị D',
-      patientCode: 'BN004',
-      date: '27/10/2025 15:30',
-      doctor: 'BS. Lê Anh',
-      amount: 500000,
-      status: 'paid',
-      paymentMethod: 'Chuyển khoản',
-    },
-    {
-      id: '5',
-      code: 'HD0121',
-      patientName: 'Hoàng Văn E',
-      patientCode: 'BN005',
-      date: '27/10/2025 11:00',
-      doctor: 'BS. Phạm Mai',
-      amount: 1200000,
-      status: 'partial',
-      paymentMethod: 'Tiền mặt',
-    },
-  ];
 
   // Load invoices from backend
   useEffect(() => {
@@ -141,33 +85,26 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
     try {
       // Get status filter for API (convert 'all' to undefined)
       const apiStatusFilter = statusFilter === 'all' ? undefined : mapStatusToBackend(statusFilter);
-      
+
       const data = await invoiceController.listInvoices(apiStatusFilter);
 
-      
+
       // Map backend data to frontend format
       const mappedInvoices = await Promise.all(data.map(mapInvoiceFromBackend));
-      
+
       setInvoices(mappedInvoices);
-      setUseRealData(true);
-      
+
       if (showRefreshIndicator) {
         toast.success('Đã làm mới danh sách hóa đơn');
       }
-      
+
       console.log(`Loaded ${mappedInvoices.length} invoices from backend`);
     } catch (error) {
       console.error('Error loading invoices:', error);
-      
-      if (!useRealData) {
-        // First time load failed, use mock data
-        setInvoices(mockInvoices);
-        toast.info('Sử dụng dữ liệu mẫu (không kết nối được backend)');
-      } else {
-        // Refresh failed, keep existing data
-        toast.error('Không thể làm mới dữ liệu');
-      }
-    } finally {
+      toast.error('Không thể tải danh sách hóa đơn');
+      setInvoices([]);
+    }
+    finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
@@ -204,40 +141,49 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
     }
   };
 
-  // Map backend invoice to frontend invoice
-  // const mapInvoiceFromBackend = (invoice: InvoiceDTO): Invoice => {
-  //   return {
-  //     id: invoice.id,
-  //     code: invoice.id.substring(0, 8).toUpperCase(),
-  //     patientName: 'Bệnh nhân', // TODO: Get from patient service
-  //     patientCode: `BN${invoice.id.substring(0, 4).toUpperCase()}`, // TODO: Get from patient service
-  //     date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
-  //       day: '2-digit',
-  //       month: '2-digit',
-  //       year: 'numeric',
-  //       hour: '2-digit',
-  //       minute: '2-digit',
-  //     }),
-  //     doctor: 'BS. Đang cập nhật', // TODO: Get from appointment service
-  //     amount: invoice.patientTotalPay, // Amount patient needs to pay
-  //     status: mapStatusToFrontend(invoice.status),
-  //     paymentMethod: invoice.status === 'PAID' ? 'Đã thanh toán' : undefined,
-  //   };
-  // };
-
 
   const mapInvoiceFromBackend = async (invoice: InvoiceDTO): Promise<Invoice> => {
     const appointment = await getAppointment(invoice.appointmentId);
     const patientUser = await getUser(appointment?.patientId);
     const doctorUser = await getUser(appointment?.doctorId);
-  
+
+    // Lấy phương thức thanh toán từ payment-service
+    let paymentMethodText: string | undefined = undefined;
+
+    if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
+      try {
+        const payments = await paymentController.getPaymentsByInvoice(invoice.id);
+
+        if (payments.length > 0) {
+          // Lấy payment gần nhất (payment cuối cùng trong mảng)
+          const latestPayment = payments[payments.length - 1];
+
+          // Map payment method sang tiếng Việt
+          switch (latestPayment.paymentMethod) {
+            case PaymentMethod.CASH:
+              paymentMethodText = 'Tiền mặt';
+              break;
+            case PaymentMethod.BANK_TRANSFER:
+              paymentMethodText = 'Chuyển khoản';
+              break;
+            default:
+              paymentMethodText = 'Không xác định';
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching payment method for invoice:', invoice.id, error);
+        // Fallback nếu lỗi
+        paymentMethodText = invoice.status === 'PAID' ? 'Đã thanh toán' : undefined;
+      }
+    }
+
     return {
       id: invoice.id,
       code: invoice.id.substring(0, 8).toUpperCase(),
       patientName: patientUser?.fullName || 'Bệnh nhân',
       patientCode: patientUser?.id
-        ? `BN${patientUser.id.substring(0, 4).toUpperCase()}`
-        : patientUser?.username || '—',
+        ? `BN${patientUser.id.slice(-6).toUpperCase()}`
+        : '—',
       date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
         day: '2-digit',
         month: '2-digit',
@@ -248,7 +194,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
       doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
       amount: invoice.patientTotalPay ?? 0,
       status: mapStatusToFrontend(invoice.status),
-      paymentMethod: invoice.status === 'PAID' ? 'Đã thanh toán' : undefined,
+      paymentMethod: paymentMethodText,
     };
   };
 
@@ -268,13 +214,13 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   };
 
   const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch = 
+    const matchesSearch =
       invoice.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.patientCode.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -304,16 +250,6 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl text-[#01304e]">Thanh toán & Hóa đơn</h1>
-            {useRealData && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                ✓ Dữ liệu thực
-              </Badge>
-            )}
-            {!useRealData && (
-              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                ⚠ Dữ liệu mẫu
-              </Badge>
-            )}
           </div>
           <p className="text-gray-600">Quản lý hóa đơn và thanh toán</p>
         </div>
@@ -481,7 +417,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                           <Button
                             size="sm"
                             className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90"
-                            onClick={() => onViewInvoice(invoice.id)}
+                            onClick={() => onViewInvoice(invoice.id, 'payment')}
                           >
                             <DollarSign className="w-3 h-3 mr-1" />
                             Thanh toán
@@ -490,7 +426,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => onViewInvoice(invoice.id)}
+                          onClick={() => onViewInvoice(invoice.id, 'view')}
                         >
                           <FileText className="w-3 h-3 mr-1" />
                           Chi tiết
@@ -543,7 +479,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                       <Button
                         size="sm"
                         className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90"
-                        onClick={() => onViewInvoice(invoice.id)}
+                        onClick={() => onViewInvoice(invoice.id, 'payment')}
                       >
                         <DollarSign className="w-3 h-3 mr-1" />
                         Thanh toán ngay
@@ -599,7 +535,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onViewInvoice(invoice.id)}
+                        onClick={() => onViewInvoice(invoice.id, 'view')}
                       >
                         <FileText className="w-3 h-3 mr-1" />
                         Xem chi tiết
