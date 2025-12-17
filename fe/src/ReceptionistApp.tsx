@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
+import { Search as SearchIcon } from 'lucide-react';
 import { ReceptionistHeader } from './components/ReceptionistHeader';
 import { ReceptionistSidebar } from './components/ReceptionistSidebar';
 import { ReceptionistDashboard } from './components/receptionist/ReceptionistDashboard';
@@ -11,6 +12,21 @@ import { ReceptionistReports } from './components/receptionist/ReceptionistRepor
 import { ReceptionistInvoice } from './components/receptionist/ReceptionistInvoice';
 import { ReceptionistInvoiceList } from './components/receptionist/ReceptionistInvoiceList';
 import { ReceptionistAccountSettings } from './components/receptionist/ReceptionistAccountSettings';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './components/ui/dialog';
+import { Input } from './components/ui/input';
+import { Button } from './components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './components/ui/table';
+import { BookAppointmentDialog } from './components/patient/BookAppointmentDialog';
+import { patientController } from './controllers/PatientController';
+import { userController } from './controllers/UserController';
+import { PatientWithUser } from './models/Patient';
 
 interface ReceptionistAppProps {
   onLogout: () => void;
@@ -28,6 +44,15 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [invoiceViewMode, setInvoiceViewMode] = useState<'view' | 'payment'>('view');
   const [searchQuery, setSearchQuery] = useState('');
+  // Dialog đặt lịch mới dùng chung cho toàn bộ app receptionist
+  const [patientSearchOpen, setPatientSearchOpen] = useState(false);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [patients, setPatients] = useState<PatientWithUser[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const [patientsError, setPatientsError] = useState<string | null>(null);
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState<PatientWithUser | null>(null);
+  const [appointmentRefreshToken, setAppointmentRefreshToken] = useState(0);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -36,9 +61,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   };
 
   const handleNewAppointment = () => {
-    setShowNewAppointment(true);
-    setCurrentPage('new-appointment');
-    navigate('/receptionist/new-appointment');
+    setPatientSearchOpen(true);
   };
 
   const handleNewPatient = () => {
@@ -105,6 +128,53 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
       setCurrentPage('dashboard');
     }
   }, [location.pathname]);
+
+  // Tải danh sách bệnh nhân khi mở dialog tìm kiếm
+  useEffect(() => {
+    if (!patientSearchOpen) return;
+    const loadPatients = async () => {
+      try {
+        setLoadingPatients(true);
+        setPatientsError(null);
+        const patientList = await patientController.getAll();
+        const userMap = await userController.getByIds(
+          patientList.map((p) => p.userId)
+        );
+        const withUser: PatientWithUser[] = patientList.map((p) => ({
+          ...p,
+          user: userMap[p.userId],
+        }));
+        setPatients(withUser);
+      } catch (error) {
+        const msg =
+          error instanceof Error ? error.message : 'Không thể tải danh sách bệnh nhân';
+        setPatientsError(msg);
+      } finally {
+        setLoadingPatients(false);
+      }
+    };
+    loadPatients();
+  }, [patientSearchOpen]);
+
+  const filteredPatients = useMemo(() => {
+    const q = patientSearchQuery.toLowerCase();
+    return patients.filter((p) => {
+      const name = p.user?.fullName?.toLowerCase() || '';
+      const phone = p.contactPhone || p.user?.phone || '';
+      const code = p.userId.toLowerCase();
+      return (
+        name.includes(q) ||
+        phone.includes(patientSearchQuery) ||
+        code.includes(q)
+      );
+    });
+  }, [patients, patientSearchQuery]);
+
+  const handleSelectPatientForBooking = (patient: PatientWithUser) => {
+    setSelectedPatient(patient);
+    setPatientSearchOpen(false);
+    setBookingDialogOpen(true);
+  };
 
   const handleSidebarChange = (page: string) => {
     switch (page) {
@@ -183,11 +253,16 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
         <Routes>
           <Route
             path="/receptionist"
-            element={<ReceptionistDashboard onCreateInvoice={handleCreateInvoice} />}
+            element={
+              <ReceptionistDashboard
+                onCreateInvoice={handleCreateInvoice}
+                refreshToken={appointmentRefreshToken}
+              />
+            }
           />
           <Route
             path="/receptionist/appointments"
-            element={<ReceptionistAppointments />}
+            element={<ReceptionistAppointments refreshToken={appointmentRefreshToken} />}
           />
           <Route
             path="/receptionist/patients"
@@ -259,6 +334,91 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
           />
           <Route path="*" element={<Navigate to="/receptionist" replace />} />
         </Routes>
+
+        <Dialog open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+          <DialogContent className="w-[90vw] max-w-none bg-white">
+            <DialogHeader>
+              <DialogTitle>Chọn bệnh nhân để đặt lịch hẹn</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  placeholder="Tìm theo tên, số điện thoại hoặc mã bệnh nhân..."
+                  className="pl-10"
+                  value={patientSearchQuery}
+                  onChange={(e) => setPatientSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="border rounded-md max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Họ tên</TableHead>
+                      <TableHead>Số điện thoại</TableHead>
+                      <TableHead>Thao tác</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingPatients ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                          Đang tải danh sách bệnh nhân...
+                        </TableCell>
+                      </TableRow>
+                    ) : patientsError ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-red-600">
+                          {patientsError}
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredPatients.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                          Không tìm thấy bệnh nhân phù hợp
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredPatients.map((p) => (
+                        <TableRow
+                          key={p.userId}
+                          className="cursor-pointer hover:bg-gray-50"
+                        >
+                          <TableCell>{p.user?.fullName || 'Chưa cập nhật'}</TableCell>
+                          <TableCell>
+                            {p.contactPhone || p.user?.phone || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSelectPatientForBooking(p)}
+                            >
+                              Chọn
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <BookAppointmentDialog
+          isOpen={bookingDialogOpen}
+          onClose={() => setBookingDialogOpen(false)}
+          onSuccess={() => {
+            setBookingDialogOpen(false);
+            setSelectedPatient(null);
+            setAppointmentRefreshToken((prev) => prev + 1);
+          }}
+          patientId={selectedPatient?.userId}
+          patientName={selectedPatient?.user?.fullName}
+          patientPhone={selectedPatient?.contactPhone || selectedPatient?.user?.phone}
+          patientEmail={selectedPatient?.user?.email}
+        />
       </div>
     </div>
   );

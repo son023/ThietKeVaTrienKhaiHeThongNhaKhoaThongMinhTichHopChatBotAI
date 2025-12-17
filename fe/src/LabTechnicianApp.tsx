@@ -23,6 +23,7 @@ export default function LabTechnicianApp({
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
 
+  useEffect(() => {
     if (location.pathname.startsWith("/lab/test-queue")) {
       setCurrentPage("test-queue");
     } else if (location.pathname.startsWith("/lab/test-results")) {
