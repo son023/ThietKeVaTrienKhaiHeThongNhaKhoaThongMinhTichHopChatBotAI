@@ -212,7 +212,7 @@ export function MyAppointments({
       console.log(`[MyAppointments] Subscribed to rollback notifications, now starting appointment...`);
       
       await appointmentController.startAppointment(appointmentId);
-      onNavigateToPatient(patientId);
+      onNavigateToPatient(patientId, appointmentId);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Khong the bat dau kham"
@@ -229,7 +229,7 @@ export function MyAppointments({
 
   const handleContinueExamination = (appointmentId: string, patientId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onNavigateToPatient(patientId);
+    onNavigateToPatient(patientId, appointmentId);
   };
 
   const handleView = (patientId: string, e: React.MouseEvent) => {
@@ -357,7 +357,7 @@ export function MyAppointments({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (apt.patientId)
-                                onNavigateToPatient(apt.patientId);
+                                onNavigateToPatient(apt.patientId, apt.id);
                             }}
                           >
                             Xem ho so

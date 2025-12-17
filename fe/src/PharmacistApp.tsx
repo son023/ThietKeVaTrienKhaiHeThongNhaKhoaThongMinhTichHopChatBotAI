@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useParams, useLocation, Navigate } from 'react-router-dom';
 import { PharmacistHeader } from './components/PharmacistHeader';
 import { PharmacistSidebar } from './components/PharmacistSidebar';
 import { PharmacistDashboard } from './components/pharmacist/PharmacistDashboard';
@@ -18,9 +19,9 @@ interface PharmacistAppProps {
 }
 
 export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<string | null>(null);
-  const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
   const [pharmacistId, setPharmacistId] = useState<string | undefined>(undefined);
 
   // ✅ Lấy pharmacistId từ currentUser
@@ -31,74 +32,136 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
     }
   }, []);
 
-  const handleNavigate = (page: string, id?: string) => {
-    if (page === 'prescription-detail' && id) {
-      setSelectedPrescriptionId(id);
-      setCurrentPage('prescription-detail');
-    } else if (page === 'drug-profile' && id) {
-      setSelectedDrugId(id);
-      setCurrentPage('drug-profile');
+  useEffect(() => {
+    if (location.pathname.startsWith('/pharmacist/prescriptions')) {
+      if (location.pathname.startsWith('/pharmacist/prescriptions/')) {
+        setCurrentPage('prescription-detail');
+      } else {
+        setCurrentPage('prescriptions');
+      }
+    } else if (location.pathname.startsWith('/pharmacist/inventory')) {
+      if (location.pathname.startsWith('/pharmacist/inventory/')) {
+        setCurrentPage('drug-profile');
+      } else {
+        setCurrentPage('inventory');
+      }
+    } else if (location.pathname.startsWith('/pharmacist/import-export')) {
+      setCurrentPage('import-export');
+    } else if (location.pathname.startsWith('/pharmacist/reports')) {
+      setCurrentPage('reports');
+    } else if (location.pathname.startsWith('/pharmacist/account')) {
+      setCurrentPage('account');
     } else {
-      setCurrentPage(page);
-      setSelectedPrescriptionId(null);
-      setSelectedDrugId(null);
+      setCurrentPage('dashboard');
+    }
+  }, [location.pathname]);
+
+  const handleSidebarChange = (page: string) => {
+    switch (page) {
+      case 'dashboard':
+        navigate('/pharmacist');
+        break;
+      case 'prescriptions':
+        navigate('/pharmacist/prescriptions');
+        break;
+      case 'inventory':
+        navigate('/pharmacist/inventory');
+        break;
+      case 'import-export':
+        navigate('/pharmacist/import-export');
+        break;
+      case 'reports':
+        navigate('/pharmacist/reports');
+        break;
+      case 'account':
+        navigate('/pharmacist/account');
+        break;
+      default:
+        navigate('/pharmacist');
+        break;
     }
   };
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <PharmacistDashboard onNavigate={handleNavigate} />;
-      case 'prescriptions':
-        return (
-          <PrescriptionQueue
-            onViewDetail={(id) => handleNavigate('prescription-detail', id)}
-          />
-        );
-      case 'inventory':
-        return (
-          <DrugInventory
-            onViewDrugProfile={(id) => handleNavigate('drug-profile', id)}
-          />
-        );
-      case 'prescription-detail':
-        return selectedPrescriptionId ? (
-          <PrescriptionDetail
-            prescriptionId={selectedPrescriptionId}
-            onBack={() => setCurrentPage('prescriptions')}
-          />
-        ) : (
-          <PharmacistDashboard onNavigate={handleNavigate} />
-        );
-      case 'drug-profile':
-        return selectedDrugId ? (
-          <DrugProfile
-            drugId={selectedDrugId}
-            onBack={() => setCurrentPage('inventory')}
-          />
-        ) : (
-          <DrugInventory
-            onViewDrugProfile={(id) => handleNavigate('drug-profile', id)}
-          />
-        );
-      case 'import-export':
-        return <ImportExportManagement />;
-      case 'reports':
-        return <PharmacyReports />;
-      case 'account':
-        return <AccountSettings />;
-      default:
-        return <PharmacistDashboard onNavigate={handleNavigate} />;
+  const handleDashboardNavigate = (page: string, id?: string) => {
+    if (page === 'prescriptions') {
+      navigate('/pharmacist/prescriptions');
+    } else if (page === 'inventory') {
+      navigate('/pharmacist/inventory');
+    } else if (page === 'prescription-detail' && id) {
+      navigate(`/pharmacist/prescriptions/${id}`);
+    } else if (page === 'drug-profile' && id) {
+      navigate(`/pharmacist/inventory/${id}`);
+    } else {
+      navigate('/pharmacist');
     }
   };
+
+  function PrescriptionDetailRouteWrapper() {
+    const { id } = useParams<{ id: string }>();
+    if (!id) return <Navigate to="/pharmacist/prescriptions" replace />;
+    return (
+      <PrescriptionDetail
+        prescriptionId={id}
+        onBack={() => navigate('/pharmacist/prescriptions')}
+      />
+    );
+  }
+
+  function DrugProfileRouteWrapper() {
+    const { id } = useParams<{ id: string }>();
+    if (!id) return <Navigate to="/pharmacist/inventory" replace />;
+    return (
+      <DrugProfile
+        drugId={id}
+        onBack={() => navigate('/pharmacist/inventory')}
+      />
+    );
+  }
 
   return (
     <NotificationProvider userId={pharmacistId}>
       <div className="min-h-screen bg-[#f8f9fa]">
         <PharmacistHeader onLogout={onLogout} onGoHome={onGoHome} />
-        <PharmacistSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+        <PharmacistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
         <div className="ml-[260px] mt-[80px]">
-          {renderPage()}
+          <Routes>
+            <Route
+              path="/pharmacist"
+              element={<PharmacistDashboard onNavigate={handleDashboardNavigate} />}
+            />
+            <Route
+              path="/pharmacist/prescriptions"
+              element={
+                <PrescriptionQueue
+                  onViewDetail={(id) =>
+                    navigate(`/pharmacist/prescriptions/${id}`)
+                  }
+                />
+              }
+            />
+            <Route
+              path="/pharmacist/prescriptions/:id"
+              element={<PrescriptionDetailRouteWrapper />}
+            />
+            <Route
+              path="/pharmacist/inventory"
+              element={
+                <DrugInventory
+                  onViewDrugProfile={(id) =>
+                    navigate(`/pharmacist/inventory/${id}`)
+                  }
+                />
+              }
+            />
+            <Route
+              path="/pharmacist/inventory/:id"
+              element={<DrugProfileRouteWrapper />}
+            />
+            <Route path="/pharmacist/import-export" element={<ImportExportManagement />} />
+            <Route path="/pharmacist/reports" element={<PharmacyReports />} />
+            <Route path="/pharmacist/account" element={<AccountSettings />} />
+            <Route path="*" element={<Navigate to="/pharmacist" replace />} />
+          </Routes>
         </div>
       </div>
     </NotificationProvider>

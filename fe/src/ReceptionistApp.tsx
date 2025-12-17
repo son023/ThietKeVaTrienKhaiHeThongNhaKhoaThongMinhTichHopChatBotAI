@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
 import { ReceptionistHeader } from './components/ReceptionistHeader';
 import { ReceptionistSidebar } from './components/ReceptionistSidebar';
 import { ReceptionistDashboard } from './components/receptionist/ReceptionistDashboard';
@@ -17,6 +18,8 @@ interface ReceptionistAppProps {
 }
 
 export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
@@ -35,34 +38,40 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   const handleNewAppointment = () => {
     setShowNewAppointment(true);
     setCurrentPage('new-appointment');
+    navigate('/receptionist/new-appointment');
   };
 
   const handleNewPatient = () => {
     setShowNewPatient(true);
     setCurrentPage('new-patient');
+    navigate('/receptionist/new-patient');
   };
 
   const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId);
     setCurrentPage('patient-detail');
+    navigate(`/receptionist/patients/${patientId}`);
   };
 
   const handleCreateInvoice = () => {
     setShowInvoice(true);
     setSelectedInvoiceId(null);
-    setCurrentPage('invoice');
+    setCurrentPage('invoices');
+    navigate('/receptionist/invoices/new');
   };
 
   const handleViewInvoice = (invoiceId: string, mode: 'view' | 'payment' = 'view') => {
     setSelectedInvoiceId(invoiceId);
     setInvoiceViewMode(mode);
     setShowInvoice(true);
-    setCurrentPage('invoice');
+    setCurrentPage('invoices');
+    navigate(`/receptionist/invoices/${invoiceId}`);
   };
 
   const handleBackToPatients = () => {
     setSelectedPatientId(null);
     setCurrentPage('patients');
+    navigate('/receptionist/patients');
   };
 
   const handleBackToDashboard = () => {
@@ -70,74 +79,95 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     setShowNewPatient(false);
     setShowInvoice(false);
     setCurrentPage('dashboard');
+    navigate('/receptionist');
   };
 
   const handleBackToInvoiceList = () => {
     setShowInvoice(false);
     setSelectedInvoiceId(null);
     setCurrentPage('invoices');
+    navigate('/receptionist/invoices');
   };
 
-  const renderPage = () => {
-    // New Appointment Form
-    if (showNewAppointment) {
-      return (
-        <ReceptionistNewAppointment
-          onBack={handleBackToDashboard}
-          onComplete={() => {
-            handleBackToDashboard();
-            // Show success message
-          }}
-        />
-      );
+  // Đồng bộ currentPage với URL để sidebar highlight
+  useEffect(() => {
+    if (location.pathname.startsWith('/receptionist/appointments')) {
+      setCurrentPage('appointments');
+    } else if (location.pathname.startsWith('/receptionist/patients')) {
+      setCurrentPage('patients');
+    } else if (location.pathname.startsWith('/receptionist/invoices')) {
+      setCurrentPage('invoices');
+    } else if (location.pathname.startsWith('/receptionist/reports')) {
+      setCurrentPage('reports');
+    } else if (location.pathname.startsWith('/receptionist/account')) {
+      setCurrentPage('account');
+    } else {
+      setCurrentPage('dashboard');
     }
+  }, [location.pathname]);
 
-    // Invoice Page
-    if (showInvoice) {
-      return (
-        <ReceptionistInvoice
-          invoiceId={selectedInvoiceId || undefined}
-          onBack={handleBackToInvoiceList}
-          mode={invoiceViewMode}
-        />
-      );
-    }
-
-    // Patient Detail
-    if (currentPage === 'patient-detail' && selectedPatientId) {
-      return (
-        <ReceptionistPatientDetail
-          patientId={selectedPatientId}
-          onBack={handleBackToPatients}
-          onNewAppointment={handleNewAppointment}
-          onCreateInvoice={handleCreateInvoice}
-        />
-      );
-    }
-
-    // Main Pages
-    switch (currentPage) {
+  const handleSidebarChange = (page: string) => {
+    switch (page) {
       case 'dashboard':
-        return <ReceptionistDashboard onCreateInvoice={handleCreateInvoice} />;
+        navigate('/receptionist');
+        break;
       case 'appointments':
-        return <ReceptionistAppointments />;
+        navigate('/receptionist/appointments');
+        break;
       case 'patients':
-        return <ReceptionistPatients onPatientSelect={handlePatientSelect} />;
+        navigate('/receptionist/patients');
+        break;
       case 'invoices':
-        return (
-          <ReceptionistInvoiceList
-            onViewInvoice={handleViewInvoice}
-            onCreateInvoice={handleCreateInvoice}
-          />
-        );
+        navigate('/receptionist/invoices');
+        break;
       case 'reports':
-        return <ReceptionistReports />;
+        navigate('/receptionist/reports');
+        break;
       case 'account':
-        return <ReceptionistAccountSettings />;
+        navigate('/receptionist/account');
+        break;
       default:
-        return <ReceptionistDashboard />;
+        navigate('/receptionist');
+        break;
     }
   };
+
+  function ReceptionistPatientDetailRoute() {
+    const params = useParams<{ patientId: string }>();
+    const patientId = params.patientId || selectedPatientId;
+    if (!patientId) {
+      return <Navigate to="/receptionist/patients" replace />;
+    }
+    if (patientId !== selectedPatientId) {
+      setSelectedPatientId(patientId);
+    }
+    return (
+      <ReceptionistPatientDetail
+        patientId={patientId}
+        onBack={handleBackToPatients}
+        onNewAppointment={handleNewAppointment}
+        onCreateInvoice={handleCreateInvoice}
+      />
+    );
+  }
+
+  function ReceptionistInvoiceRoute() {
+    const params = useParams<{ invoiceId: string }>();
+    const invoiceId = params.invoiceId || selectedInvoiceId || undefined;
+    if (!invoiceId) {
+      return <Navigate to="/receptionist/invoices" replace />;
+    }
+    if (invoiceId !== selectedInvoiceId) {
+      setSelectedInvoiceId(invoiceId);
+    }
+    return (
+      <ReceptionistInvoice
+        invoiceId={invoiceId}
+        onBack={handleBackToInvoiceList}
+        mode={invoiceViewMode}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
@@ -148,9 +178,87 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
         onNewPatient={handleNewPatient}
         onSearch={handleSearch}
       />
-      <ReceptionistSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+      <ReceptionistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
       <div className="ml-[260px] mt-[80px]">
-        {renderPage()}
+        <Routes>
+          <Route
+            path="/receptionist"
+            element={<ReceptionistDashboard onCreateInvoice={handleCreateInvoice} />}
+          />
+          <Route
+            path="/receptionist/appointments"
+            element={<ReceptionistAppointments />}
+          />
+          <Route
+            path="/receptionist/patients"
+            element={
+              <ReceptionistPatients
+                onPatientSelect={handlePatientSelect}
+              />
+            }
+          />
+          <Route
+            path="/receptionist/patients/:patientId"
+            element={<ReceptionistPatientDetailRoute />}
+          />
+          <Route
+            path="/receptionist/new-appointment"
+            element={
+              showNewAppointment ? (
+                <ReceptionistNewAppointment
+                  onBack={handleBackToDashboard}
+                  onComplete={() => {
+                    handleBackToDashboard();
+                  }}
+                />
+              ) : (
+                <Navigate to="/receptionist" replace />
+              )
+            }
+          />
+          <Route
+            path="/receptionist/invoices"
+            element={
+              <ReceptionistInvoiceList
+                onViewInvoice={handleViewInvoice}
+                onCreateInvoice={handleCreateInvoice}
+              />
+            }
+          />
+          <Route
+            path="/receptionist/invoices/new"
+            element={
+              showInvoice ? (
+                <ReceptionistInvoice
+                  invoiceId={selectedInvoiceId || undefined}
+                  onBack={handleBackToInvoiceList}
+                  mode={invoiceViewMode}
+                />
+              ) : (
+                <Navigate to="/receptionist/invoices" replace />
+              )
+            }
+          />
+          <Route
+            path="/receptionist/invoices/:invoiceId"
+            element={
+              showInvoice ? (
+                <ReceptionistInvoiceRoute />
+              ) : (
+                <Navigate to="/receptionist/invoices" replace />
+              )
+            }
+          />
+          <Route
+            path="/receptionist/reports"
+            element={<ReceptionistReports />}
+          />
+          <Route
+            path="/receptionist/account"
+            element={<ReceptionistAccountSettings />}
+          />
+          <Route path="*" element={<Navigate to="/receptionist" replace />} />
+        </Routes>
       </div>
     </div>
   );

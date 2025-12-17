@@ -80,6 +80,7 @@ const mapToothIssuesToChart = (issues?: ToothIssue[]) => {
 
 export function PatientExamination({
                                      patientId,
+                                     appointmentId,
                                      onBack,
                                      onNavigateToTreatmentPlan,
                                      onNavigateToAppointments,
@@ -128,7 +129,6 @@ export function PatientExamination({
   const [saving, setSaving] = useState(false);
   const [requestingLab, setRequestingLab] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const appointmentId = useRef<string | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
 
   const Info = ({ label, value }: { label: string; value?: string }) => (
@@ -157,33 +157,31 @@ export function PatientExamination({
 
 
   useEffect(() => {
-    const storedAppointmentId = localStorage.getItem("currentAppointmentId");
-    appointmentId.current = storedAppointmentId;
-    if (storedAppointmentId) {
-      connectWebSocket();
-      const navigateCallback = onNavigateToAppointments;
-      const unsubscribe = subscribeToAppointmentRollback(
-          storedAppointmentId,
-          (notification) => {
-            toast.error(
-                notification.message ||
-                "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
-            );
-            localStorage.removeItem("currentAppointmentId");
-            if (navigateCallback) {
-              navigateCallback();
-            }
-          }
-      );
-      unsubscribeRef.current = unsubscribe;
-      return () => {
-        if (unsubscribeRef.current) {
-          unsubscribeRef.current();
-          unsubscribeRef.current = null;
+    if (!appointmentId) return;
+
+    connectWebSocket();
+    const navigateCallback = onNavigateToAppointments;
+    const unsubscribe = subscribeToAppointmentRollback(
+      appointmentId,
+      (notification) => {
+        toast.error(
+          notification.message ||
+            "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
+        );
+        if (navigateCallback) {
+          navigateCallback();
         }
-      };
-    }
-  }, [onNavigateToAppointments]);
+      }
+    );
+    unsubscribeRef.current = unsubscribe;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [appointmentId, onNavigateToAppointments]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -223,15 +221,15 @@ export function PatientExamination({
   }, [patientId]);
 
   const filteredAttachments = useMemo(() => {
-    if (!appointmentId.current) return attachments;
+    if (!appointmentId) return attachments;
     return attachments.filter(
-        (att) => !att.labTestId || att.labTestId === appointmentId.current
+      (att) => !att.labTestId || att.labTestId === appointmentId
     );
   }, [attachments]);
 
   const labTestsForAppointment = useMemo(() => {
-    if (!appointmentId.current) return [];
-    return labTests.filter((lt) => lt.appointmentId === appointmentId.current);
+    if (!appointmentId) return [];
+    return labTests.filter((lt) => lt.appointmentId === appointmentId);
   }, [labTests]);
 
   const resultFiles = useMemo(() => {
@@ -309,12 +307,12 @@ export function PatientExamination({
     if (!patientId) {
       throw new Error("Thiếu mã bệnh nhân");
     }
-    if (!appointmentId.current) {
+    if (!appointmentId) {
       throw new Error("Không tìm thấy lịch hẹn đang khám");
     }
 
     const payload = {
-      appointmentId: appointmentId.current,
+      appointmentId,
       patientId,
       symptoms: symptoms.trim() || undefined,
       conditions: conditions.length > 0 ? conditions : undefined,
@@ -328,7 +326,7 @@ export function PatientExamination({
       toast.error("Thiếu mã bệnh nhân");
       return;
     }
-    if (!appointmentId.current) {
+    if (!appointmentId) {
       toast.error("Không tìm thấy lịch hẹn đang khám");
       return;
     }
@@ -348,13 +346,9 @@ export function PatientExamination({
         ),
       });
 
-      await appointmentController.updateStatus(
-        appointmentId.current,
-        "COMPLETED"
-      );
+      await appointmentController.updateStatus(appointmentId, "COMPLETED");
 
       toast.success("Đã lưu và hoàn tất khám");
-      localStorage.removeItem("currentAppointmentId");
 
       setSymptoms("");
       setConditions([]);
@@ -374,7 +368,7 @@ export function PatientExamination({
       toast.error("Thiếu mã bệnh nhân");
       return;
     }
-    if (!appointmentId.current) {
+    if (!appointmentId) {
       toast.error("Không tìm thấy lịch hẹn đang khám");
       return;
     }
@@ -396,7 +390,7 @@ export function PatientExamination({
   };
 
   const handleSendLabRequest = async () => {
-    if (!patientId || !appointmentId.current) {
+    if (!patientId || !appointmentId) {
       toast.error("Thiếu thông tin lịch hẹn hoặc bệnh nhân");
       return;
     }
@@ -408,7 +402,7 @@ export function PatientExamination({
     setRequestingLab(true);
     try {
       await labTestController.request({
-        appointmentId: appointmentId.current,
+        appointmentId,
         doctorId,
         labTestTypeId,
         instructions: labInstructions || undefined,
