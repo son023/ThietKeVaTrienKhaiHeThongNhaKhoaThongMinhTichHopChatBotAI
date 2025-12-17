@@ -19,9 +19,10 @@ interface Appointment {
 
 interface ReceptionistDashboardProps {
   onCreateInvoice?: (appointmentId: string) => void;
+  refreshToken?: number;
 }
 
-export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboardProps = {}) {
+export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: ReceptionistDashboardProps = {}) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +80,7 @@ export function ReceptionistDashboard({ onCreateInvoice }: ReceptionistDashboard
     };
 
     loadAppointments();
-  }, []);
+  }, [refreshToken]);
 
   const statusConfig = {
     waiting_confirm: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', count: 2 },

@@ -30,7 +30,11 @@ interface Appointment {
   service: string;
 }
 
-export function ReceptionistAppointments() {
+interface ReceptionistAppointmentsProps {
+  refreshToken?: number;
+}
+
+export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointmentsProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
@@ -123,7 +127,7 @@ export function ReceptionistAppointments() {
   useEffect(() => {
     loadAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate]);
+  }, [selectedDate, refreshToken]);
 
   return (
     <div className="p-8 space-y-6">

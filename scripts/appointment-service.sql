@@ -30,7 +30,7 @@ CREATE TABLE public.appointment
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT appointment_status_check
-    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','IN_PROGRESS'))
+    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'FAILED','IN_PROGRESS', 'COMPLETED'))
 );
 
 CREATE TABLE public.appointment_medical_service

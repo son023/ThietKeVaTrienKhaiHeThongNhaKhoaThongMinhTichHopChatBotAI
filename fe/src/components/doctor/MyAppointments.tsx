@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 interface MyAppointmentsProps {
   doctorId?: string | null;
-  onNavigateToPatient: (id: string) => void;
+  onNavigateToPatient: (patientId: string, appointmentId: string) => void;
 }
 
 const statusMap: Record<string, { label: string; style: string }> = {
@@ -212,7 +212,7 @@ export function MyAppointments({
       console.log(`[MyAppointments] Subscribed to rollback notifications, now starting appointment...`);
       
       await appointmentController.startAppointment(appointmentId);
-      onNavigateToPatient(patientId);
+      onNavigateToPatient(patientId, appointmentId);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Khong the bat dau kham"
@@ -229,7 +229,7 @@ export function MyAppointments({
 
   const handleContinueExamination = (appointmentId: string, patientId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onNavigateToPatient(patientId);
+    onNavigateToPatient(patientId, appointmentId);
   };
 
   const handleView = (patientId: string, e: React.MouseEvent) => {
@@ -238,156 +238,139 @@ export function MyAppointments({
   };
 
   return (
-    <div className="p-6 bg-neutral-background min-h-screen">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+    <div className="p-6 bg-[#fcfeff]">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="typo-h2 mb-2">Lịch hẹn của tôi</h1>
-          <p className="text-neutral-text/60">
-            Theo dõi các cuộc hẹn gần đây và sắp tới
+          <h1 className="text-[#01304e] mb-2">Lich hen cua toi</h1>
+          <p className="text-[#333333]/60">
+            Theo doi cac cuoc hen gan day va sap toi
           </p>
         </div>
         <div className="relative w-full max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-text/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
           <Input
-            placeholder="Tìm theo tên, số điện thoại, mã bệnh nhân"
+            placeholder="Tim theo ten, so dien thoai, ma benh nhan"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 rounded-xl border-neutral-border/30 bg-neutral-surface focus:border-primary transition-colors h-11 shadow-sm"
+            className="pl-10 rounded-[10px] border-[#e8e8e8]"
           />
         </div>
       </div>
 
       {loading ? (
-        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-neutral-text/60">Đang tải lịch hẹn...</p>
-            </div>
+        <Card className="rounded-[15px] border-[#e8e8e8]">
+          <CardContent className="p-8 text-center text-[#333333]/60">
+            Dang tai lich hen...
           </CardContent>
         </Card>
       ) : error ? (
-        <Card className="rounded-2xl border border-red-200 bg-red-50 shadow-sm">
-          <CardContent className="p-8">
-            <div className="flex items-center gap-3 justify-center text-red-600">
-              <User className="w-5 h-5" />
-              <span>{error}</span>
-            </div>
+        <Card className="rounded-[15px] border-[#e8e8e8]">
+          <CardContent className="p-8 text-center text-red-500">
+            {error}
           </CardContent>
         </Card>
       ) : filteredAppointments.length === 0 ? (
-        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
-                <Calendar className="w-8 h-8 text-neutral-text/40" />
-              </div>
-              <p className="text-neutral-text/60">Không có lịch hẹn nào phù hợp</p>
-            </div>
+        <Card className="rounded-[15px] border-[#e8e8e8]">
+          <CardContent className="p-8 text-center text-[#333333]/60">
+            Khong co lich hen nao phu hop
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          {Object.entries(groupedByDate).map(([date, items]) => (
-            <div key={date} className="space-y-4">
-              <div className="flex items-center gap-3 px-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Calendar className="w-4 h-4 text-primary" />
-                </div>
-                <h2 className="typo-h4">{date}</h2>
-              </div>
-              <div className="space-y-3">
-                {items.map((apt) => {
-                  const patientName = apt.patient?.user?.fullName || "Benh nhan";
-                  const phone =
-                    apt.patient?.contactPhone ||
-                    apt.patient?.user?.phone ||
-                    "N/A";
-                  const start = new Date(apt.appointmentStartTime);
-                  const timeLabel = isNaN(start.getTime())
-                    ? "N/A"
-                    : start.toLocaleTimeString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      });
+        Object.entries(groupedByDate).map(([date, items]) => (
+          <div key={date} className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-4 h-4 text-[#3FB5FF]" />
+              <h2 className="text-[#01304e] font-semibold">{date}</h2>
+            </div>
+            <div className="space-y-3">
+              {items.map((apt) => {
+                const patientName = apt.patient?.user?.fullName || "Benh nhan";
+                const phone =
+                  apt.patient?.contactPhone ||
+                  apt.patient?.user?.phone ||
+                  "N/A";
+                const start = new Date(apt.appointmentStartTime);
+                const timeLabel = isNaN(start.getTime())
+                  ? "N/A"
+                  : start.toLocaleTimeString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
 
-                  return (
-                    <Card
-                      key={apt.id}
-                      className="group rounded-xl border border-neutral-border/30 bg-neutral-surface shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200"
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-muted min-w-[90px] group-hover:bg-primary/10 transition-colors">
-                              <Clock className="w-4 h-4 text-neutral-text/60 group-hover:text-primary transition-colors" />
-                              <span className="font-medium text-neutral-text">{timeLabel}</span>
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-neutral-text group-hover:text-primary transition-colors">{patientName}</p>
-                              <div className="flex items-center gap-2 text-sm text-neutral-text/60 mt-1">
-                                <Phone className="w-4 h-4" />
-                                <span>{phone}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            {renderStatus(apt.status)}
-                            {isCheckedIn(apt.status) && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="rounded-lg bg-primary hover:bg-primary-strong text-white shadow-sm hover:shadow transition-all"
-                                onClick={(e) => apt.patientId && handleStartExamination(apt.id, apt.patientId, e)}
-                                disabled={processingId === apt.id || !apt.patientId}
-                              >
-                                {processingId === apt.id ? "Đang xử lý..." : "Bắt đầu khám"}
-                              </Button>
-                            )}
-                            {isInProgress(apt.status) && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="rounded-lg bg-primary hover:bg-primary-strong text-white shadow-sm hover:shadow transition-all"
-                                onClick={(e) => apt.patientId && handleContinueExamination(apt.id, apt.patientId, e)}
-                              >
-                                Tiếp tục khám
-                              </Button>
-                            )}
-                            {isViewOnly(apt.status) && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="rounded-lg border-primary/50 text-primary hover:bg-primary hover:text-white transition-all"
-                                onClick={(e) => apt.patientId && handleView(apt.patientId, e)}
-                              >
-                                Xem
-                              </Button>
-                            )}
-                            {!isCheckedIn(apt.status) && !isInProgress(apt.status) && !isViewOnly(apt.status) && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="rounded-lg border-primary/50 text-primary hover:bg-primary hover:text-white transition-all"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (apt.patientId)
-                                    onNavigateToPatient(apt.patientId);
-                                }}
-                              >
-                                Xem hồ sơ
-                              </Button>
-                            )}
+                return (
+                  <Card
+                    key={apt.id}
+                    className="rounded-[12px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]"
+                  >
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-[#333333]/70 min-w-[80px]">
+                          <Clock className="w-4 h-4" />
+                          <span>{timeLabel}</span>
+                        </div>
+                        <div>
+                          <p className="text-[#333333]">{patientName}</p>
+                          <div className="flex items-center gap-2 text-sm text-[#333333]/60">
+                            <Phone className="w-4 h-4 ml-3" />
+                            <span>{phone}</span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {renderStatus(apt.status)}
+                        {isCheckedIn(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="rounded-[10px] bg-[#3FB5FF] text-white hover:bg-[#2ea3e6]"
+                            onClick={(e) => apt.patientId && handleStartExamination(apt.id, apt.patientId, e)}
+                            disabled={processingId === apt.id || !apt.patientId}
+                          >
+                            {processingId === apt.id ? "Đang xử lý..." : "Bắt đầu khám"}
+                          </Button>
+                        )}
+                        {isInProgress(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="rounded-[10px] bg-[#3FB5FF] text-white hover:bg-[#2ea3e6]"
+                            onClick={(e) => apt.patientId && handleContinueExamination(apt.id, apt.patientId, e)}
+                          >
+                            Tiếp tục khám
+                          </Button>
+                        )}
+                        {isViewOnly(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
+                            onClick={(e) => apt.patientId && handleView(apt.patientId, e)}
+                          >
+                            Xem
+                          </Button>
+                        )}
+                        {!isCheckedIn(apt.status) && !isInProgress(apt.status) && !isViewOnly(apt.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (apt.patientId)
+                                onNavigateToPatient(apt.patientId, apt.id);
+                            }}
+                          >
+                            Xem ho so
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </div>
+        ))
       )}
     </div>
   );

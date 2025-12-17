@@ -100,13 +100,15 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
   const filteredHistories = medicalHistories.filter(history => {
     const patient = patients[history.patientId];
     const patientName = patient?.user?.fullName?.toLowerCase() || '';
-    const diagnosis = history.diagnosis?.toLowerCase() || '';
-    const disease = history.disease?.toLowerCase() || '';
+    const symptoms = history.symptoms?.toLowerCase() || '';
+    const conditions = (history.conditions || []).map(c => 
+      `${c.name || ''} ${c.treatment || ''} ${c.status || ''}`
+    ).join(' ').toLowerCase();
     const query = searchQuery.toLowerCase();
     
     return patientName.includes(query) || 
-           diagnosis.includes(query) || 
-           disease.includes(query) ||
+           symptoms.includes(query) || 
+           conditions.includes(query) ||
            history.id.toLowerCase().includes(query);
   });
 
@@ -209,22 +211,29 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
                       </div>
 
                       {/* Medical Info */}
-                      <div className="space-y-3 ml-15">
-                        {history.diagnosis && (
-                          <div className="flex items-start gap-3">
-                            <FileText className="w-4 h-4 text-neutral-text/60 mt-0.5" />
+                      <div className="space-y-2 ml-13">
+                        {history.symptoms && (
+                          <div className="flex items-start gap-2">
+                            <FileText className="w-4 h-4 text-[#333333]/60 mt-0.5" />
                             <div>
-                              <p className="text-xs text-neutral-text/60 mb-1">Chẩn đoán</p>
-                              <p className="text-sm text-neutral-text">{history.diagnosis}</p>
+                              <p className="text-xs text-[#333333]/60">Triệu chứng</p>
+                              <p className="text-sm text-[#333333]">{history.symptoms}</p>
                             </div>
                           </div>
                         )}
-
-                        {history.disease && (
-                          <div className="flex items-start gap-3 ml-7">
-                            <Badge variant="outline" className="text-xs border-primary/50 text-primary">
-                              {history.disease}
-                            </Badge>
+                        
+                        {history.conditions && history.conditions.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <FileText className="w-4 h-4 text-[#333333]/60 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-[#333333]/60">Tình trạng ({history.conditions.length})</p>
+                              {history.conditions.map((cond, idx) => (
+                                <p key={idx} className="text-sm text-[#333333]">
+                                  {cond.toothNumber && <span className="font-medium">Răng {cond.toothNumber}: </span>}
+                                  {cond.name} {cond.status && <span className="text-[#666666]">({cond.status})</span>}
+                                </p>
+                              ))}
+                            </div>
                           </div>
                         )}
 
