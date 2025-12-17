@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { NewPatientHeader } from './components/patient/NewPatientHeader';
 import { PatientFooter } from './components/patient/PatientFooter';
 import { PatientHome } from './components/patient/PatientHome';
@@ -15,25 +16,50 @@ interface PatientAppProps {
 }
 
 export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState('home');
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
-  const renderPage = () => {
-    switch (currentPage) {
+  useEffect(() => {
+    if (location.pathname.startsWith('/patient/dashboard')) {
+      setCurrentPage('dashboard');
+    } else if (location.pathname.startsWith('/patient/appointments')) {
+      setCurrentPage('appointments');
+    } else if (location.pathname.startsWith('/patient/payment')) {
+      setCurrentPage('payment');
+    } else if (location.pathname.startsWith('/patient/medical-records')) {
+      setCurrentPage('medical-records');
+    } else if (location.pathname.startsWith('/patient/profile')) {
+      setCurrentPage('profile');
+    } else {
+      setCurrentPage('home');
+    }
+  }, [location.pathname]);
+
+  const handleNavigate = (page: string) => {
+    switch (page) {
       case 'home':
-        return <PatientHome onNavigate={setCurrentPage} />;
+        navigate('/patient');
+        break;
       case 'dashboard':
-        return <PatientDashboard onNavigate={setCurrentPage} />;
+        navigate('/patient/dashboard');
+        break;
       case 'appointments':
-        return <PatientAppointments />;
+        navigate('/patient/appointments');
+        break;
       case 'payment':
-        return <PatientPayment />;
+        navigate('/patient/payment');
+        break;
       case 'medical-records':
-        return <PatientMedicalRecords />;
+        navigate('/patient/medical-records');
+        break;
       case 'profile':
-        return <PatientProfile />;
+        navigate('/patient/profile');
+        break;
       default:
-        return <PatientHome onNavigate={setCurrentPage} />;
+        navigate('/patient');
+        break;
     }
   };
 
@@ -42,13 +68,40 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
       {/* Fixed DoctorHeader */}
       <NewPatientHeader 
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
         onOpenChatbot={() => setIsChatbotOpen(true)}
       />
       
       {/* Main Content */}
       <main className="flex-1 w-full">
-        {renderPage()}
+        <Routes>
+          <Route
+            path="/patient"
+            element={<PatientHome onNavigate={handleNavigate} />}
+          />
+          <Route
+            path="/patient/dashboard"
+            element={<PatientDashboard onNavigate={handleNavigate} />}
+          />
+          <Route
+            path="/patient/appointments"
+            element={<PatientAppointments />}
+          />
+          <Route
+            path="/patient/payment"
+            element={<PatientPayment />}
+          />
+          <Route
+            path="/patient/medical-records"
+            element={<PatientMedicalRecords />}
+          />
+          <Route
+            path="/patient/profile"
+            element={<PatientProfile />}
+          />
+          {/* fallback trong PatientApp */}
+          <Route path="*" element={<Navigate to="/patient" replace />} />
+        </Routes>
       </main>
 
       {/* Footer */}

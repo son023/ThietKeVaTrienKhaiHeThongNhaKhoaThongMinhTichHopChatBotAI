@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { LabTechnicianSidebar } from "./components/LabTechnicianSidebar";
 import { LabTechnicianHeader } from "./components/LabTechnicianHeader";
 import { LabTechnicianDashboard } from "./components/labtechnician/LabTechnicianDashboard";
@@ -17,39 +18,50 @@ export default function LabTechnicianApp({
   onLogout,
   onGoHome,
 }: LabTechnicianAppProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
 
-  const renderPage = () => {
-    switch (currentPage) {
+    if (location.pathname.startsWith("/lab/test-queue")) {
+      setCurrentPage("test-queue");
+    } else if (location.pathname.startsWith("/lab/test-results")) {
+      setCurrentPage("test-results");
+    } else if (location.pathname.startsWith("/lab/equipment")) {
+      setCurrentPage("equipment");
+    } else if (location.pathname.startsWith("/lab/reports")) {
+      setCurrentPage("reports");
+    } else if (location.pathname.startsWith("/lab/settings")) {
+      setCurrentPage("settings");
+    } else {
+      setCurrentPage("dashboard");
+    }
+  }, [location.pathname]);
+
+  const handleSidebarNavigate = (page: string) => {
+    switch (page) {
       case "dashboard":
-        return (
-          <LabTechnicianDashboard
-            onNavigateToTest={(id) => {
-              setSelectedTestId(id);
-              setCurrentPage("test-queue");
-            }}
-          />
-        );
+        // hỗ trợ cả /lab và /lab/dashboard, điều hướng về /lab
+        navigate("/lab");
+        break;
       case "test-queue":
-        return <TestQueue selectedTestId={selectedTestId} />;
+        navigate("/lab/test-queue");
+        break;
       case "test-results":
-        return <TestResults />;
+        navigate("/lab/test-results");
+        break;
       case "equipment":
-        return <Equipment />;
+        navigate("/lab/equipment");
+        break;
       case "reports":
-        return <LabReports />;
+        navigate("/lab/reports");
+        break;
       case "settings":
-        return <LabAccountSettings />;
+        navigate("/lab/settings");
+        break;
       default:
-        return (
-          <LabTechnicianDashboard
-            onNavigateToTest={(id) => {
-              setSelectedTestId(id);
-              setCurrentPage("test-queue");
-            }}
-          />
-        );
+        navigate("/lab");
+        break;
     }
   };
 
@@ -57,12 +69,45 @@ export default function LabTechnicianApp({
     <div className="flex h-screen bg-background">
       <LabTechnicianSidebar
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleSidebarNavigate}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
         <main className="flex-1 overflow-y-auto bg-background">
-          {renderPage()}
+          <Routes>
+            <Route
+              path="/lab"
+              element={
+                <LabTechnicianDashboard
+                  onNavigateToTest={(id) => {
+                    setSelectedTestId(id);
+                    navigate("/lab/test-queue");
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/lab/dashboard"
+              element={
+                <LabTechnicianDashboard
+                  onNavigateToTest={(id) => {
+                    setSelectedTestId(id);
+                    navigate("/lab/test-queue");
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/lab/test-queue"
+              element={<TestQueue selectedTestId={selectedTestId} />}
+            />
+            <Route path="/lab/test-results" element={<TestResults />} />
+            <Route path="/lab/equipment" element={<Equipment />} />
+            <Route path="/lab/reports" element={<LabReports />} />
+            <Route path="/lab/settings" element={<LabAccountSettings />} />
+
+            <Route path="*" element={<Navigate to="/lab" replace />} />
+          </Routes>
         </main>
       </div>
     </div>
