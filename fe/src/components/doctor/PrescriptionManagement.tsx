@@ -130,46 +130,48 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
 
   // Hiển thị danh sách medical histories
   return (
-    <div className="p-6 bg-[#fcfeff]">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+    <div className="p-6 bg-neutral-background min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-[#01304e] text-2xl font-semibold mb-2">
+            <h1 className="typo-h2 mb-2">
               Tạo đơn thuốc
             </h1>
-            <p className="text-[#333333]/60">
+            <p className="text-neutral-text/60">
               Chọn hồ sơ khám bệnh để kê đơn thuốc
             </p>
           </div>
           {onBack && (
-            <Button variant="outline" onClick={onBack}>
+            <Button variant="outline" onClick={onBack} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
               Quay lại
             </Button>
           )}
         </div>
 
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-text/40" />
           <Input
             type="text"
             placeholder="Tìm kiếm theo tên bệnh nhân, chẩn đoán..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-[10px] border-[#e8e8e8]"
+            className="pl-12 rounded-xl border-neutral-border/30 bg-neutral-surface focus:border-primary transition-colors h-11 shadow-sm"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#3FB5FF]" />
-          <span className="ml-3 text-[#333333]/60">Đang tải dữ liệu...</span>
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+          <span className="text-neutral-text/60">Đang tải dữ liệu...</span>
         </div>
       ) : filteredHistories.length === 0 ? (
-        <Card className="rounded-[15px] border-[#e8e8e8]">
-          <CardContent className="p-12 text-center">
-            <FileText className="w-12 h-12 text-[#333333]/20 mx-auto mb-3" />
-            <p className="text-[#333333]/60">
+        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+          <CardContent className="p-16 text-center">
+            <div className="w-20 h-20 rounded-full bg-neutral-muted flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-10 h-10 text-neutral-text/30" />
+            </div>
+            <p className="text-neutral-text/60">
               {searchQuery
                 ? 'Không tìm thấy hồ sơ phù hợp'
                 : 'Chưa có hồ sơ khám bệnh nào'}
@@ -181,55 +183,55 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
           {filteredHistories.map((history) => {
             const patient = patients[history.patientId];
             const appointment = appointments[history.appointmentId];
-            
+
             return (
               <Card
                 key={history.id}
-                className="rounded-[15px] border-[#e8e8e8] hover:border-[#3FB5FF] hover:shadow-lg transition-all cursor-pointer"
+                className="group rounded-2xl border border-neutral-border/20 bg-neutral-surface hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
                 onClick={() => handleSelectHistory(history)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {/* Patient Info */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-[#3FB5FF]/10 flex items-center justify-center">
-                          <User className="w-5 h-5 text-[#3FB5FF]" />
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                          <User className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <h3 className="text-[#01304e] font-semibold">
+                          <h3 className="font-semibold text-neutral-text group-hover:text-primary transition-colors">
                             {patient?.user?.fullName || 'N/A'}
                           </h3>
-                          <p className="text-sm text-[#333333]/60">
+                          <p className="text-sm text-neutral-text/60 font-mono">
                             Mã BN: {history.patientId.slice(-6)}
                           </p>
                         </div>
                       </div>
 
                       {/* Medical Info */}
-                      <div className="space-y-2 ml-13">
+                      <div className="space-y-3 ml-15">
                         {history.diagnosis && (
-                          <div className="flex items-start gap-2">
-                            <FileText className="w-4 h-4 text-[#333333]/60 mt-0.5" />
+                          <div className="flex items-start gap-3">
+                            <FileText className="w-4 h-4 text-neutral-text/60 mt-0.5" />
                             <div>
-                              <p className="text-xs text-[#333333]/60">Chẩn đoán</p>
-                              <p className="text-sm text-[#333333]">{history.diagnosis}</p>
+                              <p className="text-xs text-neutral-text/60 mb-1">Chẩn đoán</p>
+                              <p className="text-sm text-neutral-text">{history.diagnosis}</p>
                             </div>
                           </div>
                         )}
-                        
+
                         {history.disease && (
-                          <div className="flex items-start gap-2">
-                            <Badge variant="outline" className="text-xs">
+                          <div className="flex items-start gap-3 ml-7">
+                            <Badge variant="outline" className="text-xs border-primary/50 text-primary">
                               {history.disease}
                             </Badge>
                           </div>
                         )}
 
                         {appointment && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-[#333333]/60" />
-                            <p className="text-xs text-[#333333]/60">
+                          <div className="flex items-center gap-2 ml-7">
+                            <Calendar className="w-4 h-4 text-neutral-text/60" />
+                            <p className="text-xs text-neutral-text/60">
                               {new Date(appointment.appointmentStartTime).toLocaleString('vi-VN')}
                             </p>
                           </div>
@@ -240,7 +242,7 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="ml-4"
+                      className="ml-4 rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectHistory(history);

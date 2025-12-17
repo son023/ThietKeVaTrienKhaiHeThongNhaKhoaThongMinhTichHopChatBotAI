@@ -103,103 +103,119 @@ export function MyPatients({ onNavigateToPatient, onNavigateToAppointments }: My
   };
 
   return (
-    <div className="p-6 bg-[#fcfeff]">
-      <div className="mb-6">
-        <h1 className="text-[#01304e] mb-4">Benh nhan cua toi</h1>
+    <div className="p-6 bg-neutral-background min-h-screen">
+      <div className="mb-8">
+        <h1 className="typo-h2 mb-2">Bệnh nhân của tôi</h1>
+        <p className="text-neutral-text/60 mb-6">
+          Danh sách bệnh nhân đã từng khám
+        </p>
 
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-text/40" />
           <Input
             type="text"
-            placeholder="Tim kiem theo ten, so dien thoai hoac ma benh nhan..."
+            placeholder="Tìm kiếm theo tên, số điện thoại hoặc mã bệnh nhân..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-[10px] border-[#e8e8e8]"
+            className="pl-12 rounded-xl border-neutral-border/30 bg-neutral-surface focus:border-primary transition-colors h-11 shadow-sm"
           />
         </div>
       </div>
 
-      <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+      <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ma BN (6 so cuoi)</TableHead>
-                <TableHead>Ten benh nhan</TableHead>
-                <TableHead>So dien thoai</TableHead>
-                <TableHead>Ngay sinh</TableHead>
-                <TableHead>Gioi tinh</TableHead>
-                <TableHead>Nhom mau</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12">
-                    Dang tai du lieu...
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-neutral-muted hover:bg-neutral-muted border-b border-neutral-border/30">
+                  <TableHead className="font-semibold text-neutral-text">Mã BN (6 số cuối)</TableHead>
+                  <TableHead className="font-semibold text-neutral-text">Tên bệnh nhân</TableHead>
+                  <TableHead className="font-semibold text-neutral-text">Số điện thoại</TableHead>
+                  <TableHead className="font-semibold text-neutral-text">Ngày sinh</TableHead>
+                  <TableHead className="font-semibold text-neutral-text">Giới tính</TableHead>
+                  <TableHead className="font-semibold text-neutral-text">Nhóm máu</TableHead>
                 </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-12 text-red-500"
-                  >
-                    {error}
-                  </TableCell>
-                </TableRow>
-              ) : filteredPatients.length > 0 ? (
-                filteredPatients.map((patient) => {
-                  const displayId =
-                    patient.userId && patient.userId.length > 6
-                      ? patient.userId.slice(-6)
-                      : patient.userId || "N/A";
-                  const phone =
-                    patient.contactPhone || patient.user?.phone || "N/A";
-                  const bloodType = patient.bloodType || "-";
-
-                  return (
-                    <TableRow
-                      key={patient.userId}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => onNavigateToPatient(patient.userId)}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-16">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                        <p className="text-neutral-text/60">Đang tải dữ liệu...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-16"
                     >
-                      <TableCell className="text-[#333333]/60">
-                        {displayId}
-                      </TableCell>
-                      <TableCell className="text-[#333333]">
-                        {patient.user?.fullName || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-[#333333]/60">
-                          <Phone className="w-4 h-4" />
-                          {phone}
+                      <div className="flex items-center justify-center gap-3 text-red-600">
+                        <Search className="w-5 h-5" />
+                        <span>{error}</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredPatients.length > 0 ? (
+                  filteredPatients.map((patient) => {
+                    const displayId =
+                      patient.userId && patient.userId.length > 6
+                        ? patient.userId.slice(-6)
+                        : patient.userId || "N/A";
+                    const phone =
+                      patient.contactPhone || patient.user?.phone || "N/A";
+                    const bloodType = patient.bloodType || "-";
+
+                    return (
+                      <TableRow
+                        key={patient.userId}
+                        className="cursor-pointer hover:bg-neutral-muted/50 border-b border-neutral-border/20 transition-colors"
+                        onClick={() => onNavigateToPatient(patient.userId)}
+                      >
+                        <TableCell className="text-neutral-text/60 font-mono">
+                          {displayId}
+                        </TableCell>
+                        <TableCell className="font-semibold text-neutral-text">
+                          {patient.user?.fullName || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-neutral-text/60">
+                            <Phone className="w-4 h-4" />
+                            <span>{phone}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-neutral-text/60">
+                          {formatDob(patient.dob)}
+                        </TableCell>
+                        <TableCell className="text-neutral-text/60">
+                          {formatGender(patient.gender)}
+                        </TableCell>
+                        <TableCell className="text-neutral-text/60 font-medium">
+                          {bloodType}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-16"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
+                          <Search className="w-8 h-8 text-neutral-text/40" />
                         </div>
-                      </TableCell>
-                      <TableCell className="text-[#333333]/60">
-                        {formatDob(patient.dob)}
-                      </TableCell>
-                      <TableCell className="text-[#333333]/60">
-                        {formatGender(patient.gender)}
-                      </TableCell>
-                      <TableCell className="text-[#333333]/60">
-                        {bloodType}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-12 text-[#333333]/60"
-                  >
-                    Khong tim thay benh nhan phu hop
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                        <p className="text-neutral-text/60">Không tìm thấy bệnh nhân phù hợp</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

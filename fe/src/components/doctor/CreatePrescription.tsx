@@ -202,34 +202,35 @@ export function CreatePrescriptionEnhanced({
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <p>Đang tải...</p>
+            <div className="flex flex-col items-center justify-center h-screen bg-neutral-background">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-neutral-text/60">Đang tải thông tin...</p>
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex flex-col bg-[#fcfeff]">
+        <div className="h-screen flex flex-col bg-neutral-background">
             {/* Header */}
-            <div className="bg-white border-b border-[#e8e8e8] px-6 py-4 flex items-center justify-between">
+            <div className="bg-neutral-surface border-b border-neutral-border/30 px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                     {onBack && (
-                        <Button variant="outline" size="sm" onClick={onBack}>
+                        <Button variant="outline" size="sm" onClick={onBack} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Quay lại
                         </Button>
                     )}
                     <div>
-                        <h1 className="text-2xl font-semibold text-[#01304e]">Kê Đơn Thuốc</h1>
-                        <p className="text-sm text-[#333333]/60">Mã lịch hẹn: {appointmentId.slice(-8)}</p>
+                        <h1 className="typo-h3">Kê Đơn Thuốc</h1>
+                        <p className="text-sm text-neutral-text/60 mt-1">Mã lịch hẹn: <span className="font-mono">{appointmentId.slice(-8)}</span></p>
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0}>
+                    <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
                         <Printer className="w-4 h-4 mr-2" />
                         Xem trước
                     </Button>
-                    <Button onClick={handleSubmit} disabled={items.length === 0}>
+                    <Button onClick={handleSubmit} disabled={items.length === 0} className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                         <Save className="w-4 h-4 mr-2" />
                         Lưu đơn thuốc
                     </Button>
@@ -239,41 +240,43 @@ export function CreatePrescriptionEnhanced({
             {/* Main Content - 2 Columns */}
             <div className="flex-1 overflow-hidden flex">
                 {/* Left Column - Patient Info (30%) */}
-                <div className="w-[30%] border-r border-[#e8e8e8] overflow-y-auto bg-[#f8f9fa]">
-                    <div className="p-6 space-y-4">
+                <div className="w-[30%] border-r border-neutral-border/30 overflow-y-auto bg-neutral-muted/30">
+                    <div className="p-6 space-y-5">
                         {/* Patient Info Card */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <User className="w-5 h-5 text-[#3FB5FF]" />
+                        <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 typo-h4">
+                                    <div className="p-2 rounded-lg bg-primary/10">
+                                        <User className="w-5 h-5 text-primary" />
+                                    </div>
                                     Thông Tin Bệnh Nhân
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
                                 <div>
-                                    <p className="text-sm text-[#333333]/60">Họ và tên</p>
-                                    <p className="font-semibold text-[#01304e]">{patient?.user?.fullName || 'N/A'}</p>
+                                    <p className="text-sm text-neutral-text/60 mb-1">Họ và tên</p>
+                                    <p className="font-semibold text-neutral-text">{patient?.user?.fullName || 'N/A'}</p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-sm text-[#333333]/60">Giới tính</p>
-                                        <p className="text-sm">{patient?.gender || 'N/A'}</p>
+                                        <p className="text-sm text-neutral-text/60 mb-1">Giới tính</p>
+                                        <p className="text-sm text-neutral-text">{patient?.gender || 'N/A'}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-[#333333]/60">Tuổi</p>
-                                        <p className="text-sm">
+                                        <p className="text-sm text-neutral-text/60 mb-1">Tuổi</p>
+                                        <p className="text-sm text-neutral-text">
                                             {patient?.dob ? new Date().getFullYear() - new Date(patient.dob).getFullYear() : 'N/A'}
                                         </p>
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-[#333333]/60 flex items-center gap-1">
+                                    <p className="text-sm text-neutral-text/60 flex items-center gap-1 mb-1">
                                         <Phone className="w-3 h-3" /> Điện thoại
                                     </p>
-                                    <p className="text-sm">{patient?.contactPhone || patient?.user?.phone || 'N/A'}</p>
+                                    <p className="text-sm text-neutral-text">{patient?.contactPhone || patient?.user?.phone || 'N/A'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-[#333333]/60 flex items-center gap-1">
+                                    <p className="text-sm text-neutral-text/60 flex items-center gap-1 mb-1">
                                         <CreditCard className="w-3 h-3" /> Nhóm máu
                                     </p>
                                     <p className="text-sm font-semibold text-red-600">{patient?.bloodType || 'N/A'}</p>
@@ -300,30 +303,30 @@ export function CreatePrescriptionEnhanced({
                         )}
 
                         {/* Summary */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm">Tổng Quan Đơn Thuốc</CardTitle>
+                        <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="typo-h4">Tổng Quan Đơn Thuốc</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
                                 {/* Medical History Info */}
                                 {medicalHistory && (
-                                    <div className="pb-3 border-b space-y-2">
+                                    <div className="pb-4 border-b border-neutral-border/30 space-y-3">
                                         {medicalHistory.diagnosis && (
                                             <div>
-                                                <p className="text-xs text-[#333333]/60">Chẩn đoán</p>
-                                                <p className="text-sm font-medium text-[#01304e]">{medicalHistory.diagnosis}</p>
+                                                <p className="text-xs text-neutral-text/60 mb-1">Chẩn đoán</p>
+                                                <p className="text-sm font-semibold text-neutral-text">{medicalHistory.diagnosis}</p>
                                             </div>
                                         )}
                                         {medicalHistory.disease && (
                                             <div>
-                                                <p className="text-xs text-[#333333]/60">Bệnh</p>
-                                                <p className="text-sm font-medium text-[#01304e]">{medicalHistory.disease}</p>
+                                                <p className="text-xs text-neutral-text/60 mb-1">Bệnh</p>
+                                                <p className="text-sm font-semibold text-neutral-text">{medicalHistory.disease}</p>
                                             </div>
                                         )}
                                         {medicalHistory.treatment && (
                                             <div>
-                                                <p className="text-xs text-[#333333]/60">Điều trị</p>
-                                                <p className="text-sm text-[#333333]">{medicalHistory.treatment}</p>
+                                                <p className="text-xs text-neutral-text/60 mb-1">Điều trị</p>
+                                                <p className="text-sm text-neutral-text">{medicalHistory.treatment}</p>
                                             </div>
                                         )}
                                     </div>
@@ -352,19 +355,19 @@ export function CreatePrescriptionEnhanced({
                 </div>
 
                 {/* Right Column - Prescription Form (70%) */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 bg-neutral-background">
                     <div className="max-w-5xl mx-auto space-y-6">
                         {/* Medicine Search */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Tìm kiếm và thêm thuốc</CardTitle>
+                        <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="typo-h4">Tìm kiếm và thêm thuốc</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <MedicineSearchInput
                                     onSelect={handleAddMedicine}
                                     disabled={false}
                                 />
-                                <p className="text-xs text-[#333333]/60 mt-2">
+                                <p className="text-xs text-neutral-text/60 mt-3">
                                     Tìm kiếm thuốc theo tên hoặc mô tả, chọn để thêm vào đơn
                                 </p>
                             </CardContent>
@@ -372,9 +375,12 @@ export function CreatePrescriptionEnhanced({
 
                         {/* Prescription Items */}
                         {items.length === 0 ? (
-                            <Card>
-                                <CardContent className="p-12 text-center">
-                                    <p className="text-[#333333]/60">Chưa có thuốc trong đơn. Vui lòng tìm kiếm và thêm thuốc.</p>
+                            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                                <CardContent className="p-16 text-center">
+                                    <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mx-auto mb-4">
+                                        <Plus className="w-8 h-8 text-neutral-text/40" />
+                                    </div>
+                                    <p className="text-neutral-text/60">Chưa có thuốc trong đơn. Vui lòng tìm kiếm và thêm thuốc.</p>
                                 </CardContent>
                             </Card>
                         ) : (
@@ -383,34 +389,34 @@ export function CreatePrescriptionEnhanced({
                                     const isExpanded = expandedItems.has(idx);
 
                                     return (
-                                        <Card key={idx} className="border-l-4 border-l-[#3FB5FF]">
-                                            <CardContent className="p-4">
+                                        <Card key={idx} className="border-l-4 border-l-primary rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                                            <CardContent className="p-5">
                                                 {/* Header - Always visible */}
-                                                <div className="flex items-start justify-between mb-2">
+                                                <div className="flex items-start justify-between mb-3">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2">
                                                             <button
                                                                 onClick={() => toggleExpandItem(idx)}
-                                                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                                                className="p-1.5 hover:bg-neutral-muted rounded-lg transition-colors"
                                                             >
                                                                 {isExpanded ? (
-                                                                    <ChevronUp className="w-4 h-4 text-[#3FB5FF]" />
+                                                                    <ChevronUp className="w-4 h-4 text-primary" />
                                                                 ) : (
-                                                                    <ChevronDown className="w-4 h-4 text-[#3FB5FF]" />
+                                                                    <ChevronDown className="w-4 h-4 text-primary" />
                                                                 )}
                                                             </button>
-                                                            <h3 className="font-semibold text-[#01304e]">{item.name}</h3>
+                                                            <h3 className="font-semibold text-neutral-text">{item.name}</h3>
                                                         </div>
-                                                        <div className="flex gap-3 text-xs text-[#333333]/60 ml-7 mt-1">
-                                                            <span>Đơn vị: {item.unit}</span>
+                                                        <div className="flex gap-3 text-xs text-neutral-text/60 ml-9 mt-2">
+                                                            <span>Đơn vị: <span className="font-medium text-neutral-text">{item.unit}</span></span>
                                                             <span>•</span>
-                                                            <span>SL: {item.quantity}</span>
+                                                            <span>SL: <span className="font-medium text-neutral-text">{item.quantity}</span></span>
                                                             <span>•</span>
-                                                            <span>Đơn giá: {item.unitPrice.toLocaleString('vi-VN')} đ</span>
+                                                            <span>Đơn giá: <span className="font-medium text-primary">{item.unitPrice.toLocaleString('vi-VN')} đ</span></span>
                                                             {item.stockQuantity !== undefined && (
                                                                 <>
                                                                     <span>•</span>
-                                                                    <span>Tồn kho: {item.stockQuantity}</span>
+                                                                    <span>Tồn kho: <span className="font-medium text-neutral-text">{item.stockQuantity}</span></span>
                                                                 </>
                                                             )}
                                                         </div>
@@ -419,7 +425,7 @@ export function CreatePrescriptionEnhanced({
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => removeItem(idx)}
-                                                        className="text-red-600"
+                                                        className="text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
@@ -427,10 +433,10 @@ export function CreatePrescriptionEnhanced({
 
                                                 {/* Expandable Details */}
                                                 {isExpanded && (
-                                                    <div className="ml-7 mt-4 space-y-3">
-                                                        <div className="grid grid-cols-2 gap-3">
+                                                    <div className="ml-9 mt-5 space-y-4 p-4 bg-neutral-muted/30 rounded-lg">
+                                                        <div className="grid grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                                <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                     Số lượng *
                                                                 </label>
                                                                 <Input
@@ -439,23 +445,24 @@ export function CreatePrescriptionEnhanced({
                                                                     max={item.stockQuantity}
                                                                     value={item.quantity}
                                                                     onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value))}
+                                                                    className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                                <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                     Thành tiền
                                                                 </label>
                                                                 <Input
                                                                     value={(item.unitPrice * item.quantity).toLocaleString('vi-VN') + ' đ'}
                                                                     disabled
-                                                                    className="bg-[#f8f9fa]"
+                                                                    className="bg-neutral-muted border-neutral-border/30 rounded-lg font-semibold text-primary"
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         {/* Dosage Templates */}
                                                         <div>
-                                                            <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                            <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                 Liều dùng mẫu:
                                                             </label>
                                                             <div className="flex gap-2 flex-wrap">
@@ -465,7 +472,7 @@ export function CreatePrescriptionEnhanced({
                                                                         variant="outline"
                                                                         size="sm"
                                                                         onClick={() => applyDosageTemplate(idx, template)}
-                                                                        className="text-xs"
+                                                                        className="text-xs rounded-lg border-primary/30 text-primary hover:bg-primary hover:text-white transition-all"
                                                                     >
                                                                         {template.label}
                                                                     </Button>
@@ -473,41 +480,44 @@ export function CreatePrescriptionEnhanced({
                                                             </div>
                                                         </div>
 
-                                                        <div className="grid grid-cols-3 gap-3">
+                                                        <div className="grid grid-cols-3 gap-4">
                                                             <div>
-                                                                <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                                <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                     Liều dùng
                                                                 </label>
                                                                 <Input
                                                                     placeholder="VD: 1 viên/lần"
                                                                     value={item.dosage}
                                                                     onChange={(e) => updateItem(idx, 'dosage', e.target.value)}
+                                                                    className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                                <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                     Tần suất
                                                                 </label>
                                                                 <Input
                                                                     placeholder="VD: 3 lần/ngày"
                                                                     value={item.frequency}
                                                                     onChange={(e) => updateItem(idx, 'frequency', e.target.value)}
+                                                                    className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                                <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                     Thời gian
                                                                 </label>
                                                                 <Input
                                                                     placeholder="VD: 7 ngày"
                                                                     value={item.duration}
                                                                     onChange={(e) => updateItem(idx, 'duration', e.target.value)}
+                                                                    className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div>
-                                                            <label className="text-xs font-medium text-[#333333]/80 block mb-1">
+                                                            <label className="text-xs font-semibold text-neutral-text block mb-2">
                                                                 Hướng dẫn sử dụng
                                                             </label>
                                                             <Textarea
@@ -515,6 +525,7 @@ export function CreatePrescriptionEnhanced({
                                                                 value={item.instruction}
                                                                 onChange={(e) => updateItem(idx, 'instruction', e.target.value)}
                                                                 rows={2}
+                                                                className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                             />
                                                         </div>
                                                     </div>
@@ -531,73 +542,76 @@ export function CreatePrescriptionEnhanced({
 
             {/* Error Dialog */}
             <Dialog open={showErrorPopup} onOpenChange={setShowErrorPopup}>
-                <DialogContent>
+                <DialogContent className="rounded-2xl border-neutral-border/20 bg-neutral-surface">
                     <DialogHeader>
-                        <DialogTitle className="text-red-600">Lỗi khi tạo đơn thuốc</DialogTitle>
+                        <DialogTitle className="text-red-600 typo-h3 flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5" />
+                            Lỗi khi tạo đơn thuốc
+                        </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-2 text-sm">
-                        <p>{errorDetail?.message || "Có lỗi xảy ra"}</p>
-                        {errorDetail?.reason && <p className="text-gray-600">Chi tiết: {errorDetail.reason}</p>}
+                    <div className="space-y-3 text-sm p-4 bg-red-50 rounded-lg border border-red-200">
+                        <p className="text-neutral-text">{errorDetail?.message || "Có lỗi xảy ra"}</p>
+                        {errorDetail?.reason && <p className="text-neutral-text/70">Chi tiết: {errorDetail.reason}</p>}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowErrorPopup(false)}>Đóng</Button>
+                        <Button variant="outline" onClick={() => setShowErrorPopup(false)} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">Đóng</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Preview Dialog */}
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border-neutral-border/20 bg-neutral-surface">
                     <DialogHeader>
-                        <DialogTitle>Xem trước đơn thuốc</DialogTitle>
+                        <DialogTitle className="typo-h3">Xem trước đơn thuốc</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 p-4 border rounded">
-                        <div className="text-center border-b pb-4">
-                            <h2 className="text-xl font-bold">ĐƠN THUỐC</h2>
-                            <p className="text-sm text-gray-600">Ngày {new Date().toLocaleDateString('vi-VN')}</p>
+                    <div className="space-y-5 p-6 border border-neutral-border/30 rounded-xl bg-neutral-surface">
+                        <div className="text-center border-b border-neutral-border/30 pb-5">
+                            <h2 className="text-2xl font-bold text-neutral-text">ĐƠN THUỐC</h2>
+                            <p className="text-sm text-neutral-text/60 mt-2">Ngày {new Date().toLocaleDateString('vi-VN')}</p>
+                        </div>
+                        <div className="space-y-2 text-neutral-text">
+                            <p><strong className="font-semibold">Bệnh nhân:</strong> {patient?.user?.fullName}</p>
+                            <p><strong className="font-semibold">Năm sinh:</strong> {patient?.dob ? new Date(patient.dob).getFullYear() : 'N/A'}</p>
+                            <p><strong className="font-semibold">Địa chỉ:</strong> {patient?.address || 'N/A'}</p>
                         </div>
                         <div>
-                            <p><strong>Bệnh nhân:</strong> {patient?.user?.fullName}</p>
-                            <p><strong>Năm sinh:</strong> {patient?.dob ? new Date(patient.dob).getFullYear() : 'N/A'}</p>
-                            <p><strong>Địa chỉ:</strong> {patient?.address || 'N/A'}</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-2">Danh sách thuốc:</h3>
-                            <table className="w-full text-sm">
+                            <h3 className="font-semibold text-neutral-text mb-3">Danh sách thuốc:</h3>
+                            <table className="w-full text-sm border-collapse">
                                 <thead>
-                                    <tr className="border-b">
-                                        <th className="text-left p-2">STT</th>
-                                        <th className="text-left p-2">Tên thuốc</th>
-                                        <th className="text-center p-2">SL</th>
-                                        <th className="text-left p-2">Cách dùng</th>
+                                    <tr className="bg-neutral-muted border-b border-neutral-border/30">
+                                        <th className="text-left p-3 font-semibold text-neutral-text">STT</th>
+                                        <th className="text-left p-3 font-semibold text-neutral-text">Tên thuốc</th>
+                                        <th className="text-center p-3 font-semibold text-neutral-text">SL</th>
+                                        <th className="text-left p-3 font-semibold text-neutral-text">Cách dùng</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => (
-                                        <tr key={idx} className="border-b">
-                                            <td className="p-2">{idx + 1}</td>
-                                            <td className="p-2">{item.name}</td>
-                                            <td className="text-center p-2">{item.quantity}</td>
-                                            <td className="p-2 text-xs">
+                                        <tr key={idx} className="border-b border-neutral-border/20 hover:bg-neutral-muted/30 transition-colors">
+                                            <td className="p-3 text-neutral-text">{idx + 1}</td>
+                                            <td className="p-3 font-medium text-neutral-text">{item.name}</td>
+                                            <td className="text-center p-3 text-neutral-text">{item.quantity}</td>
+                                            <td className="p-3 text-xs text-neutral-text">
                                                 {item.dosage} - {item.frequency} - {item.duration}
-                                                {item.instruction && <div className="text-gray-600 mt-1">{item.instruction}</div>}
+                                                {item.instruction && <div className="text-neutral-text/60 mt-1">{item.instruction}</div>}
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                        <div className="text-right pt-4 border-t">
-                            <p className="font-bold">Tổng tiền: {totalAmount.toLocaleString('vi-VN')} đ</p>
+                        <div className="text-right pt-4 border-t border-neutral-border/30">
+                            <p className="text-lg font-bold text-primary">Tổng tiền: {totalAmount.toLocaleString('vi-VN')} đ</p>
                         </div>
-                        <div className="text-right pt-8">
-                            <p className="font-semibold">Bác sĩ</p>
-                            <p className="text-sm text-gray-600">{currentUser?.fullName || 'N/A'}</p>
+                        <div className="text-right pt-6">
+                            <p className="font-semibold text-neutral-text">Bác sĩ</p>
+                            <p className="text-sm text-neutral-text/60 mt-1">{currentUser?.fullName || 'N/A'}</p>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowPreview(false)}>Đóng</Button>
-                        <Button onClick={() => window.print()}>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setShowPreview(false)} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">Đóng</Button>
+                        <Button onClick={() => window.print()} className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                             <Printer className="w-4 h-4 mr-2" />
                             In đơn
                         </Button>
