@@ -1,23 +1,36 @@
-import { Link } from "react-router-dom";
-import { cn } from "./utils"; // Đảm bảo bạn đã có hàm cn
+import { Link } from "react-router-dom"; // 1. Bắt buộc import Link
+import { cn } from "./utils";
 
 interface LogoProps {
-  collapsed?: boolean; // Prop quyết định trạng thái thu gọn
-  className?: string; // Để ghi đè style nếu cần thiết trong tương lai
+  collapsed?: boolean;
+  className?: string;
+  variant?: "header" | "sidebar";
 }
 
-export const Logo = ({ collapsed = false, className }: LogoProps) => {
-  // Kích thước chuẩn khi mở rộng
+export const Logo = ({
+  collapsed = false,
+  className,
+  variant = "sidebar", // Mặc định là sidebar (chỉ trang trí)
+}: LogoProps) => {
   const expandedSize = "w-10 h-10 text-xl";
-  // Kích thước khi thu nhỏ (nên nhỏ lại một chút để vừa vặn sidebar hẹp)
   const collapsedSize = "w-8 h-8 text-base";
 
+  // --- LOGIC XỬ LÝ ---
+  // Nếu là header: Dùng thẻ 'Link' để điều hướng mượt mà (SPA)
+  // Nếu là sidebar: Dùng thẻ 'div' (chỉ hiển thị)
+  const Component = variant === "header" ? Link : "div";
+
+  // Nếu là header thì cần prop 'to="/"', sidebar thì không cần gì cả
+  const componentProps = variant === "header" ? { to: "/" } : {};
+
   return (
-    <Link
-      to="/"
+    // @ts-ignore: Bỏ qua lỗi check type động giữa Link và div để code gọn hơn
+    <Component
+      {...componentProps}
       className={cn(
         "flex items-center transition-all duration-300 group select-none",
-        // Nếu collapsed thì căn giữa, nếu không thì có khoảng cách gap-3
+        // Header: hiện bàn tay bấm được. Sidebar: con trỏ thường
+        variant === "header" ? "cursor-pointer" : "cursor-default",
         collapsed ? "justify-center gap-0" : "gap-3",
         className
       )}
@@ -26,33 +39,27 @@ export const Logo = ({ collapsed = false, className }: LogoProps) => {
       <div
         className={cn(
           "bg-primary rounded-lg flex items-center justify-center shadow-sm transition-all duration-300 shrink-0",
-          // Logic đổi kích thước dựa trên prop collapsed
           collapsed ? collapsedSize : expandedSize
         )}
       >
         <span className="text-white filter drop-shadow-sm">🦷</span>
       </div>
 
-      {/* --- PHẦN CHỮ (Tên thương hiệu) --- */}
-      {/* Sử dụng trick CSS để ẩn hiện mượt mà */}
+      {/* --- PHẦN CHỮ --- */}
       <div
         className={cn(
           "flex flex-col overflow-hidden transition-all duration-300",
-          // Nếu collapsed: chiều rộng = 0, mờ dần.
-          // Nếu expanded: chiều rộng tự động, hiện rõ.
           collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
         )}
       >
         <h1
           className={cn(
-            "text-xl font-bold text-[#01304e] whitespace-nowrap leading-none",
-            // Mẹo nhỏ: Khi hover vào logo, chữ sáng màu lên một chút cho đẹp
-            "group-hover:text-primary transition-colors"
+            "text-xl font-bold text-[#01304e] whitespace-nowrap leading-none"
           )}
         >
           DentalCareX
         </h1>
       </div>
-    </Link>
+    </Component>
   );
 };

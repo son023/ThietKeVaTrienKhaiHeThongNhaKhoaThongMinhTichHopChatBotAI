@@ -1,4 +1,5 @@
 import { Home, Calendar, Users, UserCog, Briefcase, Package, Receipt, BarChart3, Settings, LogOut } from 'lucide-react';
+import { Logo } from './ui/logo';
 
 interface AdminSidebarProps {
   currentPage: string;
@@ -21,13 +22,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   return (
     <aside className="w-64 bg-white border-r border-[#e8e8e8] flex flex-col">
       <div className="p-6 border-b border-[#e8e8e8]">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#3FB5FF] rounded-full" />
-          <div>
-            <h1 className="text-[#01304e]">DentalCareX</h1>
-            <p className="text-xs text-[#333333]/60">Quản trị viên</p>
-          </div>
-        </div>
+        <Logo />
       </div>
       
       <nav className="flex-1 px-4 py-4 overflow-y-auto">
