@@ -87,42 +87,44 @@ export function MedicineSearchInput({ onSelect, disabled }: MedicineSearchInputP
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#333333]/40" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-text/40" />
         <Input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Tìm kiếm thuốc theo tên hoặc mô tả..."
           disabled={disabled}
-          className="pl-10 pr-4"
+          className="pl-11 pr-4 rounded-xl border-neutral-border/30 bg-neutral-surface focus:border-primary transition-colors h-11 shadow-sm"
         />
       </div>
 
       {showDropdown && filteredMedicines.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-[#e8e8e8] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+        <div className="absolute z-50 w-full mt-2 bg-neutral-surface border border-neutral-border/30 rounded-xl shadow-lg max-h-[400px] overflow-y-auto">
           {filteredMedicines.map((medicine) => (
             <button
               key={medicine.id}
               onClick={() => handleSelect(medicine)}
               disabled={medicine.stockStatus === 'out'}
-              className={`w-full px-4 py-3 text-left hover:bg-[#f8f9fa] transition-colors border-b border-[#e8e8e8] last:border-b-0 ${
+              className={`w-full px-5 py-4 text-left hover:bg-neutral-muted/50 transition-colors border-b border-neutral-border/20 last:border-b-0 first:rounded-t-xl last:rounded-b-xl ${
                 medicine.stockStatus === 'out' ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Package className="w-4 h-4 text-[#3FB5FF]" />
-                    <p className="font-semibold text-[#01304e]">{medicine.name}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1 rounded bg-primary/10">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                    <p className="font-semibold text-neutral-text">{medicine.name}</p>
                   </div>
                   {medicine.description && (
-                    <p className="text-xs text-[#333333]/60 mb-2">{medicine.description}</p>
+                    <p className="text-xs text-neutral-text/60 mb-2 ml-7">{medicine.description}</p>
                   )}
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-[#333333]/60">
-                      Đơn vị: {medicine.unit || 'N/A'}
+                  <div className="flex items-center gap-4 ml-7">
+                    <span className="text-xs text-neutral-text/60">
+                      Đơn vị: <span className="font-medium">{medicine.unit || 'N/A'}</span>
                     </span>
-                    <span className="text-xs font-semibold text-[#3FB5FF]">
+                    <span className="text-xs font-bold text-primary">
                       {medicine.salePrice?.toLocaleString('vi-VN')} đ
                     </span>
                   </div>
@@ -137,9 +139,11 @@ export function MedicineSearchInput({ onSelect, disabled }: MedicineSearchInputP
       )}
 
       {showDropdown && filteredMedicines.length === 0 && query && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-[#e8e8e8] rounded-lg shadow-lg p-4 text-center">
-          <AlertCircle className="w-8 h-8 text-[#333333]/20 mx-auto mb-2" />
-          <p className="text-sm text-[#333333]/60">Không tìm thấy thuốc phù hợp</p>
+        <div className="absolute z-50 w-full mt-2 bg-neutral-surface border border-neutral-border/30 rounded-xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mx-auto mb-3">
+            <AlertCircle className="w-8 h-8 text-neutral-text/30" />
+          </div>
+          <p className="text-sm text-neutral-text/60">Không tìm thấy thuốc phù hợp</p>
         </div>
       )}
     </div>

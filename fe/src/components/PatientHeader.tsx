@@ -1,6 +1,7 @@
 import svgPaths from "../../src/imports/svg-rgty3nojwf";
 import { Bell, User, Calendar, CreditCard, FileText, Clock, Check, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { Logo } from './ui/logo';
 
 
 interface NewPatientHeaderProps {
@@ -253,15 +254,8 @@ export default function PatientHeader({ currentPage, onNavigate, onOpenChatbot }
             </div>
 
             {/* Logo */}
-            <div className="absolute content-stretch flex gap-[9px] h-[64px] items-center left-[80px] top-[20px] cursor-pointer" data-name="Logo" onClick={() => onNavigate('home')}>
-                <div className="relative shrink-0 size-[24px]">
-                    <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-                        <path d={svgPaths.p2d52d100} id="Vector 2" stroke="#002035" strokeWidth="12" />
-                    </svg>
-                </div>
-                <div className="flex flex-col font-['Fz_Poppins:SemiBold',sans-serif] justify-end leading-[0] not-italic relative shrink-0 text-[#01304e] text-[24px] tracking-[0.5px] w-[165px]">
-                    <p className="leading-[normal]">DentalCareX</p>
-                </div>
+            <div className="absolute left-[80px] top-[20px] h-[64px] flex items-center" onClick={() => onNavigate('home')}>
+                <Logo />
             </div>
 
             {/* Header Menu */}

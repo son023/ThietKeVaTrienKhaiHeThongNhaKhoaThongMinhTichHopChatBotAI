@@ -1,4 +1,5 @@
 import { LayoutDashboard, Calendar, Users, DollarSign, BarChart3, Settings } from 'lucide-react';
+import { Logo } from './ui/logo';
 
 interface ReceptionistSidebarProps {
   currentPage: string;
@@ -17,7 +18,10 @@ export function ReceptionistSidebar({ currentPage, onPageChange }: ReceptionistS
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[260px] bg-white border-r border-gray-200 z-50">
-      <nav className="mt-[80px] p-4">
+      <div className="p-6 border-b border-gray-200">
+        <Logo />
+      </div>
+      <nav className="p-4">
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;

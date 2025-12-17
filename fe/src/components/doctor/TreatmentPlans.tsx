@@ -88,43 +88,43 @@ export function TreatmentPlans({ onNavigateToPlan }: TreatmentPlansProps) {
   const renderPlanCard = (plan: typeof treatmentPlans[0]) => (
     <Card
       key={plan.id}
-      className="cursor-pointer hover:border-[#3FB5FF] transition-all rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)] hover:shadow-[0px_4px_12px_0px_rgba(63,181,255,0.3)]"
+      className="group cursor-pointer hover:border-primary transition-all duration-200 rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md"
       onClick={() => onNavigateToPlan(plan.id)}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h3 className="text-[#333333] mb-1">{plan.planName}</h3>
-            <p className="text-sm text-[#333333]/60">
-              {plan.patientName} • {plan.patientId}
+            <h3 className="font-semibold text-neutral-text mb-2 group-hover:text-primary transition-colors">{plan.planName}</h3>
+            <p className="text-sm text-neutral-text/60">
+              {plan.patientName} • <span className="font-mono">{plan.patientId}</span>
             </p>
           </div>
-          <Badge className={plan.status === 'completed' ? 'bg-green-500' : 'bg-[#3FB5FF]'}>
+          <Badge className={`${plan.status === 'completed' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-primary-strong'} text-white`}>
             {plan.completedSteps}/{plan.totalSteps} bước
           </Badge>
         </div>
 
-        <div className="mb-3">
-          <div className="flex items-center justify-between text-sm text-[#333333]/60 mb-1">
-            <span>Tiến độ</span>
-            <span>{plan.progress}%</span>
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-sm text-neutral-text/60 mb-2">
+            <span className="font-medium">Tiến độ</span>
+            <span className="font-bold text-neutral-text">{plan.progress}%</span>
           </div>
-          <Progress value={plan.progress} className="h-2" />
+          <Progress value={plan.progress} className="h-2.5" />
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2 text-[#333333]/60">
+          <div className="flex items-center gap-2 text-neutral-text/60">
             <Calendar className="w-4 h-4" />
             <span>Bắt đầu: {plan.startDate}</span>
           </div>
           {plan.nextAppointment && (
-            <div className="flex items-center gap-2 text-[#3FB5FF]">
+            <div className="flex items-center gap-2 text-primary font-medium">
               <Clock className="w-4 h-4" />
               <span>{plan.nextAppointment}</span>
             </div>
           )}
           {!plan.nextAppointment && (
-            <div className="flex items-center gap-2 text-green-600">
+            <div className="flex items-center gap-2 text-green-600 font-medium">
               <CheckCircle className="w-4 h-4" />
               <span>Hoàn tất</span>
             </div>
@@ -135,50 +135,57 @@ export function TreatmentPlans({ onNavigateToPlan }: TreatmentPlansProps) {
   );
 
   return (
-    <div className="p-6 bg-[#fcfeff]">
-      <div className="mb-6">
-        <h1 className="text-[#01304e] mb-4">Kế hoạch điều trị</h1>
-        
+    <div className="p-6 bg-neutral-background min-h-screen">
+      <div className="mb-8">
+        <h1 className="typo-h2 mb-2">Kế hoạch điều trị</h1>
+        <p className="text-neutral-text/60 mb-6">Quản lý và theo dõi các kế hoạch điều trị</p>
+
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-text/40" />
           <Input
             type="text"
             placeholder="Tìm kiếm kế hoạch điều trị..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-[10px] border-[#e8e8e8]"
+            className="pl-12 rounded-xl border-neutral-border/30 bg-neutral-surface focus:border-primary transition-colors h-11 shadow-sm"
           />
         </div>
       </div>
 
-      <Tabs defaultValue="in-progress">
-        <TabsList>
-          <TabsTrigger value="in-progress">
+      <Tabs defaultValue="in-progress" className="space-y-6">
+        <TabsList className="bg-neutral-muted border border-neutral-border/30 p-1 rounded-xl">
+          <TabsTrigger value="in-progress" className="rounded-lg data-[state=active]:bg-neutral-surface data-[state=active]:shadow-sm">
             Đang thực hiện ({inProgressPlans.length})
           </TabsTrigger>
-          <TabsTrigger value="completed">
+          <TabsTrigger value="completed" className="rounded-lg data-[state=active]:bg-neutral-surface data-[state=active]:shadow-sm">
             Đã hoàn thành ({completedPlans.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="in-progress" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="in-progress">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {inProgressPlans.map(renderPlanCard)}
           </div>
           {inProgressPlans.length === 0 && (
-            <div className="text-center py-12 text-[#333333]/60">
-              Không có kế hoạch điều trị đang thực hiện
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
+                <Clock className="w-8 h-8 text-neutral-text/40" />
+              </div>
+              <p className="text-neutral-text/60">Không có kế hoạch điều trị đang thực hiện</p>
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="completed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {completedPlans.map(renderPlanCard)}
           </div>
           {completedPlans.length === 0 && (
-            <div className="text-center py-12 text-[#333333]/60">
-              Không có kế hoạch điều trị đã hoàn thành
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
+                <CheckCircle className="w-8 h-8 text-neutral-text/40" />
+              </div>
+              <p className="text-neutral-text/60">Không có kế hoạch điều trị đã hoàn thành</p>
             </div>
           )}
         </TabsContent>

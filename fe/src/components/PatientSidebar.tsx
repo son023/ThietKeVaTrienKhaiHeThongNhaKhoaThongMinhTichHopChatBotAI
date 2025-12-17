@@ -1,5 +1,6 @@
 import { Home, Calendar, CreditCard, FileText, User, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { Logo } from './ui/logo';
 
 interface PatientSidebarProps {
   currentPage: string;
@@ -53,7 +54,10 @@ export function PatientSidebar({ currentPage, onNavigate }: PatientSidebarProps)
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <nav className="p-[20px] space-y-[8px] mt-[80px] lg:mt-0">
+        <div className="p-[20px] border-b border-[#ebf6fc]">
+          <Logo />
+        </div>
+        <nav className="p-[20px] space-y-[8px]">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
