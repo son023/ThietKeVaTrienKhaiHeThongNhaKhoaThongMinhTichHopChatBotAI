@@ -9,20 +9,22 @@ import {
   Printer,
   CheckCircle2,
   Loader2,
-  QrCode,
   AlertCircle,
   Calendar,
   User,
   FileText,
   DollarSign,
   Shield,
-  Wallet
+  Wallet,
+  RefreshCw
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { paymentController, PaymentStatus } from '../../controllers/PaymentController';
+import { paymentController, PaymentStatus, PaymentResponseDTO } from '../../controllers/PaymentController';
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
-
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import { userController } from '../../controllers/UserController';
+import { UserDTO } from '../../models/User';
 import {
   Table,
   TableBody,
@@ -31,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { usePayOS, PayOSConfig } from '@payos/payos-checkout';
 
 interface InvoiceItem {
   id: string;
@@ -46,9 +49,10 @@ interface ReceptionistInvoiceProps {
   invoiceId?: string;
   patientId?: string;
   onBack: () => void;
+  mode?: 'view' | 'payment'; // 'view' = chỉ xem chi tiết, 'payment' = xem + thanh toán
 }
 
-export function ReceptionistInvoice({ invoiceId, patientId, onBack }: ReceptionistInvoiceProps) {
+export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view' }: ReceptionistInvoiceProps) {
   // ===== STATE =====
   // Backend data
   const [invoiceData, setInvoiceData] = useState<InvoiceDTO | null>(null);
@@ -62,19 +66,101 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
   const [notes, setNotes] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showInvoiceItems, setShowInvoiceItems] = useState(true);
+  const [showPayOS, setShowPayOS] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentResponseDTO | null>(null);
 
 
-  // Mock data fallback
-  const [patient] = useState({
-    name: 'Nguyễn Văn A',
-    code: 'BN001',
-  });
 
-  const [invoice] = useState({
-    code: 'HD0123',
-    date: '28/10/2025',
-    doctor: 'BS. Phạm Thị Ngọc Mai',
-  });
+  const payOSConfig: PayOSConfig | null = checkoutUrl
+    ? {
+      RETURN_URL: 'http://localhost:3000/payment/result',
+      ELEMENT_ID: 'embedded-payment-container',
+      CHECKOUT_URL: checkoutUrl,
+      embedded: false,
+
+      onSuccess: (event) => {
+        console.log('✅ Payment success:', event);
+        toast.success('🎉 Thanh toán thành công!', {
+          description: 'Hóa đơn đã được thanh toán qua PayOS',
+          duration: 5000,
+        });
+        setShowPayOS(false);
+        setIsPaid(true);
+        setIsProcessing(false);
+
+        if (invoiceId) {
+          loadInvoiceData();
+        }
+      },
+
+      onCancel: async () => {
+        console.log('❌ Payment cancelled by user');
+        setShowPayOS(false);
+        setIsProcessing(false);
+
+        toast.warning('⚠️ Đã hủy thanh toán', {
+          description: 'Bạn đã hủy giao dịch thanh toán',
+          duration: 4000,
+        });
+
+        // Reload để check status mới nhất
+        if (invoiceId) {
+          await loadInvoiceData();
+        }
+      },
+
+      onExit: async () => {
+        console.log('🚪 Payment window closed');
+        setShowPayOS(false);
+        setIsProcessing(false);
+
+        // Check payment status sau khi đóng popup
+        if (invoiceId) {
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 1s
+            const paymentStatus = await paymentController.getPaymentStatus(invoiceId);
+
+            if (paymentStatus.status === PaymentStatus.SUCCESSFUL) {
+              toast.success('✅ Thanh toán thành công!');
+              setIsPaid(true);
+              await loadInvoiceData();
+            } else if (paymentStatus.status === PaymentStatus.CANCELLED) {
+              toast.info('ℹ️ Thanh toán đã bị hủy');
+            } else if (paymentStatus.status === PaymentStatus.TIMEOUT) {
+              toast.error('⏰ Hết thời gian thanh toán', {
+                description: 'Mã QR đã hết hạn. Vui lòng thử lại.',
+                duration: 5000,
+              });
+            } else if (paymentStatus.status === PaymentStatus.FAILED) {
+              toast.error('❌ Thanh toán thất bại', {
+                description: 'Giao dịch không thành công. Vui lòng thử lại.',
+                duration: 5000,
+              });
+            }
+          } catch (error) {
+            console.error('Error checking payment status:', error);
+          }
+        }
+      },
+    }
+    : null;
+
+  const payOS = payOSConfig ? usePayOS(payOSConfig) : null;
+
+
+  useEffect(() => {
+    if (checkoutUrl && payOS) {
+      payOS.open();
+    }
+  }, [checkoutUrl]);
+
+
+
+  // Real backend data states
+  const [patientData, setPatientData] = useState<UserDTO | null>(null);
+  const [doctorData, setDoctorData] = useState<UserDTO | null>(null);
+  const [appointmentData, setAppointmentData] = useState<AppointmentDTO | null>(null);
 
   // Thêm state cho cancel dialog
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -84,28 +170,6 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
   useEffect(() => {
     if (invoiceId) {
       loadInvoiceData();
-    } else {
-      // Load mock data nếu không có invoiceId
-      setItems([
-        {
-          id: '1',
-          serviceType: 'Dental',
-          name: 'Trám răng Composite Răng 46',
-          quantity: 1,
-          unitPrice: 500000,
-          insurancePayAmount: 300000,
-          patientPayAmount: 200000,
-        },
-        {
-          id: '2',
-          serviceType: 'Dental',
-          name: 'Cạo vôi răng',
-          quantity: 1,
-          unitPrice: 300000,
-          insurancePayAmount: 150000,
-          patientPayAmount: 150000,
-        },
-      ]);
     }
   }, [invoiceId]);
 
@@ -114,10 +178,34 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 
     setIsLoadingInvoice(true);
     try {
+      // 1. Load Invoice
       const data = await invoiceController.getInvoiceById(invoiceId);
       setInvoiceData(data);
 
-      // Map items từ backend
+      // 2. Load Appointment từ appointmentId
+      if (data.appointmentId) {
+        try {
+          const appointment = await appointmentController.getById(data.appointmentId);
+          setAppointmentData(appointment);
+
+          // 3. Load Patient info
+          if (appointment.patientId) {
+            const patient = await userController.getById(appointment.patientId);
+            setPatientData(patient);
+          }
+
+          // 4. Load Doctor info
+          if (appointment.doctorId) {
+            const doctor = await userController.getById(appointment.doctorId);
+            setDoctorData(doctor);
+          }
+        } catch (error) {
+          console.error('Error loading appointment/user data:', error);
+          toast.error('Không thể tải thông tin bệnh nhân/bác sĩ');
+        }
+      }
+
+      // 5. Map invoice items
       if (data.items && data.items.length > 0) {
         const mappedItems: InvoiceItem[] = data.items.map(item => ({
           id: item.id,
@@ -131,37 +219,26 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
         setItems(mappedItems);
       }
 
-      // Check if already paid
+      // 6. Check if already paid
       if (data.status === 'PAID') {
         setIsPaid(true);
+
+        // 7. Load Payment data nếu đã thanh toán
+        try {
+          const paymentInfo = await paymentController.getPaymentStatus(invoiceId);
+          setPaymentData(paymentInfo);
+
+          // Set payment method từ backend data
+          setPaymentMethod(paymentInfo.paymentMethod);
+          console.log('✅ Loaded payment info:', paymentInfo);
+        } catch (error) {
+          console.error('Error loading payment info:', error);
+        }
       }
 
       console.log('✅ Loaded invoice:', data);
     } catch (error) {
-      console.error('❌ Error loading invoice:', error);
-      toast.error('Không thể tải hóa đơn, sử dụng dữ liệu mẫu');
-
-      // Fallback to mock data
-      setItems([
-        {
-          id: '1',
-          serviceType: 'Dental',
-          name: 'Trám răng Composite Răng 46',
-          quantity: 1,
-          unitPrice: 500000,
-          insurancePayAmount: 300000,
-          patientPayAmount: 200000,
-        },
-        {
-          id: '2',
-          serviceType: 'Dental',
-          name: 'Cạo vôi răng',
-          quantity: 1,
-          unitPrice: 300000,
-          insurancePayAmount: 150000,
-          patientPayAmount: 150000,
-        },
-      ]);
+      toast.error('Không thể tải hóa đơn');
     } finally {
       setIsLoadingInvoice(false);
     }
@@ -181,18 +258,24 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
   const change = amountReceived ? Math.max(0, parseInt(amountReceived) - patientPays) : 0;
 
   // Display values
-  const displayInvoiceCode = invoiceData?.id.substring(0, 8).toUpperCase() || invoice.code;
+  const displayInvoiceCode = invoiceData?.id.substring(0, 8).toUpperCase() || 'N/A';
   const displayDate = invoiceData?.issueAt
     ? new Date(invoiceData.issueAt).toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     })
-    : invoice.date;
+    : '—';
 
-  // ===== HANDLERS =====
+  // Patient & Doctor display values
+  const displayPatientName = patientData?.fullName || 'Đang tải...';
+  const displayPatientCode = patientData?.id
+    ? `BN${patientData.id.slice(-6).toUpperCase()}`
+    : '—';
+  const displayDoctorName = doctorData?.fullName || 'Đang tải...';
+
+
   const handleConfirmPayment = async () => {
-    // Validate for cash payment
     if (paymentMethod === 'CASH') {
       if (!amountReceived) {
         toast.error('Vui lòng nhập số tiền nhận');
@@ -212,35 +295,37 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
         totalAmount: patientPays,
       });
 
+      // 💵 TIỀN MẶT
       if (paymentMethod === 'CASH') {
-        // Cash payment - immediate success
         toast.success('Thanh toán tiền mặt thành công!');
         setIsPaid(true);
 
-        // Reload invoice data if available
         if (invoiceId) {
           await loadInvoiceData();
         }
-        setIsProcessing(false);
-      } else {
-        // Bank transfer - REDIRECT to PayOS Hosted Page
-        if (response.paymentUrl) {
-          toast.info('Đang chuyển đến trang thanh toán PayOS...');
 
-          // Wait a bit for toast to show, then redirect
-          setTimeout(() => {
-            window.location.href = response.paymentUrl!;
-          }, 500);
-        } else {
-          toast.error('Không nhận được link thanh toán từ server');
-          setIsProcessing(false);
-        }
+        setIsProcessing(false);
+        return;
       }
+
+      // 🏦 CHUYỂN KHOẢN (EMBEDDED)
+      if (!response.paymentUrl) {
+        toast.error('Không nhận được link thanh toán từ PayOS');
+        setIsProcessing(false);
+        return;
+      }
+
+      //toast.info('Đang mở popup thanh toán...');
+
+      setCheckoutUrl(response.paymentUrl);
+      setShowPayOS(true);
+
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Lỗi tạo thanh toán');
       setIsProcessing(false);
     }
   };
+
 
   // Get service icon
   const getServiceIcon = (serviceType: string) => {
@@ -288,24 +373,32 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
               >
                 {isPaid ? '✓ ĐÃ THANH TOÁN' : '⏳ CHƯA THANH TOÁN'}
               </Badge>
-              {invoiceData && (
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  📡 Dữ liệu thực
-                </Badge>
-              )}
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <span className="flex items-center gap-1">
                 <User className="w-4 h-4" />
-                <strong>{patient.name}</strong> ({patient.code})
+                <strong>{displayPatientName}</strong> ({displayPatientCode})
               </span>
               <span>•</span>
-              <span>BS. {invoice.doctor}</span>
+              <span>BS. {displayDoctorName}</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2 rounded-[10px]"
+            onClick={() => loadInvoiceData()}
+            disabled={isLoadingInvoice}
+          >
+            {isLoadingInvoice ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            Làm mới
+          </Button>
           <Button variant="outline" className="gap-2 rounded-[10px]">
             <Printer className="w-4 h-4" />
             In Hóa đơn
@@ -340,7 +433,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Bác sĩ</p>
-              <p className="text-[#01304e] font-semibold text-sm md:text-base truncate">{invoice.doctor}</p>
+              <p className="text-[#01304e] font-semibold text-sm md:text-base truncate">{displayDoctorName}</p>
             </div>
           </div>
         </div>
@@ -463,7 +556,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
 
 
       {/* Payment Section */}
-      {!isPaid && (
+      {mode === 'payment' && !isPaid && invoiceData?.status === 'PENDING' && (
         <Card className="p-6 border-2 border-blue-100">
           <h3 className="text-lg font-semibold text-[#01304e] mb-4 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-[#3FB5FF]" />
@@ -623,8 +716,6 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
       )}
 
 
-
-
       {/* Payment Success */}
       {isPaid && (
         <Card className="p-6 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-[15px]">
@@ -639,26 +730,65 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
                 </h3>
                 <div className="text-sm text-green-700 space-y-1">
                   <p>
-                    <strong>Phương thức:</strong> {paymentMethodMap[paymentMethod]}
+                    <strong>Phương thức:</strong> {paymentData?.paymentMethod ? paymentMethodMap[paymentData.paymentMethod] : paymentMethodMap[paymentMethod]}
                   </p>
-                  {paymentMethod === 'CASH' && amountReceived && (
+
+                  {/* Chi tiết cho TIỀN MẶT */}
+                  {(paymentData?.paymentMethod === 'CASH' || paymentMethod === 'CASH') && (
                     <>
-                      <p>
-                        <strong>Số tiền nhận:</strong> {parseInt(amountReceived).toLocaleString('vi-VN')}đ
-                      </p>
-                      {change > 0 && (
+                      {paymentData?.totalAmount && (
                         <p>
-                          <strong>Tiền thừa:</strong> {change.toLocaleString('vi-VN')}đ
+                          <strong>Số tiền thanh toán:</strong> {paymentData.totalAmount.toLocaleString('vi-VN')}đ
                         </p>
+                      )}
+                      {amountReceived && (
+                        <>
+                          <p>
+                            <strong>Số tiền nhận:</strong> {parseInt(amountReceived).toLocaleString('vi-VN')}đ
+                          </p>
+                          {change > 0 && (
+                            <p>
+                              <strong>Tiền thừa:</strong> {change.toLocaleString('vi-VN')}đ
+                            </p>
+                          )}
+                        </>
                       )}
                     </>
                   )}
-                  {notes && (
+
+                  {/* Chi tiết cho CHUYỂN KHOẢN */}
+                  {(paymentData?.paymentMethod === 'BANK_TRANSFER' || paymentMethod === 'BANK_TRANSFER') && (
+                    <>
+                      <p>
+                        <strong>Số tiền:</strong> {paymentData?.totalAmount ? paymentData.totalAmount.toLocaleString('vi-VN') : patientPays.toLocaleString('vi-VN')}đ
+                      </p>
+                      <p>
+                        <strong>Cổng thanh toán:</strong> PayOS
+                      </p>
+                      {paymentData?.transactionId && (
+                        <p className="text-xs">
+                          <strong>Mã GD:</strong> {paymentData.transactionId}
+                        </p>
+                      )}
+                      {paymentData?.paidAt && (
+                        <p className="text-xs">
+                          <strong>Thời gian:</strong> {new Date(paymentData.paidAt).toLocaleString('vi-VN')}
+                        </p>
+                      )}
+                      <p className="text-xs text-green-600 italic">
+                        ✓ Đã xác nhận thanh toán qua ngân hàng
+                      </p>
+                    </>
+                  )}
+
+                  {(notes || paymentData?.description) && (
                     <p className="italic mt-2 bg-white/50 px-2 py-1 rounded">
-                      <strong>Ghi chú:</strong> {notes}
+                      <strong>Ghi chú:</strong> {paymentData?.description || notes}
                     </p>
                   )}
                 </div>
+
+
               </div>
             </div>
             <div className="flex gap-2">
@@ -681,16 +811,18 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
         </Card>
       )}
 
-      {/* Nút Hủy hóa đơn - mở dialog */}
-      <Button
-        variant="outline"
-        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2 rounded-[10px]"
-        disabled={isProcessing}
-        onClick={() => setShowCancelDialog(true)}
-      >
-        <AlertCircle className="w-4 h-4" />
-        Hủy Hóa đơn
-      </Button>
+      {/* Nút Hủy hóa đơn - chỉ hiển thị cho hóa đơn PENDING */}
+      {invoiceData?.status === 'PENDING' && (
+        <Button
+          variant="outline"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-2 rounded-[10px]"
+          disabled={isProcessing}
+          onClick={() => setShowCancelDialog(true)}
+        >
+          <AlertCircle className="w-4 h-4" />
+          Hủy Hóa đơn
+        </Button>
+      )}
 
       {/* Cancel Dialog - Thêm ở cuối component */}
       {showCancelDialog && (
@@ -789,6 +921,14 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack }: Receptioni
             </div>
           </Card>
         </div>
+      )}
+
+      {/* PayOS Embedded Container */}
+      {showPayOS && (
+        <div
+          id="embedded-payment-container"
+          className="fixed inset-0 z-[9999]"
+        />
       )}
     </div>
   );
