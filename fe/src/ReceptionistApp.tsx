@@ -23,6 +23,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [invoiceViewMode, setInvoiceViewMode] = useState<'view' | 'payment'>('view');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (query: string) => {
@@ -52,8 +53,9 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     setCurrentPage('invoice');
   };
 
-  const handleViewInvoice = (invoiceId: string) => {
+  const handleViewInvoice = (invoiceId: string, mode: 'view' | 'payment' = 'view') => {
     setSelectedInvoiceId(invoiceId);
+    setInvoiceViewMode(mode);
     setShowInvoice(true);
     setCurrentPage('invoice');
   };
@@ -96,6 +98,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
         <ReceptionistInvoice
           invoiceId={selectedInvoiceId || undefined}
           onBack={handleBackToInvoiceList}
+          mode={invoiceViewMode}
         />
       );
     }
