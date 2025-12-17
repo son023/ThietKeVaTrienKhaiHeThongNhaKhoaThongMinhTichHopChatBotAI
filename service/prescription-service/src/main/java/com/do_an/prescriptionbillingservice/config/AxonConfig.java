@@ -13,4 +13,6 @@ public class AxonConfig {
             "com.main_project.**"
         });
     }
+
+
 }

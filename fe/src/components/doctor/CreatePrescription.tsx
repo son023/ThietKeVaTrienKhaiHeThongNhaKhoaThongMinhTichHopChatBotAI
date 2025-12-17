@@ -191,6 +191,9 @@ export function CreatePrescriptionEnhanced({
 
         try {
             const res = await prescriptionController.createPrescription(payload);
+
+            console.log(res);
+
             toast.success("Đã tạo đơn thuốc thành công");
             onCreated?.();
         } catch (e: any) {

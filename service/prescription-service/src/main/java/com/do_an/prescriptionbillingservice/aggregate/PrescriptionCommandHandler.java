@@ -22,16 +22,38 @@ public class PrescriptionCommandHandler {
 
     @CommandHandler
     public void handle(CreatePrescriptionCommand command) {
-        log.info("CreatePrescriptionCommand appointmentId={}, prescriptionId={}, items={}",
-                command.getAppointmentId(), command.getPrescriptionId(), command.getItems() != null ? command.getItems().size() : 0);
+        log.info("📥 [COMMAND] CreatePrescriptionCommand: appointmentId={}, prescriptionId={}, items={}",
+                command.getAppointmentId(), command.getPrescriptionId(), 
+                command.getItems() != null ? command.getItems().size() : 0);
 
+        // ✅ VALIDATION
         if (command.getItems() == null || command.getItems().isEmpty()) {
             throw new IllegalStateException("Không có thuốc để tạo đơn thuốc");
         }
 
-        List<InvoiceResponseDTO> invoices = invoiceClient.getInvoicesByAppointmentId(command.getAppointmentId());
+        // ✅ IDEMPOTENCY CHECK: Load aggregate để kiểm tra đã tồn tại chưa
+        try {
+            prescriptionAggregateRepository.load(command.getPrescriptionId().toString());
+            log.warn("⚠️ [COMMAND HANDLER GUARD] PrescriptionAggregate {} already exists, skipping creation", 
+                    command.getPrescriptionId());
+            return; // Aggregate đã tồn tại, không tạo mới
+        } catch (Exception loadException) {
+            // Aggregate chưa tồn tại, tiếp tục tạo mới
+            log.info("✅ [COMMAND HANDLER] PrescriptionAggregate {} not found, creating new", command.getPrescriptionId());
+        }
 
-        try{
+
+
+        try {
+
+            // Lấy invoice
+            List<InvoiceResponseDTO> invoices = invoiceClient.getInvoicesByAppointmentId(command.getAppointmentId());
+
+            if (invoices.isEmpty()) {
+                throw new IllegalStateException("Không tìm thấy hóa đơn cho appointment: " + command.getAppointmentId());
+            }
+
+            // Tạo aggregate mới
             prescriptionAggregateRepository.newInstance(() -> new PrescriptionAggregate(
                     command.getPrescriptionId(),
                     invoices.get(0).getId(),
@@ -40,12 +62,12 @@ public class PrescriptionCommandHandler {
                     command.getMedicalHistoryId(),
                     command.getItems()
             ));
+            
+            log.info("✅ [COMMAND HANDLER] Successfully created PrescriptionAggregate: {}", command.getPrescriptionId());
 
-        }catch (Exception e){
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error("❌ [COMMAND HANDLER] Failed to create PrescriptionAggregate: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi tạo đơn thuốc: " + e.getMessage(), e);
         }
-
-
-
     }
 }

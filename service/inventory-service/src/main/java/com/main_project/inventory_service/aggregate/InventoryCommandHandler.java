@@ -32,6 +32,22 @@ public class InventoryCommandHandler {
     @CommandHandler
     @Transactional(readOnly = true)
     public void handle(ReserveMedicineCommand command) throws Exception {
+        log.info("📥 [COMMAND] ReserveMedicineCommand: dispenseOrderId={}, prescriptionId={}", 
+                command.getDispenseOrderId(), command.getPrescriptionId());
+
+        // ✅ IDEMPOTENCY CHECK: Load aggregate để kiểm tra đã tồn tại chưa
+        try {
+            inventoryAggregateRepository.load(command.getDispenseOrderId().toString());
+            log.warn("⚠️ [COMMAND HANDLER GUARD] InventoryAggregate {} already exists, skipping creation", 
+                    command.getDispenseOrderId());
+            return; // Aggregate đã tồn tại, không tạo mới
+        } catch (Exception loadException) {
+            // Aggregate chưa tồn tại, tiếp tục validate và tạo mới
+            log.info("✅ [COMMAND HANDLER] InventoryAggregate {} not found, proceeding with validation", 
+                    command.getDispenseOrderId());
+        }
+
+        // ✅ VALIDATION: Kiểm tra tồn kho trước khi tạo aggregate
         for (MedicineItem item : command.getItems()) {
             UUID medicineId = item.getMedicineId();
             Medicine medicine = medicineRepository.findById(medicineId)
@@ -73,7 +89,7 @@ public class InventoryCommandHandler {
             }
         }
 
-        log.info("Validation thành công. Khởi tạo Aggregate.");
+        log.info("✅ [COMMAND HANDLER] Validation thành công. Khởi tạo InventoryAggregate.");
 
         inventoryAggregateRepository.newInstance(() -> new InventoryAggregate(command));
     }

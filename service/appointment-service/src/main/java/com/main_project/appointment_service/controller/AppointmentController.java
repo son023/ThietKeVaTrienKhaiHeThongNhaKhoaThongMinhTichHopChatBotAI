@@ -71,6 +71,7 @@ public class AppointmentController {
         AppointmentDTO appointment = appointmentService.startAppointment(id);
 
         UUID clinicalId = UUID.randomUUID();
+
         List<MedicalServiceDTO> medicalServicePayload = appointment.getMedicalServices() == null
                 ? List.of()
                 : appointment.getMedicalServices().stream()

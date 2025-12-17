@@ -7,4 +7,5 @@ import java.util.UUID;
 @Value
 public class MedicineReservationFailedEvent {
     UUID prescriptionId;
+
 }

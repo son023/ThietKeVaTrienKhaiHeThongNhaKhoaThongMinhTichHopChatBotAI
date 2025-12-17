@@ -15,6 +15,7 @@ import org.axonframework.eventhandling.GenericEventMessage;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -42,13 +43,44 @@ public class InventoryEventHandler {
     @Transactional
     public void on(MedicineReservedEvent event) {
         try {
-            DispenseOrder dispenseOrder = new DispenseOrder();
-            dispenseOrder.setId(event.getDispenseOrderId());
-            dispenseOrder.setPrescription(event.getPrescriptionId());
-            dispenseOrder.setMedicalHistoryId(event.getMedicalHistoryId());
-            dispenseOrder.setDoctorId(event.getDoctorId());
-            dispenseOrder.setStatus("RESERVED");
-            dispenseOrderRepository.save(dispenseOrder);
+            
+            log.info("📦 [INVENTORY] Processing MedicineReservedEvent: dispenseOrderId={}, prescriptionId={}", 
+                    event.getDispenseOrderId(), event.getPrescriptionId());
+
+            // ✅ IDEMPOTENCY CHECK: Kiểm tra xem DispenseOrder đã tồn tại chưa
+            DispenseOrder dispenseOrder = dispenseOrderRepository.findById(event.getDispenseOrderId())
+                    .orElse(null);
+            
+            if (dispenseOrder != null) {
+                log.warn("⚠️ DispenseOrder {} already exists with status {}, skipping event processing", 
+                        event.getDispenseOrderId(), dispenseOrder.getStatus());
+                
+                // ✅ Nếu status là RESERVED hoặc SOLD → event đã được xử lý
+                if ("RESERVED".equals(dispenseOrder.getStatus()) || "SOLD".equals(dispenseOrder.getStatus())) {
+                    return;
+                }
+            }
+
+            // ✅ Tạo mới nếu chưa tồn tại
+            if (dispenseOrder == null) {
+                dispenseOrder = new DispenseOrder();
+                dispenseOrder.setId(event.getDispenseOrderId());
+                dispenseOrder.setPrescription(event.getPrescriptionId());
+                dispenseOrder.setMedicalHistoryId(event.getMedicalHistoryId());
+                dispenseOrder.setDoctorId(event.getDoctorId());
+                dispenseOrder.setStatus("RESERVED");
+                dispenseOrder = dispenseOrderRepository.save(dispenseOrder);
+                log.info("✅ Created new DispenseOrder: {}", dispenseOrder.getId());
+            }
+
+            // ✅ Check xem items đã được tạo chưa
+            List<DispenseItem> existingItems = dispenseItemRepository.findByDispenseOrderId(dispenseOrder.getId());
+            if (!existingItems.isEmpty()) {
+                log.warn("⚠️ DispenseItems already exist for order {}, count={}, skipping item creation", 
+                        dispenseOrder.getId(), existingItems.size());
+                return;
+            }
+
 
             for (MedicineItem item : event.getItems()) {
                 UUID medicineId = item.getMedicineId();
@@ -72,29 +104,53 @@ public class InventoryEventHandler {
                     int availableInLot = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
                     int toReserveFromLot = Math.min(remainingToReserve, availableInLot);
 
+                    // ✅ Tạo deterministic ID cho DispenseItem
+                    UUID dispenseItemId = generateDeterministicUUID(
+                            dispenseOrder.getId().toString(), 
+                            medicineId.toString(), 
+                            lot.getId().toString()
+                    );  
+
+                    // ✅ Check xem item này đã tồn tại chưa
+                    if (dispenseItemRepository.existsById(dispenseItemId)) {
+                        log.warn("⚠️ DispenseItem {} already exists, skipping...", dispenseItemId);
+                        continue;
+                    }
+
+
                     DispenseItem dispenseItem = new DispenseItem();
-                    dispenseItem.setId(UUID.randomUUID());
+                    dispenseItem.setId(dispenseItemId);
                     dispenseItem.setQuantity(toReserveFromLot);
                     dispenseItem.setPriceAtDispense(medicine.getSalePrice() != null ? medicine.getSalePrice() : 0);
                     dispenseItem.setInventoryLot(lot);
+                    dispenseItem.setDosage(item.getDosage());
+                    dispenseItem.setDuration(item.getDuration());
+                    dispenseItem.setFrequency(item.getFrequency());
+                    dispenseItem.setUsageInstructions(item.getInstruction());
                     dispenseItem.setDispenseOrder(dispenseOrder);
                     dispenseItem = dispenseItemRepository.save(dispenseItem);
 
                     lot.setQuantityOnHand(availableInLot - toReserveFromLot);
                     inventoryLotRepository.save(lot);
-
+                    
+                    // ✅ Tạo StockLedger với deterministic ID
+                    UUID ledgerId = generateDeterministicUUID(dispenseItemId.toString(), "LEDGER", "OUT");
+            
+                    if (!stockLedgerRepository.existsById(ledgerId)) {
                     StockLedger ledgerEntry = new StockLedger();
-                    //ledgerEntry.setId(UUID.randomUUID());
-
-                    //ledgerEntry.setLot(lot.getLotNo());
+                    ledgerEntry.setId(ledgerId);
                     ledgerEntry.setType("OUT");
                     ledgerEntry.setQuantity(toReserveFromLot);
-                    ledgerEntry.setReferenceId(dispenseItem.getId()); // Reference to DispenseItem
+                    ledgerEntry.setReferenceId(dispenseItem.getId());
                     ledgerEntry.setReferenceType("DISPENSE_ITEM");
                     ledgerEntry.setInventoryLot(lot);
                     stockLedgerRepository.save(ledgerEntry);
+                    }
 
                     remainingToReserve -= toReserveFromLot;
+                }
+                 if (remainingToReserve > 0) {
+                     throw new RuntimeException("Không đủ tồn kho cho thuốc: " + medicine.getName());
                 }
             }
 
@@ -117,25 +173,32 @@ public class InventoryEventHandler {
     @EventHandler
     @Transactional
     public void on(MedicineReservationReleasedEvent event){
-        try {
+            try {
+            log.info("🔄 [ROLLBACK] Processing MedicineReservationReleasedEvent: prescriptionId={}", 
+                    event.getPrescriptionId());
+
             List<DispenseOrder> dispenseOrders =
                     dispenseOrderRepository.findAllByPrescription(event.getPrescriptionId());
 
-            // Đánh dấu hủy đơn xuất
-            dispenseOrders.forEach(order -> order.setStatus("CANCELLED"));
-            dispenseOrderRepository.saveAll(dispenseOrders);
-
-            // Hoàn trả lại số lượng vào lô
             for (DispenseOrder order : dispenseOrders) {
-                List<DispenseItem> dispenseItems = dispenseItemRepository.findByDispenseOrderId(order.getId());
-                for (DispenseItem dispenseItem : dispenseItems) {
-                    rollbackDispenseItem(dispenseItem);
+                // ✅ Idempotency: Chỉ rollback nếu chưa CANCELLED
+                if (!"CANCELLED".equals(order.getStatus())) {
+                    order.setStatus("CANCELLED");
+                    dispenseOrderRepository.save(order);
+
+                    List<DispenseItem> dispenseItems = dispenseItemRepository.findByDispenseOrderId(order.getId());
+                    for (DispenseItem dispenseItem : dispenseItems) {
+                        rollbackDispenseItem(dispenseItem);
+                    }
+                } else {
+                    log.warn("⚠️ DispenseOrder {} already CANCELLED, skipping rollback", order.getId());
                 }
             }
-            log.info("Đã rollback kho thành công cho Release");
+
+            log.info("✅ Đã rollback kho thành công");
 
         } catch (Exception e) {
-            log.error("Lỗi khi rollback kho: {}", e.getMessage());
+            log.error("❌ Lỗi khi rollback kho: {}", e.getMessage(), e);
         }
     }
 
@@ -148,26 +211,41 @@ public class InventoryEventHandler {
         InventoryLot lot = dispenseItem.getInventoryLot();
         Integer quantityToRestore = dispenseItem.getQuantity();
 
-
-//        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
-//                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
-//                        "OUT".equals(ledger.getType()) &&
-//                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
-//                .toList();
+        // ✅ Check xem đã rollback chưa bằng cách kiểm tra StockLedger
+        UUID rollbackLedgerId = generateDeterministicUUID(
+                dispenseItem.getId().toString(), 
+                "LEDGER", 
+                "ROLLBACK"
+        );
+        
+        if (stockLedgerRepository.existsById(rollbackLedgerId)) {
+            log.warn("⚠️ Rollback ledger {} already exists, skipping...", rollbackLedgerId);
+            return;
+        }
 
         int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
         lot.setQuantityOnHand(currentQuantity + quantityToRestore);
         inventoryLotRepository.save(lot);
 
         StockLedger reverseLedgerEntry = new StockLedger();
-        reverseLedgerEntry.setId(UUID.randomUUID());
-        //reverseLedgerEntry.setLot(lot.getLotNo());
+        reverseLedgerEntry.setId(rollbackLedgerId);
         reverseLedgerEntry.setType("IN");
         reverseLedgerEntry.setQuantity(quantityToRestore);
-        reverseLedgerEntry.setReferenceId(dispenseItem.getId()); //reference DispenseItem
+        reverseLedgerEntry.setReferenceId(dispenseItem.getId());
         reverseLedgerEntry.setReferenceType("DISPENSE_ITEM_ROLLBACK");
         reverseLedgerEntry.setInventoryLot(lot);
         stockLedgerRepository.save(reverseLedgerEntry);
+    }
+
+    // ✅ HELPER: Tạo deterministic UUID
+    private UUID generateDeterministicUUID(String... parts) {
+        try {
+            String combined = String.join("-", parts);
+            return UUID.nameUUIDFromBytes(combined.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            log.error("Error generating deterministic UUID, fallback to random", e);
+            return UUID.randomUUID();
+        }
     }
 
 

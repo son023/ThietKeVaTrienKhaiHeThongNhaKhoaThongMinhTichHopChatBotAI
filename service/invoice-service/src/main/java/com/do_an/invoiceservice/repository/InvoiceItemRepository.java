@@ -15,5 +15,9 @@ public interface InvoiceItemRepository extends JpaRepository<InvoiceItem, UUID> 
     // Tìm 1 item cụ thể thuộc 1 hóa đơn cụ thể (bảo mật)
     Optional<InvoiceItem> findByIdAndInvoiceId(UUID itemId, UUID invoiceId);
 
+    // Xóa items theo invoiceId và serviceType
     void deleteByInvoice_IdAndServiceType(UUID invoiceId, String serviceType);
+    
+    // ✅ Tìm items theo invoiceId và serviceType (for idempotency check)
+    List<InvoiceItem> findByInvoice_IdAndServiceType(UUID invoiceId, String serviceType);
 }

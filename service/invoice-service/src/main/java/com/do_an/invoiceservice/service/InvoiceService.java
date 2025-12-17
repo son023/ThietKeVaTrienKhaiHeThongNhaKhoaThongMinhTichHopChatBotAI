@@ -50,12 +50,15 @@ public class InvoiceService {
         invoice.setStatus("PENDING"); // <-- THAY ĐỔI: Bắt đầu là PENDING
         invoice.setIssueAt(LocalDateTime.now());
 
+
         int totalAmount = 0;
         for (InvoiceItem item : invoice.getItems()) {
             //item.setId(UUID.randomUUID());
             item.setInvoice(invoice);
             totalAmount += (item.getQuantity() * item.getUnitPrice());
         }
+        invoice.setInsuranceTotalPay(0);
+        invoice.setPatientTotalPay(totalAmount);
         invoice.setTotalAmount(totalAmount);
         Invoice savedInvoice = invoiceRepository.save(invoice);
         savedInvoice.getItems().size(); // ép load các item

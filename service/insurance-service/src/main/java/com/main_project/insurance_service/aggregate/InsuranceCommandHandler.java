@@ -23,6 +23,7 @@ import org.axonframework.eventhandling.GenericEventMessage;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -51,13 +52,30 @@ public class InsuranceCommandHandler {
     @Transactional(readOnly = true)
     public void handle(ValidateInsuranceCommand command){
         try {
+            log.info("🏥 [INSURANCE] Processing ValidateInsuranceCommand: prescriptionId={}, claimId={}", 
+                    command.getPrescriptionId(), command.getInsuranceClaimId());
+
             UUID patientId = command.getPatientId();
 
-//            PatientInsurance patientInsurance = patientInsuranceRepository
-//                    .findActiveInsuranceByPatientId(patientId)
-//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm đang hoạt động cho bệnh nhân: " + patientId));
+            // ✅ IDEMPOTENCY CHECK #1: Load aggregate để kiểm tra đã tồn tại chưa
+            try {
+                insuranceAggregateRepository.load(command.getInsuranceClaimId().toString());
+                log.warn("⚠️ [COMMAND HANDLER GUARD] InsuranceAggregate {} already exists, skipping validation", 
+                        command.getInsuranceClaimId());
+                return; // Aggregate đã tồn tại, không validate lại
+            } catch (Exception loadException) {
+                // Aggregate chưa tồn tại, tiếp tục validate
+                log.info("✅ [COMMAND HANDLER] InsuranceAggregate {} not found, proceeding with validation", 
+                        command.getInsuranceClaimId());
+            }
+            
+            // ✅ IDEMPOTENCY CHECK #2: Fallback check DB (nếu aggregate chưa load được từ event store)
+            if (insuranceClaimRepository.existsById(command.getInsuranceClaimId())) {
+                log.warn("⚠️ [COMMAND HANDLER GUARD] InsuranceClaim {} found in DB, skipping validation", 
+                        command.getInsuranceClaimId());
+                return;
+            }
 
-            // Thay vì orElseThrow, kiểm tra thủ công và publish event rồi return
             var optInsurance = patientInsuranceRepository.findActiveInsuranceByPatientId(patientId);
             if (optInsurance.isEmpty()) {
                 eventBus.publish(GenericEventMessage.asEventMessage(
@@ -105,8 +123,14 @@ public class InsuranceCommandHandler {
                 ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
                 InvoiceItemDTO dto = processedItem.getInvoiceItem();
 
-                // Tạo UUID trước cho ClaimItem để gửi qua Event (giúp EventHandler lưu đúng ID)
-                UUID claimItemId = (dto.getInsurancePayAmount() > 0) ? UUID.randomUUID() : null;
+                // ✅ DETERMINISTIC ID: Dựa vào claimId và invoiceItemId
+                UUID claimItemId = null;
+                if (dto.getInsurancePayAmount() > 0) {
+                    claimItemId = generateDeterministicUUID(
+                            command.getInsuranceClaimId().toString(), 
+                            dto.getId().toString()
+                    );
+                }
                 InvoiceItemResponse response = InvoiceItemResponse.builder()
                         .id(dto.getId())
                         .referenceId(dto.getReferenceId())
@@ -227,7 +251,15 @@ public class InsuranceCommandHandler {
         return request;
     }
 
-
-
+    // ✅ HELPER: Tạo deterministic UUID
+    private UUID generateDeterministicUUID(String... parts) {
+        try {
+            String combined = String.join("-", parts);
+            return UUID.nameUUIDFromBytes(combined.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            log.error("Error generating deterministic UUID, fallback to random", e);
+            return UUID.randomUUID();
+        }
+    }
 
 }

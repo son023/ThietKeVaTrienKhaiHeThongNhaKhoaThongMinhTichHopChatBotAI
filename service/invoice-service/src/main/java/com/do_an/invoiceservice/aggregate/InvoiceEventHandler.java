@@ -50,18 +50,47 @@ public class InvoiceEventHandler {
     @Transactional
         public void on(MedicineChargesAddedEvent event){
         try {
+            log.info("💰 [INVOICE] Processing MedicineChargesAddedEvent: invoiceId={}, prescriptionId={}", 
+                event.getInvoiceId(), event.getPrescriptionId());
+
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
+
+            // ✅ IDEMPOTENCY CHECK: Kiểm tra xem medicine items đã được thêm chưa
+            List<InvoiceItem> existingMedicineItems = invoiceItemRepository
+                .findByInvoice_IdAndServiceType(event.getInvoiceId(), "MEDICINE");
+
+
+            if (!existingMedicineItems.isEmpty()) {
+            log.warn("⚠️ Medicine items already added to invoice {}, count={}, skipping...", 
+                    event.getInvoiceId(), existingMedicineItems.size());
+            return;
+            }
 
             int addedAmount = 0;
 
             for (InvoiceItemCheckerRequest medicineItem : event.getInvoiceItemCheckerRequest().getItems()) {
-                InvoiceItem invoiceItem = new InvoiceItem();
-                invoiceItem.setId(medicineItem.getId());
-                invoiceItem.setServiceType("MEDICINE");
-                invoiceItem.setReferenceId(medicineItem.getReferenceId());
-                invoiceItem.setQuantity(medicineItem.getQuantity());
-                invoiceItem.setDescription(medicineItem.getDescription());
-                invoiceItem.setUnitPrice(medicineItem.getUnitPrice());
+                
+            UUID itemId = medicineItem.getId();
+
+                InvoiceItem invoiceItem =
+                        invoiceItemRepository.findById(itemId).orElse(null);
+
+
+                if (invoiceItem != null) {
+                    log.warn("⚠️ InvoiceItem {} already exists, skipping", itemId);
+                    continue;
+                }
+
+
+            invoiceItem = new InvoiceItem();
+            invoiceItem.setId(itemId);
+            invoiceItem.setServiceType("MEDICINE");
+            invoiceItem.setReferenceId(medicineItem.getReferenceId());
+            invoiceItem.setQuantity(medicineItem.getQuantity());
+            invoiceItem.setInsurancePayAmount(0);
+            invoiceItem.setPatientPayAmount(medicineItem.getQuantity() * medicineItem.getUnitPrice());
+            invoiceItem.setDescription(medicineItem.getDescription());
+            invoiceItem.setUnitPrice(medicineItem.getUnitPrice());
 
                 for (MedicineItem it : event.getMedicineItems()) {
                     if (medicineItem.getId().equals(it.getId()) ||
@@ -78,11 +107,14 @@ public class InvoiceEventHandler {
                 addedAmount += (medicineItem.getQuantity() * medicineItem.getUnitPrice());
             }
 
+              // ✅ Chỉ cập nhật total nếu có items mới được thêm
+        if (addedAmount > 0) {
             invoice.setTotalAmount((invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) + addedAmount);
+            invoiceRepository.save(invoice);
+            log.info("✅ Đã cập nhật Invoice DB. Tổng tiền mới: {}", invoice.getTotalAmount());
+        }
 
-            Invoice invoiceSaved = invoiceRepository.save(invoice);
-
-            log.info("Đã cập nhật Invoice DB thành công. Tổng tiền mới: {}", (invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) + addedAmount);
+            
 
         } catch (Exception e) {
             log.error("LỖI NGHIÊM TRỌNG khi cập nhật Invoice DB: {}", e.getMessage());
@@ -104,7 +136,7 @@ public class InvoiceEventHandler {
     @EventHandler
     @Transactional
     public void on(InsuranceDiscountUpdatedEvent event){
-        //BỎ COMMENT NÀY ĐỂ TEST LUỒNG ROLLBACK FULL
+                //BỎ COMMENT NÀY ĐỂ TEST LUỒNG ROLLBACK FULL
 //        eventBus.publish(GenericEventMessage.asEventMessage(
 //                new InvoiceDiscountAppliedFailedEvent(
 //                        event.getPrescriptionId(),
@@ -112,19 +144,31 @@ public class InvoiceEventHandler {
 //                        "Lỗi cơ sở dữ liệu: "
 //                )
 //        ));
-
         try {
+            log.info("💳 [INVOICE] Processing InsuranceDiscountUpdatedEvent: invoiceId={}, prescriptionId={}", 
+                    event.getInvoiceId(), event.getPrescriptionId());
+
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
                     .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hoá đơn: " + event.getInvoiceId()));
 
             Integer currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
             Integer discount = event.getDiscountAmount() != null ? event.getDiscountAmount() : 0;
 
+            // ✅ IDEMPOTENCY CHECK: Kiểm tra xem discount đã được apply chưa
+            Integer currentInsurancePay = invoice.getInsuranceTotalPay() != null ? invoice.getInsuranceTotalPay() : 0;
+            
+            if (currentInsurancePay.equals(discount)) {
+                log.warn("⚠️ Insurance discount already applied to invoice {}, amount={}, skipping...", 
+                        event.getInvoiceId(), discount);
+                return;
+            }
+
             Integer finalAmount = Math.max(0, currentTotal - discount);
             invoice.setInsuranceTotalPay(discount);
             invoice.setPatientTotalPay(finalAmount);
-
             invoiceRepository.save(invoice);
+
+            // Update invoice items
             List<InvoiceItem> existingItems = invoiceItemRepository.findByInvoiceId(event.getInvoiceId());
             Map<UUID, InvoiceItem> existingMap = existingItems.stream()
                     .collect(Collectors.toMap(InvoiceItem::getId, item -> item));
@@ -138,15 +182,18 @@ public class InvoiceEventHandler {
                 }
             }
 
-            invoiceItemRepository.saveAll(itemsToUpdate);
+            if (!itemsToUpdate.isEmpty()) {
+                invoiceItemRepository.saveAll(itemsToUpdate);
+            }
 
-                eventBus.publish(asEventMessage(
-                        new InvoiceDiscountAppliedSuccessEvent(
-                                event.getPrescriptionId(),
-                                event.getInvoiceId()
-                        )
-                ));
-            log.info("Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}", discount, finalAmount);
+            eventBus.publish(asEventMessage(
+                    new InvoiceDiscountAppliedSuccessEvent(
+                            event.getPrescriptionId(),
+                            event.getInvoiceId()
+                    )
+            ));
+            
+            log.info("✅ Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}", discount, finalAmount);
         } catch (Exception e) {
             log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
             // 4. COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
@@ -327,32 +374,34 @@ public class InvoiceEventHandler {
     @Transactional
     public void on(InvoicePaidEvent event) {
         try {
-            log.info("Nhận sự kiện InvoicePaidEvent. Cập nhật trạng thái PAID cho Invoice: {}", event.getInvoiceId());
+            log.info("✅ [INVOICE] Processing InvoicePaidEvent: invoiceId={}", event.getInvoiceId());
 
-            // Tìm Invoice
-            Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
+            Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
+                    .orElseThrow(() -> new RuntimeException("Invoice not found: " + event.getInvoiceId()));
 
+            // ✅ IDEMPOTENCY CHECK: Kiểm tra xem invoice đã PAID chưa
+            if ("PAID".equals(invoice.getStatus())) {
+                log.warn("⚠️ Invoice {} already marked as PAID at {}, skipping...", 
+                        event.getInvoiceId(), invoice.getPaidAt());
+                return;
+            }
 
             // Cập nhật trạng thái PAID
             invoice.setStatus("PAID");
             invoice.setPaidAt(LocalDateTime.now());
             invoiceRepository.save(invoice);
 
-            //Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
-            //inventoryClient.markAsSold()
-
-
             // ✅ PHÁT EVENT ĐỂ INVENTORY-SERVICE BIẾT
             eventBus.publish(asEventMessage(new InvoicePaidNotificationEvent(
                     event.getInvoiceId(),
                     invoice.getAppointmentId(),
-                    "Hóa đơn" + event.getInvoiceId() + "đã được thanh toán thành công"
+                    "Hóa đơn " + event.getInvoiceId() + " đã được thanh toán thành công"
             )));
 
-            log.info("Đã cập nhật Invoice {} thành công (PAID).", invoice.getId());
+            log.info("✅ Đã cập nhật Invoice {} thành công (PAID).", invoice.getId());
 
         } catch (Exception e) {
-            log.error("Lỗi khi xử lý InvoicePaidEvent cho Invoice {}: {}",
+            log.error("❌ Lỗi khi xử lý InvoicePaidEvent cho Invoice {}: {}",
                     event.getInvoiceId(), e.getMessage(), e);
         }
     }

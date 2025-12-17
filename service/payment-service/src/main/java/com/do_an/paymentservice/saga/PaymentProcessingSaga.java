@@ -38,75 +38,136 @@ public class PaymentProcessingSaga {
     private UUID paymentId;
     private UUID invoiceId;
     private String deadlineId;
+    
+    // ✅ Track command sending để đảm bảo idempotency
+    private boolean invoicePaidCommandSent = false;
+    private boolean invoiceCancelCommandSent = false;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "paymentId")
     public void on(PaymentInitiatedEvent event) {
+        log.info("🔵 [SAGA START] PaymentInitiatedEvent: paymentId={}, invoiceId={}", 
+                event.getPaymentId(), event.getInvoiceId());
+        
+        // ✅ Idempotency check
+        if (this.paymentId != null) {
+            log.warn("⚠️ PaymentInitiatedEvent already processed for paymentId={}, skipping...", 
+                    event.getPaymentId());
+            return;
+        }
+
         this.paymentId = event.getPaymentId();
         this.invoiceId = event.getInvoiceId();
-        log.info("Bắt đầu phiên thanh toán: {}", paymentId);
 
         // Timeout 30 phút cho mã QR
-        this.deadlineId = deadlineManager.schedule(Duration.ofMinutes(30),"paymentSessionTimeout", this.paymentId);
+        this.deadlineId = deadlineManager.schedule(
+                Duration.ofMinutes(30),
+                "paymentSessionTimeout", 
+                this.paymentId
+        );
+        
+        log.info("⏰ Đã thiết lập timeout 30 phút cho payment session: {}", paymentId);
     }
 
     @EndSaga
     @SagaEventHandler(associationProperty = "paymentId")
     public void on(PaymentProcessedEvent event) {
-        log.info("Thanh toán thành công. Cập nhật Invoice {} sang PAID.", event.getInvoiceId());
+        log.info("✅ [SAGA SUCCESS] PaymentProcessedEvent: paymentId={}, invoiceId={}", 
+                event.getPaymentId(), event.getInvoiceId());
 
         cancelDeadline();
         
-        commandGateway.send(new MarkInvoiceAsPaidCommand(event.getInvoiceId()));
+        // ✅ Idempotency check: Chỉ gửi command một lần
+        if (!invoicePaidCommandSent) {
+            invoicePaidCommandSent = true;
+            
+            log.info("📤 Sending MarkInvoiceAsPaidCommand for invoice {}", event.getInvoiceId());
+            commandGateway.send(new MarkInvoiceAsPaidCommand(event.getInvoiceId()))
+                .exceptionally(exception -> {
+                    log.error("❌ Lỗi kỹ thuật khi mark invoice as paid: {}", exception.getMessage());
+                    invoicePaidCommandSent = false; // Reset để có thể retry
+                    return null;
+                });
+        } else {
+            log.warn("⚠️ MarkInvoiceAsPaidCommand already sent for invoice {}, skipping...", 
+                    event.getInvoiceId());
+        }
 
-        //Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
-        //commandGateway.send(new ConfirmMedicineDispenseCommand());
+        // TODO: Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
+        // commandGateway.send(new ConfirmMedicineDispenseCommand());
+        
+        log.info("🎉 Payment Saga completed successfully for payment {}", event.getPaymentId());
     }
 
     @EndSaga
     @SagaEventHandler(associationProperty = "paymentId")
     public void on(PaymentFailedEvent event) {
-        if ("TIMEOUT".equals(event.getStatus())) {
-            log.info("🛑 Giao dịch TIMEOUT. Thực hiện Hủy Hóa Đơn và Trả Thuốc.");
-            this.deadlineId = null;
-            commandGateway.send(new CancelInvoiceCommand(
-                    this.invoiceId,
-                    "Hủy do hết hạn thanh toán (Timeout)"
-            ));
+        log.warn("❌ [SAGA FAILED] PaymentFailedEvent: paymentId={}, status={}, reason={}", 
+                event.getPaymentId(), event.getStatus(), event.getReason());
 
+        if ("TIMEOUT".equals(event.getStatus())) {
+            log.info("⏰ Giao dịch TIMEOUT. Thực hiện Hủy Hóa Đơn và Trả Thuốc.");
+            this.deadlineId = null;
+            
+            // ✅ Idempotency check: Chỉ gửi command một lần
+            if (!invoiceCancelCommandSent) {
+                invoiceCancelCommandSent = true;
+                
+                log.info("📤 Sending CancelInvoiceCommand for invoice {} due to timeout", this.invoiceId);
+                commandGateway.send(new CancelInvoiceCommand(
+                        this.invoiceId,
+                        "Hủy do hết hạn thanh toán (Timeout 30 phút)"
+                )).exceptionally(exception -> {
+                    log.error("❌ Lỗi kỹ thuật khi cancel invoice: {}", exception.getMessage());
+                    invoiceCancelCommandSent = false; // Reset để có thể retry
+                    return null;
+                });
+            } else {
+                log.warn("⚠️ CancelInvoiceCommand already sent for invoice {}, skipping...", 
+                        this.invoiceId);
+            }
+
+        } else if ("CANCELLED".equals(event.getStatus())) {
+            log.info("🚫 Người dùng đã hủy thanh toán. Giữ nguyên hóa đơn để có thể thanh toán lại.");
+            cancelDeadline();
+            
         } else {
             log.info("⚠️ Giao dịch thất bại do: {}. Giữ nguyên Hóa đơn để thử lại.", event.getReason());
             cancelDeadline();
         }
 
-
-        //Thông báo Frontend (Notification Service sẽ lắng nghe event này hoặc bạn bắn event notification riêng)
-
-
+        // TODO: Thông báo Frontend qua Notification Service
+        log.info("💬 Payment failed notification should be sent to frontend");
     }
 
     
     @DeadlineHandler(deadlineName = "paymentSessionTimeout")
     public void onTimeout() {
-        log.info("Saga: Timeout 30p. Tự động đánh dấu Payment là FAILED.");
+        log.warn("⏰ [SAGA TIMEOUT] Payment session timeout sau 30 phút: paymentId={}", paymentId);
         
+        // ✅ Gửi command để update payment status sang TIMEOUT
+        log.info("📤 Sending UpdatePaymentStatusCommand to mark payment as TIMEOUT");
         commandGateway.send(new UpdatePaymentStatusCommand(
                 paymentId,
                 PaymentStatus.TIMEOUT.toString(),
-                "Thanh toán thất bại do mã hết hạn cho thử lại"
-        ));
+                "Thanh toán timeout - Hết hạn mã QR sau 30 phút"
+        )).exceptionally(exception -> {
+            log.error("❌ Lỗi khi update payment status to TIMEOUT: {}", exception.getMessage());
+            return null;
+        });
     }
 
     private void cancelDeadline() {
         if (deadlineId != null) {
             try {
+                log.info("🔕 Cancelling deadline: {}", deadlineId);
                 deadlineManager.cancelSchedule("paymentSessionTimeout", deadlineId);
+                log.info("✅ Deadline cancelled successfully");
             } catch (Exception e) {
-                log.debug("Deadline {} đã không còn tồn tại để hủy (có thể đã chạy xong).", deadlineId);
+                log.debug("ℹ️ Deadline {} đã không còn tồn tại để hủy (có thể đã timeout rồi)", deadlineId);
             }
             deadlineId = null;
         }
-
     }
 
     
