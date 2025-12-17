@@ -1,5 +1,7 @@
 package com.main_project.patient_service.controller;
 
+import com.main_project.patient_service.dto.ConditionRequestDTO;
+import com.main_project.patient_service.dto.ConditionResponseDTO;
 import com.main_project.patient_service.dto.MedicalHistoryRequestDTO;
 import com.main_project.patient_service.dto.MedicalHistoryResponseDTO;
 import com.main_project.patient_service.service.IMedicalHistoryService;
@@ -44,11 +46,6 @@ public class MedicalHistoryController {
         return ResponseEntity.ok(medicalHistoryService.getMedicalHistoriesByAppointment(appointmentId));
     }
 
-    @GetMapping("/disease")
-    public ResponseEntity<List<MedicalHistoryResponseDTO>> searchByDisease(@RequestParam("q") String diseaseKeyword) {
-        return ResponseEntity.ok(medicalHistoryService.searchMedicalHistoriesByDisease(diseaseKeyword));
-    }
-
     @PostMapping
     public ResponseEntity<MedicalHistoryResponseDTO> createMedicalHistory(
             @Valid @RequestBody MedicalHistoryRequestDTO request) {
@@ -77,6 +74,29 @@ public class MedicalHistoryController {
         try {
             medicalHistoryService.deleteMedicalHistory(id);
             return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{medicalHistoryId}/conditions")
+    public ResponseEntity<ConditionResponseDTO> addConditionToMedicalHistory(
+            @PathVariable UUID medicalHistoryId,
+            @Valid @RequestBody ConditionRequestDTO conditionRequest) {
+        try {
+            ConditionResponseDTO created = medicalHistoryService.addConditionToMedicalHistory(medicalHistoryId, conditionRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/byAppointmentId")
+    public ResponseEntity<MedicalHistoryResponseDTO> updateMedicalHistoryByAppointmentId(
+            @Valid @RequestBody MedicalHistoryRequestDTO request) {
+        try {
+            MedicalHistoryResponseDTO updated = medicalHistoryService.updateMedicalHistoryByAppointmentId(request);
+            return ResponseEntity.ok(updated);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.notFound().build();
         }

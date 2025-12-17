@@ -63,13 +63,16 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
       const patientId = mh.patientId;
 
       // Ghi chú bác sĩ từ MedicalHistory
-      const notes = [mh.diagnosis, mh.treatment, mh.symptoms].filter(Boolean).join('. ');
+      const notes = [
+        mh.symptoms,
+        ...(mh.conditions || []).map(c => c.name).filter(Boolean)
+      ].filter(Boolean).join('. ');
       setDoctorNotes(
         [
-          mh.diagnosis ? `Chẩn đoán: ${mh.diagnosis}` : '',
-          mh.disease ? `Bệnh: ${mh.disease}` : '',
           mh.symptoms ? `Triệu chứng: ${mh.symptoms}` : '',
-          mh.treatment ? `Điều trị: ${mh.treatment}` : '',
+          ...(mh.conditions || []).map(c => 
+            `${c.toothNumber ? `Răng ${c.toothNumber}: ` : ''}${c.name || ''}${c.status ? ` (${c.status})` : ''}${c.treatment ? ` - ${c.treatment}` : ''}`
+          ).filter(Boolean)
         ].filter(Boolean).join('\n')
       );
 

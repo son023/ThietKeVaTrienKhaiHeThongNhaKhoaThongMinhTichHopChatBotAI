@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS public.underlying_disease CASCADE;
 DROP TABLE IF EXISTS public.allergy CASCADE;
 DROP TABLE IF EXISTS public.medical_history CASCADE;
 DROP TABLE IF EXISTS public.patient CASCADE;
-
+DROP TABLE IF EXISTS public.condition CASCADE;
 CREATE TABLE IF NOT EXISTS public.patient
 (
     user_id          UUID NOT NULL,
@@ -86,10 +86,7 @@ CREATE TABLE IF NOT EXISTS public.medical_history
     id                 UUID NOT NULL,
     appointment_id     UUID,
     created_at         TIMESTAMP WITH TIME ZONE,
-    diagnosis          VARCHAR(255),
-    disease            VARCHAR(255),
     symptoms           VARCHAR(255),
-    treatment          VARCHAR(255),
     updated_at         TIMESTAMP WITH TIME ZONE,
                                      patient_profile_id UUID NOT NULL, -- Khóa ngoại tham chiếu đến patient
 
@@ -106,6 +103,24 @@ CREATE TABLE IF NOT EXISTS public.medical_history
 -- Thêm Index
 -- ---------------------------------------------------------------------
 CREATE INDEX idx_medical_history_patient_id ON public.medical_history (patient_profile_id);
+
+
+--- Tạo Bảng condition
+CREATE TABLE IF NOT EXISTS public.condition
+(
+    id                 UUID PRIMARY KEY,
+    medical_history_id UUID NOT NULL,
+    tooth_number        INT,
+    name               VARCHAR(255),
+    status             VARCHAR(50),
+    treatment          VARCHAR(255),
+    surface            VARCHAR(255),
+
+    CONSTRAINT fk_condition_medical_history
+    FOREIGN KEY (medical_history_id)
+    REFERENCES public.medical_history (id)
+    ON DELETE CASCADE
+);
 
 -- ---------------------------------------------------------------------
 -- Bảng 5: allergy (Danh mục dị ứng - Master Data)
@@ -190,16 +205,13 @@ VALUES (
     InsertMedicalHistory1 AS (
 -- 3. Tạo dữ liệu cho Bảng MEDICAL_HISTORY (Hồ sơ 1 - Bệnh nhân 1)
 INSERT INTO public.medical_history (
-    id, appointment_id, created_at, diagnosis, disease, symptoms, treatment, updated_at, patient_profile_id
+    id, appointment_id, created_at, symptoms, updated_at, patient_profile_id
 )
 SELECT
-    gen_random_uuid(),
+    '11111111-1111-1111-1111-111111111111'::UUID,
     gen_random_uuid(),
     t1.current_ts - INTERVAL '2 months',
-    'Viêm họng cấp',
-    'J02.9 - Acute pharyngitis, unspecified',
     'Đau rát họng, sốt nhẹ, ho khan',
-    'Kháng sinh, giảm đau, nghỉ ngơi',
     t1.current_ts - INTERVAL '2 months',
     t1.patient_id
 FROM InsertPatient t1
@@ -207,19 +219,29 @@ FROM InsertPatient t1
     )
 -- 4. Tạo dữ liệu cho Bảng MEDICAL_HISTORY (Hồ sơ 2 - Bệnh nhân 2)
 INSERT INTO public.medical_history (
-    id, appointment_id, created_at, diagnosis, disease, symptoms, treatment, updated_at, patient_profile_id
+    id, appointment_id, created_at, symptoms, updated_at, patient_profile_id
 )
 SELECT
-    gen_random_uuid(),
+    '22222222-2222-2222-2222-222222222222'::UUID,
     gen_random_uuid(),
     t2.current_ts_2 - INTERVAL '1 month',
-    'Đau dạ dày',
-    'K29.7 - Gastritis, unspecified',
     'Đau bụng, buồn nôn, khó tiêu',
-    'Thuốc giảm acid, chế độ ăn uống',
     t2.current_ts_2 - INTERVAL '1 month',
     t2.patient_id_2
 FROM InsertPatient2 t2;
+
+-- -------------------------
+-- Insert sample data for condition
+-- -------------------------
+-- Condition for Medical History 1 (Patient 1)
+INSERT INTO public.condition (id, medical_history_id, tooth_number, name, status, treatment, surface) VALUES
+    ('b1111111-1111-1111-1111-111111111111'::UUID, '11111111-1111-1111-1111-111111111111'::UUID, 18, 'Sâu răng', 'ACTIVE', 'Trám răng composite', 'Mặt nhai'),
+    ('b2222222-2222-2222-2222-222222222222'::UUID, '11111111-1111-1111-1111-111111111111'::UUID, 25, 'Viêm tủy răng', 'TREATED', 'Điều trị tủy răng', 'Toàn bộ răng');
+
+-- Condition for Medical History 2 (Patient 2)
+INSERT INTO public.condition (id, medical_history_id, tooth_number, name, status, treatment, surface) VALUES
+    ('b3333333-3333-3333-3333-333333333333'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 14, 'Viêm nướu', 'ACTIVE', 'Làm sạch răng, điều trị viêm nướu', NULL),
+    ('b4444444-4444-4444-4444-444444444444'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 32, 'Răng khôn mọc lệch', 'PENDING', 'Nhổ răng khôn', NULL);
 
 -- -------------------------
 -- Insert sample data for tooth_issue

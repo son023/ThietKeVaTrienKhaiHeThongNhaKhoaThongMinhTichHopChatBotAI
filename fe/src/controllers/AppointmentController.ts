@@ -27,6 +27,16 @@ export interface HoldSlotRequest {
   medicalServiceIds: string[];
 }
 
+export type AppointmentStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CHECKED"
+  | "IN_PROGRESS"
+  | "PROGRESSING"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "FAILED";
+
 class AppointmentController {
   private baseUrl = API_CONFIG.ENDPOINTS.APPOINTMENTS;
 
@@ -165,6 +175,17 @@ class AppointmentController {
       throw new Error(msg);
     }
     return this.getById(id);
+  }
+
+  async updateStatus(id: string, status: AppointmentStatus): Promise<AppointmentDTO> {
+    const res = await fetch(
+      createApiUrl(this.baseUrl, id, 'status') + `?status=${status}`,
+      {
+        method: 'PATCH',
+        headers: getApiHeaders(true),
+      }
+    );
+    return this.handleResponse<AppointmentDTO>(res);
   }
 }
 

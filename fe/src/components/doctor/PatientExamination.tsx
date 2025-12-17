@@ -9,7 +9,7 @@ import {
   Printer,
   Phone,
   Mail,
-  Sparkles, ThermometerSun, Stethoscope, Pill
+  Sparkles, ThermometerSun, Stethoscope, Pill, Plus, X
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -100,8 +100,25 @@ export function PatientExamination({
   const [attachments, setAttachments] = useState<MedicalAttachmentDTO[]>([]);
   const [dentalChartData, setDentalChartData] = useState<Record<string, string[]>>({});
   const [internalNote, setInternalNote] = useState("");
-  const [diagnosisDisease, setDiagnosisDisease] = useState<string>("");
-  const [diagnosisTooth, setDiagnosisTooth] = useState<string>("");
+  const [symptoms, setSymptoms] = useState<string>("");
+  const [conditions, setConditions] = useState<Array<{
+    toothNumber?: number;
+    name: string;
+    status?: string;
+    treatment?: string;
+    surface?: string;
+  }>>([]);
+  const [isAddConditionDialogOpen, setIsAddConditionDialogOpen] = useState(false);
+  const [newCondition, setNewCondition] = useState<{
+    toothNumber?: number;
+    name: string;
+    status: string;
+    treatment?: string;
+    surface?: string;
+  }>({
+    name: "",
+    status: "ACTIVE"
+  });
   const [labTestTypeId, setLabTestTypeId] = useState<string>("");
   const [labInstructions, setLabInstructions] = useState("");
   const [labTab, setLabTab] = useState<"request" | "results">("request");
@@ -112,6 +129,7 @@ export function PatientExamination({
   const [requestingLab, setRequestingLab] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const appointmentId = useRef<string | null>(null);
+  const [savingDraft, setSavingDraft] = useState(false);
 
   const Info = ({ label, value }: { label: string; value?: string }) => (
       <div>
@@ -246,6 +264,65 @@ export function PatientExamination({
     }
   };
 
+  const handleAddCondition = () => {
+    if (!newCondition.name || newCondition.name.trim() === "") {
+      toast.error("Vui lòng nhập tên tình trạng");
+      return;
+    }
+    setConditions([...conditions, { ...newCondition }]);
+    setNewCondition({
+      name: "",
+      status: "ACTIVE"
+    });
+    setIsAddConditionDialogOpen(false);
+    toast.success("Đã thêm chuẩn đoán lâm sàng");
+  };
+
+  const handleRemoveCondition = (index: number) => {
+    setConditions(conditions.filter((_, i) => i !== index));
+  };
+
+  const buildConditionsFromChart = () => {
+    const conditionsFromChart: Array<{
+      toothNumber?: number;
+      name?: string;
+      status?: string;
+      treatment?: string;
+      surface?: string;
+    }> = [];
+
+    Object.entries(dentalChartData).forEach(([toothNumber, toothConditions]) => {
+      if (toothConditions && toothConditions.length > 0) {
+        conditionsFromChart.push({
+          toothNumber: Number(toothNumber),
+          name: toothConditions.join(", "),
+          status: "ACTIVE",
+          treatment: internalNote?.slice(0, 250) || undefined,
+        });
+      }
+    });
+
+    return conditionsFromChart;
+  };
+
+  const upsertMedicalHistoryByAppointment = async () => {
+    if (!patientId) {
+      throw new Error("Thiếu mã bệnh nhân");
+    }
+    if (!appointmentId.current) {
+      throw new Error("Không tìm thấy lịch hẹn đang khám");
+    }
+
+    const payload = {
+      appointmentId: appointmentId.current,
+      patientId,
+      symptoms: symptoms.trim() || undefined,
+      conditions: conditions.length > 0 ? conditions : undefined,
+    };
+
+    return medicalHistoryController.updateByAppointment(payload);
+  };
+
   const handleSaveComplete = async () => {
     if (!patientId) {
       toast.error("Thiếu mã bệnh nhân");
@@ -256,57 +333,66 @@ export function PatientExamination({
       return;
     }
 
-    const trimmedNote = currentNote?.slice(0, 250);
-    const diseaseValue = diagnosisDisease
-        ? `${diagnosisDisease}${
-            diagnosisTooth ? ` - Răng ${diagnosisTooth}` : ""
-        }`
-        : undefined;
     setSaving(true);
     try {
-      await Promise.all([
-        medicalHistoryController.create({
-          appointmentId: appointmentId.current,
-          patientId,
-          diagnosis: trimmedNote || undefined,
-          disease: diseaseValue,
-          symptoms: undefined,
-          treatment: internalNote?.slice(0, 250) || undefined,
-        }),
-        patientController.updateProfile(patientId, {
-          userId: patientId,
-          toothIssues: Object.entries(dentalChartData).map(
-              ([toothNumber, conditions]) => ({
-                toothNumber: Number(toothNumber),
-                status: "ACTIVE",
-                description: conditions.join(", "),
-              })
-          ),
-        }),
-      ]);
+      await upsertMedicalHistoryByAppointment();
+
+      await patientController.updateProfile(patientId, {
+        userId: patientId,
+        toothIssues: Object.entries(dentalChartData).map(
+          ([toothNumber, toothConditions]) => ({
+            toothNumber: Number(toothNumber),
+            status: "ACTIVE",
+            description: toothConditions.join(", "),
+          })
+        ),
+      });
+
+      await appointmentController.updateStatus(
+        appointmentId.current,
+        "COMPLETED"
+      );
+
       toast.success("Đã lưu và hoàn tất khám");
+      localStorage.removeItem("currentAppointmentId");
+
+      setSymptoms("");
+      setConditions([]);
+      setDentalChartData({});
+      setInternalNote("");
     } catch (err) {
       toast.error(
-          err instanceof Error ? err.message : "Không thể lưu thông tin khám"
+        err instanceof Error ? err.message : "Không thể lưu thông tin khám"
       );
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSaveDraft = () => {
-    localStorage.setItem(
-        "examDraft",
-        JSON.stringify({
-          patientId,
-          currentNote,
-          internalNote,
-          diagnosisDisease,
-          diagnosisTooth,
-          dentalChartData,
-        })
-    );
-    toast.success("Đã lưu nháp cục bộ");
+  const handleSaveDraft = async () => {
+    if (!patientId) {
+      toast.error("Thiếu mã bệnh nhân");
+      return;
+    }
+    if (!appointmentId.current) {
+      toast.error("Không tìm thấy lịch hẹn đang khám");
+      return;
+    }
+
+    setSavingDraft(true);
+    try {
+      await upsertMedicalHistoryByAppointment();
+
+      toast.success("Đã lưu nháp khám ");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Không thể lưu nháp thông tin khám"
+      );
+    } finally {
+      setSavingDraft(false);
+    }
   };
 
   const handleSendLabRequest = async () => {
@@ -564,7 +650,7 @@ export function PatientExamination({
                         Chưa có lịch sử điều trị.
                       </p>
                   )}
-                  {histories.map((item) => (
+                  {histories.map((item, idx) => (
                       <Card
                           key={item.id}
                           className="rounded-[10px] border-[#e8e8e8] hover:border-[#3FB5FF] transition-all"
@@ -580,10 +666,16 @@ export function PatientExamination({
                         </span>
                           </div>
                           <p className="text-sm text-[#01304e] line-clamp-1">
-                            {item.diagnosis || "Chưa có chẩn đoán"}
+                            {item.symptoms || (item.conditions && item.conditions.length > 0 
+                              ? item.conditions.map(c => c.name).filter(Boolean).join(", ") 
+                              : "Chưa có thông tin")}
                           </p>
                           <p className="text-xs text-[#333333]/60 line-clamp-2">
-                            {item.disease || item.treatment || "Không có ghi chú"}
+                            {item.conditions && item.conditions.length > 0
+                              ? `${item.conditions.length} tình trạng: ${item.conditions.map(c => 
+                                  c.toothNumber ? `Răng ${c.toothNumber}` : c.name
+                                ).filter(Boolean).join(", ")}`
+                              : "Không có ghi chú"}
                           </p>
                         </CardContent>
                       </Card>
@@ -631,54 +723,87 @@ export function PatientExamination({
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="md:col-span-2">
+                    <div className="space-y-4">
+                      {/* Triệu chứng */}
+                      <div>
                         <Label className="text-[#01304e] mb-2 block">
-                          Ghi chú lâm sàng
+                          Triệu chứng
                         </Label>
                         <Textarea
-                            value={currentNote}
-                            onChange={(e) => setCurrentNote(e.target.value)}
-                            placeholder="Nhập ghi chú lâm sàng..."
-                            className="h-full min-h-[300px] font-mono"
+                            value={symptoms}
+                            onChange={(e) => setSymptoms(e.target.value)}
+                            placeholder="Nhập triệu chứng của bệnh nhân..."
+                            className="rounded-[10px] h-[100px]"
                         />
                       </div>
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-[#01304e] mb-1 block">
-                            Bệnh răng
+
+                      {/* Chuẩn đoán lâm sàng */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-[#01304e] block">
+                            Chuẩn đoán lâm sàng
                           </Label>
-                          <Select
-                              value={diagnosisDisease}
-                              onValueChange={setDiagnosisDisease}
-                          >
-                            <SelectTrigger className="rounded-[10px]">
-                              <SelectValue placeholder="Chọn bệnh răng" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {dentalDiseaseOptions.map((opt) => (
-                                  <SelectItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-[#01304e] mb-1 block">
-                            Răng số
-                          </Label>
-                          <Input
-                              type="number"
-                              min={11}
-                              max={48}
-                              placeholder="VD: 16"
-                              value={diagnosisTooth}
-                              onChange={(e) => setDiagnosisTooth(e.target.value)}
+                          <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsAddConditionDialogOpen(true)}
                               className="rounded-[10px]"
-                          />
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Thêm chuẩn đoán
+                          </Button>
                         </div>
+                        
+                        {conditions.length === 0 ? (
+                          <div className="border border-dashed border-[#e8e8e8] rounded-[10px] p-6 text-center">
+                            <p className="text-sm text-[#666666]">Chưa có chuẩn đoán lâm sàng nào</p>
+                            <p className="text-xs text-[#999999] mt-1">Nhấn "Thêm chuẩn đoán" để thêm mới</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {conditions.map((condition, index) => (
+                              <div
+                                key={index}
+                                className="border border-[#e8e8e8] rounded-[10px] p-3 bg-[#f5fbff] flex items-start justify-between"
+                              >
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {condition.toothNumber && (
+                                      <Badge variant="outline" className="text-xs">
+                                        Răng {condition.toothNumber}
+                                      </Badge>
+                                    )}
+                                    {condition.status && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {condition.status}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm font-medium text-[#01304e]">{condition.name}</p>
+                                  {condition.treatment && (
+                                    <p className="text-xs text-[#666666] mt-1">Điều trị: {condition.treatment}</p>
+                                  )}
+                                  {condition.surface && (
+                                    <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
+                                  )}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveCondition(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
+
+                     
                     </div>
 
                   </TabsContent>
@@ -894,7 +1019,7 @@ export function PatientExamination({
                   <Button
                       className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
                       onClick={handleSaveComplete}
-                      disabled={saving}
+                      disabled={saving || savingDraft}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
@@ -903,9 +1028,10 @@ export function PatientExamination({
                       variant="outline"
                       className="w-full rounded-[10px] border-[#e8e8e8]"
                       onClick={handleSaveDraft}
+                      disabled={saving || savingDraft}
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Lưu nháp
+                    {savingDraft ? "Đang lưu nháp..." : "Lưu nháp"}
                   </Button>
                   <Button
                       variant="outline"
@@ -945,6 +1071,107 @@ export function PatientExamination({
             }}
         />
 
+        <Dialog open={isAddConditionDialogOpen} onOpenChange={setIsAddConditionDialogOpen}>
+          <DialogContent className="max-w-md bg-white">
+            <DialogHeader>
+              <DialogTitle>Thêm chuẩn đoán lâm sàng</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Tên tình trạng <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={newCondition.name}
+                  onChange={(e) => setNewCondition({ ...newCondition, name: e.target.value })}
+                  placeholder="VD: Sâu răng, Viêm nướu..."
+                  className="rounded-[10px]"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Răng số (tùy chọn)
+                </Label>
+                <Input
+                  type="number"
+                  min={11}
+                  max={48}
+                  value={newCondition.toothNumber || ""}
+                  onChange={(e) => setNewCondition({ 
+                    ...newCondition, 
+                    toothNumber: e.target.value ? Number(e.target.value) : undefined 
+                  })}
+                  placeholder="VD: 16, 25..."
+                  className="rounded-[10px]"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Trạng thái
+                </Label>
+                <Select
+                  value={newCondition.status || "ACTIVE"}
+                  onValueChange={(value) => setNewCondition({ ...newCondition, status: value })}
+                >
+                  <SelectTrigger className="rounded-[10px] bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="TREATED">TREATED</SelectItem>
+                    <SelectItem value="PENDING">PENDING</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Điều trị (tùy chọn)
+                </Label>
+                <Input
+                  value={newCondition.treatment || ""}
+                  onChange={(e) => setNewCondition({ ...newCondition, treatment: e.target.value })}
+                  placeholder="VD: Trám răng composite..."
+                  className="rounded-[10px]"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Bề mặt (tùy chọn)
+                </Label>
+                <Input
+                  value={newCondition.surface || ""}
+                  onChange={(e) => setNewCondition({ ...newCondition, surface: e.target.value })}
+                  placeholder="VD: Mặt nhai, Mặt trong..."
+                  className="rounded-[10px]"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddConditionDialogOpen(false);
+                    setNewCondition({ name: "", status: "ACTIVE" });
+                  }}
+                  className="rounded-[10px]"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleAddCondition}
+                  className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
+                >
+                  Thêm
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isVisitDialogOpen} onOpenChange={setIsVisitDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto rounded-[10px] bg-white">
             <DialogHeader>
@@ -967,8 +1194,19 @@ export function PatientExamination({
                   <div className="grid grid-cols-2 gap-4 p-4 bg-[#d8f0ff]/30 rounded-[10px]">
                     <Info label="Ngày khám" value={formatDateTime(selectedVisit?.createdAt)} />
                     <Info label="Bác sĩ" value={selectedVisit.doctorName} />
-                    <Info label="Chẩn đoán" value={selectedVisit.diagnosis} />
-                    <Info label="Điều trị" value={selectedVisit.treatment} />
+                    <Info label="Triệu chứng" value={selectedVisit.symptoms || "Không có"} />
+                    {selectedVisit.conditions && selectedVisit.conditions.length > 0 && (
+                      <div>
+                        <p className="text-xs text-[#666666] mb-1">Tình trạng ({selectedVisit.conditions.length}):</p>
+                        {selectedVisit.conditions.map((cond: any, idx: number) => (
+                          <div key={idx} className="text-sm text-[#333333] mb-1 pl-2 border-l-2 border-[#3FB5FF]">
+                            {cond.toothNumber && `Răng ${cond.toothNumber}: `}
+                            {cond.name} {cond.status && `(${cond.status})`}
+                            {cond.treatment && ` - ${cond.treatment}`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Clinical Notes */}
