@@ -190,4 +190,35 @@
   [class*='font-["Roboto:Regular'] {
     font-weight: 400 !important;
   }
+
+  /* === NEW CODE ADDED HERE === */
+
+  /* Class tiện ích: Khi gán class này vào thẻ cha, toàn bộ text con bên trong sẽ chuyển trắng */
+  .on-accent,
+  .on-dark {
+    --text-strong: #ffffff !important; /* Tiêu đề (h1-h6) chuyển trắng tinh */
+    --text-regular: #f0f9ff !important; /* Text thường chuyển trắng hơi xanh (cho dịu mắt) */
+    --text-muted: #bae6fd !important; /* Text phụ (mờ) chuyển xanh nhạt */
+
+    --accent: #ffffff !important; /* Link chuyển trắng */
+    --accent-light: #dbeafe !important; /* Link hover chuyển xanh nhạt */
+    --border-soft: rgba(
+      255,
+      255,
+      255,
+      0.2
+    ) !important; /* Viền chuyển thành mờ trắng */
+  }
+
+  /* Tự động áp dụng chữ trắng cho các class background màu xanh của bạn */
+  .bg-primary,
+  .bg-accent,
+  [class*="bg-[#05619a]"], /* Tự động bắt màu hex cứng này */
+  [class*="bg-[#3fb5ff]"]  /* Tự động bắt màu hex cứng này */ {
+    --text-strong: #ffffff !important;
+    --text-regular: #f0f9ff !important;
+    --text-muted: #bae6fd !important;
+    --accent: #ffffff !important;
+    --border-soft: rgba(255, 255, 255, 0.2) !important;
+  }
 }

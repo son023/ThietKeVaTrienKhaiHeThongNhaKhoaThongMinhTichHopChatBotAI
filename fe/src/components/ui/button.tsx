@@ -9,20 +9,51 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // DEFAULT: Nút chính.
+        // Hover: Dùng màu strong (đậm hơn) để tạo cảm giác bấm.
+        // Shadow: Shadow màu primary tạo hiệu ứng phát sáng nhẹ.
         default:
-          "bg-primary text-white hover:bg-primary-light shadow-md shadow-primary/20",
+          "bg-primary text-white shadow-lg shadow-primary/25 hover:bg-primary-strong hover:shadow-primary/40",
+
+        // PRIMARY: (Giống Default - giữ lại để tương thích ngược nếu cần)
         primary:
-          "bg-primary text-white hover:bg-primary-light shadow-md shadow-primary/20",
-        secondary:
-          "bg-secondary-deep text-white hover:bg-secondary-deep/90 shadow-md shadow-secondary-deep/20",
+          "bg-primary text-white shadow-lg shadow-primary/25 hover:bg-primary-strong hover:shadow-primary/40",
+
+        // DESTRUCTIVE: Nút hành động nguy hiểm (Xóa/Hủy)
+        destructive: "bg-red-500 text-white shadow-md hover:bg-red-600",
+
+        // OUTLINE: Nút phụ.
+        // Bình thường: Viền xanh, nền trong suốt.
+        // Hover: "Fill" đầy màu xanh, chữ trắng.
         outline:
-          "border border-primary text-primary bg-transparent hover:bg-primary hover:text-white",
+          "border-2 border-primary bg-white text-primary hover:bg-primary hover:text-white hover:border-primary",
+
+        // SECONDARY: Nút phụ thứ cấp.
+        // Dùng màu secondary (Deep Blue/Beige) tùy setup của bạn.
+        secondary: "bg-secondary text-white shadow-md hover:bg-secondary/90",
+
+        // GHOST: Dùng cho Navbar/Sidebar.
+        // Bình thường: Nền trong suốt, Chữ xanh (hoặc màu xám đậm).
+        // Hover: Nền Primary, Chữ Trắng (Đúng yêu cầu).
         ghost:
-          "bg-transparent text-primary hover:bg-primary hover:text-white",
+          "bg-transparent text-primary hover:bg-primary hover:text-white hover:shadow-md",
+
+        // LINK: Dạng link thuần túy
+        link: "text-primary underline-offset-4 hover:underline",
+
+        // ACCENT: Nút nhấn đặc biệt (CTA Sale/Hot)
         accent:
-          "bg-accent-pink text-white hover:bg-[#e736a7] shadow-md shadow-accent-pink/25",
+          "bg-accent-pink text-white shadow-lg shadow-accent-pink/30 hover:bg-[#e736a7]",
+
+        // SUBTLE: Nút chìm (Text only)
+        // Bình thường: Nền trong, chữ Primary.
+        // Hover: Nền vẫn trong, chữ đậm hơn (Primary Strong).
+        // Active (Click): Chữ đậm hơn nữa (Dark Blue).
+        subtle:
+          "bg-transparent text-primary hover:bg-transparent hover:text-primary-strong active:text-[#004B7D]",
       },
       size: {
+        msm: "h-8 text-sm",
         sm: "h-9 px-3 text-sm",
         default: "h-11 px-4 text-base",
         lg: "h-12 px-5 text-base",

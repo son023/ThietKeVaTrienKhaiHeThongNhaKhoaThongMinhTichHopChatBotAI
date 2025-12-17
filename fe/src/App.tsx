@@ -239,7 +239,10 @@ function PublicApp({ onLogin }: PublicAppProps) {
         return (
           <div className="min-h-screen bg-[#fcfeff] pt-[104px] px-[80px] py-[80px]">
             <div className="container mx-auto">
-              <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[48px] mb-[40px]">
+              {/* <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[48px] mb-[40px]">
+                Về chúng tôi
+              </h1> */}
+              <h1 className="font-display font-bold text-[var(--text-strong)] text-5xl mb-10 mt-10">
                 Về chúng tôi
               </h1>
               <div className="space-y-[24px] max-w-[800px]">

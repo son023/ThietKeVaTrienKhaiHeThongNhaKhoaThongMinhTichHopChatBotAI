@@ -41,34 +41,41 @@ export function PublicHeader({ onNavigate, onLoginClick, onBookingClick }: Publi
         {/* Navigation Menu */}
         <nav className="flex items-center gap-[30px]">
           {menuItems.map((item) => (
-            <button
+            <Button
               key={item.id}
+              variant="ghost"
               onClick={() => handleMenuClick(item.id)}
-              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] transition-colors ${
-                activeMenu === item.id ? 'text-[#01304e]' : 'text-[#666666] hover:text-[#01304e]'
+              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${
+                activeMenu === item.id ? "text-primary hover:text-primary hover:bg-accent" : ""
               }`}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
         </nav>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-[10px]">
-          <Button
-            onClick={onLoginClick}
-            variant="outline"
-            className="bg-[#fcfeff] text-[#1882c3] border-0 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] h-[50px] px-[20px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#f0f9ff]"
-          >
-            Đăng nhập
-          </Button>
-          <Button
-            onClick={onBookingClick}
-            className="bg-[#3fb5ff] text-[#fcfeff] border-0 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] h-[51px] px-[20px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#3fb5ff]/90"
-          >
-            Đặt lịch hẹn
-          </Button>
-        </div>
+        <div className="flex items-center gap-3"> {/* gap-[10px] ~ gap-2.5 hoặc gap-3 */}
+        {/* BUTTON 1: Đăng nhập */}
+        {/* Dùng variant "ghost" (hoặc "outline") như đã setup cho Navbar */}
+        {/* Font Inter sẽ tự động nhận, không cần khai báo */}
+        <Button 
+          onClick={onLoginClick} 
+          variant="outline" 
+        >
+          Đăng nhập
+        </Button>
+
+        {/* BUTTON 2: Đặt lịch hẹn */}
+        {/* Không cần ghi variant="default" vì nó là mặc định */}
+        {/* Xóa bg-[#3fb5ff], xóa font, xóa border... hệ thống tự lo */}
+        <Button 
+          onClick={onBookingClick}
+          variant= "primary"
+        >
+          Đặt lịch hẹn
+        </Button>
+      </div>
       </div>
     </header>
   );

@@ -65,7 +65,7 @@ export function ServiceCard({
           variant="ghost"
           className="w-full justify-between text-[#3fb5ff] hover:text-[#3fb5ff] hover:bg-[#ebf6fc] rounded-[12px] h-[44px] font-['Fz_Poppins:Medium',sans-serif] text-[15px] tracking-[0.5px] group-hover:bg-[#ebf6fc]"
         >
-          Tìm hi?u thêm
+          TÃ¬m hiá»ƒu thÃªm
           <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>

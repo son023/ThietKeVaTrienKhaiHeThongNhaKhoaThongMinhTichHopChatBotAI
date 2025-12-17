@@ -171,13 +171,15 @@ export function LoginPage({
                   Ghi nhớ đăng nhập
                 </span>
               </label>
-              <button
+              <Button
                 type="button"
-                className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[14px] hover:underline"
+                className="font-family hover:underline"
                 onClick={() => toast.info("Chức năng đang được phát triển")}
+                variant="subtle"
+                size="msm"
               >
                 Quên mật khẩu?
-              </button>
+              </Button>
             </div>
 
             <Button
@@ -193,12 +195,9 @@ export function LoginPage({
           <div className="mt-[32px] text-center">
             <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px]">
               Chưa có tài khoản?{" "}
-              <button
-                onClick={onNavigateToSignup}
-                className="text-[#3fb5ff] font-['Fz_Poppins:SemiBold',sans-serif] hover:underline"
-              >
+              <Button onClick={onNavigateToSignup} variant="subtle" size="msm">
                 Đăng ký ngay
-              </button>
+              </Button>
             </p>
           </div>
         </div>
