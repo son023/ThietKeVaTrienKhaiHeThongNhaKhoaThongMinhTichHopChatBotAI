@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 interface MyAppointmentsProps {
   doctorId?: string | null;
-  onNavigateToPatient: (id: string) => void;
+  onNavigateToPatient: (patientId: string, appointmentId: string) => void;
 }
 
 const statusMap: Record<string, { label: string; style: string }> = {

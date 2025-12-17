@@ -3,6 +3,7 @@ package com.main_project.patient_service.repository;
 import com.main_project.patient_service.entity.Patient;
 import com.main_project.patient_service.enums.BloodType;
 import com.main_project.patient_service.enums.Gender;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,7 +22,12 @@ import java.util.UUID;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
 
-    Optional<Patient> findByUserId(UUID id);
+    @EntityGraph(attributePaths = {
+        "patientAllergies",
+        "underlyingDiseases",
+        "toothIssues"
+    })
+    Optional<Patient> findByUserId(UUID userId);
 
     /**
      * Find patient with all relationships eagerly loaded.

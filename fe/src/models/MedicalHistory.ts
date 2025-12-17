@@ -1,16 +1,35 @@
+export interface ConditionDTO {
+  id?: string;
+  medicalHistoryId?: string;
+  toothNumber?: number;
+  name?: string;
+  status?: string;
+  treatment?: string;
+  surface?: string;
+}
+
+export interface ConditionRequest {
+  id?: string;
+  toothNumber?: number;
+  name?: string;
+  status?: string;
+  treatment?: string;
+  surface?: string;
+}
+
 export interface MedicalHistoryDTO {
   id?: string;
-  appointmentId: string;
+  appointmentId?: string;
   symptoms?: string;
-  treatment?: string;
-  diagnosis?: string;
-  disease?: string;
   createdAt?: string;
   updatedAt?: string;
   patientId: string;
+  conditions?: ConditionDTO[];
 }
 
-export type MedicalHistoryRequest = Omit<
-  MedicalHistoryDTO,
-  "id" | "createdAt" | "updatedAt"
->;
+export interface MedicalHistoryRequest {
+  appointmentId?: string;
+  symptoms?: string;
+  patientId: string;
+  conditions?: ConditionRequest[];
+}

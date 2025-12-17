@@ -1,24 +1,39 @@
 import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
 
+export interface ConditionDTO {
+  id?: string;
+  medicalHistoryId?: string;
+  toothNumber?: number;
+  name?: string;
+  status?: string;
+  treatment?: string;
+  surface?: string;
+}
+
+export interface ConditionRequest {
+  id?: string;
+  toothNumber?: number;
+  name?: string;
+  status?: string;
+  treatment?: string;
+  surface?: string;
+}
+
 export interface MedicalHistoryDTO {
   id: string;
-  appointmentId: string;
+  appointmentId?: string;
   symptoms?: string;
-  treatment?: string;
-  diagnosis?: string;
-  disease?: string;
   createdAt?: string;
   updatedAt?: string;
   patientId: string;
+  conditions?: ConditionDTO[];
 }
 
 export interface MedicalHistoryRequest {
   appointmentId: string;
   symptoms?: string;
-  treatment?: string;
-  diagnosis?: string;
-  disease?: string;
   patientId: string;
+  conditions?: ConditionRequest[];
 }
 
 class MedicalHistoryController {
@@ -68,13 +83,14 @@ class MedicalHistoryController {
     return this.handleResponse<MedicalHistoryDTO[]>(res);
   }
 
-  async searchByDisease(q: string): Promise<MedicalHistoryDTO[]> {
-    const res = await fetch(createApiUrl(`${this.baseUrl}/disease?q=${q}`), {
+  async addCondition(medicalHistoryId: string, condition: ConditionRequest): Promise<ConditionDTO> {
+    const res = await fetch(createApiUrl(this.baseUrl, medicalHistoryId, "conditions"), {
+      method: "POST",
       headers: getApiHeaders(true),
+      body: JSON.stringify(condition),
     });
-    return this.handleResponse<MedicalHistoryDTO[]>(res);
+    return this.handleResponse<ConditionDTO>(res);
   }
-
 
   async create(payload: MedicalHistoryRequest): Promise<MedicalHistoryDTO> {
     const res = await fetch(createApiUrl(this.baseUrl), {
@@ -87,6 +103,15 @@ class MedicalHistoryController {
 
   async update(id: string, payload: MedicalHistoryRequest): Promise<MedicalHistoryDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
+      method: "PUT",
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    return this.handleResponse<MedicalHistoryDTO>(res);
+  }
+
+  async updateByAppointment(payload: MedicalHistoryRequest): Promise<MedicalHistoryDTO> {
+    const res = await fetch(createApiUrl(this.baseUrl, "byAppointmentId"), {
       method: "PUT",
       headers: getApiHeaders(true),
       body: JSON.stringify(payload),

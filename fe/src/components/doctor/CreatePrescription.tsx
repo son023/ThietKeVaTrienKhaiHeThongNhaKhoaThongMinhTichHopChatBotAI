@@ -308,22 +308,23 @@ export function CreatePrescriptionEnhanced({
                                 {/* Medical History Info */}
                                 {medicalHistory && (
                                     <div className="pb-3 border-b space-y-2">
-                                        {medicalHistory.diagnosis && (
+                                        {medicalHistory.symptoms && (
                                             <div>
-                                                <p className="text-xs text-[#333333]/60">Chẩn đoán</p>
-                                                <p className="text-sm font-medium text-[#01304e]">{medicalHistory.diagnosis}</p>
+                                                <p className="text-xs text-[#333333]/60">Triệu chứng</p>
+                                                <p className="text-sm font-medium text-[#01304e]">{medicalHistory.symptoms}</p>
                                             </div>
                                         )}
-                                        {medicalHistory.disease && (
+                                        {medicalHistory.conditions && medicalHistory.conditions.length > 0 && (
                                             <div>
-                                                <p className="text-xs text-[#333333]/60">Bệnh</p>
-                                                <p className="text-sm font-medium text-[#01304e]">{medicalHistory.disease}</p>
-                                            </div>
-                                        )}
-                                        {medicalHistory.treatment && (
-                                            <div>
-                                                <p className="text-xs text-[#333333]/60">Điều trị</p>
-                                                <p className="text-sm text-[#333333]">{medicalHistory.treatment}</p>
+                                                <p className="text-xs text-[#333333]/60">Tình trạng ({medicalHistory.conditions.length})</p>
+                                                {medicalHistory.conditions.map((cond, idx) => (
+                                                    <div key={idx} className="text-sm text-[#333333] mt-1">
+                                                        {cond.toothNumber && <span className="font-medium">Răng {cond.toothNumber}: </span>}
+                                                        <span>{cond.name}</span>
+                                                        {cond.status && <span className="text-[#666666]"> ({cond.status})</span>}
+                                                        {cond.treatment && <div className="text-xs text-[#666666] mt-0.5">- {cond.treatment}</div>}
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                     </div>
