@@ -87,14 +87,17 @@ CREATE TABLE IF NOT EXISTS public.medical_history
     appointment_id     UUID,
     created_at         TIMESTAMP WITH TIME ZONE,
     symptoms           VARCHAR(255),
+    treatment          VARCHAR(255),
+    diagnosis          VARCHAR(255),
+    disease            VARCHAR(255),
     updated_at         TIMESTAMP WITH TIME ZONE,
-                                     patient_profile_id UUID NOT NULL, -- Khóa ngoại tham chiếu đến patient
+                                     patient_user_id UUID NOT NULL, -- Khóa ngoại tham chiếu đến patient
 
                                      CONSTRAINT medical_history_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại: Liên kết với bảng patient
     CONSTRAINT fk_medical_history_patient
-    FOREIGN KEY (patient_profile_id)
+    FOREIGN KEY (patient_user_id)
     REFERENCES public.patient (user_id)
                                  ON DELETE CASCADE
     );
@@ -174,117 +177,58 @@ CREATE INDEX idx_patient_allergy_allergy_id ON public.patient_allergy (allergy_i
 -- -------------------------
 -- Insert sample data
 -- -------------------------
-WITH InsertPatient AS (
--- 1. Tạo dữ liệu cho Bảng PATIENT (Bệnh nhân 1)
-INSERT INTO public.patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number)
-VALUES (
-    'd903022a-1000-4001-8001-000000000003',
-    '1990-05-15T00:00:00+07:00'::TIMESTAMP WITH TIME ZONE,
-    'MALE',
-    '123 Đường Nguyễn Huệ, Quận 1, TP. HCM',
-    '0901234567',
-    'A_POSITIVE',
-    'BHXH-900515'
-    )
-    RETURNING user_id AS patient_id, NOW() AS current_ts
-    ),
-    InsertPatient2 AS (
--- 2. Tạo dữ liệu cho Bảng PATIENT (Bệnh nhân 2)
-INSERT INTO public.patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number)
-VALUES (
-    'd903022a-1000-4001-8001-000000000008',
-    '1985-11-20T00:00:00+07:00'::TIMESTAMP WITH TIME ZONE,
-    'FEMALE',
-    '456 Đường Lê Lợi, Quận 3, TP. HCM',
-    '0987654321',
-    'B_NEGATIVE',
-    'BHXH-851120'
-    )
-    RETURNING user_id AS patient_id_2, NOW() AS current_ts_2
-    ),
-    InsertMedicalHistory1 AS (
--- 3. Tạo dữ liệu cho Bảng MEDICAL_HISTORY (Hồ sơ 1 - Bệnh nhân 1)
-INSERT INTO public.medical_history (
-    id, appointment_id, created_at, symptoms, updated_at, patient_profile_id
-)
-SELECT
-    '11111111-1111-1111-1111-111111111111'::UUID,
-    gen_random_uuid(),
-    t1.current_ts - INTERVAL '2 months',
-    'Đau rát họng, sốt nhẹ, ho khan',
-    t1.current_ts - INTERVAL '2 months',
-    t1.patient_id
-FROM InsertPatient t1
-    RETURNING id
-    )
--- 4. Tạo dữ liệu cho Bảng MEDICAL_HISTORY (Hồ sơ 2 - Bệnh nhân 2)
-INSERT INTO public.medical_history (
-    id, appointment_id, created_at, symptoms, updated_at, patient_profile_id
-)
-SELECT
-    '22222222-2222-2222-2222-222222222222'::UUID,
-    gen_random_uuid(),
-    t2.current_ts_2 - INTERVAL '1 month',
-    'Đau bụng, buồn nôn, khó tiêu',
-    t2.current_ts_2 - INTERVAL '1 month',
-    t2.patient_id_2
-FROM InsertPatient2 t2;
+INSERT INTO patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number) VALUES
+('00000000-0000-0000-0000-000000000101', '2002-03-18', 'FEMALE', '12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM', '0905123456', 'O+', 'HS-790123456'),
+('00000000-0000-0000-0000-000000000102', '2001-11-02', 'MALE',   '85 Lê Lợi, Q. Hải Châu, Đà Nẵng',          '0912345678', 'A+', 'HS-790223344'),
+('00000000-0000-0000-0000-000000000103', '2003-07-25', 'FEMALE', '220 Cầu Giấy, Q. Cầu Giấy, Hà Nội',         '0987654321', 'B+', 'HS-790998877');
 
--- -------------------------
--- Insert sample data for condition
--- -------------------------
--- Condition for Medical History 1 (Patient 1)
-INSERT INTO public.condition (id, medical_history_id, tooth_number, name, status, treatment, surface) VALUES
-    ('b1111111-1111-1111-1111-111111111111'::UUID, '11111111-1111-1111-1111-111111111111'::UUID, 18, 'Sâu răng', 'ACTIVE', 'Trám răng composite', 'Mặt nhai'),
-    ('b2222222-2222-2222-2222-222222222222'::UUID, '11111111-1111-1111-1111-111111111111'::UUID, 25, 'Viêm tủy răng', 'TREATED', 'Điều trị tủy răng', 'Toàn bộ răng');
+-- =========================================================
+-- 10) MEDICAL_HISTORY  (gắn appointment + patient + condition)
+-- =========================================================
+INSERT INTO medical_history (id, symptoms, treatment, diagnosis, disease, created_at, updated_at, appointment_id, patient_user_id) VALUES
+('00000000-0000-0000-0000-000000007001', 'Đau răng khi nhai', 'Trám composite', 'Sâu răng r16', 'Caries', '2025-12-16 09:20:00', '2025-12-16 09:20:00', '00000000-0000-0000-0000-000000005001', '00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000007002', 'Đau nhức kéo dài',  'Điều trị tủy',  'Viêm tủy r36', 'Pulpitis','2025-12-17 10:40:00','2025-12-17 10:40:00', '00000000-0000-0000-0000-000000005002', '00000000-0000-0000-0000-000000000102'),
+('00000000-0000-0000-0000-000000007003', 'Chảy máu chân răng', 'Cạo vôi',      'Viêm lợi',     'Gingivitis','2025-12-16 15:00:00','2025-12-16 15:00:00', '00000000-0000-0000-0000-000000005003', '00000000-0000-0000-0000-000000000103'),
+('00000000-0000-0000-0000-000000007004', 'Răng mẻ, ê nhẹ',     'Trám phục hồi', 'Mẻ răng',      'Chipped tooth','2025-12-18 16:40:00','2025-12-18 16:40:00','00000000-0000-0000-0000-000000005004','00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000007005', 'Đau vùng răng khôn', 'Nhổ răng',      'Răng khôn mọc lệch','Impacted tooth','2025-12-19 11:10:00','2025-12-19 11:10:00','00000000-0000-0000-0000-000000005005','00000000-0000-0000-0000-000000000103');
 
--- Condition for Medical History 2 (Patient 2)
-INSERT INTO public.condition (id, medical_history_id, tooth_number, name, status, treatment, surface) VALUES
-    ('b3333333-3333-3333-3333-333333333333'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 14, 'Viêm nướu', 'ACTIVE', 'Làm sạch răng, điều trị viêm nướu', NULL),
-    ('b4444444-4444-4444-4444-444444444444'::UUID, '22222222-2222-2222-2222-222222222222'::UUID, 32, 'Răng khôn mọc lệch', 'PENDING', 'Nhổ răng khôn', NULL);
 
--- -------------------------
--- Insert sample data for tooth_issue
--- -------------------------
--- Patient 1 has tooth issues
-INSERT INTO public.tooth_issue (id, tooth_number, status, description, diagnosed_date, note, patient_id) VALUES
-                                                                                                             (gen_random_uuid(), 18, 'ACTIVE', 'Cavity on upper right molar', '2024-10-15', 'Requires filling treatment', 'd903022a-1000-4001-8001-000000000003'),
-                                                                                                             (gen_random_uuid(), 25, 'TREATED', 'Root canal completed', '2024-08-20', 'Follow-up checkup needed in 6 months', 'd903022a-1000-4001-8001-000000000003');
+-- =========================================================
+-- 9) CONDITION + ALLERGY + UNDERLYING_DISEASE + PATIENT_ALLERGY + TOOTH_ISSUE
+-- =========================================================
+INSERT INTO condition (id, tooth_number, name, status, treatment, surface, medical_history_id) VALUES
+('00000000-0000-0000-0000-000000006001', 16, 'Sâu răng',        'ACTIVE', 'Trám composite',     'Mặt nhai', '00000000-0000-0000-0000-000000007001'),
+('00000000-0000-0000-0000-000000006002', 26, 'Viêm lợi',        'ACTIVE', 'Cạo vôi - vệ sinh',  'Quanh cổ răng', '00000000-0000-0000-0000-000000007001'),
+('00000000-0000-0000-0000-000000006003', 11, 'Mẻ răng',         'ACTIVE', 'Trám/Phục hình',     'Mặt ngoài', '00000000-0000-0000-0000-000000007002'),
+('00000000-0000-0000-0000-000000006004', 36, 'Viêm tủy',        'ACTIVE', 'Điều trị tủy',       'Mặt nhai', '00000000-0000-0000-0000-000000007003'),
+('00000000-0000-0000-0000-000000006005', 48, 'Răng khôn mọc lệch','ACTIVE','Nhổ răng',          'Mặt xa', '00000000-0000-0000-0000-000000007004');
 
--- Patient 2 has tooth issues
-INSERT INTO public.tooth_issue (id, tooth_number, status, description, diagnosed_date, note, patient_id) VALUES
-    (gen_random_uuid(), 14, 'PENDING', 'Wisdom tooth extraction needed', '2024-11-01', 'Scheduled for next month', 'd903022a-1000-4001-8001-000000000008');
+INSERT INTO allergy (id, name, type, description) VALUES
+('00000000-0000-0000-0000-000000006101', 'Penicillin', 'DRUG',  'Dị ứng kháng sinh nhóm penicillin.'),
+('00000000-0000-0000-0000-000000006102', 'Hải sản',    'FOOD',  'Ngứa/ mẩn đỏ khi ăn hải sản.'),
+('00000000-0000-0000-0000-000000006103', 'Latex',      'OTHER', 'Kích ứng với găng tay latex.'),
+('00000000-0000-0000-0000-000000006104', 'NSAIDs',     'DRUG',  'Dị ứng thuốc giảm đau NSAIDs.'),
+('00000000-0000-0000-0000-000000006105', 'Bụi mịn',    'ENV',   'Hắt hơi, chảy nước mũi theo mùa.');
 
--- -------------------------
--- Insert sample data for underlying_disease
--- -------------------------
--- Patient 1 has underlying diseases
-INSERT INTO public.underlying_disease (id, name, status, severity, is_verified, note, patient_id) VALUES
-                                                                                                      (gen_random_uuid(), 'Diabetes Type 2', 'CONTROLLED', 'MODERATE', true, 'Requires regular blood sugar monitoring', 'd903022a-1000-4001-8001-000000000003'),
-                                                                                                      (gen_random_uuid(), 'Hypertension', 'ACTIVE', 'MILD', true, 'Taking medication daily', 'd903022a-1000-4001-8001-000000000003');
+INSERT INTO underlying_disease (id, name, status, severity, is_verified, note, patient_id) VALUES
+('00000000-0000-0000-0000-000000006201', 'Tăng huyết áp', 'ACTIVE', 'MILD',   'true', 'Theo dõi huyết áp trước thủ thuật.', '00000000-0000-0000-0000-000000000102'),
+('00000000-0000-0000-0000-000000006202', 'Tiểu đường type 2', 'ACTIVE', 'MODERATE', 'true', 'Cần kiểm soát đường huyết.',        '00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000006203', 'Hen suyễn',   'ACTIVE', 'MILD',   'false', 'Có tiền sử, chưa có hồ sơ xác nhận.', '00000000-0000-0000-0000-000000000103'),
+('00000000-0000-0000-0000-000000006204', 'Viêm dạ dày', 'ACTIVE', 'MILD',   'false', 'Tránh thuốc kích ứng dạ dày.',        '00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000006205', 'Rối loạn đông máu', 'INACTIVE', 'SEVERE', 'true', 'Đã điều trị ổn định.',              '00000000-0000-0000-0000-000000000102');
 
--- Patient 2 has underlying diseases
-INSERT INTO public.underlying_disease (id, name, status, severity, is_verified, note, patient_id) VALUES
-    (gen_random_uuid(), 'Asthma', 'CONTROLLED', 'MODERATE', true, 'Has rescue inhaler', 'd903022a-1000-4001-8001-000000000008');
+INSERT INTO patient_allergy (id, severity, reaction, note, patient_id, allergy_id) VALUES
+('00000000-0000-0000-0000-000000006301', 'HIGH',   'Nổi mề đay', 'Tránh dùng penicillin', '00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000006101'),
+('00000000-0000-0000-0000-000000006302', 'LOW',    'Ngứa',      'Dị ứng nhẹ',             '00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000006102'),
+('00000000-0000-0000-0000-000000006303', 'MEDIUM', 'Kích ứng',  'Đổi găng nitrile',       '00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000006103'),
+('00000000-0000-0000-0000-000000006304', 'LOW',    'Hắt hơi',   'Theo mùa',               '00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000006105'),
+('00000000-0000-0000-0000-000000006305', 'MEDIUM', 'Đau bụng',  'Cẩn trọng khi kê thuốc', '00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000006104');
 
--- -------------------------
--- Insert sample data for allergy (master data)
--- -------------------------
-INSERT INTO public.allergy (id, name, type, description) VALUES
-                                                             ('a1111111-1111-1111-1111-111111111111', 'Penicillin', 'DRUG', 'Antibiotic medication - can cause severe allergic reactions'),
-                                                             ('a2222222-2222-2222-2222-222222222222', 'Peanuts', 'FOOD', 'Common food allergen - can cause anaphylaxis'),
-                                                             ('a3333333-3333-3333-3333-333333333333', 'Pollen', 'ENVIRONMENTAL', 'Seasonal allergen - causes hay fever'),
-                                                             ('a4444444-4444-4444-4444-444444444444', 'Latex', 'ENVIRONMENTAL', 'Natural rubber latex - common in medical settings'),
-                                                             ('a5555555-5555-5555-5555-555555555555', 'Shellfish', 'FOOD', 'Seafood allergen - can cause severe reactions');
+INSERT INTO tooth_issue (id, tooth_number, status, description, diagnosed_date, note, patient_id) VALUES
+('00000000-0000-0000-0000-000000006401', 16, 'OPEN', 'Sâu răng mặt nhai',       '2025-12-16', 'Cần trám',              '00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000006402', 26, 'OPEN', 'Viêm lợi - chảy máu',     '2025-12-16', 'Vệ sinh định kỳ',       '00000000-0000-0000-0000-000000000103'),
+('00000000-0000-0000-0000-000000006403', 36, 'OPEN', 'Đau nhức nghi viêm tủy',  '2025-12-17', 'Chụp X-quang kiểm tra', '00000000-0000-0000-0000-000000000102'),
+('00000000-0000-0000-0000-000000006404', 11, 'CLOSED', 'Mẻ răng nhẹ',            '2025-11-28', 'Đã xử lý trám',         '00000000-0000-0000-0000-000000000101'),
+('00000000-0000-0000-0000-000000006405', 48, 'OPEN', 'Răng khôn mọc lệch',      '2025-12-19', 'Có chỉ định nhổ',       '00000000-0000-0000-0000-000000000103'),
+('00000000-0000-0000-0000-000000006406', 21, 'OPEN', 'Ê buốt khi ăn lạnh',      '2025-12-18', 'Theo dõi thêm',         '00000000-0000-0000-0000-000000000102');
 
--- -------------------------
--- Insert sample data for patient_allergy
--- -------------------------
--- Patient 1 allergic to Penicillin (as mentioned in old data)
-INSERT INTO public.patient_allergy (id, patient_id, allergy_id, severity, reaction, note) VALUES
-                                                                                              (gen_random_uuid(), 'd903022a-1000-4001-8001-000000000003', 'a1111111-1111-1111-1111-111111111111', 'SEVERE', 'Rash, difficulty breathing', 'Patient reported severe reaction in 2015'),
-                                                                                              (gen_random_uuid(), 'd903022a-1000-4001-8001-000000000003', 'a3333333-3333-3333-3333-333333333333', 'MILD', 'Sneezing, watery eyes', 'Seasonal allergy');
-
--- Patient 2 has peanut allergy
-INSERT INTO public.patient_allergy (id, patient_id, allergy_id, severity, reaction, note) VALUES
-    (gen_random_uuid(), 'd903022a-1000-4001-8001-000000000008', 'a2222222-2222-2222-2222-222222222222', 'MODERATE', 'Hives, swelling', 'Avoid all peanut products');

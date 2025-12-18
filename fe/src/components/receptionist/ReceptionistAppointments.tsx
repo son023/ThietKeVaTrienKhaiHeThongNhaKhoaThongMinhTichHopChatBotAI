@@ -130,29 +130,29 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
   }, [selectedDate, refreshToken]);
 
   return (
-    <div className="p-8 space-y-6">
-      {/* DoctorHeader */}
+    <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl text-[#01304e] mb-1">Lịch hẹn (Tổng quan)</h1>
-          <p className="text-gray-600">Quản lý lịch hẹn của tất cả bác sĩ</p>
+          <h1 className="text-3xl font-bold text-neutral-text tracking-tight mb-2">Lịch hẹn (Tổng quan)</h1>
+          <p className="text-neutral-text/70 font-medium">Quản lý lịch hẹn của tất cả bác sĩ</p>
         </div>
 
         {/* View Mode */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 bg-neutral-surface border border-neutral-border rounded-lg p-1">
           <Button
             size="sm"
-            variant={viewMode === 'day' ? 'default' : 'outline'}
+            variant={viewMode === 'day' ? 'default' : 'ghost'}
             onClick={() => setViewMode('day')}
-            className={viewMode === 'day' ? 'bg-[#3FB5FF]' : ''}
+            className={viewMode === 'day' ? 'bg-primary hover:bg-primary-strong text-white' : 'hover:bg-neutral-muted text-neutral-text'}
           >
             Ngày
           </Button>
           <Button
             size="sm"
-            variant={viewMode === 'week' ? 'default' : 'outline'}
+            variant={viewMode === 'week' ? 'default' : 'ghost'}
             onClick={() => setViewMode('week')}
-            className={viewMode === 'week' ? 'bg-[#3FB5FF]' : ''}
+            className={viewMode === 'week' ? 'bg-primary hover:bg-primary-strong text-white' : 'hover:bg-neutral-muted text-neutral-text'}
           >
             Tuần
           </Button>
@@ -160,51 +160,62 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       </div>
 
       {/* Date Navigation */}
-      <Card className="p-4">
+      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
         <div className="flex items-center justify-between">
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          
+
           <div className="text-center">
-            <h2 className="text-xl text-[#01304e]">
+            <h2 className="text-xl font-semibold text-neutral-text">
               {selectedDate.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </h2>
           </div>
-          
-          <Button variant="outline" size="icon">
+
+          <Button variant="outline" size="icon" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </Card>
 
       {loadingAppointments && (
-        <div className="text-sm text-gray-600 px-1">Đang tải lịch hẹn...</div>
+        <Card className="p-6 border-neutral-border bg-neutral-surface">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            <p className="text-sm text-neutral-text/70 font-medium">Đang tải lịch hẹn...</p>
+          </div>
+        </Card>
       )}
       {appointmentsError && (
-        <div className="text-sm text-red-600 px-1">{appointmentsError}</div>
+        <Card className="p-5 border-red-200 bg-red-50">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-700 font-medium">{appointmentsError}</p>
+          </div>
+        </Card>
       )}
 
       {/* Doctor Filter */}
-      <Card className="p-4">
-        <h3 className="text-sm text-[#01304e] mb-3">Bộ lọc Bác sĩ</h3>
+      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
+        <h3 className="text-sm font-semibold text-neutral-text mb-4">Bộ lọc Bác sĩ</h3>
         <div className="flex flex-wrap gap-4">
           {doctors.map((doctor) => (
-            <div key={doctor.id} className="flex items-center gap-2">
+            <div key={doctor.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-muted transition-colors">
               <Checkbox
                 id={`doctor-${doctor.id}`}
                 checked={selectedDoctors.includes(doctor.id)}
                 onCheckedChange={() => toggleDoctor(doctor.id)}
+                className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <label
                 htmlFor={`doctor-${doctor.id}`}
                 className="flex items-center gap-2 cursor-pointer"
               >
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full ring-2 ring-offset-2 ring-neutral-border"
                   style={{ backgroundColor: doctor.color }}
                 />
-                <span className="text-sm text-gray-700">{doctor.name}</span>
+                <span className="text-sm text-neutral-text font-medium">{doctor.name}</span>
               </label>
             </div>
           ))}
@@ -212,13 +223,13 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       </Card>
 
       {/* Calendar Grid */}
-      <Card className="p-6">
+      <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
         <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] gap-4">
           {/* Time Column */}
           <div className="space-y-4">
-            <div className="h-8" /> {/* DoctorHeader spacer */}
+            <div className="h-10" /> {/* Header spacer */}
             {timeSlots.map((time) => (
-              <div key={time} className="h-16 flex items-start justify-end pr-2 text-xs text-gray-500">
+              <div key={time} className="h-16 flex items-start justify-end pr-2 text-xs text-neutral-text/60 font-medium">
                 {time}
               </div>
             ))}
@@ -229,9 +240,9 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
             .filter(doctor => selectedDoctors.includes(doctor.id))
             .map((doctor) => (
               <div key={doctor.id} className="space-y-4">
-                {/* Doctor DoctorHeader */}
-                <div className="h-8 flex items-center justify-center border-b-2 pb-2" style={{ borderColor: doctor.color }}>
-                  <span className="text-sm text-[#01304e]">{doctor.name}</span>
+                {/* Doctor Header */}
+                <div className="h-10 flex items-center justify-center border-b-2 pb-2 transition-colors" style={{ borderColor: doctor.color }}>
+                  <span className="text-sm font-semibold text-neutral-text">{doctor.name}</span>
                 </div>
 
                 {/* Time Slots */}
@@ -242,11 +253,11 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                     );
 
                     return (
-                      <div key={time} className="h-16 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative">
+                      <div key={time} className="h-16 border border-neutral-border bg-neutral-muted/20 rounded-lg hover:bg-neutral-muted/40 transition-all relative">
                         {doctorAppts.map((apt) => (
                           <div
                             key={apt.id}
-                            className={`absolute inset-0 p-2 rounded-lg border-2 cursor-pointer hover:shadow-md transition-shadow ${statusColors[apt.status]}`}
+                            className={`absolute inset-0 p-2 rounded-lg border-2 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all ${statusColors[apt.status]}`}
                             style={{
                               height: `${(apt.duration / 30) * 32}px`,
                             }}
@@ -255,7 +266,7 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                className="absolute top-1 right-1 h-7 px-2 text-[11px] bg-white/80 hover:bg-white shadow-sm"
+                                className="absolute top-1 right-1 h-7 px-2 text-[11px] bg-neutral-surface/90 hover:bg-neutral-surface shadow-md border border-neutral-border"
                                 onClick={() => openCheckInDialog(apt)}
                               >
                                 <ClipboardPlus className="w-3 h-3 mr-1" />
@@ -263,14 +274,14 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                               </Button>
                             )}
                             {apt.status === 'checked_in' && (
-                              <div className="absolute top-1 right-1 flex items-center gap-1 text-green-700 text-[11px] bg-white/80 px-2 py-1 rounded">
+                              <div className="absolute top-1 right-1 flex items-center gap-1 text-green-700 text-[11px] bg-neutral-surface/90 px-2 py-1 rounded shadow-sm border border-green-200">
                                 <ShieldCheck className="w-3 h-3" />
                                 Đã check-in
                               </div>
                             )}
-                            <p className="text-xs line-clamp-1">{apt.patientName}</p>
-                            <p className="text-xs text-gray-600">{apt.service}</p>
-                            <p className="text-xs mt-1">{apt.time} ({apt.duration}p)</p>
+                            <p className="text-xs font-medium line-clamp-1">{apt.patientName}</p>
+                            <p className="text-xs text-neutral-text/70">{apt.service}</p>
+                            <p className="text-xs mt-1 text-neutral-text/60">{apt.time} ({apt.duration}p)</p>
                           </div>
                         ))}
                       </div>
@@ -309,25 +320,27 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       />
 
       {/* Legend */}
-      <div className="flex items-center gap-6 text-xs">
-        <span className="text-gray-600">Trạng thái:</span>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-yellow-400" />
-          <span>Chờ xác nhận</span>
+      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
+        <div className="flex items-center gap-6 text-sm">
+          <span className="text-neutral-text font-semibold">Trạng thái:</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-yellow-400 ring-2 ring-offset-1 ring-yellow-200" />
+            <span className="text-neutral-text">Chờ xác nhận</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-blue-400 ring-2 ring-offset-1 ring-blue-200" />
+            <span className="text-neutral-text">Đã xác nhận</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-purple-400 ring-2 ring-offset-1 ring-purple-200" />
+            <span className="text-neutral-text">Đã check-in</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-green-400 ring-2 ring-offset-1 ring-green-200" />
+            <span className="text-neutral-text">Đang khám</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-blue-400" />
-          <span>Đã xác nhận</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-purple-400" />
-          <span>Đã check-in</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-green-400" />
-          <span>Đang khám</span>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }
