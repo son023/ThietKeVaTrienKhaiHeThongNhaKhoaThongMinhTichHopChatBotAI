@@ -22,6 +22,9 @@ public class InventoryLotRequest {
     
     @NotNull(message = "Medicine ID is required")
     private UUID medicineId;
+    
+    @NotNull(message = "Pharmacist ID is required")
+    private UUID pharmacistId;
 }
 
 

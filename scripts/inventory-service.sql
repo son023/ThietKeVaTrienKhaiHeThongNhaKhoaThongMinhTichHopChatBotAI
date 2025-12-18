@@ -73,23 +73,31 @@ CREATE TABLE IF NOT EXISTS public.inventory_lot
 CREATE TABLE IF NOT EXISTS public.stock_ledger
 (
     id               UUID NOT NULL,
-    create_at        TIMESTAMP,
+    type             VARCHAR(255), -- 'IN', 'OUT', 'ADJUST'
     quantity         INTEGER,
-    reference_id     UUID,          -- ID tham chiếu (ví dụ: ID đơn nhập, ID đơn thuốc)
-    reference_type   VARCHAR(255),  -- Loại tham chiếu
-    type             VARCHAR(255),  -- 'IN', 'OUT',
-    update_at        TIMESTAMP,
-    inventory_lot_id UUID,
+    reference_type   VARCHAR(255), -- 'IMPORT', 'DISPENSE', 'ADJUST', etc.
+    reference_id     UUID,         -- ID của đối tượng tham chiếu (DispenseItem, etc.)
+    create_at        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    update_at        TIMESTAMP WITH TIME ZONE,
+                                   inventory_lot_id UUID,
+                                   pharmacist_id    UUID,
 
-    -- Khóa chính
-    CONSTRAINT stock_ledger_pkey PRIMARY KEY (id),
+                                   CONSTRAINT stock_ledger_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại: Liên kết với inventory_lot
+    -- Khóa ngoại tham chiếu đến InventoryLot
     CONSTRAINT fk_stock_ledger_inventory_lot
     FOREIGN KEY (inventory_lot_id)
     REFERENCES public.inventory_lot (id)
-    ON DELETE CASCADE
+                               ON DELETE RESTRICT,
+
+    -- Khóa ngoại tham chiếu đến Pharmacist
+    CONSTRAINT fk_stock_ledger_pharmacist
+    FOREIGN KEY (pharmacist_id)
+    REFERENCES public.pharmacist (user_id)
+                               ON DELETE SET NULL
     );
+
+
 
 ---
 
@@ -152,14 +160,19 @@ CREATE TABLE IF NOT EXISTS public.dispense_item
     ON DELETE SET NULL
     );
 
+
 -- ---------------------------------------------------------------------
 -- Tạo Index để tối ưu hóa truy vấn
 -- ---------------------------------------------------------------------
+
 CREATE INDEX idx_inventory_lot_medicine_id ON public.inventory_lot (medicine_id);
 CREATE INDEX idx_stock_ledger_inventory_lot_id ON public.stock_ledger (inventory_lot_id);
+CREATE INDEX idx_stock_ledger_pharmacist_id ON public.stock_ledger (pharmacist_id);
+CREATE INDEX idx_stock_ledger_reference_id ON public.stock_ledger (reference_id);
 CREATE INDEX idx_dispense_order_pharmacist_id ON public.dispense_order (pharmacist_id);
-CREATE INDEX idx_dispense_item_order_id ON public.dispense_item (dispense_order_id);
-CREATE INDEX idx_dispense_item_lot_id ON public.dispense_item (inventory_lot_id);
+CREATE INDEX idx_dispense_order_prescription ON public.dispense_order (prescription);
+CREATE INDEX idx_dispense_item_inventory_lot_id ON public.dispense_item (inventory_lot_id);
+CREATE INDEX idx_dispense_item_dispense_order_id ON public.dispense_item (dispense_order_id);
 
 
 -- =====================================================================

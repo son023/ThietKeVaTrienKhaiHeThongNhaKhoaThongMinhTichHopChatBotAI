@@ -4,6 +4,7 @@ import { inventoryController, DispenseOrderDTO } from '../../controllers/Invento
 import { patientController } from '../../controllers/PatientController';
 import { medicalHistoryController } from '../../controllers/MedicalHistoryController';
 import { doctorController } from '../../controllers/DoctorController';
+import { userController } from '../../controllers/UserController';
 import { toast } from 'sonner';
 
 interface PrescriptionQueueProps {
@@ -18,13 +19,15 @@ interface EnrichedDispenseOrder extends DispenseOrderDTO {
 }
 
 export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
-  const [activeTab, setActiveTab] = useState<'pending' | 'review' | 'dispensed' | 'cancelled'>('pending');
+  //const [activeTab, setActiveTab] = useState<'pending' | 'review' | 'dispensed' | 'cancelled'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'dispensed' | 'cancelled'>('pending');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [prescriptions, setPrescriptions] = useState<EnrichedDispenseOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [counts, setCounts] = useState({
     pending: 0,
-    review: 0,
+    //review: 0,
     dispensed: 0,
     cancelled: 0,
   });
@@ -37,9 +40,9 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
         case 'pending':
           status = 'RESERVED'; // Đã giữ thuốc, chờ cấp phát
           break;
-        case 'review':
-          status = 'IN_PROGRESS'; // Đang xem xét
-          break;
+        // case 'review':
+        //   status = 'IN_PROGRESS'; // Đang xem xét
+        //   break;
         case 'dispensed':
           status = 'SOLD'; // Đã cấp phát
           break;
@@ -50,76 +53,89 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
       const orders = await inventoryController.getDispenseOrdersByStatus(status);
 
-      // Enrich với thông tin bệnh nhân và bác sĩ
-      const enriched = await Promise.all(
-        // orders.map(async (order) => {
-        //   let patientName = 'Đang tải...';
-        //   let doctorName = 'Đang tải...';
+      if (orders.length === 0) {
+        setPrescriptions([]);
+        return;
+      }
 
-        //   try {
-        //     // Gọi imedical history service để lấy patientId
-        //     // Tạm thời dùng medicalHistoryId để lấy thông tin
-        //     // Bạn cần implement logic này dựa vào kiến trúc hệ thống
-        //     patientName = 'Bệnh nhân ' + order.medicalHistoryId.substring(0, 8);
+      // Tối ưu: Batch fetch tất cả dữ liệu cần thiết
+      // 1. Thu thập tất cả unique IDs
+      const medicalHistoryIds = [...new Set(orders.map(o => o.medicalHistoryId))];
+      const doctorIds = [...new Set(orders.map(o => o.doctorId))];
 
-
-        //   } catch (error) {
-        //     console.error('Error fetching patient:', error);
-        //   }
-
-        //   try {
-        //     const data = await doctorController.getWithUserById(order.doctorId);
-        //     doctorName = `${data.user?.fullName || 'N/A'}`;
-        //   } catch (error) {
-        //     console.error('Error fetching doctor:', error);
-        //   }
-
-        //   return {
-        //     ...order,
-        //     patientName,
-        //     doctorName,
-        //     time: new Date(order.createAt).toLocaleString('vi-VN'),
-        //     priority: 'normal', // Có thể tính toán dựa vào thời gian tạo
-        //   };
-        // })
-        orders.map(async (order) => {
-          let patientName = 'Đang tải...';
-          let doctorName = 'Đang tải...';
-
+      // 2. Batch fetch medical histories song song
+      const medicalHistoryMap: Record<string, any> = {};
+      await Promise.all(
+        medicalHistoryIds.map(async (mhId) => {
           try {
-            // Lấy patientId từ medicalHistoryId
-            const mh = await medicalHistoryController.getById(order.medicalHistoryId);
-            if (mh?.patientId) {
-              const patient = await patientController.getWithUserById(mh.patientId);
-          
-              patientName = patient.user?.fullName || '';
-                // patient.user?.fullName ||
-                // `Bệnh nhân ${mh.patientId.substring(0, 8)}`;
-                //console.log(patient);
-            } else {
-              patientName = `Bệnh nhân ${order.medicalHistoryId.substring(0, 8)}`;
-            }
+            const mh = await medicalHistoryController.getById(mhId);
+            medicalHistoryMap[mhId] = mh;
           } catch (error) {
-            console.error('Error fetching patient:', error);
-            patientName = `Bệnh nhân ${order.medicalHistoryId.substring(0, 8)}`;
+            console.error(`Error fetching medical history ${mhId}:`, error);
           }
-
-          try {
-            const data = await doctorController.getWithUserById(order.doctorId);
-            doctorName = `${data.user?.fullName || 'N/A'}`;
-          } catch (error) {
-            console.error('Error fetching doctor:', error);
-          }
-
-          return {
-            ...order,
-            patientName,
-            doctorName,
-            time: new Date(order.createAt).toLocaleString('vi-VN'),
-            priority: 'normal',
-          };
         })
       );
+
+      // 3. Extract patient IDs từ medical histories
+      const patientIds = [...new Set(
+        Object.values(medicalHistoryMap)
+          .map((mh: any) => mh?.patientId)
+          .filter(Boolean)
+      )];
+
+      // 4. Batch fetch patients và users cho patients
+      const patientMap: Record<string, any> = {};
+      await Promise.all(
+        patientIds.map(async (patientId) => {
+          try {
+            const patient = await patientController.getWithUserById(patientId);
+            patientMap[patientId] = patient;
+          } catch (error) {
+            console.error(`Error fetching patient ${patientId}:`, error);
+          }
+        })
+      );
+
+      // 5. Batch fetch doctors và users cho doctors
+      const doctorUserIds = doctorIds;
+      const userMap = await userController.getByIds(doctorUserIds);
+
+      const doctorMap: Record<string, any> = {};
+      await Promise.all(
+        doctorIds.map(async (doctorId) => {
+          try {
+            const doctor = await doctorController.getById(doctorId);
+            doctorMap[doctorId] = {
+              ...doctor,
+              user: userMap[doctorId],
+            };
+          } catch (error) {
+            console.error(`Error fetching doctor ${doctorId}:`, error);
+          }
+        })
+      );
+
+      // 6. Map lại orders với thông tin đã fetch
+      const enriched = orders.map((order) => {
+        const mh = medicalHistoryMap[order.medicalHistoryId];
+        let patientName = `Bệnh nhân ${order.medicalHistoryId.substring(0, 8)}`;
+
+        if (mh?.patientId) {
+          const patient = patientMap[mh.patientId];
+          patientName = patient?.user?.fullName || patientName;
+        }
+
+        const doctor = doctorMap[order.doctorId];
+        const doctorName = doctor?.user?.fullName || 'N/A';
+
+        return {
+          ...order,
+          patientName,
+          doctorName,
+          time: new Date(order.createAt).toLocaleString('vi-VN'),
+          priority: 'normal',
+        };
+      });
 
       setPrescriptions(enriched);
     } catch (error) {
@@ -132,16 +148,17 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   const loadCounts = async () => {
     try {
-      const [reserved, inProgress, sold, cancelled] = await Promise.all([
+      //const [reserved, inProgress, sold, cancelled] = await Promise.all([
+      const [reserved, sold, cancelled] = await Promise.all([
         inventoryController.getDispenseOrdersByStatus('RESERVED'),
-        inventoryController.getDispenseOrdersByStatus('IN_PROGRESS'),
+        // inventoryController.getDispenseOrdersByStatus('IN_PROGRESS'),
         inventoryController.getDispenseOrdersByStatus('SOLD'),
         inventoryController.getDispenseOrdersByStatus('CANCELLED'),
       ]);
 
       setCounts({
         pending: reserved.length,
-        review: inProgress.length,
+        // review: inProgress.length,
         dispensed: sold.length,
         cancelled: cancelled.length,
       });
@@ -166,21 +183,21 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
-      RESERVED: { 
-        label: 'Chờ cấp', 
-        className: 'px-3 py-1 rounded-full bg-[#fff3cd] text-[#856404]' 
+      RESERVED: {
+        label: 'Chờ cấp',
+        className: 'px-3 py-1 rounded-full bg-[#fff3cd] text-[#856404]'
       },
-      IN_PROGRESS: { 
-        label: 'Cần xem xét', 
-        className: 'px-3 py-1 rounded-full bg-[#f8d7da] text-[#721c24]' 
+      IN_PROGRESS: {
+        label: 'Cần xem xét',
+        className: 'px-3 py-1 rounded-full bg-[#f8d7da] text-[#721c24]'
       },
-      SOLD: { 
-        label: 'Đã cấp phát', 
-        className: 'px-3 py-1 rounded-full bg-[#d4edda] text-[#155724]' 
+      SOLD: {
+        label: 'Đã cấp phát',
+        className: 'px-3 py-1 rounded-full bg-[#d4edda] text-[#155724]'
       },
-      CANCELLED: { 
-        label: 'Đã hủy', 
-        className: 'px-3 py-1 rounded-full bg-[#f8f9fa] text-[#6c757d]' 
+      CANCELLED: {
+        label: 'Đã hủy',
+        className: 'px-3 py-1 rounded-full bg-[#f8f9fa] text-[#6c757d]'
       },
     };
 
@@ -194,7 +211,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   const tabs = [
     { id: 'pending' as const, label: 'Chờ cấp', count: counts.pending },
-    { id: 'review' as const, label: 'Cần xem xét', count: counts.review },
+    // { id: 'review' as const, label: 'Cần xem xét', count: counts.review },
     { id: 'dispensed' as const, label: 'Đã cấp phát', count: counts.dispensed },
     { id: 'cancelled' as const, label: 'Đã hủy', count: counts.cancelled },
   ];
@@ -205,13 +222,13 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
-            Đơn thuốc chờ cấp
+            Danh sách đơn thuốc
           </h1>
           <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
             Quản lý và cấp phát đơn thuốc
           </p>
         </div>
-        <button 
+        <button
           onClick={() => {
             loadPrescriptions();
             loadCounts();
@@ -229,11 +246,10 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${
-              activeTab === tab.id
-                ? 'border-[#3fb5ff] text-[#3fb5ff]'
-                : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
-            }`}
+            className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${activeTab === tab.id
+              ? 'border-[#3fb5ff] text-[#3fb5ff]'
+              : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+              }`}
           >
             {tab.label} ({tab.count})
           </button>

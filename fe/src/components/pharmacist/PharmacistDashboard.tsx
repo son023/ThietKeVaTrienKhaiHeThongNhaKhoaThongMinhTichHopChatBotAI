@@ -67,7 +67,7 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
             </span>
           </div>
           <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
-            Đơn thuốc chờ cấp
+            Danh sách đơn thuốc
           </p>
         </div>
 

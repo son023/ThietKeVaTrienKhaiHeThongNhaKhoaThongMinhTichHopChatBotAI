@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Alert, AlertDescription } from "../ui/alert";
 import { authController } from "../../controllers/AuthController";
@@ -191,10 +190,10 @@ export function CreatePrescriptionEnhanced({
 
         try {
             const res = await prescriptionController.createPrescription(payload);
-            toast.success("Đã tạo đơn thuốc thành công");
+            //toast.success("Đã tạo đơn thuốc thành công");
             onCreated?.();
         } catch (e: any) {
-            toast.error(e.message || "Lỗi tạo đơn thuốc");
+            //toast.error(e.message || "Lỗi tạo đơn thuốc");
         }
     };
 
