@@ -129,119 +129,127 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
   );
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl text-[#01304e] mb-1">Quan ly Benh nhan</h1>
-          <p className="text-gray-600">Danh sach va ho so benh nhan</p>
+          <h1 className="text-3xl font-bold text-neutral-text tracking-tight mb-2">Quan ly Benh nhan</h1>
+          <p className="text-neutral-text/70 font-medium">Danh sach va ho so benh nhan</p>
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-subtle" />
             <Input
               type="text"
               placeholder="Tim kiem theo Ten, SDT, Ma BN, Email..."
-              className="pl-10"
+              className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">
+          <Button className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200">
             + Them Benh nhan moi
           </Button>
         </div>
       </Card>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Tong so benh nhan hom nay</p>
-          <p className="text-2xl text-[#01304e]">{patients.length}</p>
+        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Tong so benh nhan hom nay</p>
+          <p className="text-3xl font-bold text-neutral-text">{patients.length}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Benh nhan moi (thang nay)</p>
-          <p className="text-2xl text-green-600">-</p>
+        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Benh nhan moi (thang nay)</p>
+          <p className="text-3xl font-bold text-green-600">-</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Ca lich hen hom nay</p>
-          <p className="text-2xl text-blue-600">{patients.length}</p>
+        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Ca lich hen hom nay</p>
+          <p className="text-3xl font-bold text-primary">{patients.length}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600 mb-1">Can lien he lai</p>
-          <p className="text-2xl text-orange-600">-</p>
+        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Can lien he lai</p>
+          <p className="text-3xl font-bold text-accent-orange">-</p>
         </Card>
       </div>
 
-      <Card>
+      <Card className="border-neutral-border bg-neutral-surface shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Ma BN</TableHead>
-              <TableHead>Ho ten</TableHead>
-              <TableHead>So dien thoai</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Ngay sinh</TableHead>
-              <TableHead>Gio hen hom nay</TableHead>
-              <TableHead>Ghi chu</TableHead>
-              <TableHead>Thao tac</TableHead>
+            <TableRow className="bg-neutral-muted/30 hover:bg-neutral-muted/40">
+              <TableHead className="font-semibold text-neutral-text">Ma BN</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Ho ten</TableHead>
+              <TableHead className="font-semibold text-neutral-text">So dien thoai</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Email</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Ngay sinh</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Gio hen hom nay</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Ghi chu</TableHead>
+              <TableHead className="font-semibold text-neutral-text">Thao tac</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                  Dang tai danh sach benh nhan hom nay...
+                <TableCell colSpan={8} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    <p className="text-neutral-text/70 font-medium">Dang tai danh sach benh nhan hom nay...</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-red-500">
-                  {error}
+                <TableCell colSpan={8} className="text-center py-12">
+                  <div className="text-red-600 font-medium">{error}</div>
                 </TableCell>
               </TableRow>
             ) : filteredPatients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                  Khong tim thay benh nhan nao co lich hom nay
+                <TableCell colSpan={8} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 bg-neutral-muted rounded-full flex items-center justify-center">
+                      <User className="w-8 h-8 text-neutral-text/40" />
+                    </div>
+                    <p className="text-neutral-text/60 font-medium">Khong tim thay benh nhan nao co lich hom nay</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredPatients.map((patient) => (
-                <TableRow key={patient.id} className="cursor-pointer hover:bg-gray-50">
-                  <TableCell className="font-mono text-xs">{patient.code}</TableCell>
+                <TableRow key={patient.id} className="cursor-pointer hover:bg-neutral-muted/30 transition-colors border-b border-neutral-border">
+                  <TableCell className="font-mono text-xs text-neutral-text/70">{patient.code}</TableCell>
                   <TableCell>
                     <button
                       onClick={() => onPatientSelect(patient.id)}
-                      className="text-[#3FB5FF] hover:underline text-left"
+                      className="text-primary hover:text-primary-strong hover:underline text-left font-medium transition-colors"
                     >
                       {patient.name}
                     </button>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Phone className="w-3 h-3 text-gray-400" />
-                      <span className="text-sm">{patient.phone || '-'}</span>
+                      <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                      <span className="text-sm text-neutral-text">{patient.phone || '-'}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Mail className="w-3 h-3 text-gray-400" />
-                      <span className="text-sm">{patient.email || '-'}</span>
+                      <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                      <span className="text-sm text-neutral-text">{patient.email || '-'}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-3 h-3 text-gray-400" />
-                      <span className="text-sm">{patient.birthDate}</span>
+                      <Calendar className="w-3.5 h-3.5 text-neutral-subtle" />
+                      <span className="text-sm text-neutral-text">{patient.birthDate}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{patient.lastVisit}</TableCell>
+                  <TableCell className="text-sm text-neutral-text">{patient.lastVisit}</TableCell>
                   <TableCell>
                     {patient.notes && (
                       <div
-                        className="text-xs text-gray-600 max-w-[200px] truncate"
+                        className="text-xs text-neutral-text/70 max-w-[200px] truncate"
                         title={patient.notes}
                       >
                         {patient.notes}
@@ -249,7 +257,7 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" onClick={() => onPatientSelect(patient.id)}>
+                    <Button size="sm" variant="outline" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all" onClick={() => onPatientSelect(patient.id)}>
                       Xem
                     </Button>
                   </TableCell>
