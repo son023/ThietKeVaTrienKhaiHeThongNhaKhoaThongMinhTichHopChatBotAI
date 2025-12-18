@@ -101,8 +101,8 @@ CREATE INDEX idx_dws_work_schedule_id ON public.doctor_work_schedule (work_sched
 -- 5) DOCTOR + DOCTOR_DEGREE
 -- =========================================================
 INSERT INTO doctor (user_id, specialization_code, working_hospital, license_number, consultation_fee_amount) VALUES
-('00000000-0000-0000-0000-000000000201', 'RHM-IMPLANT', 'Bệnh viện Răng Hàm Mặt TP.HCM', 'BS-79001234', 300000),
-('00000000-0000-0000-0000-000000000202', 'RHM-NHASI',   'Bệnh viện Răng Hàm Mặt TW',     'BS-79005678', 350000);
+('00000000-0000-0000-0000-000000000201', 'GEN', 'Bệnh viện Răng Hàm Mặt TP.HCM', 'BS-79001234', 300000),
+('00000000-0000-0000-0000-000000000202', 'PEDO',   'Bệnh viện Răng Hàm Mặt TW',     'BS-79005678', 350000);
 
 INSERT INTO doctor_degree (id, degree_name, institution, year_obtained, doctor_id) VALUES
 ('00000000-0000-0000-0000-000000002001', 'Bác sĩ Răng Hàm Mặt', 'ĐH Y Dược TP.HCM', 2016, '00000000-0000-0000-0000-000000000201'),

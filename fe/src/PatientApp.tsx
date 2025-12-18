@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { NewPatientHeader } from './components/patient/NewPatientHeader';
+import { NewPatientHeader } from './components/public/NewPatientHeader';
 import { PatientFooter } from './components/patient/PatientFooter';
 import { PatientHome } from './components/patient/PatientHome';
 import { PatientDashboard } from './components/patient/PatientDashboard';
