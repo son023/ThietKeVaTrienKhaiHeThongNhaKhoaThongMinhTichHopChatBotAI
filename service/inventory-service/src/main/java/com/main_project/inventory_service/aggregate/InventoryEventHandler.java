@@ -12,14 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.GenericEventMessage;
-import org.axonframework.modelling.command.AggregateLifecycle;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.main_project.inventory_service.entity.Pharmacist;
+import com.main_project.inventory_service.repository.PharmacistRepository;
 
 @Component
 @RequiredArgsConstructor
@@ -36,6 +36,8 @@ public class InventoryEventHandler {
 
     private final DispenseOrderRepository dispenseOrderRepository;
 
+    private final PharmacistRepository pharmacistRepository;
+
     private final EventBus eventBus;
 
     @EventHandler
@@ -48,6 +50,13 @@ public class InventoryEventHandler {
             dispenseOrder.setMedicalHistoryId(event.getMedicalHistoryId());
             dispenseOrder.setDoctorId(event.getDoctorId());
             dispenseOrder.setStatus("RESERVED");
+            
+            // ✅ Lấy pharmacist từ DispenseOrder nếu có
+            Pharmacist pharmacist = null;
+            if (dispenseOrder.getPharmacist() != null) {
+                pharmacist = dispenseOrder.getPharmacist();
+            }
+            
             dispenseOrderRepository.save(dispenseOrder);
 
             for (MedicineItem item : event.getItems()) {
@@ -77,22 +86,31 @@ public class InventoryEventHandler {
                     dispenseItem.setQuantity(toReserveFromLot);
                     dispenseItem.setPriceAtDispense(medicine.getSalePrice() != null ? medicine.getSalePrice() : 0);
                     dispenseItem.setInventoryLot(lot);
+                    dispenseItem.setDosage(item.getDosage());
+                    dispenseItem.setDuration(item.getDuration());
+                    dispenseItem.setFrequency(item.getFrequency());
+                    dispenseItem.setUsageInstructions(item.getInstruction());
                     dispenseItem.setDispenseOrder(dispenseOrder);
+
                     dispenseItem = dispenseItemRepository.save(dispenseItem);
 
                     lot.setQuantityOnHand(availableInLot - toReserveFromLot);
                     inventoryLotRepository.save(lot);
 
+                    // Ghi stock ledger - Xuất kho tự động từ saga
                     StockLedger ledgerEntry = new StockLedger();
-                    //ledgerEntry.setId(UUID.randomUUID());
-
-                    //ledgerEntry.setLot(lot.getLotNo());
                     ledgerEntry.setType("OUT");
                     ledgerEntry.setQuantity(toReserveFromLot);
-                    ledgerEntry.setReferenceId(dispenseItem.getId()); // Reference to DispenseItem
-                    ledgerEntry.setReferenceType("DISPENSE_ITEM");
+                    ledgerEntry.setReferenceId(dispenseItem.getId());
+                    ledgerEntry.setReferenceType("AUTO_DISPENSE");
                     ledgerEntry.setInventoryLot(lot);
+                    // ✅ Set pharmacist nếu có
+                    if (pharmacist != null) {
+                        ledgerEntry.setPharmacist(pharmacist);
+                    }
                     stockLedgerRepository.save(ledgerEntry);
+                    log.debug("✅ [AUTO-EXPORT] Stock ledger: lotNo={}, qty={}, pharmacist={}", 
+                            lot.getLotNo(), toReserveFromLot, pharmacist != null ? pharmacist.getUserId() : "N/A");
 
                     remainingToReserve -= toReserveFromLot;
                 }
@@ -101,12 +119,10 @@ public class InventoryEventHandler {
             log.info("Đã cập nhật kho thành công cho đơn thuốc: {}", event.getPrescriptionId());
 
         } catch (Exception e) {
-            //try-catch để báo Saga rollback nếu việc GHI DB thất bại
             log.error("Lỗi khi cập nhật DB Inventory: {}", e.getMessage());
             eventBus.publish(GenericEventMessage.asEventMessage(
                     new MedicineReservationFailedEvent(event.getPrescriptionId())
             ));
-
             throw new RuntimeException("Hoàn tác giao dịch kho", e);
         }
 
@@ -148,26 +164,32 @@ public class InventoryEventHandler {
         InventoryLot lot = dispenseItem.getInventoryLot();
         Integer quantityToRestore = dispenseItem.getQuantity();
 
-
-//        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
-//                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
-//                        "OUT".equals(ledger.getType()) &&
-//                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
-//                .toList();
-
         int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
         lot.setQuantityOnHand(currentQuantity + quantityToRestore);
         inventoryLotRepository.save(lot);
 
+        // ✅ Lấy pharmacist từ DispenseOrder nếu có
+        Pharmacist pharmacist = null;
+        if (dispenseItem.getDispenseOrder() != null && 
+            dispenseItem.getDispenseOrder().getPharmacist() != null) {
+            pharmacist = dispenseItem.getDispenseOrder().getPharmacist();
+        }
+
+        // Ghi stock ledger - Hoàn trả kho do rollback
         StockLedger reverseLedgerEntry = new StockLedger();
         reverseLedgerEntry.setId(UUID.randomUUID());
-        //reverseLedgerEntry.setLot(lot.getLotNo());
         reverseLedgerEntry.setType("IN");
         reverseLedgerEntry.setQuantity(quantityToRestore);
-        reverseLedgerEntry.setReferenceId(dispenseItem.getId()); //reference DispenseItem
-        reverseLedgerEntry.setReferenceType("DISPENSE_ITEM_ROLLBACK");
+        reverseLedgerEntry.setReferenceId(dispenseItem.getId());
+        reverseLedgerEntry.setReferenceType("AUTO_ROLLBACK");
         reverseLedgerEntry.setInventoryLot(lot);
+        // ✅ Set pharmacist nếu có
+        if (pharmacist != null) {
+            reverseLedgerEntry.setPharmacist(pharmacist);
+        }
         stockLedgerRepository.save(reverseLedgerEntry);
+        log.debug("✅ [AUTO-ROLLBACK] Stock ledger: lotNo={}, qty={}, pharmacist={}", 
+                lot.getLotNo(), quantityToRestore, pharmacist != null ? pharmacist.getUserId() : "N/A");
     }
 
 
