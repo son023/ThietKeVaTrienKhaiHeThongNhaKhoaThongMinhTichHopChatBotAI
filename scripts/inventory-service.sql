@@ -1,9 +1,9 @@
-DROP TABLE IF EXISTS public.dispense_item CASCADE;
-DROP TABLE IF EXISTS public.dispense_order CASCADE;
-DROP TABLE IF EXISTS public.stock_ledger CASCADE;
-DROP TABLE IF EXISTS public.inventory_lot CASCADE;
-DROP TABLE IF EXISTS public.medicine CASCADE;
-DROP TABLE IF EXISTS public.pharmacist CASCADE;
+DROP TABLE IF EXISTS dispense_item CASCADE;
+DROP TABLE IF EXISTS dispense_order CASCADE;
+DROP TABLE IF EXISTS stock_ledger CASCADE;
+DROP TABLE IF EXISTS inventory_lot CASCADE;
+DROP TABLE IF EXISTS pharmacist CASCADE;
+DROP TABLE IF EXISTS medicine CASCADE;
 
 -- ---------------------------------------------------------------------
 -- Bảng 1: medicine
@@ -11,12 +11,13 @@ DROP TABLE IF EXISTS public.pharmacist CASCADE;
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.medicine
 (
-    id          UUID NOT NULL,
-    name        VARCHAR(100) NOT NULL,
-    unit        VARCHAR(100),
+    id          UUID          NOT NULL,
     description VARCHAR(255),
+    name        VARCHAR(100)  NOT NULL,
     sale_price  INTEGER,
+    unit        VARCHAR(100),
 
+    -- Khóa chính
     CONSTRAINT medicine_pkey PRIMARY KEY (id)
     );
 
@@ -29,9 +30,10 @@ CREATE TABLE IF NOT EXISTS public.medicine
 CREATE TABLE IF NOT EXISTS public.pharmacist
 (
     user_id     UUID NOT NULL,
-    degree      VARCHAR(255),
     certificate VARCHAR(255),
+    degree      VARCHAR(255),
 
+    -- Khóa chính
     CONSTRAINT pharmacist_pkey PRIMARY KEY (user_id)
     );
 
@@ -43,23 +45,24 @@ CREATE TABLE IF NOT EXISTS public.pharmacist
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.inventory_lot
 (
-    id               UUID NOT NULL,
-    lot_no           VARCHAR(100) NOT NULL,
-    expire_date      DATE,
-    quantity_on_hand INTEGER DEFAULT 0,
+    id               UUID         NOT NULL,
     cost_price       INTEGER,
+    expire_date      DATE,
+    lot_no           VARCHAR(100) NOT NULL,
+    quantity_on_hand INTEGER DEFAULT 0,
     medicine_id      UUID,
 
+    -- Khóa chính
     CONSTRAINT inventory_lot_pkey PRIMARY KEY (id),
-    CONSTRAINT uk_inventory_lot_no UNIQUE (lot_no),
+    -- Ràng buộc duy nhất
+    CONSTRAINT uk_lot_no UNIQUE (lot_no),
 
-    -- Khóa ngoại tham chiếu đến Medicine
+    -- Khóa ngoại: Liên kết với medicine
     CONSTRAINT fk_inventory_lot_medicine
     FOREIGN KEY (medicine_id)
     REFERENCES public.medicine (id)
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
     );
-
 
 ---
 
@@ -105,23 +108,23 @@ CREATE TABLE IF NOT EXISTS public.stock_ledger
 CREATE TABLE IF NOT EXISTS public.dispense_order
 (
     id                 UUID NOT NULL,
-    prescription       UUID,          -- ID đơn thuốc từ Service khám bệnh
-    medical_history_id UUID,          -- ID lịch sử khám
-    doctor_id          UUID,          -- ID bác sĩ kê đơn
-    status             VARCHAR(255),  -- 'PENDING', 'COMPLETED', 'CANCELLED'
-    create_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    update_at          TIMESTAMP WITH TIME ZONE,
-                                     pharmacist_id      UUID,
+    create_at          TIMESTAMP,
+    doctor_id          UUID,
+    medical_history_id UUID,
+    prescription       UUID,
+    status             VARCHAR(255),  -- PENDING, COMPLETED, CANCELLED
+    update_at          TIMESTAMP,
+    pharmacist_id      UUID,
 
-                                     CONSTRAINT dispense_order_pkey PRIMARY KEY (id),
+    -- Khóa chính
+    CONSTRAINT dispense_order_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại tham chiếu đến Pharmacist
+    -- Khóa ngoại: Liên kết với pharmacist
     CONSTRAINT fk_dispense_order_pharmacist
     FOREIGN KEY (pharmacist_id)
     REFERENCES public.pharmacist (user_id)
-                                 ON DELETE SET NULL
+    ON DELETE SET NULL
     );
-
 
 ---
 
@@ -132,29 +135,31 @@ CREATE TABLE IF NOT EXISTS public.dispense_order
 CREATE TABLE IF NOT EXISTS public.dispense_item
 (
     id                 UUID NOT NULL,
-    quantity           INTEGER,
+    dosage             VARCHAR(100), -- Liều lượng (vd: 500mg)
+    duration           VARCHAR(50),  -- Thời gian dùng (vd: 5 ngày)
+    frequency          VARCHAR(50),  -- Tần suất (vd: 2 lần/ngày)
     price_at_dispense  INTEGER,
-    dosage             VARCHAR(100),
-    frequency          VARCHAR(50),
-    duration           VARCHAR(50),
+    quantity           INTEGER,
     usage_instructions VARCHAR(255),
-    inventory_lot_id   UUID,
     dispense_order_id  UUID,
+    inventory_lot_id   UUID,
 
+    -- Khóa chính
     CONSTRAINT dispense_item_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại tham chiếu đến InventoryLot
-    CONSTRAINT fk_dispense_item_inventory_lot
-    FOREIGN KEY (inventory_lot_id)
-    REFERENCES public.inventory_lot (id)
-    ON DELETE RESTRICT,
-
-    -- Khóa ngoại tham chiếu đến DispenseOrder
-    CONSTRAINT fk_dispense_item_dispense_order
+    -- Khóa ngoại 1: Liên kết với dispense_order
+    CONSTRAINT fk_item_dispense_order
     FOREIGN KEY (dispense_order_id)
     REFERENCES public.dispense_order (id)
-    ON DELETE CASCADE
+    ON DELETE CASCADE,
+
+    -- Khóa ngoại 2: Liên kết với inventory_lot
+    CONSTRAINT fk_item_inventory_lot
+    FOREIGN KEY (inventory_lot_id)
+    REFERENCES public.inventory_lot (id)
+    ON DELETE SET NULL
     );
+
 
 -- ---------------------------------------------------------------------
 -- Tạo Index để tối ưu hóa truy vấn
