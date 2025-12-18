@@ -66,12 +66,12 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   return (
     <div className="flex flex-col min-h-screen bg-[#fcfeff]">
       {/* Fixed DoctorHeader */}
-      <NewPatientHeader 
+      <NewPatientHeader
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onOpenChatbot={() => setIsChatbotOpen(true)}
       />
-      
+
       {/* Main Content */}
       <main className="flex-1 w-full">
         <Routes>

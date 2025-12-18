@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, CheckCircle, Clock, XCircle, X, Calendar, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -17,6 +18,7 @@ interface ImportExportManagementProps {
 }
 
 export function ImportExportManagement({ onNavigate }: ImportExportManagementProps = {}) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'import' | 'export'>('import');
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -275,11 +277,8 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
   };
 
   const handleViewPrescription = (prescriptionId: string) => {
-    if (onNavigate) {
-      onNavigate('prescription-detail', prescriptionId);
-    } else {
-      toast.info(`Xem chi tiết đơn thuốc: ${prescriptionId}`);
-    }
+    // Sử dụng React Router để navigate
+    navigate(`/pharmacist/prescriptions/${prescriptionId}`);
   };
 
   return (
@@ -288,7 +287,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
-            Quản lý Nhập/Xuất kho
+            Quản lý nhập/xuất thuốc
           </h1>
           <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
             Quản lý phiếu nhập và phiếu xuất kho
@@ -300,7 +299,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
             className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dc3545] text-[#dc3545] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#fff5f5] transition-colors"
           >
             <XCircle className="w-4 h-4" />
-            Tạo Phiếu Xuất kho
+            Tạo phiếu xuất kho
           </button>
           <button
             onClick={() => setShowImportDialog(true)}
