@@ -21,6 +21,7 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<string | null>(null);
   const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
+  const [previousPage, setPreviousPage] = useState<string>('prescriptions');
   const [pharmacistId, setPharmacistId] = useState<string | undefined>(undefined);
 
   // ✅ Lấy pharmacistId từ currentUser
@@ -33,6 +34,7 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
 
   const handleNavigate = (page: string, id?: string) => {
     if (page === 'prescription-detail' && id) {
+      setPreviousPage(currentPage);
       setSelectedPrescriptionId(id);
       setCurrentPage('prescription-detail');
     } else if (page === 'drug-profile' && id) {
@@ -65,7 +67,7 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
         return selectedPrescriptionId ? (
           <PrescriptionDetail
             prescriptionId={selectedPrescriptionId}
-            onBack={() => setCurrentPage('prescriptions')}
+            onBack={() => setCurrentPage(previousPage)}
           />
         ) : (
           <PharmacistDashboard onNavigate={handleNavigate} />
@@ -82,7 +84,7 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
           />
         );
       case 'import-export':
-        return <ImportExportManagement />;
+        return <ImportExportManagement onNavigate={handleNavigate} />;
       case 'reports':
         return <PharmacyReports />;
       case 'account':

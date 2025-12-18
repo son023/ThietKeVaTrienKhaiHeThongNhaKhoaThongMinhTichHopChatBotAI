@@ -17,6 +17,8 @@ public interface StockLedgerRepository extends JpaRepository<StockLedger, UUID> 
     
     // Find all StockLedger entries by referenceType
     List<StockLedger> findByReferenceType(String referenceType);
+
+    List<StockLedger> findByInventoryLotId(UUID inventoryLotId);
 }
 
 

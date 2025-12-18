@@ -34,7 +34,7 @@ interface MedicationItem {
 }
 
 export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetailProps) {
-  const [activeTab, setActiveTab] = useState<'prescription' | 'interactions' | 'history'>('prescription');
+  const [activeTab, setActiveTab] = useState<'prescription' | 'history'>('prescription');
   const [pharmacistNotes, setPharmacistNotes] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -434,7 +434,6 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
             <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-5">
               {[
                 { id: 'prescription' as const, label: 'Chi tiết Đơn thuốc' },
-                { id: 'interactions' as const, label: 'Cảnh báo Tương tác (AI)' },
                 { id: 'history' as const, label: 'Lịch sử cấp phát' },
               ].map((tab) => (
                 <button
@@ -514,14 +513,6 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                 </div>
               )}
 
-              {activeTab === 'interactions' && (
-                <div className="text-center py-8">
-                  <CheckCircle className="w-12 h-12 text-[#28a745] mx-auto mb-3" />
-                  <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#28a745]">
-                    Không phát hiện tương tác thuốc
-                  </p>
-                </div>
-              )}
 
               {activeTab === 'history' && (
                 <div className="space-y-3">
@@ -557,14 +548,6 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
           <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5 space-y-3">
             <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">Hành động</h3>
-            {/* <button
-              onClick={handleDispense}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#28a745] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#218838] transition-colors"
-            >
-              <CheckCircle className="w-5 h-5" />
-              Hoàn tất & Cấp phát
-            </button> */}
-
 <button
   onClick={handleDispense}
   disabled={!isInvoicePaid || isCheckingPayment}

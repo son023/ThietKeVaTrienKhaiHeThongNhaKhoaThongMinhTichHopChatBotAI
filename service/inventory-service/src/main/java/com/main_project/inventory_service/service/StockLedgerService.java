@@ -3,6 +3,7 @@ package com.main_project.inventory_service.service;
 import com.main_project.inventory_service.dto.StockLedgerRequest;
 import com.main_project.inventory_service.dto.StockLedgerResponse;
 import com.main_project.inventory_service.entity.InventoryLot;
+import com.main_project.inventory_service.entity.Pharmacist;
 import com.main_project.inventory_service.entity.StockLedger;
 import com.main_project.inventory_service.iservice.IStockLedgerService;
 import com.main_project.inventory_service.repository.InventoryLotRepository;
@@ -85,13 +86,15 @@ public class StockLedgerService implements IStockLedgerService {
 
     private StockLedgerResponse mapToResponse(StockLedger stockLedger) {
         InventoryLot inventoryLot = stockLedger.getInventoryLot();
+        Pharmacist pharmacist = stockLedger.getPharmacist();
         return new StockLedgerResponse(
                 stockLedger.getId(),
                 stockLedger.getType(),
                 stockLedger.getQuantity(),
                 stockLedger.getReferenceType(),
                 stockLedger.getReferenceId(),
-                inventoryLot != null ? inventoryLot.getId() : null
+                inventoryLot != null ? inventoryLot.getId() : null,
+                pharmacist != null ? pharmacist.getUserId() : null
         );
     }
 }

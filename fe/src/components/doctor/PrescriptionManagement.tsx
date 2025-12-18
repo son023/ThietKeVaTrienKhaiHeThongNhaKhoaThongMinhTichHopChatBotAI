@@ -120,7 +120,6 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
         medicalHistoryId={selectedHistory.id}
         patientId={selectedHistory.patientId}
         onCreated={(prescriptionId) => {
-          toast.success('Đã tạo đơn thuốc thành công');
           handleBackToList();
         }}
         onBack={handleBackToList}

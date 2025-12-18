@@ -1,7 +1,7 @@
 package com.main_project.inventory_service.controller;
 
-import com.main_project.inventory_service.dto.InventoryLotRequest;
-import com.main_project.inventory_service.dto.InventoryLotResponse;
+import com.main_project.inventory_service.dto.*;
+import com.main_project.inventory_service.entity.StockLedger;
 import com.main_project.inventory_service.iservice.IInventoryLotService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +47,32 @@ public class InventoryLotController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         inventoryLotService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ==================== MANUAL EXPORT ENDPOINTS ====================
+
+    @PostMapping("/export")
+    public ResponseEntity<ManualExportResponse> exportStock(@Valid @RequestBody ManualExportRequest request) {
+        ManualExportResponse response = inventoryLotService.exportStock(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/exports")
+    public ResponseEntity<List<ManualExportResponse>> getAllManualExports() {
+        List<ManualExportResponse> responses = inventoryLotService.getAllManualExports();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/all-exports")
+    public ResponseEntity<List<ManualExportResponse>> getAllExports() {
+        List<ManualExportResponse> responses = inventoryLotService.getAllExports();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{lotId}/stock-ledgers")
+    public ResponseEntity<List<StockLedgerResponse>> getStockLedgersByLotId(@PathVariable UUID lotId) {
+        List<StockLedgerResponse> stockLedgers = inventoryLotService.getStockLedgersByLotId(lotId);
+        return ResponseEntity.ok(stockLedgers);
     }
 }
 
