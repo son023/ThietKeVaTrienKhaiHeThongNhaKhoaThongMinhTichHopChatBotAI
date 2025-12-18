@@ -29,7 +29,7 @@ x-spring-template: &spring-template
 
 services:
   axon-server:
-    image: axoniq/axonserver
+    image: axoniq/axonserver:4.6.8
     container_name: axon-server
     restart: always
     ports:
@@ -54,146 +54,26 @@ services:
     networks:
       - microservice-network
 
-  postgres-user:
+  postgres:
     <<: *pg-template
-    container_name: postgres-user
+    container_name: postgres
     environment:
       <<: *pg-default-env
-      POSTGRES_DB: user-service
+      POSTGRES_DB: postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - postgres-user-data:/var/lib/postgresql/data
-      - ./scripts/user-service.sql:/docker-entrypoint-initdb.d/user-service.sql
-
-  postgres-patient:
-    <<: *pg-template
-    container_name: postgres-patient
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: patient-service
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres-patient-data:/var/lib/postgresql/data
-      - ./scripts/patient-service.sql:/docker-entrypoint-initdb.d/patient-service.sql
-
-  postgres-doctor:
-    <<: *pg-template
-    container_name: postgres-doctor
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: doctor-service
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres-doctor-data:/var/lib/postgresql/data
-      - ./scripts/doctor-service.sql:/docker-entrypoint-initdb.d/doctor-service.sql
-
-  postgres-appointment:
-    <<: *pg-template
-    container_name: postgres-appointment
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: appointment-service
-    ports:
-      - "5436:5432"
-    volumes:
-      - postgres-appointment-data:/var/lib/postgresql/data
-      - ./scripts/appointment-service.sql:/docker-entrypoint-initdb.d/appointment-service.sql
-
-  postgres-payment:
-    <<: *pg-template
-    container_name: postgres-payment
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: payment-service
-    ports:
-      - "5437:5432"
-    volumes:
-      - postgres-payment-data:/var/lib/postgresql/data
-      - ./scripts/payment-service.sql:/docker-entrypoint-initdb.d/payment-service.sql
-
-  postgres-labtest:
-    <<: *pg-template
-    container_name: postgres-labtest
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: labtest-service
-    ports:
-      - "5438:5432"
-    volumes:
-      - postgres-labtest-data:/var/lib/postgresql/data
-      - ./scripts/labtest-service.sql:/docker-entrypoint-initdb.d/labtest-service.sql
-
-  postgres-invoice:
-    <<: *pg-template
-    container_name: postgres-invoice
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: invoice-service
-    ports:
-      - "5439:5432"
-    volumes:
-      - postgres-invoice-data:/var/lib/postgresql/data
-      - ./scripts/invoice-service.sql:/docker-entrypoint-initdb.d/invoice-service.sql
-
-  postgres-inventory:
-    <<: *pg-template
-    container_name: postgres-inventory
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: inventory-service
-    ports:
-      - "5440:5432"
-    volumes:
-      - postgres-inventory-data:/var/lib/postgresql/data
-      - ./scripts/inventory-service.sql:/docker-entrypoint-initdb.d/inventory-service.sql
-
-  postgres-insurance:
-    <<: *pg-template
-    container_name: postgres-insurance
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: insurance-service
-    ports:
-      - "5441:5432"
-    volumes:
-      - postgres-insurance-data:/var/lib/postgresql/data
-      - ./scripts/insurance-service.sql:/docker-entrypoint-initdb.d/insurance-service.sql
-
-  postgres-clinical:
-    <<: *pg-template
-    container_name: postgres-clinical
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: clinical-service
-    ports:
-      - "5442:5432"
-    volumes:
-      - postgres-clinical-data:/var/lib/postgresql/data
-
-  postgres-prescription:
-    <<: *pg-template
-    container_name: postgres-prescription
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: prescription-service
-    ports:
-      - "5443:5432"
-    volumes:
-      - postgres-prescription-data:/var/lib/postgresql/data
-
-  postgres-notification:
-    <<: *pg-template
-    container_name: postgres-notification
-    environment:
-      <<: *pg-default-env
-      POSTGRES_DB: notification-service
-    ports:
-      - "5444:5432"
-    volumes:
-      - postgres-notification-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-all-databases.sh:/docker-entrypoint-initdb.d/01-init-all-databases.sh
+      - ./scripts/user-service.sql:/scripts/user-service.sql
+      - ./scripts/patient-service.sql:/scripts/patient-service.sql
+      - ./scripts/doctor-service.sql:/scripts/doctor-service.sql
+      - ./scripts/appointment-service.sql:/scripts/appointment-service.sql
+      - ./scripts/payment-service.sql:/scripts/payment-service.sql
+      - ./scripts/labtest-service.sql:/scripts/labtest-service.sql
+      - ./scripts/invoice-service.sql:/scripts/invoice-service.sql
+      - ./scripts/inventory-service.sql:/scripts/inventory-service.sql
+      - ./scripts/insurance-service.sql:/scripts/insurance-service.sql
 
   registry-service:
     build:
@@ -235,7 +115,7 @@ services:
       dockerfile: service/user-service/Dockerfile
     container_name: user-service
     depends_on:
-      postgres-user:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -243,7 +123,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user-service
     ports:
       - "8085:8085"
 
@@ -254,7 +134,7 @@ services:
       dockerfile: service/appointment-service/Dockerfile
     container_name: appointment-service
     depends_on:
-      postgres-appointment:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -264,9 +144,12 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-appointment:5432/appointment-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/appointment-service
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      FEIGN_USER_SERVICE_URL: http://user-service:8085/user-service/users
+      FEIGN_NOTIFICATION_SERVICE_URL: http://notification-service:8094/notification-service
+      FEIGN_DOCTOR_SERVICE_URL: http://doctor-service:8090/doctor-service
     ports:
       - "8082:8082"
 
@@ -277,7 +160,7 @@ services:
       dockerfile: service/doctor-service/Dockerfile
     container_name: doctor-service
     depends_on:
-      postgres-doctor:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -285,7 +168,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-doctor:5432/doctor-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/doctor-service
     ports:
       - "8090:8090"
 
@@ -296,7 +179,7 @@ services:
       dockerfile: service/patient-service/Dockerfile
     container_name: patient-service
     depends_on:
-      postgres-patient:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -304,7 +187,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-patient:5432/patient-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient-service
     ports:
       - "8089:8089"
 
@@ -315,7 +198,7 @@ services:
       dockerfile: service/payment-service/Dockerfile
     container_name: payment-service
     depends_on:
-      postgres-payment:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -323,7 +206,9 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-payment:5432/payment-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment-service
+      INVOICE_SERVICE_URL: http://invoice-service:8091
+      INVENTORY_SERVICE_URL: http://inventory-service:8084
     ports:
       - "8086:8086"
 
@@ -334,7 +219,7 @@ services:
       dockerfile: service/labtest-service/Dockerfile
     container_name: labtest-service
     depends_on:
-      postgres-labtest:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -342,7 +227,11 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-labtest:5432/labtest-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/labtest-service
+      FEIGN_USER_SERVICE_URL: http://user-service:8085/user-service/users
+      FEIGN_DOCTOR_SERVICE_URL: http://doctor-service:8090/doctor-service/doctors
+      FEIGN_PATIENT_SERVICE_URL: http://patient-service:8089/patient-service/patients
+      FEIGN_APPOINTMENT_SERVICE_URL: http://appointment-service:8082/appointment-service/appointments
     ports:
       - "8088:8088"
 
@@ -353,7 +242,7 @@ services:
       dockerfile: service/invoice-service/Dockerfile
     container_name: invoice-service
     depends_on:
-      postgres-invoice:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -361,7 +250,9 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-invoice:5432/invoice-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/invoice-service
+      INVENTORY_SERVICE_URL: http://inventory-service:8084
+      APPOINTMENT_SERVICE_URL: http://appointment-service:8082
     ports:
       - "8091:8091"
 
@@ -372,7 +263,7 @@ services:
       dockerfile: service/inventory-service/Dockerfile
     container_name: inventory-service
     depends_on:
-      postgres-inventory:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -380,7 +271,9 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-inventory:5432/inventory-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory-service
+      INVOICE_SERVICE_URL: http://invoice-service:8091
+      PATIENT_SERVICE_URL: http://patient-service:8089
     ports:
       - "8084:8084"
 
@@ -391,7 +284,7 @@ services:
       dockerfile: service/insurance-service/Dockerfile
     container_name: insurance-service
     depends_on:
-      postgres-insurance:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -399,7 +292,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-insurance:5432/insurance-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/insurance-service
     ports:
       - "8087:8087"
 
@@ -410,7 +303,7 @@ services:
       dockerfile: service/clinical-service/Dockerfile
     container_name: clinical-service
     depends_on:
-      postgres-clinical:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -418,7 +311,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-clinical:5432/clinical-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinical-service
     ports:
       - "8083:8083"
 
@@ -429,7 +322,7 @@ services:
       dockerfile: service/prescription-service/Dockerfile
     container_name: prescription-service
     depends_on:
-      postgres-prescription:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -437,7 +330,8 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-prescription:5432/prescription-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/prescription-service
+      INVOICE_SERVICE_URL: http://invoice-service:8091
     ports:
       - "8081:8081"
 
@@ -448,7 +342,7 @@ services:
       dockerfile: service/notification-service/Dockerfile
     container_name: notification-service
     depends_on:
-      postgres-notification:
+      postgres:
         condition: service_healthy
       registry-service:
         condition: service_healthy
@@ -456,7 +350,7 @@ services:
         condition: service_started
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notification:5432/notification-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification-service
     ports:
       - "8094:8094"
 
@@ -469,19 +363,4 @@ volumes:
   axon-events:
   axon-config:
   redis-data:
-  postgres-user-data:
-  postgres-patient-data:
-  postgres-doctor-data:
-  postgres-appointment-data:
-  postgres-payment-data:
-  postgres-labtest-data:
-  postgres-invoice-data:
-  postgres-inventory-data:
-  postgres-insurance-data:
-  postgres-clinical-data:
-  postgres-prescription-data:
-  postgres-notification-data:
-
-
-
-
+  postgres-data:
