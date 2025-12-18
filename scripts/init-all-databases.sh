@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # Create all databases
@@ -19,38 +19,29 @@ EOSQL
 
 # Run schema scripts for each database (only if file exists)
 if [ -f /scripts/user-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "user-service" -f /scripts/user-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "user-service" -f /scripts/user-service.sql
 fi
-
 if [ -f /scripts/patient-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "patient-service" -f /scripts/patient-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "patient-service" -f /scripts/patient-service.sql
 fi
-
 if [ -f /scripts/doctor-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "doctor-service" -f /scripts/doctor-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "doctor-service" -f /scripts/doctor-service.sql
 fi
-
 if [ -f /scripts/appointment-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "appointment-service" -f /scripts/appointment-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "appointment-service" -f /scripts/appointment-service.sql
 fi
-
 if [ -f /scripts/payment-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "payment-service" -f /scripts/payment-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "payment-service" -f /scripts/payment-service.sql
 fi
-
 if [ -f /scripts/labtest-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "labtest-service" -f /scripts/labtest-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "labtest-service" -f /scripts/labtest-service.sql
 fi
-
 if [ -f /scripts/invoice-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "invoice-service" -f /scripts/invoice-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "invoice-service" -f /scripts/invoice-service.sql
 fi
-
 if [ -f /scripts/inventory-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "inventory-service" -f /scripts/inventory-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "inventory-service" -f /scripts/inventory-service.sql
 fi
-
 if [ -f /scripts/insurance-service.sql ]; then
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "insurance-service" -f /scripts/insurance-service.sql
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "insurance-service" -f /scripts/insurance-service.sql
 fi
-

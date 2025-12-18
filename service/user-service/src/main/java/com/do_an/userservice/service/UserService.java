@@ -8,6 +8,8 @@ import com.do_an.userservice.entity.User;
 import com.do_an.userservice.entity.UserRole;
 import com.do_an.userservice.exceptions.UserNotFoundException;
 import com.do_an.userservice.mapper.UserMapper;
+import com.do_an.userservice.client.PatientServiceClient;
+import com.do_an.userservice.dto.patient.PatientCreateRequest;
 import com.do_an.userservice.repository.RoleRepository;
 import com.do_an.userservice.repository.UserRepository;
 import com.do_an.userservice.repository.UserRoleRepository;
@@ -29,6 +31,7 @@ public class UserService {
     private final UserRoleRepository userRoleRepository;
     private final UserMapper userMapper;
     private final FileStorageService fileStorageService;
+    private final PatientServiceClient patientServiceClient;
 
     @Transactional
     public UserDTO createUser(CreateUserRequestDTO request) {
@@ -70,9 +73,20 @@ public class UserService {
             userRole.setRole(defaultRole);
             userRoles.add(userRole);
         }
+        try {
+            PatientCreateRequest patientRequest = PatientCreateRequest.builder()
+                    .userId(savedUser.getId())
+                    .contactPhone(savedUser.getPhone())
+                    .build();
+
+            patientServiceClient.createPatient(patientRequest);
+            log.info("Đã tạo patient cho userId: {}", savedUser.getId());
+        } catch (Exception ex) {
+            log.error("Lỗi khi tạo patient cho userId {}: {}", savedUser.getId(), ex.getMessage(), ex);
+        }
+
         userRoleRepository.saveAll(userRoles);
         log.info("Đã tạo user thành công: {}", savedUser.getId());
-        
         return userMapper.toDto(savedUser);
     }
 
