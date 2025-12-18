@@ -18,6 +18,7 @@ public class InventoryLotResponse {
     private Integer costPrice;
     private UUID medicineId;
     private String medicineName;
+    private UUID pharmacistId; // ID dược sĩ nhập kho
 }
 
 

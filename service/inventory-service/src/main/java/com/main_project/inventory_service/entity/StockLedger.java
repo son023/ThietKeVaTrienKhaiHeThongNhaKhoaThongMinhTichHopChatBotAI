@@ -47,6 +47,11 @@ public class StockLedger {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_lot_id")
     private InventoryLot inventoryLot;
+    
+    // Mối quan hệ nhiều StockLedger thuộc về 1 Pharmacist (dược sĩ thực hiện giao dịch)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pharmacist_id")
+    private Pharmacist pharmacist;
 }
 
 

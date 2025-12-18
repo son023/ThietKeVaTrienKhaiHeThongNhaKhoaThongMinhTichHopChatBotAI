@@ -63,6 +63,9 @@ public class InvoiceEventHandler {
                 invoiceItem.setDescription(medicineItem.getDescription());
                 invoiceItem.setUnitPrice(medicineItem.getUnitPrice());
 
+                invoiceItem.setInsurancePayAmount(0);
+                invoiceItem.setPatientPayAmount(medicineItem.getQuantity() * medicineItem.getUnitPrice());
+
                 for (MedicineItem it : event.getMedicineItems()) {
                     if (medicineItem.getId().equals(it.getId()) ||
                             it.getMedicineId().equals(medicineItem.getReferenceId())) {

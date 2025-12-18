@@ -1,6 +1,7 @@
 package com.main_project.notification_service.handler;
 
 import com.do_an.common.event.PrescriptionProcessNotificationEvent;
+import com.main_project.notification_service.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
@@ -22,7 +23,7 @@ public class PrescriptionProcessEventHandler {
 
         // Đẩy xuống WebSocket cho Frontend
         // Client (Frontend) cần subscribe vào topic: /topic/notifications/{doctorId}
-        String destination = "/topic/notifications/" + event.getDoctorId();
+        String destination = "/topic/prescription-error/" + event.getDoctorId();
 
         messagingTemplate.convertAndSend(destination, event);
 

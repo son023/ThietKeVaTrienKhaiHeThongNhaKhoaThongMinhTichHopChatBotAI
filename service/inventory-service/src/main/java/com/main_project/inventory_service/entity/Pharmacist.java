@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -22,4 +24,9 @@ public class Pharmacist {
 
     @Column(length = 255)
     private String certificate;
+
+    
+    //Mối quan hệ 1 Pharmacist có nhiều StockLedger (lịch sử giao dịch kho)
+    @OneToMany(mappedBy = "pharmacist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<StockLedger> stockLedgers = new ArrayList<>();
 }
