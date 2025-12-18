@@ -19,6 +19,7 @@ interface NewPatientHeaderProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   onOpenChatbot: () => void;
+  onLogout: () => void;
 }
 
 interface Notification {
@@ -34,6 +35,7 @@ export function NewPatientHeader({
   currentPage,
   onNavigate,
   onOpenChatbot,
+  onLogout,
 }: NewPatientHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -332,10 +334,7 @@ export function NewPatientHeader({
                   <div className="my-[8px] border-t border-neutral-border" />
                   {/* Logout */}
                   <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      handleLogout();
-                    }}
+                    onClick={onLogout}
                     className="w-full px-[20px] py-[12px] flex items-center gap-[12px] hover:bg-red-50 transition-colors text-left"
                   >
                     <LogOut className="w-[18px] h-[18px] text-red-600" />
