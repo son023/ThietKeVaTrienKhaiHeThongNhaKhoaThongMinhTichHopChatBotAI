@@ -1,5 +1,7 @@
 package com.main_project.patient_service.util;
 
+import com.main_project.patient_service.dto.ConditionRequestDTO;
+import com.main_project.patient_service.dto.ConditionResponseDTO;
 import com.main_project.patient_service.dto.MedicalHistoryRequestDTO;
 import com.main_project.patient_service.dto.MedicalHistoryResponseDTO;
 import com.main_project.patient_service.dto.PatientAllergyDTO;
@@ -7,6 +9,7 @@ import com.main_project.patient_service.dto.PatientRequestDTO;
 import com.main_project.patient_service.dto.PatientResponseDTO;
 import com.main_project.patient_service.dto.ToothIssueDTO;
 import com.main_project.patient_service.dto.UnderlyingDiseaseDTO;
+import com.main_project.patient_service.entity.Condition;
 import com.main_project.patient_service.entity.MedicalHistory;
 import com.main_project.patient_service.entity.PatientAllergy;
 import com.main_project.patient_service.entity.Patient;
@@ -72,14 +75,15 @@ public class EntityMapper {
         dto.setId(entity.getId());
         dto.setAppointmentId(entity.getAppointmentId());
         dto.setSymptoms(entity.getSymptoms());
-        dto.setTreatment(entity.getTreatment());
-        dto.setDiagnosis(entity.getDiagnosis());
-        dto.setDisease(entity.getDisease());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
         if (entity.getPatient() != null) {
             dto.setPatientId(entity.getPatient().getUserId());
+        }
+
+        if (entity.getConditions() != null) {
+            dto.setConditions(mapConditionsToDTO(entity.getConditions()));
         }
 
         return dto;
@@ -88,14 +92,20 @@ public class EntityMapper {
     public MedicalHistory toMedicalHistoryEntity(MedicalHistoryRequestDTO request, Patient patient) {
         if (request == null) return null;
 
-        return MedicalHistory.builder()
+        MedicalHistory medicalHistory = MedicalHistory.builder()
                 .appointmentId(request.getAppointmentId())
                 .symptoms(request.getSymptoms())
-                .treatment(request.getTreatment())
-                .diagnosis(request.getDiagnosis())
-                .disease(request.getDisease())
                 .patient(patient)
                 .build();
+
+        if (request.getConditions() != null && !request.getConditions().isEmpty()) {
+            List<Condition> conditions = request.getConditions().stream()
+                    .map(conditionDTO -> toConditionEntity(conditionDTO, medicalHistory))
+                    .collect(Collectors.toList());
+            medicalHistory.setConditions(new java.util.HashSet<>(conditions));
+        }
+
+        return medicalHistory;
     }
 
     public void updateMedicalHistoryEntity(MedicalHistory entity, MedicalHistoryRequestDTO request, Patient patient) {
@@ -103,10 +113,55 @@ public class EntityMapper {
 
         entity.setAppointmentId(request.getAppointmentId());
         entity.setSymptoms(request.getSymptoms());
-        entity.setTreatment(request.getTreatment());
-        entity.setDiagnosis(request.getDiagnosis());
-        entity.setDisease(request.getDisease());
         entity.setPatient(patient);
+
+        if (request.getConditions() != null) {
+            if (!request.getConditions().isEmpty()) {
+                List<Condition> conditions = request.getConditions().stream()
+                        .map(conditionDTO -> toConditionEntity(conditionDTO, entity))
+                        .collect(Collectors.toList());
+                entity.getConditions().addAll(conditions);
+            }
+        }
+    }
+
+    public ConditionResponseDTO toConditionResponse(Condition entity) {
+        if (entity == null) return null;
+
+        ConditionResponseDTO dto = new ConditionResponseDTO();
+        dto.setId(entity.getId());
+        dto.setToothNumber(entity.getToothNumber());
+        dto.setName(entity.getName());
+        dto.setStatus(entity.getStatus());
+        dto.setTreatment(entity.getTreatment());
+        dto.setSurface(entity.getSurface());
+
+        if (entity.getMedicalHistory() != null) {
+            dto.setMedicalHistoryId(entity.getMedicalHistory().getId());
+        }
+
+        return dto;
+    }
+
+    public Condition toConditionEntity(ConditionRequestDTO request, MedicalHistory medicalHistory) {
+        if (request == null) return null;
+
+        return Condition.builder()
+                .id(request.getId() != null ? request.getId() : java.util.UUID.randomUUID())
+                .medicalHistory(medicalHistory)
+                .toothNumber(request.getToothNumber())
+                .name(request.getName())
+                .status(request.getStatus())
+                .treatment(request.getTreatment())
+                .surface(request.getSurface())
+                .build();
+    }
+
+    private List<ConditionResponseDTO> mapConditionsToDTO(Collection<Condition> conditions) {
+        if (conditions == null) return null;
+        return conditions.stream()
+                .map(this::toConditionResponse)
+                .collect(Collectors.toList());
     }
 
     private List<PatientAllergyDTO> mapPatientAllergiesToDTO(Collection<PatientAllergy> allergies) {

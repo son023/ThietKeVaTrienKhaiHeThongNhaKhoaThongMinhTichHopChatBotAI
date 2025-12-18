@@ -106,9 +106,9 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
       case 'completed':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'upcoming':
-        return <div className="w-5 h-5 rounded-full border-2 border-[#3FB5FF] flex items-center justify-center"><div className="w-2 h-2 bg-[#3FB5FF] rounded-full" /></div>;
+        return <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center"><div className="w-2 h-2 bg-primary rounded-full" /></div>;
       case 'scheduled':
-        return <div className="w-5 h-5 rounded-full border-2 border-gray-300" />;
+        return <div className="w-5 h-5 rounded-full border-2 border-neutral-border" />;
       case 'overdue':
         return <div className="w-5 h-5 rounded-full border-2 border-red-500 flex items-center justify-center"><div className="w-2 h-2 bg-red-500 rounded-full" /></div>;
       default:
@@ -119,13 +119,13 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-500">Đã hoàn thành</Badge>;
+        return <Badge className="bg-green-500 hover:bg-green-600 text-white">Đã hoàn thành</Badge>;
       case 'upcoming':
-        return <Badge className="bg-[#3FB5FF]">Sắp tới</Badge>;
+        return <Badge className="bg-primary hover:bg-primary-strong text-white">Sắp tới</Badge>;
       case 'scheduled':
-        return <Badge variant="outline">Đã lên lịch</Badge>;
+        return <Badge variant="outline" className="border-neutral-border/50">Đã lên lịch</Badge>;
       case 'overdue':
-        return <Badge className="bg-red-500">Đã trễ hẹn</Badge>;
+        return <Badge className="bg-red-500 hover:bg-red-600 text-white">Đã trễ hẹn</Badge>;
       default:
         return null;
     }
@@ -146,31 +146,31 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
   const progress = Math.round((completedSteps / totalSteps) * 100);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* DoctorHeader */}
-      <div className="bg-white border-b border-[#e8e8e8] p-6 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-        <div className="flex items-center gap-4 mb-4">
-          <Button variant="outline" size="sm" onClick={onBack} className="rounded-[10px] border-[#e8e8e8]">
+    <div className="h-full flex flex-col bg-neutral-background">
+      {/* Header */}
+      <div className="bg-neutral-surface border-b border-neutral-border/30 p-6 shadow-sm">
+        <div className="flex items-center gap-4 mb-5">
+          <Button variant="outline" size="sm" onClick={onBack} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-[#01304e]">{plan.name}</h1>
-              <Badge className={plan.status === 'completed' ? 'bg-green-500' : 'bg-[#3FB5FF]'}>
+              <h1 className="typo-h3">{plan.name}</h1>
+              <Badge className={plan.status === 'completed' ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-primary hover:bg-primary-strong text-white'}>
                 {plan.status === 'completed' ? 'Hoàn tất ✅' : `Đang thực hiện (${completedSteps}/${totalSteps} bước đã hoàn thành)`}
               </Badge>
             </div>
-            <p className="text-[#333333]/60">
-              {plan.patientName} • {plan.patientAge} tuổi • Mã BN: {plan.patientId}
+            <p className="text-neutral-text/60">
+              {plan.patientName} • {plan.patientAge} tuổi • Mã BN: <span className="font-mono">{plan.patientId}</span>
             </p>
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between text-sm text-[#333333]/60 mb-2">
-            <span>Tiến độ tổng thể</span>
-            <span>{progress}%</span>
+          <div className="flex items-center justify-between text-sm text-neutral-text/60 mb-2">
+            <span className="font-medium">Tiến độ tổng thể</span>
+            <span className="font-bold text-neutral-text">{progress}%</span>
           </div>
           <Progress value={progress} className="h-3" />
         </div>
@@ -179,28 +179,28 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="stages" className="h-full flex flex-col">
-          <div className="border-b bg-white px-6">
-            <TabsList>
-              <TabsTrigger value="stages">Giai đoạn điều trị</TabsTrigger>
-              <TabsTrigger value="documents">Tài liệu & Hình ảnh</TabsTrigger>
-              <TabsTrigger value="notes">Ghi chú & Lịch sử</TabsTrigger>
+          <div className="border-b border-neutral-border/30 bg-neutral-surface px-6">
+            <TabsList className="bg-transparent">
+              <TabsTrigger value="stages" className="data-[state=active]:border-b-2 data-[state=active]:border-primary">Giai đoạn điều trị</TabsTrigger>
+              <TabsTrigger value="documents" className="data-[state=active]:border-b-2 data-[state=active]:border-primary">Tài liệu & Hình ảnh</TabsTrigger>
+              <TabsTrigger value="notes" className="data-[state=active]:border-b-2 data-[state=active]:border-primary">Ghi chú & Lịch sử</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="stages" className="flex-1 overflow-hidden m-0">
             <ScrollArea className="h-full">
               <div className="p-6">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-6 flex items-center justify-between">
                   <Button
                     variant={editMode ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setEditMode(!editMode)}
-                    className={editMode ? 'bg-[#3FB5FF] hover:bg-[#3FB5FF]/90' : ''}
+                    className={editMode ? 'bg-primary hover:bg-primary-strong text-white rounded-lg' : 'rounded-lg border-neutral-border/50 hover:bg-neutral-muted'}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     {editMode ? 'Đang chỉnh sửa' : 'Chế độ chỉnh sửa'}
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="rounded-lg border-primary/50 text-primary hover:bg-primary hover:text-white transition-all">
                     <Plus className="w-4 h-4 mr-2" />
                     Thêm giai đoạn mới
                   </Button>
@@ -208,35 +208,35 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
 
                 <div className="space-y-4 relative">
                   {/* Timeline line */}
-                  <div className="absolute left-[20px] top-8 bottom-8 w-0.5 bg-gray-200" />
+                  <div className="absolute left-[20px] top-8 bottom-8 w-0.5 bg-neutral-border/30" />
 
                   {steps.map((step, index) => (
-                    <Card key={step.id} className={`rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)] ${step.status === 'upcoming' ? 'border-[#3FB5FF] shadow-[0px_4px_12px_0px_rgba(63,181,255,0.2)]' : ''}`}>
-                      <CardContent className="p-4">
+                    <Card key={step.id} className={`rounded-xl border bg-neutral-surface shadow-sm transition-all ${step.status === 'upcoming' ? 'border-primary shadow-md' : 'border-neutral-border/30 hover:border-primary/50 hover:shadow-md'}`}>
+                      <CardContent className="p-5">
                         <div className="flex items-start gap-4">
                           {editMode && step.status !== 'completed' && (
-                            <button className="text-gray-400 hover:text-gray-600 cursor-move mt-1">
+                            <button className="text-neutral-text/40 hover:text-neutral-text cursor-move mt-1 transition-colors">
                               <GripVertical className="w-5 h-5" />
                             </button>
                           )}
-                          
-                          <div className="mt-1 relative z-10 bg-white">
+
+                          <div className="mt-1 relative z-10 bg-neutral-surface">
                             {getStatusIcon(step.status)}
                           </div>
 
                           <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 {editMode && step.status !== 'completed' ? (
                                   <Input
                                     defaultValue={step.name}
-                                    className="mb-2"
+                                    className="mb-2 rounded-lg border-neutral-border/30 focus:border-primary"
                                   />
                                 ) : (
-                                  <h3 className="text-[#333333]">{step.name}</h3>
+                                  <h3 className="font-semibold text-neutral-text">{step.name}</h3>
                                 )}
                                 <div className="flex items-center gap-3 mt-2">
-                                  <div className="flex items-center gap-2 text-sm text-[#333333]/60">
+                                  <div className="flex items-center gap-2 text-sm text-neutral-text/60">
                                     <Calendar className="w-4 h-4" />
                                     {step.status === 'completed' ? 'Hoàn thành: ' : 'Dự kiến: '}
                                     {step.date}
@@ -247,18 +247,18 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
                             </div>
 
                             {step.notes && (
-                              <div className="bg-gray-50 p-3 rounded text-sm text-[#333333]/80 mb-3">
+                              <div className="bg-neutral-muted p-3 rounded-lg text-sm text-neutral-text mb-3">
                                 {step.notes}
                               </div>
                             )}
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                               {step.status !== 'completed' && (
                                 <>
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="text-green-600 border-green-300 hover:bg-green-50"
+                                    className="text-green-600 border-green-300 hover:bg-green-50 rounded-lg transition-all"
                                     onClick={() => markStepComplete(step.id)}
                                   >
                                     <CheckCircle className="w-4 h-4 mr-1" />
@@ -267,7 +267,7 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="text-[#3FB5FF] border-[#3FB5FF]/30"
+                                    className="text-primary border-primary/30 hover:bg-primary hover:text-white rounded-lg transition-all"
                                   >
                                     <Calendar className="w-4 h-4 mr-1" />
                                     Đặt lịch
@@ -279,6 +279,7 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
                                   <Button
                                     size="sm"
                                     variant="outline"
+                                    className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all"
                                   >
                                     <Edit className="w-4 h-4 mr-1" />
                                     Chỉnh sửa
@@ -286,7 +287,7 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="text-red-500 border-red-300"
+                                    className="text-red-500 border-red-300 hover:bg-red-50 rounded-lg transition-all"
                                     onClick={() => deleteStep(step.id)}
                                   >
                                     <Trash2 className="w-4 h-4 mr-1" />
@@ -308,8 +309,8 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
           <TabsContent value="documents" className="flex-1 overflow-hidden m-0">
             <ScrollArea className="h-full">
               <div className="p-6">
-                <div className="mb-4">
-                  <Button className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90">
+                <div className="mb-6">
+                  <Button className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                     <Plus className="w-4 h-4 mr-2" />
                     Upload tài liệu
                   </Button>
@@ -317,16 +318,16 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {documents.map((doc) => (
-                    <Card key={doc.id} className="cursor-pointer hover:border-[#3FB5FF] transition-colors">
-                      <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                        <div className="text-center text-[#333333]/40">
+                    <Card key={doc.id} className="cursor-pointer border border-neutral-border/30 bg-neutral-surface hover:border-primary hover:shadow-md transition-all rounded-xl">
+                      <div className="aspect-video bg-neutral-muted flex items-center justify-center">
+                        <div className="text-center text-neutral-text/40">
                           <div className="text-4xl mb-2">📄</div>
-                          <p className="text-sm">{doc.type}</p>
+                          <p className="text-sm font-medium">{doc.type}</p>
                         </div>
                       </div>
-                      <CardContent className="p-3">
-                        <p className="text-sm text-[#333333]">{doc.name}</p>
-                        <p className="text-xs text-[#333333]/60 mt-1">{doc.date}</p>
+                      <CardContent className="p-4">
+                        <p className="text-sm font-semibold text-neutral-text">{doc.name}</p>
+                        <p className="text-xs text-neutral-text/60 mt-1">{doc.date}</p>
                       </CardContent>
                     </Card>
                   ))}
@@ -338,36 +339,36 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
           <TabsContent value="notes" className="flex-1 overflow-hidden m-0">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Ghi chú chung</CardTitle>
+                <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="typo-h4">Ghi chú chung</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
                       value={generalNotes}
                       onChange={(e) => setGeneralNotes(e.target.value)}
-                      className="min-h-[150px]"
+                      className="min-h-[150px] rounded-lg border-neutral-border/30 focus:border-primary"
                       placeholder="Nhập ghi chú tổng quan về kế hoạch điều trị..."
                     />
-                    <Button className="mt-3 bg-[#05619A] hover:bg-[#05619A]/90">
+                    <Button className="mt-4 bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                       <Save className="w-4 h-4 mr-2" />
                       Lưu ghi chú
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Lịch sử chỉnh sửa</CardTitle>
+                <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="typo-h4">Lịch sử chỉnh sửa</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {auditLog.map((log) => (
-                        <div key={log.id} className="flex gap-3 p-3 bg-gray-50 rounded">
-                          <div className="w-2 h-2 bg-[#3FB5FF] rounded-full mt-2 flex-shrink-0" />
+                        <div key={log.id} className="flex gap-3 p-4 bg-neutral-muted rounded-lg">
+                          <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
                           <div className="flex-1">
-                            <p className="text-sm text-[#333333]">{log.action}</p>
-                            <p className="text-xs text-[#333333]/60 mt-1">
+                            <p className="text-sm text-neutral-text">{log.action}</p>
+                            <p className="text-xs text-neutral-text/60 mt-1">
                               {log.user} • {log.time}
                             </p>
                           </div>
@@ -383,26 +384,26 @@ export function TreatmentPlanDetail({ planId, onBack }: TreatmentPlanDetailProps
       </div>
 
       {/* Footer Toolbar */}
-      <div className="bg-white border-t border-[#e8e8e8] p-4 shadow-[0px_-4px_12px_0px_rgba(159,166,175,0.08)]">
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
+      <div className="bg-neutral-surface border-t border-neutral-border/30 p-5 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex gap-2 flex-wrap">
+            <Button className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
               <Save className="w-4 h-4 mr-2" />
               Lưu thay đổi
             </Button>
-            <Button variant="outline" className="rounded-[10px] border-[#e8e8e8]">
+            <Button variant="outline" className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
               <Printer className="w-4 h-4 mr-2" />
               In kế hoạch
             </Button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {plan.status !== 'completed' && (
-              <Button className="bg-green-600 hover:bg-green-700 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
+              <Button className="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm hover:shadow transition-all">
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Hoàn tất Kế hoạch
               </Button>
             )}
-            <Button variant="outline" className="text-red-500 border-red-300 rounded-[10px]">
+            <Button variant="outline" className="text-red-500 border-red-300 hover:bg-red-50 rounded-lg transition-all">
               <X className="w-4 h-4 mr-2" />
               Hủy Kế hoạch
             </Button>

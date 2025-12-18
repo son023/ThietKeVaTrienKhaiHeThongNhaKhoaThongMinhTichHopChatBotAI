@@ -17,6 +17,10 @@ interface BookAppointmentDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    patientId?: string;
+    patientName?: string;
+    patientPhone?: string;
+    patientEmail?: string;
 }
 
 const timeSlots = [
@@ -24,7 +28,15 @@ const timeSlots = [
     '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
 ];
 
-export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppointmentDialogProps) {
+export function BookAppointmentDialog({
+    isOpen,
+    onClose,
+    onSuccess,
+    patientId,
+    patientName,
+    patientPhone,
+    patientEmail,
+}: BookAppointmentDialogProps) {
     const [currentStep, setCurrentStep] = useState(1);
     const [services, setServices] = useState<MedicalServiceDTO[]>([]);
     const [doctors, setDoctors] = useState<DoctorWithUser[]>([]);
@@ -52,9 +64,9 @@ export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppoin
             doctor: '',
             date: undefined,
             time: '',
-            patientName: user?.fullName || '',
-            patientPhone: user?.phone || '',
-            patientEmail: user?.email || '',
+            patientName: patientName ?? user?.fullName ?? '',
+            patientPhone: patientPhone ?? user?.phone ?? '',
+            patientEmail: patientEmail ?? user?.email ?? '',
             notes: '',
         });
         setAvailableTimes([]);
@@ -164,8 +176,9 @@ export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppoin
             return;
         }
         const user = authController.getCurrentUser();
-        if (!user?.id) {
-            toast.error('Vui lòng đăng nhập để đặt lịch');
+        const targetPatientId = patientId || user?.id;
+        if (!targetPatientId) {
+            toast.error('Vui lòng đăng nhập hoặc chọn bệnh nhân để đặt lịch');
             return;
         }
 
@@ -174,7 +187,7 @@ export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppoin
         try {
             await appointmentController.holdSlot({
                 doctorId: formData.doctor,
-                patientId: user.id,
+                patientId: targetPatientId,
                 appointmentStartTime: start.toISOString(),
                 medicalServiceIds: formData.services,
             });
@@ -222,8 +235,9 @@ export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppoin
         }
 
         const user = authController.getCurrentUser();
-        if (!user?.id) {
-            toast.error('Vui lòng đăng nhập để đặt lịch');
+        const targetPatientId = patientId || user?.id;
+        if (!targetPatientId) {
+            toast.error('Vui lòng đăng nhập hoặc chọn bệnh nhân để đặt lịch');
             return;
         }
 
@@ -237,7 +251,7 @@ export function BookAppointmentDialog({ isOpen, onClose, onSuccess }: BookAppoin
         setSubmitting(true);
         appointmentController.create({
             doctorId: formData.doctor,
-            patientId: user.id,
+            patientId: targetPatientId,
             appointmentStartTime: start.toISOString(),
             medicalServiceIds: formData.services,
         })

@@ -71,32 +71,32 @@ export function LabTestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl sm:max-w-6xl max-h-[90vh] overflow-y-auto bg-white p-0">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-[#e8e8e8]">
-          <DialogTitle className="text-[#01304e]">
+      <DialogContent className="max-w-6xl sm:max-w-6xl max-h-[90vh] overflow-y-auto bg-neutral-surface p-0 rounded-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-border/30">
+          <DialogTitle className="typo-h3">
             Chi tiết kết quả lab test
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-5">
           {/* Header Card */}
-          <Card className="rounded-[12px] border-[#e8e8e8]">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-[#01304e] font-semibold">
+          <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+            <CardHeader className="p-5 pb-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <p className="font-semibold text-neutral-text">
                       {labTest.labTestType?.name || "Lab test"}
                     </p>
                     {labTest.status && (
-                      <Badge className={labStatusMeta[labTest.status]?.color || "bg-gray-100 text-gray-800"}>
+                      <Badge className={labStatusMeta[labTest.status]?.color || "bg-neutral-muted text-neutral-text"}>
                         {labStatusMeta[labTest.status]?.label || labTest.status}
                       </Badge>
                     )}
                   </div>
                   {labTest.resultDate && (
-                    <div className="flex items-center gap-1 text-xs text-[#333333]/60">
-                      <Calendar className="w-3 h-3" />
+                    <div className="flex items-center gap-2 text-sm text-neutral-text/60">
+                      <Calendar className="w-4 h-4" />
                       <span>
                         Kết quả: {new Date(labTest.resultDate).toLocaleString("vi-VN")}
                       </span>
@@ -107,7 +107,7 @@ export function LabTestDetailDialog({
                   variant="ghost"
                   size="sm"
                   onClick={() => onOpenChange(false)}
-                  className="text-[#333333]/70"
+                  className="text-neutral-text/70 rounded-lg hover:bg-neutral-muted transition-all"
                 >
                   Đóng
                 </Button>
@@ -115,36 +115,38 @@ export function LabTestDetailDialog({
             </CardHeader>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Basic Information */}
-            <Card className="rounded-[12px] border-[#e8e8e8]">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-sm text-[#01304e] flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-sm font-semibold text-neutral-text flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <FileText className="w-4 h-4 text-primary" />
+                  </div>
                   Thông tin cơ bản
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-5 space-y-4">
                 {labTest.instructions && (
                   <div className="text-sm">
-                    <span className="font-semibold text-[#01304e]">Hướng dẫn: </span>
-                    <span className="text-[#333333]/70">{labTest.instructions}</span>
+                    <span className="font-semibold text-neutral-text">Hướng dẫn: </span>
+                    <span className="text-neutral-text/70">{labTest.instructions}</span>
                   </div>
                 )}
 
                 {labTest.labTechnicianId && (
                   <div className="text-sm flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#01304e]" />
-                    <span className="font-semibold text-[#01304e]">Nhân viên lab: </span>
-                    <span className="text-[#333333]/70">{labTest.labTechnicianId}</span>
+                    <User className="w-4 h-4 text-neutral-text/60" />
+                    <span className="font-semibold text-neutral-text">Nhân viên lab: </span>
+                    <span className="text-neutral-text/70">{labTest.labTechnicianId}</span>
                   </div>
                 )}
 
                 {labTest.createdAt && (
                   <div className="text-sm flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#01304e]" />
-                    <span className="font-semibold text-[#01304e]">Tạo lúc: </span>
-                    <span className="text-[#333333]/70">
+                    <Calendar className="w-4 h-4 text-neutral-text/60" />
+                    <span className="font-semibold text-neutral-text">Tạo lúc: </span>
+                    <span className="text-neutral-text/70">
                       {new Date(labTest.createdAt).toLocaleString("vi-VN")}
                     </span>
                   </div>
@@ -154,53 +156,55 @@ export function LabTestDetailDialog({
 
             {/* Test Results */}
             {(parsedStructure || labTest.units || labTest.referenceRange || labTest.abnormalFlag) && (
-              <Card className="rounded-[12px] border-[#e8e8e8]">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm text-[#01304e] flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4" />
+              <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                <CardHeader className="p-5 pb-3">
+                  <CardTitle className="text-sm font-semibold text-neutral-text flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-primary/10">
+                      <AlertTriangle className="w-4 h-4 text-primary" />
+                    </div>
                     Kết quả xét nghiệm
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {labTest.status && (
                       <div className="text-sm">
-                        <span className="font-semibold text-[#01304e]">Trạng thái: </span>
-                        <span className="text-[#333333]/70">
+                        <span className="font-semibold text-neutral-text">Trạng thái: </span>
+                        <span className="text-neutral-text/70">
                           {labStatusMeta[labTest.status]?.label || labTest.status}
                         </span>
                       </div>
                     )}
                     {labTest.abnormalFlag && (
                       <div className="text-sm">
-                        <span className="font-semibold text-[#01304e]">
+                        <span className="font-semibold text-neutral-text">
                           Đánh giá bất thường:{" "}
                         </span>
-                        <span className="text-[#333333]/70">{labTest.abnormalFlag}</span>
+                        <span className="text-neutral-text/70">{labTest.abnormalFlag}</span>
                       </div>
                     )}
                     {labTest.units && (
                       <div className="text-sm">
-                        <span className="font-semibold text-[#01304e]">Đơn vị: </span>
-                        <span className="text-[#333333]/70">{labTest.units}</span>
+                        <span className="font-semibold text-neutral-text">Đơn vị: </span>
+                        <span className="text-neutral-text/70">{labTest.units}</span>
                       </div>
                     )}
                     {labTest.referenceRange && (
                       <div className="text-sm">
-                        <span className="font-semibold text-[#01304e]">
+                        <span className="font-semibold text-neutral-text">
                           Khoảng tham chiếu:{" "}
                         </span>
-                        <span className="text-[#333333]/70">{labTest.referenceRange}</span>
+                        <span className="text-neutral-text/70">{labTest.referenceRange}</span>
                       </div>
                     )}
                   </div>
 
                   {parsedStructure && (
-                    <div className="space-y-2 pt-2 border-t border-[#e8e8e8]">
-                      <p className="text-sm font-semibold text-[#01304e]">
+                    <div className="space-y-3 pt-3 border-t border-neutral-border/30">
+                      <p className="text-sm font-semibold text-neutral-text">
                         Chi tiết kết quả:
                       </p>
-                      <div className="text-xs font-mono bg-white border border-slate-200 rounded-lg p-3 text-[#01304e] overflow-x-auto">
+                      <div className="text-xs font-mono bg-neutral-muted border border-neutral-border/30 rounded-lg p-4 text-neutral-text overflow-x-auto">
                         <pre className="whitespace-pre-wrap break-words">
                           {typeof parsedStructure === "string"
                             ? parsedStructure
@@ -216,22 +220,24 @@ export function LabTestDetailDialog({
 
           {/* Medical Attachments */}
           {labTestAttachments.length > 0 && (
-            <Card className="rounded-[12px] border-[#e8e8e8]">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-sm text-[#01304e] flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" />
+            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-sm font-semibold text-neutral-text flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                  </div>
                   File đính kèm ({labTestAttachments.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {labTestAttachments.map((file) => {
                     const fileUrl = getFileUrl(file.filePath);
                     const isImage = isImageFile(file.type, file.filePath);
                     const fileName = file.filePath
                       ? file.filePath.split("/").pop() || "Tệp không tên"
                       : "Tệp không tên";
-                    
+
                     // Debug log
                     console.log("File attachment:", {
                       id: file.id,
@@ -244,10 +250,10 @@ export function LabTestDetailDialog({
                     return (
                       <Card
                         key={file.id}
-                        className="rounded-[10px] border-[#e8e8e8] hover:border-[#3FB5FF] transition-all overflow-hidden"
+                        className="rounded-xl border border-neutral-border/30 hover:border-primary hover:shadow-md transition-all overflow-hidden bg-neutral-surface"
                       >
                         {isImage && fileUrl ? (
-                          <div className="relative w-full aspect-video bg-gray-100">
+                          <div className="relative w-full aspect-video bg-neutral-muted">
                             <img
                               src={fileUrl}
                               alt={fileName}
@@ -274,21 +280,21 @@ export function LabTestDetailDialog({
                             />
                           </div>
                         ) : (
-                          <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                            <FileText className="w-12 h-12 text-gray-400" />
+                          <div className="w-full aspect-video bg-neutral-muted flex items-center justify-center">
+                            <FileText className="w-12 h-12 text-neutral-text/30" />
                           </div>
                         )}
-                        <CardContent className="p-3 space-y-1">
-                          <p className="text-sm text-[#01304e] line-clamp-1 font-medium">
+                        <CardContent className="p-4 space-y-2">
+                          <p className="text-sm text-neutral-text line-clamp-1 font-semibold">
                             {fileName}
                           </p>
                           {file.type && (
-                            <p className="text-xs text-[#333333]/60">
+                            <p className="text-xs text-neutral-text/60">
                               Loại: {file.type}
                             </p>
                           )}
                           {file.updatedAt && (
-                            <p className="text-xs text-[#333333]/60">
+                            <p className="text-xs text-neutral-text/60">
                               Cập nhật:{" "}
                               {new Date(file.updatedAt).toLocaleDateString("vi-VN")}
                             </p>
@@ -298,9 +304,9 @@ export function LabTestDetailDialog({
                               href={fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-[#3FB5FF] hover:text-[#3FB5FF]/80 mt-1"
+                              className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary-strong font-medium mt-2 transition-colors"
                             >
-                              <Download className="w-3 h-3" />
+                              <Download className="w-3.5 h-3.5" />
                               Xem/Tải xuống
                             </a>
                           )}

@@ -22,14 +22,14 @@ public class LabTestCompletedEventHandler {
     @EventHandler
     public void on(LabTestCompletedEvent event) {
         log.info("=== LabTestCompletedEventHandler triggered ===");
-        log.info("Received LabTestCompletedEvent for labTestId: {}, appointmentId: {}, doctorId: {}", 
+        log.info("Received LabTestCompletedEvent for labTestId: {}, appointmentId: {}, doctorId: {}",
                 event.getLabTestId(), event.getAppointmentId(), event.getDoctorId());
-        
+
         if (event.getDoctorId() == null) {
             log.error("DoctorId is null in LabTestCompletedEvent! Cannot process notification.");
             return;
         }
-        
+
         try {
             UUID doctorId = event.getDoctorId();
             log.info("Processing notification for doctorId: {}", doctorId);
@@ -42,7 +42,7 @@ public class LabTestCompletedEventHandler {
                     .status("sent")
                     .retryCount(0)
                     .build();
-            
+
             log.info("Saving notification to database...");
             notification = notificationRepository.save(notification);
             log.info("Notification saved with id: {}, userId: {}, message: {}",
@@ -55,9 +55,9 @@ public class LabTestCompletedEventHandler {
                     event.getAppointmentId(),
                     notification.getMessage()
             );
-            
+
             log.info("✅ Lab test completed notification sent to doctor: {}", doctorId);
-            
+
         } catch (Exception e) {
             log.error("Failed to process LabTestCompletedEvent for labTestId: {}, appointmentId: {}",
                     event.getLabTestId(), event.getAppointmentId(), e);

@@ -1,5 +1,6 @@
 package com.main_project.patient_service.service;
 
+import com.main_project.patient_service.dto.ConditionResponseDTO;
 import com.main_project.patient_service.dto.MedicalHistoryRequestDTO;
 import com.main_project.patient_service.dto.MedicalHistoryResponseDTO;
 
@@ -17,9 +18,11 @@ public interface IMedicalHistoryService {
 
     List<MedicalHistoryResponseDTO> getMedicalHistoriesByAppointment(UUID appointmentId);
 
-    List<MedicalHistoryResponseDTO> searchMedicalHistoriesByDisease(String diseaseKeyword);
-
     MedicalHistoryResponseDTO updateMedicalHistory(UUID id, MedicalHistoryRequestDTO request);
 
     void deleteMedicalHistory(UUID id);
+
+    ConditionResponseDTO addConditionToMedicalHistory(UUID medicalHistoryId, com.main_project.patient_service.dto.ConditionRequestDTO conditionRequest);
+
+    MedicalHistoryResponseDTO updateMedicalHistoryByAppointmentId(MedicalHistoryRequestDTO request);
 }

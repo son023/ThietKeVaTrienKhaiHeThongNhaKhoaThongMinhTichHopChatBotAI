@@ -42,6 +42,7 @@ dependencies {
 
     // Thêm dependency vào common module
     implementation 'com.do_an:common:1.0.0'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'

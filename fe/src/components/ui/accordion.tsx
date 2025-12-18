@@ -35,13 +35,30 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
-          className,
+          // 1. Layout & Animation
+          "group flex flex-1 items-center justify-between py-4 font-medium transition-all outline-none text-left text-sm",
+          "rounded-md px-4", // Giữ padding để nội dung không sát mép
+
+          // 2. LOGIC MÀU SẮC (SỬA Ở ĐÂY):
+          // Luôn luôn nền trắng
+          "bg-white",
+          // Mặc định chữ màu tối (#333), Hover chuyển sang màu Primary (#3FB5FF)
+          "text-foreground hover:text-primary",
+
+          // 3. Các trạng thái khác (Focus, Disabled, Rotate Icon)
+          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+          "disabled:pointer-events-none disabled:opacity-50",
+          "[&[data-state=open]>svg]:rotate-180",
+
+          className
         )}
         {...props}
       >
         {children}
-        <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
+        <ChevronDownIcon
+          // Icon cũng sẽ đổi màu theo text khi hover (nhờ class group-hover)
+          className="pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 text-muted-foreground group-hover:text-primary"
+        />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );

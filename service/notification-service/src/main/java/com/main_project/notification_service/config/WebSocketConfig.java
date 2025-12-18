@@ -1,4 +1,4 @@
-package com.main_project.notification_service.configuration;
+package com.main_project.notification_service.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -6,10 +6,10 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic");
@@ -23,4 +23,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .withSockJS().setDisconnectDelay(30 * 1000)
                 .setHeartbeatTime(10 * 1000);
     }
+
 }

@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MedicalHistoryRepository extends JpaRepository<MedicalHistory, UUID> {
-    List<MedicalHistory> findByDiseaseContainingIgnoreCase(String disease);
-    List<MedicalHistory> findByDiagnosisContainingIgnoreCase(String diagnosis);
     List<MedicalHistory> findByAppointmentId(UUID appointmentId);
     List<MedicalHistory> findByPatient_UserId(UUID patientId);
 }

@@ -21,6 +21,7 @@ public class SecurityConfig {
         return http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/inventory-service/dispense-orders/prescription/**").permitAll()
 //                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                 )

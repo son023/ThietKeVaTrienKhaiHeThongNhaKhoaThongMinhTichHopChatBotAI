@@ -1,4 +1,4 @@
-package com.main_project.notification_service.configuration;
+package com.main_project.notification_service.config;
 
 import com.thoughtworks.xstream.XStream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,4 +13,6 @@ public class AxonConfig {
             "com.main_project.**"
         });
     }
+
 }
+

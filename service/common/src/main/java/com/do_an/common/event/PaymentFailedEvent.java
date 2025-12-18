@@ -10,7 +10,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentFailedEvent {
-    private UUID prescriptionId;
+    //private UUID prescriptionId;
     private UUID paymentId;
+    private String status;
     private String reason;
 }

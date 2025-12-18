@@ -23,8 +23,8 @@ public class InventoryAggregate {
 
     public InventoryAggregate(ReserveMedicineCommand command) {
         AggregateLifecycle.apply(new MedicineReservedEvent(
-                command.getPrescriptionId(),
                 command.getDispenseOrderId(),
+                command.getPrescriptionId(),
                 command.getDoctorId(),
                 command.getMedicalHistoryId(),
                 command.getItems()

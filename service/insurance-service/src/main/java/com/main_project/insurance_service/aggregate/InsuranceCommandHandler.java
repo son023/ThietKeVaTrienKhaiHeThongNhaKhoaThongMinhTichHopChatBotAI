@@ -53,9 +53,24 @@ public class InsuranceCommandHandler {
         try {
             UUID patientId = command.getPatientId();
 
-            PatientInsurance patientInsurance = patientInsuranceRepository
-                    .findActiveInsuranceByPatientId(patientId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm đang hoạt động cho bệnh nhân: " + patientId));
+//            PatientInsurance patientInsurance = patientInsuranceRepository
+//                    .findActiveInsuranceByPatientId(patientId)
+//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm đang hoạt động cho bệnh nhân: " + patientId));
+
+            // Thay vì orElseThrow, kiểm tra thủ công và publish event rồi return
+            var optInsurance = patientInsuranceRepository.findActiveInsuranceByPatientId(patientId);
+            if (optInsurance.isEmpty()) {
+                eventBus.publish(GenericEventMessage.asEventMessage(
+                        new InsuranceRejectedEvent(
+                                command.getPatientId(),
+                                command.getPrescriptionId(),
+                                "Không tìm thấy bảo hiểm đang hoạt động cho bệnh nhân: " + patientId
+                        )
+                ));
+                return;
+            }
+
+            PatientInsurance patientInsurance = optInsurance.get();
 
             if (!isInsuranceValid(patientInsurance)) {
                 eventBus.publish(GenericEventMessage.asEventMessage(

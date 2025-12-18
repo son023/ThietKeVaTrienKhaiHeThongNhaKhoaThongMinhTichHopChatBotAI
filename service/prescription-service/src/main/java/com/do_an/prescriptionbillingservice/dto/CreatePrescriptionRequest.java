@@ -11,6 +11,8 @@ public class CreatePrescriptionRequest {
     // ID của lần khám (MedicalHistory)
     private UUID medicalHistoryId;
 
+    private UUID appointmentId;
+
     // ID bệnh nhân
     private UUID patientId;
 

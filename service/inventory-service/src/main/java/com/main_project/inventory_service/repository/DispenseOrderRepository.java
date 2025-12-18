@@ -15,6 +15,13 @@ public interface DispenseOrderRepository extends JpaRepository<DispenseOrder, UU
     
     // Find all DispenseOrders by prescription ID
     List<DispenseOrder> findAllByPrescription(UUID prescriptionId);
+
+
+    // ✅ THÊM: Lấy danh sách theo status
+    List<DispenseOrder> findAllByStatusOrderByCreateAtDesc(String status);
+
+    // ✅ THÊM: Lấy danh sách theo nhiều status
+    List<DispenseOrder> findAllByStatusInOrderByCreateAtDesc(List<String> statuses);
 }
 
 

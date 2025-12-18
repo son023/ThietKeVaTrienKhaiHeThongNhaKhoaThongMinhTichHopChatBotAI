@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -34,21 +36,21 @@ public class InsuranceClaim {
     private Integer totalInsurancePay;
 
     @Column(name = "claim_date")
-    private ZonedDateTime claimDate;
+    private LocalDateTime claimDate;
 
     @Column(name = "approval_date")
-    private ZonedDateTime approvalDate;
+    private LocalDateTime approvalDate;
 
-    @Column(name = "notes")
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @CreationTimestamp
     @Column(name = "create_at")
-    private ZonedDateTime createAt;
+    private LocalDateTime createAt;
 
     @UpdateTimestamp
     @Column(name = "update_at")
-    private ZonedDateTime updateAt;
+    private LocalDateTime updateAt;
 
     // Many-to-One relationship with PatientInsurance
     @ManyToOne(fetch = FetchType.LAZY)

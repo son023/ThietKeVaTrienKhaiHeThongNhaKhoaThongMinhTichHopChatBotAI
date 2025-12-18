@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -17,8 +18,9 @@ public class DispenseOrderResponse {
     private String status;
     private UUID medicalHistoryId;
     private UUID doctorId;
-    private ZonedDateTime createAt;
-    private ZonedDateTime updateAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
+
 }
 
 

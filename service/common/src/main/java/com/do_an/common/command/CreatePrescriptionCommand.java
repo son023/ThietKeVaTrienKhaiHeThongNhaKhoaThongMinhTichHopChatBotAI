@@ -16,6 +16,7 @@ import java.util.UUID;
 public class CreatePrescriptionCommand {
     @TargetAggregateIdentifier
     private UUID prescriptionId;
+    private UUID appointmentId;
     private UUID patientId;
     private UUID doctorId;
     private UUID medicalHistoryId;

@@ -6,9 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -21,23 +25,14 @@ import java.util.UUID;
 public class MedicalHistory {
 
     @Id
-    @Column(length = 50)
+    @Column(name = "id")
     private UUID id;
 
-    @Column(name = "appointment_id", length = 50)
+    @Column(name = "appointment_id")
     private UUID appointmentId;
 
-    @Column(length = 255)
+    @Column(name = "symptoms", length = 255)
     private String symptoms;
-
-    @Column(length = 255)
-    private String treatment;
-
-    @Column(length = 255)
-    private String diagnosis;
-
-    @Column(length = 255)
-    private String disease;
 
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
@@ -48,6 +43,11 @@ public class MedicalHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_profile_id", referencedColumnName = "user_id")
     private Patient patient;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "medicalHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<Condition> conditions = new HashSet<>();
 
     @PrePersist
     public void onCreate() {

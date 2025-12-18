@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Button } from "../ui/button";
 import {
   Sparkles,
   Shield,
@@ -408,19 +409,23 @@ export function PublicHomepage({
               </p>
 
               <div className="flex flex-wrap gap-[16px]">
-                <button
+                <Button
                   onClick={onBookingClick}
-                  className="group bg-[#3fb5ff] text-[#fcfeff] px-[40px] py-[18px] rounded-[16px] font-['Fz_Poppins:SemiBold',sans-serif] text-[17px] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.4)] hover:shadow-[0px_12px_32px_0px_rgba(63,181,255,0.5)] hover:bg-[#3fb5ff]/90 transition-all duration-300"
+                  // Mặc định là variant="default" (Nền xanh, chữ trắng) nên không cần ghi
+                  // Thêm class 'group' để icon bên trong bắt được sự kiện hover của nút cha
+                  variant="primary"
+                  className="group h-auto px-10 py-[18px] rounded-2xl text-lg shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50"
                 >
                   Đặt lịch ngay
-                  <Calendar className="inline-block w-[20px] h-[20px] ml-[8px] group-hover:translate-x-[4px] transition-transform" />
-                </button>
-                <button
+                  <Calendar className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                </Button>
+                <Button
                   onClick={() => onNavigate("services")}
-                  className="bg-[#fcfeff] text-[#3fb5ff] px-[40px] py-[18px] rounded-[16px] font-['Fz_Poppins:SemiBold',sans-serif] text-[17px] border-2 border-[#3fb5ff] hover:bg-[#ebf6fc] transition-all duration-300"
+                  variant="outline"
+                  className="h-auto px-10 py-[18px] rounded-2xl text-lg"
                 >
                   Xem dịch vụ
-                </button>
+                </Button>
               </div>
 
               {/* Social Proof */}
@@ -678,13 +683,15 @@ export function PublicHomepage({
                   </div>
                 </div>
               </div>
-
-              <button
+              <Button
                 onClick={() => onNavigate("doctors")}
-                className="bg-[#3fb5ff] text-[#fcfeff] px-[32px] py-[16px] rounded-[14px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#3fb5ff]/90 transition-all shadow-[0px_4px_16px_0px_rgba(63,181,255,0.3)]"
+                // Mặc định là variant="default" (Nền xanh, chữ trắng) nên không cần ghi
+                // Thêm class 'group' để icon bên trong bắt được sự kiện hover của nút cha
+                variant="primary"
+                className="group h-auto px-10 py-[18px] rounded-2xl text-lg shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50"
               >
                 Xem tất cả bác sĩ
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -791,8 +798,7 @@ export function PublicHomepage({
               Các loại dịch vụ
             </h2>
             <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[18px] max-w-[600px] mx-auto">
-              Cung cấp đa dạng {servicesData.length} dịch vụ nha khoa với công
-              nghệ hiện đại nhất
+              Cung cấp đa dạng dịch vụ nha khoa với công nghệ hiện đại nhất
             </p>
           </div>
 
@@ -893,12 +899,15 @@ export function PublicHomepage({
           </div>
 
           <div className="text-center mt-[48px]">
-            <button
+            <Button
               onClick={() => onNavigate("services")}
-              className="bg-[#3fb5ff] text-[#fcfeff] px-[40px] py-[18px] rounded-[16px] font-['Fz_Poppins:SemiBold',sans-serif] text-[17px] hover:bg-[#3fb5ff]/90 transition-all shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)]"
+              // Mặc định là variant="default" (Nền xanh, chữ trắng) nên không cần ghi
+              // Thêm class 'group' để icon bên trong bắt được sự kiện hover của nút cha
+              variant="primary"
+              className="group h-auto px-10 py-[18px] rounded-2xl text-lg shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50"
             >
-              Xem tất cả {servicesData.length} dịch vụ
-            </button>
+              Xem tất cả dịch vụ
+            </Button>
           </div>
         </div>
       </section>
@@ -975,12 +984,13 @@ export function PublicHomepage({
           <Accordion type="single" collapsible className="space-y-[16px]">
             <AccordionItem
               value="item-1"
-              className="bg-gradient-to-br from-[#fcfeff] to-[#f8fcff] border border-[#ebf6fc] rounded-[16px] px-[24px] shadow-sm hover:shadow-md transition-all"
+              className="rounded-[16px] border border-slate-200 bg-white transition-colors hover:border-primary data-[state=open]:bg-neutral-muted data-[state=open]:border-primary last:border-b"
             >
-              <AccordionTrigger className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[17px] hover:no-underline py-[24px]">
+              <AccordionTrigger className="bg-transparent px-[24px] py-[22px] font-semibold text-[17px] text-secondary-deep hover:no-underline transition-colors hover:text-primary">
                 Chi phí điều trị tại phòng khám như thế nào?
               </AccordionTrigger>
-              <AccordionContent className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] pb-[24px]">
+
+              <AccordionContent className="px-[24px] pb-[24px] text-[15px] leading-[1.7] font-normal text-primary">
                 Chi phí điều trị phụ thuộc vào loại dịch vụ và tình trạng răng
                 miệng của bạn. Chúng tôi cam kết báo giá minh bạch, rõ ràng
                 trước khi bắt đầu điều trị. Bạn có thể đặt lịch tư vấn miễn phí
@@ -990,12 +1000,12 @@ export function PublicHomepage({
 
             <AccordionItem
               value="item-2"
-              className="bg-gradient-to-br from-[#fcfeff] to-[#f8fcff] border border-[#ebf6fc] rounded-[16px] px-[24px] shadow-sm hover:shadow-md transition-all"
+              className="rounded-[16px] border border-slate-200 bg-white transition-colors hover:border-primary data-[state=open]:bg-neutral-muted data-[state=open]:border-primary last:border-b"
             >
-              <AccordionTrigger className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[17px] hover:no-underline py-[24px]">
+              <AccordionTrigger className="bg-transparent px-[24px] py-[22px] font-semibold text-[17px] text-secondary-deep hover:no-underline transition-colors hover:text-primary">
                 Có đau khi điều trị nha khoa không?
               </AccordionTrigger>
-              <AccordionContent className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] pb-[24px]">
+              <AccordionContent className="px-[24px] pb-[24px] text-[15px] leading-[1.7] font-normal text-primary">
                 Chúng tôi sử dụng công nghệ hiện đại và thuốc tê an toàn để đảm
                 bảo quá trình điều trị không đau và thoải mái nhất. Bác sĩ sẽ
                 luôn theo dõi và điều chỉnh để bạn cảm thấy thoải mái.
@@ -1004,12 +1014,12 @@ export function PublicHomepage({
 
             <AccordionItem
               value="item-3"
-              className="bg-gradient-to-br from-[#fcfeff] to-[#f8fcff] border border-[#ebf6fc] rounded-[16px] px-[24px] shadow-sm hover:shadow-md transition-all"
+              className="rounded-[16px] border border-slate-200 bg-white transition-colors hover:border-primary data-[state=open]:bg-neutral-muted data-[state=open]:border-primary last:border-b"
             >
-              <AccordionTrigger className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[17px] hover:no-underline py-[24px]">
+              <AccordionTrigger className="bg-transparent px-[24px] py-[22px] font-semibold text-[17px] text-secondary-deep hover:no-underline transition-colors hover:text-primary">
                 Làm sao để đặt lịch hẹn tại phòng khám?
               </AccordionTrigger>
-              <AccordionContent className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] pb-[24px]">
+              <AccordionContent className="px-[24px] pb-[24px] text-[15px] leading-[1.7] font-normal text-primary">
                 Bạn có thể đặt lịch hẹn trực tuyến qua website, gọi hotline
                 (123) 456-7890, hoặc nhắn tin qua fanpage Facebook của chúng
                 tôi. Chúng tôi sẽ xác nhận lịch hẹn trong vòng 30 phút.
@@ -1018,12 +1028,12 @@ export function PublicHomepage({
 
             <AccordionItem
               value="item-4"
-              className="bg-gradient-to-br from-[#fcfeff] to-[#f8fcff] border border-[#ebf6fc] rounded-[16px] px-[24px] shadow-sm hover:shadow-md transition-all"
+              className="rounded-[16px] border border-slate-200 bg-white transition-colors hover:border-primary data-[state=open]:bg-neutral-muted data-[state=open]:border-primary last:border-b"
             >
-              <AccordionTrigger className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[17px] hover:no-underline py-[24px]">
+              <AccordionTrigger className="bg-transparent px-[24px] py-[22px] font-semibold text-[17px] text-secondary-deep hover:no-underline transition-colors hover:text-primary">
                 Phòng khám có bảo hành dịch vụ không?
               </AccordionTrigger>
-              <AccordionContent className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[15px] leading-[1.7] pb-[24px]">
+              <AccordionContent className="px-[24px] pb-[24px] text-[15px] leading-[1.7] font-normal text-primary">
                 Có, chúng tôi cam kết bảo hành cho tất cả các dịch vụ theo quy
                 định. Thời gian bảo hành tùy thuộc vào từng loại dịch vụ và sẽ
                 được ghi rõ trong hợp đồng điều trị.

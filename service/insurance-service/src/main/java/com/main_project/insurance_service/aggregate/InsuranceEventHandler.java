@@ -18,6 +18,8 @@ import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Component
@@ -58,8 +60,9 @@ public class InsuranceEventHandler {
             insuranceClaim.setTotalClaimAmount(totalClaimAmount);
             insuranceClaim.setTotalInsurancePay(totalInsurancePay);
             insuranceClaim.setPatientPayAmount(totalPatientPay);
-            insuranceClaim.setClaimDate(ZonedDateTime.now());
-            insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
+            insuranceClaim.setClaimDate(LocalDateTime.now());
+
+            //insuranceClaim.setNotes("Claim created from invoice checker request via Saga");
 
             insuranceClaimRepository.save(insuranceClaim);
 

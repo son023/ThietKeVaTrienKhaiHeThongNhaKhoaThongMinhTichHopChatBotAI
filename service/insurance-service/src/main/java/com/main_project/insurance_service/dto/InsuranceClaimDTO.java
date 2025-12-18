@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -16,11 +17,11 @@ public class InsuranceClaimDTO {
     private Integer patientPayAmount;
     private Integer totalClaimAmount;
     private Integer totalInsurancePay;
-    private ZonedDateTime claimDate;
-    private ZonedDateTime approvalDate;
+    private LocalDateTime claimDate;
+    private LocalDateTime approvalDate;
     private String notes;
-    private ZonedDateTime createAt;
-    private ZonedDateTime updateAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
     private UUID patientInsuranceId;
     private PatientInsuranceDTO patientInsurance;
 }

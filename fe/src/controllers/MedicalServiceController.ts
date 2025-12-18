@@ -21,7 +21,7 @@ export interface AllergyDTO {
   description?: string;
 }
 
-export interface MedicalHistoryRequest {
+export interface MedicalHistoryRequestDTO {
   appointmentId: string;
   patientId: string;
   symptoms?: string;
@@ -30,7 +30,10 @@ export interface MedicalHistoryRequest {
   disease?: string;
 }
 
-export interface MedicalHistoryResponse extends MedicalHistoryRequest {
+
+
+
+export interface MedicalHistoryResponse extends MedicalHistoryRequestDTO {
   id: string;
   createdAt?: string;
   updatedAt?: string;
@@ -124,7 +127,7 @@ class MedicalServiceController {
   }
 
   async createMedicalHistory(
-    payload: MedicalHistoryRequest
+    payload: MedicalHistoryRequestDTO
   ): Promise<MedicalHistoryResponse> {
     const url = createApiUrl('patient', '/patient-service/medical-histories');
     const res = await fetch(url, {

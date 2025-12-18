@@ -85,6 +85,8 @@ public class InventoryEventHandler {
 
                     StockLedger ledgerEntry = new StockLedger();
                     //ledgerEntry.setId(UUID.randomUUID());
+
+                    //ledgerEntry.setLot(lot.getLotNo());
                     ledgerEntry.setType("OUT");
                     ledgerEntry.setQuantity(toReserveFromLot);
                     ledgerEntry.setReferenceId(dispenseItem.getId()); // Reference to DispenseItem
@@ -147,11 +149,11 @@ public class InventoryEventHandler {
         Integer quantityToRestore = dispenseItem.getQuantity();
 
 
-        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
-                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
-                        "OUT".equals(ledger.getType()) &&
-                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
-                .toList();
+//        List<StockLedger> ledgerEntries = stockLedgerRepository.findAll().stream()
+//                .filter(ledger -> dispenseItem.getId().toString().equals(ledger.getReferenceId()) &&
+//                        "OUT".equals(ledger.getType()) &&
+//                        "DISPENSE_ITEM".equals(ledger.getReferenceType()))
+//                .toList();
 
         int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
         lot.setQuantityOnHand(currentQuantity + quantityToRestore);
@@ -159,6 +161,7 @@ public class InventoryEventHandler {
 
         StockLedger reverseLedgerEntry = new StockLedger();
         reverseLedgerEntry.setId(UUID.randomUUID());
+        //reverseLedgerEntry.setLot(lot.getLotNo());
         reverseLedgerEntry.setType("IN");
         reverseLedgerEntry.setQuantity(quantityToRestore);
         reverseLedgerEntry.setReferenceId(dispenseItem.getId()); //reference DispenseItem

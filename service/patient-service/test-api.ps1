@@ -48,12 +48,11 @@ Write-Host "-----------------------------------" -ForegroundColor Yellow
 Write-Host "1.1 Creating Patient..." -ForegroundColor Green
 $patientBody = @{
     userId = "52ddd54d-4c63-4719-bbd0-daa4197cc432"
-    dob = "1995-05-15"
+    dob = "1995-05-15T00:00:00+07:00"
     gender = "MALE"
     address = "123 Nguyen Trai, District 5, HCMC"
     contactPhone = "0901234567"
-    bloodType = "O+"
-    allergy = "Penicillin"
+    bloodType = "O_POSITIVE"
     insuranceNumber = "INS-2025-0001"
 } | ConvertTo-Json -Depth 3
 
@@ -78,11 +77,17 @@ try {
     Write-Host "   [OK] Found $($response.Count) patients" -ForegroundColor Green
     if (-not $patientId -and $response.Count -gt 0) {
         $patientId = $response[0].userId
-        Write-Host "   [INFO] Using Patient ID: $patientId" -ForegroundColor Yellow
+        Write-Host "   [INFO] Using Patient ID from list: $patientId" -ForegroundColor Yellow
+    } elseif ($patientId) {
+        Write-Host "   [INFO] Using existing Patient ID: $patientId" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
     Show-ErrorDetail $_.Exception
+    if (-not $patientId) {
+        $patientId = "52ddd54d-4c63-4719-bbd0-daa4197cc432"
+        Write-Host "   [INFO] Using fallback Patient ID: $patientId" -ForegroundColor Yellow
+    }
 }
 Write-Host ""
 
@@ -99,40 +104,24 @@ if ($patientId) {
     Write-Host ""
 }
 
-# 1.4 Get Patients By Gender
-Write-Host "1.4 Getting Patients By Gender..." -ForegroundColor Green
-try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/patients/gender/MALE" -Method Get -Headers $headers
-    Write-Host "   [OK] Found $($response.Count) male patients" -ForegroundColor Green
-} catch {
-    Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
-    Show-ErrorDetail $_.Exception
-}
-Write-Host ""
+# 1.4 Get Patients By Gender - Endpoint not available, skipping
+# Write-Host "1.4 Getting Patients By Gender..." -ForegroundColor Green
+# Note: This endpoint is not implemented in PatientController
 
-# 1.5 Get Patients By Blood Type
-Write-Host "1.5 Getting Patients By Blood Type..." -ForegroundColor Green
-try {
-    $encodedBloodType = [System.Web.HttpUtility]::UrlEncode("O+")
-    $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/patients/blood-type/$encodedBloodType" -Method Get -Headers $headers
-    Write-Host "   [OK] Found $($response.Count) patients with blood type O+" -ForegroundColor Green
-} catch {
-    Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
-    Show-ErrorDetail $_.Exception
-}
-Write-Host ""
+# 1.5 Get Patients By Blood Type - Endpoint not available, skipping
+# Write-Host "1.5 Getting Patients By Blood Type..." -ForegroundColor Green
+# Note: This endpoint is not implemented in PatientController
 
 # 1.6 Update Patient
 if ($patientId) {
     Write-Host "1.6 Updating Patient..." -ForegroundColor Green
     $updateBody = @{
         userId = $patientId
-        dob = "1995-05-15"
+        dob = "1995-05-15T00:00:00+07:00"
         gender = "MALE"
         address = "456 Le Loi, District 1, HCMC"
         contactPhone = "0909998888"
-        bloodType = "O+"
-        allergy = "None"
+        bloodType = "O_POSITIVE"
         insuranceNumber = "INS-2025-0001-UPDATED"
     } | ConvertTo-Json -Depth 3
 
@@ -158,11 +147,24 @@ if ($patientId) {
     Write-Host "2.1 Creating Medical History..." -ForegroundColor Green
     $medicalHistoryBody = @{
         appointmentId = $appointmentId
-        symptoms = "Ho khan, sot nhe"
-        treatment = "Uong thuoc giam ho"
-        diagnosis = "Viêm họng"
-        disease = "Benh ho hap tren"
+        symptoms = "Ho khan, sot nhe, dau hong"
         patientId = $patientId
+        conditions = @(
+            @{
+                toothNumber = 18
+                name = "Sâu răng"
+                status = "ACTIVE"
+                treatment = "Trám răng composite"
+                surface = "Mặt nhai"
+            },
+            @{
+                toothNumber = 25
+                name = "Viêm tủy răng"
+                status = "TREATED"
+                treatment = "Điều trị tủy răng"
+                surface = "Toàn bộ răng"
+            }
+        )
     } | ConvertTo-Json -Depth 3
 
     try {
@@ -171,6 +173,9 @@ if ($patientId) {
         $medicalHistoryId = $response.id
         Write-Host "   [OK] Created Medical History with ID: $medicalHistoryId" -ForegroundColor Green
         Write-Host "   Response: $($response | ConvertTo-Json -Depth 3)" -ForegroundColor Gray
+        if ($response.conditions) {
+            Write-Host "   [INFO] Medical History has $($response.conditions.Count) conditions" -ForegroundColor Cyan
+        }
     } catch {
         Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
         Show-ErrorDetail $_.Exception
@@ -187,6 +192,9 @@ try {
     Write-Host "   [OK] Found $($response.Count) medical histories" -ForegroundColor Green
     if (-not $medicalHistoryId -and $response.Count -gt 0) {
         $medicalHistoryId = $response[0].id
+        Write-Host "   [INFO] Using Medical History ID from list: $medicalHistoryId" -ForegroundColor Yellow
+    } elseif ($medicalHistoryId) {
+        Write-Host "   [INFO] Using existing Medical History ID: $medicalHistoryId" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
@@ -199,7 +207,10 @@ if ($medicalHistoryId) {
     Write-Host "2.3 Getting Medical History By ID..." -ForegroundColor Green
     try {
         $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/medical-histories/$medicalHistoryId" -Method Get -Headers $headers
-        Write-Host "   [OK] Retrieved Medical History for Disease: $($response.disease)" -ForegroundColor Green
+        Write-Host "   [OK] Retrieved Medical History with Symptoms: $($response.symptoms)" -ForegroundColor Green
+        if ($response.conditions) {
+            Write-Host "   [INFO] Medical History has $($response.conditions.Count) conditions" -ForegroundColor Cyan
+        }
     } catch {
         Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
         Show-ErrorDetail $_.Exception
@@ -231,34 +242,61 @@ try {
 }
 Write-Host ""
 
-# 2.6 Search Medical Histories By Disease
-Write-Host "2.6 Searching Medical Histories By Disease..." -ForegroundColor Green
-try {
-    $searchTerm = [System.Web.HttpUtility]::UrlEncode("viem")
-    $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/medical-histories/disease?q=$searchTerm" -Method Get -Headers $headers
-    Write-Host "   [OK] Found $($response.Count) medical histories matching keyword" -ForegroundColor Green
+# 2.6 Add Condition to Medical History
+if ($medicalHistoryId) {
+    Write-Host "2.6 Adding Condition to Medical History..." -ForegroundColor Green
+    $conditionBody = @{
+        toothNumber = 14
+        name = "Viêm nướu"
+        status = "ACTIVE"
+        treatment = "Làm sạch răng, điều trị viêm nướu"
+        surface = $null
+    } | ConvertTo-Json -Depth 3
+
+    try {
+        $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($conditionBody)
+        $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/medical-histories/$medicalHistoryId/conditions" -Method Post -Headers $headers -Body $bodyBytes -ContentType "application/json; charset=utf-8"
+        Write-Host "   [OK] Added Condition with ID: $($response.id)" -ForegroundColor Green
+        Write-Host "   Condition: $($response.name) - Status: $($response.status)" -ForegroundColor Cyan
 } catch {
     Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
     Show-ErrorDetail $_.Exception
 }
 Write-Host ""
+}
 
 # 2.7 Update Medical History
 if ($medicalHistoryId -and $patientId) {
     Write-Host "2.7 Updating Medical History..." -ForegroundColor Green
     $updateBody = @{
         appointmentId = $appointmentId
-        symptoms = "Ho khan giam dan"
-        treatment = "Tiep tuc uong thuoc giam ho"
-        diagnosis = "Viêm họng - giai doan hoi phuc"
-        disease = "Benh ho hap tren"
+        symptoms = "Ho khan giam dan, tinh trang on dinh"
         patientId = $patientId
+        conditions = @(
+            @{
+                toothNumber = 18
+                name = "Sâu răng"
+                status = "TREATED"
+                treatment = "Đã trám răng composite"
+                surface = "Mặt nhai"
+            },
+            @{
+                toothNumber = 32
+                name = "Răng khôn mọc lệch"
+                status = "PENDING"
+                treatment = "Nhổ răng khôn"
+                surface = $null
+            }
+        )
     } | ConvertTo-Json -Depth 3
 
     try {
         $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($updateBody)
         $response = Invoke-RestMethod -Uri "$baseUrl/patient-service/medical-histories/$medicalHistoryId" -Method Put -Headers $headers -Body $bodyBytes -ContentType "application/json; charset=utf-8"
         Write-Host "   [OK] Updated Medical History" -ForegroundColor Green
+        if ($response.conditions) {
+            Write-Host "   [INFO] Medical History now has $($response.conditions.Count) conditions" -ForegroundColor Cyan
+        }
     } catch {
         Write-Host "   [ERROR] $($_.Exception.Message)" -ForegroundColor Red
         Show-ErrorDetail $_.Exception

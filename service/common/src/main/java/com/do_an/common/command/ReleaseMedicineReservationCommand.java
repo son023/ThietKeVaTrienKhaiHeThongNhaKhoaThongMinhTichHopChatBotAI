@@ -16,5 +16,6 @@ public class ReleaseMedicineReservationCommand {
     @TargetAggregateIdentifier
     private UUID dispenseOrderId;
     private UUID prescriptionId;
-    private List<MedicineItem> medicineItems;
+
+    //private List<MedicineItem> medicineItems;
 }

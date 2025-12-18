@@ -13,6 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PrescriptionCreatedEvent {
     private UUID prescriptionId;
+    private UUID invoiceId;
     private UUID patientId;
     private UUID doctorId;
     private UUID medicalHistoryId;

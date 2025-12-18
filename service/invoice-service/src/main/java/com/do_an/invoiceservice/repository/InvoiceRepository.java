@@ -36,4 +36,21 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     
     // API sắp xếp theo thời gian tạo tăng dần
     List<Invoice> findAllByOrderByIssueAtAsc();
+
+    List<Invoice> findAllByStatusAndIssueAtBefore(String status, LocalDateTime issueAt);
+    List<Invoice> findByStatusOrderByIssueAtDesc(String status);
+
+    // Thêm method mới để query nhiều appointmentIds cùng lúc
+    List<Invoice> findAllByAppointmentIdIn(List<UUID> appointmentIds);
+
+    // Query với appointmentIds và status
+    List<Invoice> findAllByAppointmentIdInAndStatus(List<UUID> appointmentIds, String status);
+
+    // Query với appointmentIds và sắp xếp theo thời gian
+    List<Invoice> findAllByAppointmentIdInOrderByIssueAtDesc(List<UUID> appointmentIds);
+
+    // Query với appointmentIds, status và sắp xếp
+    List<Invoice> findAllByAppointmentIdInAndStatusOrderByIssueAtDesc(List<UUID> appointmentIds, String status);
+
+
 }

@@ -37,40 +37,43 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
   // Appointment data and status helpers
 
     const statusMeta: Record<string, { label: string; className: string }> = {
-    pending: {
-      label: 'Cho xac nhan',
+      progressing: {
+      label: 'Chờ xác nhận',
       className: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
     },
     confirmed: {
-      label: 'Da xac nhan',
+      label: 'Đã xác nhận',
       className: 'bg-blue-100 text-blue-800 border border-blue-300',
     },
-    'checked-in': {
-      label: 'Da check-in',
+    checked: {
+      label: 'Đã check-in',
       className: 'bg-yellow-500 text-white',
     },
-    'in-progress': {
-      label: 'Dang kham',
+    'in_progress': {
+      label: 'Đang khám',
       className: 'bg-[#3FB5FF] text-white',
     },
     completed: {
-      label: 'Hoan thanh',
+      label: 'Hoàn thành',
       className: 'bg-green-500 text-white',
     },
     cancelled: {
-      label: 'Da huy',
+      label: 'Đã huỷ',
       className: 'bg-red-100 text-red-800 border border-red-300',
     },
-    'no-show': {
-      label: 'Khong den',
+    'no_show': {
+      label: 'Không đến',
       className: 'bg-gray-200 text-gray-800 border border-gray-300',
     },
   };
 
   const getStatusBadge = (status: string) => {
-    const meta = statusMeta[status] || statusMeta.pending;
+    const meta = statusMeta[status.toLowerCase()] || statusMeta.progressing;
     return <Badge className={`${meta.className} h-7`}>{meta.label}</Badge>;
   };
+
+ 
+
 
   useEffect(() => {
     const loadAppointments = async () => {
@@ -88,6 +91,7 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
         const data = await appointmentController.getByDoctorId(doctorId);
         setAppointments(data);
 
+   
         const patientIds = Array.from(
           new Set(data.map((apt) => apt.patientId).filter(Boolean))
         );
@@ -95,6 +99,8 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           setPatientMap({});
           return;
         }
+
+      
 
         const patients = await Promise.all(
           patientIds.map(async (pid) => {
@@ -107,6 +113,8 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           })
         );
 
+
+
         const map: Record<string, PatientWithUser> = {};
         patients.forEach((p) => {
           if (p?.userId) {
@@ -114,6 +122,7 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
           }
         });
         setPatientMap(map);
+        
       } catch (err) {
         setAppointmentError(
           err instanceof Error ? err.message : 'Khong tai duoc lich hen'
@@ -262,27 +271,41 @@ const handleOpenTaskDialog = (task: any) => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-[#fcfeff]">
-      <div>
-        <h1 className="text-[#01304e] mb-2">Bảng điều khiển - Hôm nay</h1>
-        <p className="text-[#333333]/60">Tổng quan công việc trong ngày của bạn</p>
+    <div className="p-6 space-y-6 bg-neutral-background">
+      <div className="mb-8">
+        <h1 className="typo-h2 mb-2">Bảng điều khiển - Hôm nay</h1>
+        <p className="text-neutral-text/60">Tổng quan công việc trong ngày của bạn</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">        {/* Main: Today's Appointments */}
-        <Card className="lg:col-span-2 rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#01304e]">
-              <Calendar className="w-5 h-5 text-[#3FB5FF]" />
-              Lich hen hom nay
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main: Today's Appointments */}
+        <Card className="lg:col-span-2 rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 typo-h4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              Lịch hẹn hôm nay
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loadingAppointments ? (
-              <div className="p-4 text-[#333333]/60">Dang tai lich hen hom nay...</div>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-neutral-text/60">Đang tải lịch hẹn hôm nay...</p>
+              </div>
             ) : appointmentError ? (
-              <div className="p-4 text-red-500">{appointmentError}</div>
+              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{appointmentError}</span>
+              </div>
             ) : todayAppointments.length === 0 ? (
-              <div className="p-4 text-[#333333]/60">Hom nay khong co lich hen truoc nao</div>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-neutral-text/40" />
+                </div>
+                <p className="text-neutral-text/60">Hôm nay không có lịch hẹn nào</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {todayAppointments.map((appointment) => {
@@ -296,28 +319,28 @@ const handleOpenTaskDialog = (task: any) => {
                   return (
                     <div
                       key={appointment.id}
-                      className="flex items-center justify-between p-4 bg-white border border-[#e8e8e8] rounded-[10px] hover:border-[#3FB5FF] hover:shadow-[0px_4px_12px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer"
+                      className="group flex items-center justify-between p-4 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
                       onClick={() =>
                         appointment.patientId &&
                         onNavigateToPatient(appointment.patientId)
                       }
                     >
                       <div className="flex items-center gap-4 flex-1">
-                        <div className="flex items-center gap-2 w-20">
-                          <Clock className="w-4 h-4 text-[#333333]/60" />
-                          <span className="text-[#333333]">
+                        <div className="flex items-center gap-2 min-w-[80px] px-3 py-2 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
+                          <Clock className="w-4 h-4 text-neutral-text/60 group-hover:text-primary transition-colors" />
+                          <span className="font-medium text-neutral-text">
                             {appointment.timeLabel}
                           </span>
                         </div>
                         <div className="flex-1">
-                          <p className="text-[#333333]">{patientName}</p>
-                          <div className="flex items-center gap-2 text-sm text-[#333333]/60">
+                          <p className="font-semibold text-neutral-text group-hover:text-primary transition-colors">{patientName}</p>
+                          <div className="flex items-center gap-2 text-sm text-neutral-text/60 mt-1">
                             <Phone className="w-4 h-4" />
                             <span>{phone}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 h-10">
+                      <div className="flex items-center gap-3">
                         {getStatusBadge(appointment.status)}
                       </div>
                     </div>
@@ -329,10 +352,12 @@ const handleOpenTaskDialog = (task: any) => {
         </Card>
 
         {/* Quick Tasks */}
-        <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#01304e]">
-              <CheckCircle className="w-5 h-5 text-[#3FB5FF]" />
+        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 typo-h4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <CheckCircle className="w-5 h-5 text-primary" />
+              </div>
               Việc cần làm nhanh
             </CardTitle>
           </CardHeader>
@@ -341,22 +366,24 @@ const handleOpenTaskDialog = (task: any) => {
               {quickTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`p-4 rounded-[10px] border ${
-                    task.urgent ? 'border-orange-300 bg-orange-50' : 'border-[#e8e8e8] bg-white'
+                  className={`p-4 rounded-xl border transition-all ${
+                    task.urgent
+                      ? 'border-accent-orange/30 bg-accent-orange/5 hover:bg-accent-orange/10'
+                      : 'border-neutral-border/30 bg-neutral-surface hover:border-primary/30 hover:shadow-sm'
                   }`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <p className="text-[#333333]">{task.title}</p>
-                      <p className="text-sm text-[#333333]/60 mt-1">{task.count} mục</p>
+                      <p className="font-semibold text-neutral-text">{task.title}</p>
+                      <p className="text-sm text-neutral-text/60 mt-1">{task.count} mục</p>
                     </div>
                     {task.urgent && (
-                      <AlertCircle className="w-5 h-5 text-orange-500" />
+                      <AlertCircle className="w-5 h-5 text-accent-orange flex-shrink-0" />
                     )}
                   </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full mt-3 bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
+                  <Button
+                    size="sm"
+                    className="w-full bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all"
                     onClick={() => handleOpenTaskDialog(task)}
                   >
                     Xử lý
@@ -369,10 +396,12 @@ const handleOpenTaskDialog = (task: any) => {
       </div>
 
       {/* Pending Records */}
-      <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#01304e]">
-            <FileCheck className="w-5 h-5 text-[#3FB5FF]" />
+      <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 typo-h4">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <FileCheck className="w-5 h-5 text-primary" />
+            </div>
             Hồ sơ chờ xử lý
           </CardTitle>
         </CardHeader>
@@ -381,16 +410,18 @@ const handleOpenTaskDialog = (task: any) => {
             {pendingRecords.map((record) => (
               <div
                 key={record.id}
-                className="p-4 bg-white border border-[#e8e8e8] rounded-[10px] hover:border-[#3FB5FF] hover:shadow-[0px_4px_12px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer"
+                className="group p-4 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
                 onClick={() => onNavigateToPatient(record.id)}
               >
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-[#333333]/60" />
-                  <div className="flex-1">
-                    <p className="text-[#333333]">{record.patientName}</p>
-                    <p className="text-sm text-[#333333]/60">{record.type}</p>
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
+                    <User className="w-5 h-5 text-neutral-text/60 group-hover:text-primary transition-colors" />
                   </div>
-                  <span className="text-sm text-[#333333]/60">{record.date}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-neutral-text group-hover:text-primary transition-colors">{record.patientName}</p>
+                    <p className="text-sm text-neutral-text/60 mt-0.5">{record.type}</p>
+                  </div>
+                  <span className="text-sm font-medium text-neutral-text/60">{record.date}</span>
                 </div>
               </div>
             ))}
@@ -400,56 +431,58 @@ const handleOpenTaskDialog = (task: any) => {
 
       {/* Task Dialog */}
       <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border-neutral-border/20">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#01304e]">
+            <DialogTitle className="flex items-center gap-3 typo-h3">
               {selectedTask && getTaskIcon(selectedTask.type)}
               {selectedTask?.title}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-neutral-text/60 mt-2">
               Có {selectedTask?.count} mục cần xử lý
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-3 mt-4">
             {selectedTask?.items.map((item: any, index: number) => (
               <div
                 key={index}
-                className="p-4 bg-white border border-[#e8e8e8] rounded-[10px] hover:border-[#3FB5FF] transition-all"
+                className="p-5 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary/50 hover:shadow-sm transition-all"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4 text-[#333333]/60" />
-                      <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
+                      <div className="p-1.5 rounded-lg bg-neutral-muted">
+                        <User className="w-4 h-4 text-neutral-text/60" />
+                      </div>
+                      <p className="font-semibold text-neutral-text">
                         {item.patientName}
                       </p>
-                      <span className="text-sm text-[#333333]/60">({item.patientId})</span>
+                      <span className="text-sm text-neutral-text/60">({item.patientId})</span>
                     </div>
-                    <p className="text-sm text-[#333333] mb-1">
+                    <p className="text-sm text-neutral-text mb-2 ml-9">
                       {item.description}
                     </p>
-                    <p className="text-xs text-[#333333]/60">
+                    <p className="text-xs text-neutral-text/60 ml-9">
                       Ngày: {item.date}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 border-[#3FB5FF] text-[#3FB5FF] hover:bg-[#3FB5FF] hover:text-white rounded-[10px]"
+                    className="flex-1 min-w-[120px] border-primary/50 text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
                     onClick={() => handleViewPatient(item.patientId)}
                   >
                     Xem chi tiết
                   </Button>
-                  
+
                   {selectedTask.type === 'xray' && (
                     <>
                       <Button
                         size="sm"
-                        className="flex-1 bg-green-500 hover:bg-green-600 rounded-[10px]"
+                        className="flex-1 min-w-[120px] bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm hover:shadow transition-all"
                         onClick={() => handleApproveItem(index)}
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
@@ -458,7 +491,7 @@ const handleOpenTaskDialog = (task: any) => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-[10px]"
+                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all"
                         onClick={() => handleRejectItem(index)}
                       >
                         <X className="w-4 h-4" />
@@ -470,7 +503,7 @@ const handleOpenTaskDialog = (task: any) => {
                     <>
                       <Button
                         size="sm"
-                        className="flex-1 bg-green-500 hover:bg-green-600 rounded-[10px]"
+                        className="flex-1 min-w-[120px] bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm hover:shadow transition-all"
                         onClick={() => handleApproveItem(index)}
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
@@ -479,7 +512,7 @@ const handleOpenTaskDialog = (task: any) => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white rounded-[10px]"
+                        className="flex-1 min-w-[140px] border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-white rounded-lg transition-all"
                         onClick={() => handleRejectItem(index)}
                       >
                         Yêu cầu chỉnh sửa
@@ -490,7 +523,7 @@ const handleOpenTaskDialog = (task: any) => {
                   {selectedTask.type === 'dental-chart' && (
                     <Button
                       size="sm"
-                      className="flex-1 bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
+                      className="flex-1 min-w-[140px] bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all"
                       onClick={() => handleApproveItem(index)}
                     >
                       <CheckCircle className="w-4 h-4 mr-1" />
@@ -502,11 +535,11 @@ const handleOpenTaskDialog = (task: any) => {
             ))}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               variant="outline"
               onClick={handleCloseTaskDialog}
-              className="rounded-[10px]"
+              className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all"
             >
               Đóng
             </Button>

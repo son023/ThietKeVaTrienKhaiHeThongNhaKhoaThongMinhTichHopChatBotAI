@@ -1,6 +1,7 @@
 import { Bell, Plus, Search, LogOut, Home } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Logo } from './ui/logo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +23,7 @@ export function ReceptionistHeader({ onLogout, onGoHome, onNewAppointment, onNew
   return (
     <header className="fixed top-0 right-0 left-[260px] h-[80px] bg-white border-b border-gray-200 z-40 flex items-center justify-between px-8">
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#3FB5FF] rounded-lg flex items-center justify-center">
-          <span className="text-white text-xl">🦷</span>
-        </div>
-        <h1 className="text-xl text-[#01304e]">DentalCareX</h1>
-      </div>
+      <Logo />
 
       {/* Search Bar */}
       <div className="flex-1 max-w-xl mx-8">

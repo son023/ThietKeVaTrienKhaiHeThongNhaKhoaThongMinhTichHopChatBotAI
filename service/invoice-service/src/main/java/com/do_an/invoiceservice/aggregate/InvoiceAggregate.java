@@ -3,10 +3,7 @@ package com.do_an.invoiceservice.aggregate;
 
 import com.do_an.common.command.RemoveMedicineChargesCommand;
 import com.do_an.common.command.RevertInsuranceDiscountCommand;
-import com.do_an.common.event.InsuranceDiscountRevertedEvent;
-import com.do_an.common.event.InsuranceDiscountUpdatedEvent;
-import com.do_an.common.event.MedicineChargesAddedEvent;
-import com.do_an.common.event.MedicineChargesRemovedEvent;
+import com.do_an.common.event.*;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemResponse;
 import com.do_an.common.model.MedicalServiceDTO;
@@ -31,8 +28,16 @@ public class InvoiceAggregate {
    private UUID invoiceId;
 
     // Trạng thái nội tại (nếu cần cho validation sau này, ví dụ để chặn lệnh duplicate)
+
+    private UUID prescriptionId;
+
+    private UUID insuranceClaimId;
+
     private boolean medicineChargesAdded;
     private boolean insuranceApplied;
+
+
+    private String status;
 
     public InvoiceAggregate(UUID clinicalId, UUID invoiceId, UUID appointmentId, UUID patientId, UUID medicalHistoryId, UUID doctorId, List<MedicalServiceDTO> medicalServices) {
         AggregateLifecycle.apply(new InvoiceCreateEvent(
@@ -43,6 +48,17 @@ public class InvoiceAggregate {
                 medicalHistoryId,
                 doctorId,
                 medicalServices
+        ));
+    }
+
+    public InvoiceAggregate(UUID prescriptionId, UUID invoiceId,
+                            List<MedicineItem> medicineItems,
+                            InvoiceCheckerRequest invoiceCheckerRequest) {
+        AggregateLifecycle.apply(new MedicineChargesAddedEvent(
+                prescriptionId,
+                invoiceId,
+                medicineItems,
+                invoiceCheckerRequest
         ));
     }
 
@@ -57,14 +73,40 @@ public class InvoiceAggregate {
         ));
     }
 
-    public void applyInsuranceDiscount(UUID prescriptionId, UUID invoiceId, Integer discountAmount, Set<InvoiceItemResponse> items) {
+    public void applyInsuranceDiscount(UUID insuranceClaimId, UUID prescriptionId, UUID invoiceId, Integer discountAmount, Set<InvoiceItemResponse> items) {
         AggregateLifecycle.apply(new InsuranceDiscountUpdatedEvent(
+                insuranceClaimId,
                 prescriptionId,
                 invoiceId,
                 discountAmount,
                 items
         ));
     }
+
+    public void applyInvoicePaid(UUID invoiceId){
+        AggregateLifecycle.apply(new InvoicePaidEvent(invoiceId));
+
+    }
+
+    public void applyCancelInvoice(UUID invoiceId, String reason){
+        UUID insuranceClaimId;
+
+        if(this.insuranceApplied == false){
+            insuranceClaimId = null;
+        }
+        else{
+            insuranceClaimId = this.insuranceClaimId;
+        }
+
+
+        AggregateLifecycle.apply(new InvoiceCancelledEvent(
+                invoiceId,
+                this.prescriptionId,
+                insuranceClaimId,
+                reason
+        ));
+    }
+
 
    @CommandHandler
    public void handle(RevertInsuranceDiscountCommand command) {
@@ -85,7 +127,9 @@ public class InvoiceAggregate {
    @EventSourcingHandler
    public void on(MedicineChargesAddedEvent event) {
        this.invoiceId = event.getInvoiceId();
+       this.prescriptionId = event.getPrescriptionId();
        this.medicineChargesAdded = true;
+       this.status = "PENDING";
    }
 
     @EventSourcingHandler
@@ -95,17 +139,24 @@ public class InvoiceAggregate {
 
    @EventSourcingHandler
    public void on(InsuranceDiscountUpdatedEvent event) {
-       this.insuranceApplied = true;
+        this.insuranceClaimId = event.getInsuranceClaimId();
+        this.insuranceApplied = true;
    }
 
    @EventSourcingHandler
    public void on(InsuranceDiscountRevertedEvent event) {
-       this.insuranceApplied = false;
+        this.insuranceApplied = false;
    }
 
    @EventSourcingHandler
    public void on(MedicineChargesRemovedEvent event) {
-       this.medicineChargesAdded = false;
+
+        this.medicineChargesAdded = false;
+   }
+
+   @EventSourcingHandler
+   public void on(InvoicePaidEvent event){
+       this.status = "PAID";
    }
 }
 

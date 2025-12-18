@@ -18,20 +18,20 @@ public interface InvoiceClient {
      * Lấy thông tin Invoice theo ID
      * GET /api/invoices/{id}
      */
-    @GetMapping("/api/invoices/{id}")
+    @GetMapping("/invoice-service/invoices/{id}")
     InvoiceResponseDTO getInvoiceById(@PathVariable("id") UUID invoiceId);
     
     /**
      * Đánh dấu Invoice đã thanh toán
      * PATCH /api/invoices/{id}/pay
      */
-    @PatchMapping("/api/invoices/{id}/pay")
+    @PatchMapping("/invoice-service/invoices/{id}/pay")
     InvoiceResponseDTO markAsPaid(@PathVariable("id") UUID invoiceId);
     
     /**
      * Hủy Invoice
      * PATCH /api/invoices/{id}/cancel
      */
-    @PatchMapping("/api/invoices/{id}/cancel")
+    @PatchMapping("/invoice-service/invoices/{id}/cancel")
     InvoiceResponseDTO cancelInvoice(@PathVariable("id") UUID invoiceId);
 }

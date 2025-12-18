@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/appointment-service/medical-services/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/appointment-service/appointments/doctor/**").permitAll()
-                                .requestMatchers(HttpMethod.OPTIONS, "/appointment-service/appointments/patient/**").permitAll()
+                                .requestMatchers("/appointment-service/appointments/patient/**").permitAll()
 //                        .requestMatchers(HttpMethod.GET, "/appointment-service/appointments/**").permitAll()
 //                        .requestMatchers(HttpMethod.GET, "/appointment-service/appointments/**").permitAll()
                         .requestMatchers(
