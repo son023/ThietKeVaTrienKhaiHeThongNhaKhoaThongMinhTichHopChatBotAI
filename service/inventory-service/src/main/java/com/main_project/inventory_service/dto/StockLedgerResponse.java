@@ -16,6 +16,7 @@ public class StockLedgerResponse {
     private String referenceType;
     private UUID referenceId;
     private UUID inventoryLotId;
+    private UUID pharmacistId;
 }
 
 
