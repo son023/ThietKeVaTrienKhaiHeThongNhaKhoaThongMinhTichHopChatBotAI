@@ -1,4 +1,4 @@
-import svgPaths from "../../imports/svg-rgty3nojwf";
+import svgPaths from "../imports/svg-rgty3nojwf";
 import {
   Bell,
   User,
@@ -12,8 +12,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Logo } from "../ui/logo";
-import { Button } from "../ui/button";
+import { Logo } from "./ui/logo";
+import { Button } from "./ui/button";
 
 interface NewPatientHeaderProps {
   currentPage: string;
@@ -110,7 +110,6 @@ export function NewPatientHeader({
     { id: "appointments", label: "Lịch hẹn" },
     { id: "payment", label: "Thanh toán" },
     { id: "medical-records", label: "Hồ sơ bệnh án" },
-    { id: "chatbot", label: "Chatbot" },
   ];
 
   const handleMenuClick = (id: string) => {

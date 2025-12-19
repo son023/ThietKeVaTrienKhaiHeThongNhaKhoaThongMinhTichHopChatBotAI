@@ -6,7 +6,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { NewPatientHeader } from "./components/public/NewPatientHeader";
+import { NewPatientHeader } from "./components/NewPatientHeader";
 import { PatientFooter } from "./components/patient/PatientFooter";
 import { PatientHome } from "./components/patient/PatientHome";
 import { PatientDashboard } from "./components/patient/PatientDashboard";
