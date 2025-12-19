@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Search, Phone, Mail, Calendar } from 'lucide-react';
+import { Search, Phone, Mail, Calendar, User } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -132,8 +132,8 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
     <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-text tracking-tight mb-2">Quan ly Benh nhan</h1>
-          <p className="text-neutral-text/70 font-medium">Danh sach va ho so benh nhan</p>
+          <h1 className="text-3xl font-bold text-neutral-text tracking-tight mb-2">Quản lý Bệnh nhân</h1>
+          <p className="text-neutral-text/70 font-medium">Danh sách và hồ sơ bệnh nhân</p>
         </div>
       </div>
 
@@ -143,33 +143,33 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-subtle" />
             <Input
               type="text"
-              placeholder="Tim kiem theo Ten, SDT, Ma BN, Email..."
+              placeholder="Tìm kiếm theo Tên, SĐT, Mã BN, Email..."
               className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <Button className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200">
-            + Them Benh nhan moi
+            + Thêm Bệnh nhân mới
           </Button>
         </div>
       </Card>
 
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Tong so benh nhan hom nay</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Tổng số bệnh nhân hôm nay</p>
           <p className="text-3xl font-bold text-neutral-text">{patients.length}</p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Benh nhan moi (thang nay)</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Bệnh nhân mới (tháng này)</p>
           <p className="text-3xl font-bold text-green-600">-</p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Ca lich hen hom nay</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Cả lịch hẹn hôm nay</p>
           <p className="text-3xl font-bold text-primary">{patients.length}</p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Can lien he lai</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Cần liên hệ lại</p>
           <p className="text-3xl font-bold text-accent-orange">-</p>
         </Card>
       </div>
@@ -178,14 +178,14 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
         <Table>
           <TableHeader>
             <TableRow className="bg-neutral-muted/30 hover:bg-neutral-muted/40">
-              <TableHead className="font-semibold text-neutral-text">Ma BN</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Ho ten</TableHead>
-              <TableHead className="font-semibold text-neutral-text">So dien thoai</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Email</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Ngay sinh</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Gio hen hom nay</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Ghi chu</TableHead>
-              <TableHead className="font-semibold text-neutral-text">Thao tac</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Ngày sinh</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Giờ hẹn hôm nay</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -194,7 +194,7 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    <p className="text-neutral-text/70 font-medium">Dang tai danh sach benh nhan hom nay...</p>
+                    <p className="text-neutral-text/70 font-medium">Đang tải danh sách bệnh nhân hôm nay...</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -211,7 +211,7 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                     <div className="w-16 h-16 bg-neutral-muted rounded-full flex items-center justify-center">
                       <User className="w-8 h-8 text-neutral-text/40" />
                     </div>
-                    <p className="text-neutral-text/60 font-medium">Khong tim thay benh nhan nao co lich hom nay</p>
+                    <p className="text-neutral-text/60 font-medium">Không tìm thấy bệnh nhân nào có lịch hôm nay</p>
                   </div>
                 </TableCell>
               </TableRow>

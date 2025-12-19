@@ -238,18 +238,18 @@ export function MyAppointments({
   };
 
   return (
-    <div className="p-6 bg-[#fcfeff]">
+    <div className="p-6 bg-[var(--page-bg)]">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[#01304e] mb-2">Lich hen cua toi</h1>
-          <p className="text-[#333333]/60">
+          <p className="text-regular">
             Theo doi cac cuoc hen gan day va sap toi
           </p>
         </div>
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
           <Input
-            placeholder="Tim theo ten, so dien thoai, ma benh nhan"
+            placeholder="Tìm theo tên, số điện thoại hoặc mã bệnh nhân..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 rounded-[10px] border-[#e8e8e8]"
@@ -260,7 +260,7 @@ export function MyAppointments({
       {loading ? (
         <Card className="rounded-[15px] border-[#e8e8e8]">
           <CardContent className="p-8 text-center text-[#333333]/60">
-            Dang tai lich hen...
+            Đang tải lịch hẹn...
           </CardContent>
         </Card>
       ) : error ? (
@@ -272,7 +272,7 @@ export function MyAppointments({
       ) : filteredAppointments.length === 0 ? (
         <Card className="rounded-[15px] border-[#e8e8e8]">
           <CardContent className="p-8 text-center text-[#333333]/60">
-            Khong co lich hen nao phu hop
+            Không có lịch hẹn nào phù hợp
           </CardContent>
         </Card>
       ) : (

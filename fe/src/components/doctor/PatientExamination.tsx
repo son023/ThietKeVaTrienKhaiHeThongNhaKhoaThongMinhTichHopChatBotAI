@@ -568,7 +568,7 @@ export function PatientExamination({
   }
 
   return (
-      <div className="p-6 flex flex-col gap-6 bg-neutral-background min-h-screen">
+      <div className="p-6 flex flex-col gap-6 bg-[var(--page-bg)] min-h-screen">
         {renderSnapshot()}
 
         <div className="grid grid-cols-12 gap-5">

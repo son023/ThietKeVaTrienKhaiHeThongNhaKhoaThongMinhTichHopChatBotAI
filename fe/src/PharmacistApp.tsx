@@ -88,69 +88,70 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
 
   return (
       <NotificationProvider userId={pharmacistId}>
-        <div className="min-h-screen bg-[#f8f9fa]">
-          <PharmacistHeader onLogout={onLogout} onGoHome={onGoHome} />
+        <div className="flex h-screen">
           <PharmacistSidebar
               currentPage={currentPage}
               onPageChange={handleSidebarChange}
           />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <PharmacistHeader onLogout={onLogout} onGoHome={onGoHome} />
+            <main className="flex-1 overflow-y-auto">
+              <Routes>
+                <Route
+                    path="/pharmacist"
+                    element={<PharmacistDashboard onNavigate={handleNavigate} />}
+                />
 
-          <div className="ml-[260px] mt-[80px]">
-            <Routes>
-              <Route
-                  path="/pharmacist"
-                  element={<PharmacistDashboard onNavigate={handleNavigate} />}
-              />
+                <Route
+                    path="/pharmacist/prescriptions"
+                    element={
+                      <PrescriptionQueue
+                          onViewDetail={(id) =>
+                              handleNavigate('prescription-detail', id)
+                          }
+                      />
+                    }
+                />
 
-              <Route
-                  path="/pharmacist/prescriptions"
-                  element={
-                    <PrescriptionQueue
-                        onViewDetail={(id) =>
-                            handleNavigate('prescription-detail', id)
-                        }
-                    />
-                  }
-              />
+                <Route
+                    path="/pharmacist/prescriptions/:id"
+                    element={<PrescriptionDetailWrapper />}
+                />
 
-              <Route
-                  path="/pharmacist/prescriptions/:id"
-                  element={<PrescriptionDetailWrapper />}
-              />
+                <Route
+                    path="/pharmacist/inventory"
+                    element={
+                      <DrugInventory
+                          onViewDrugProfile={(id) =>
+                              handleNavigate('drug-profile', id)
+                          }
+                      />
+                    }
+                />
 
-              <Route
-                  path="/pharmacist/inventory"
-                  element={
-                    <DrugInventory
-                        onViewDrugProfile={(id) =>
-                            handleNavigate('drug-profile', id)
-                        }
-                    />
-                  }
-              />
+                <Route
+                    path="/pharmacist/inventory/:id"
+                    element={<DrugProfileWrapper />}
+                />
 
-              <Route
-                  path="/pharmacist/inventory/:id"
-                  element={<DrugProfileWrapper />}
-              />
+                <Route
+                    path="/pharmacist/import-export"
+                    element={<ImportExportManagement />}
+                />
 
-              <Route
-                  path="/pharmacist/import-export"
-                  element={<ImportExportManagement />}
-              />
+                <Route
+                    path="/pharmacist/reports"
+                    element={<PharmacyReports />}
+                />
 
-              <Route
-                  path="/pharmacist/reports"
-                  element={<PharmacyReports />}
-              />
+                <Route
+                    path="/pharmacist/account"
+                    element={<AccountSettings />}
+                />
 
-              <Route
-                  path="/pharmacist/account"
-                  element={<AccountSettings />}
-              />
-
-              <Route path="*" element={<Navigate to="/pharmacist" replace />} />
-            </Routes>
+                <Route path="*" element={<Navigate to="/pharmacist" replace />} />
+              </Routes>
+            </main>
           </div>
         </div>
       </NotificationProvider>

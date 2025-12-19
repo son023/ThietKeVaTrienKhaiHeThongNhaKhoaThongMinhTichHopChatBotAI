@@ -1,4 +1,5 @@
 import { LayoutDashboard, FileText, Package, TruckIcon, BarChart3, Settings } from 'lucide-react';
+import { Logo } from './ui/logo';
 
 interface PharmacistSidebarProps {
   currentPage: string;
@@ -16,32 +17,31 @@ export function PharmacistSidebar({ currentPage, onPageChange }: PharmacistSideb
   ];
 
   return (
-    <div className="fixed left-0 top-[80px] h-[calc(100vh-80px)] w-[260px] bg-white border-r border-[#e5e7eb] shadow-sm overflow-y-auto">
-      <div className="p-4">
-        <nav className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => onPageChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[#3fb5ff] text-white shadow-md'
-                    : 'text-[#333333] hover:bg-[#f0f9ff] hover:text-[#3fb5ff]'
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[#05619a]'}`} />
-                <span className="font-['Fz_Poppins:Medium',sans-serif] text-[14px]">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+    <aside className="w-64 bg-white border-r border-[#e8e8e8] flex flex-col">
+      <div className="p-6 border-b border-[#e8e8e8]">
+        <Logo />
       </div>
-    </div>
+      <nav className="flex-1 px-4 py-4">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentPage === item.id;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onPageChange(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 mb-1 rounded-[10px] transition-all ${
+                isActive
+                  ? 'bg-[#3FB5FF] text-white shadow-[0px_4px_12px_0px_rgba(63,181,255,0.3)]'
+                  : 'text-[#333333] hover:bg-[#d8f0ff]'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

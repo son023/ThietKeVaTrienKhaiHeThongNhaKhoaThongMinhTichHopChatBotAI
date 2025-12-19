@@ -362,11 +362,11 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           </Button>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-[#01304e]">
+              <h1 className="text-2xl font-bold text-neutral-heading">
                 Hóa đơn #{displayInvoiceCode}
               </h1>
               {isLoadingInvoice && (
-                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
               )}
               <Badge
                 className={isPaid ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'}
@@ -374,7 +374,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 {isPaid ? '✓ ĐÃ THANH TOÁN' : '⏳ CHƯA THANH TOÁN'}
               </Badge>
             </div>
-            <div className="flex items-center gap-3 text-sm text-gray-600">
+            <div className="flex items-center gap-3 text-sm text-neutral-text/70">
               <span className="flex items-center gap-1">
                 <User className="w-4 h-4" />
                 <strong>{displayPatientName}</strong> ({displayPatientCode})
@@ -407,33 +407,33 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
       </div>
 
       {/* Invoice Info Card*/}
-      <Card className="p-4 md:p-6 bg-gradient-to-br from-blue-50 to-white border-blue-100">
+      <Card className="p-4 md:p-6 bg-gradient-to-br from-primary/5 to-neutral-surface border-primary/20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="flex items-start gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ngày lập</p>
-              <p className="text-[#01304e] font-semibold text-sm md:text-base truncate">{displayDate}</p>
+              <p className="text-xs text-neutral-text/60 uppercase tracking-wide mb-1 font-medium">Ngày lập</p>
+              <p className="text-neutral-heading font-semibold text-sm md:text-base truncate">{displayDate}</p>
             </div>
           </div>
           <div className="flex items-start gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Mã hóa đơn</p>
-              <p className="text-[#01304e] font-mono font-semibold text-sm md:text-base truncate">{displayInvoiceCode}</p>
+              <p className="text-xs text-neutral-text/60 uppercase tracking-wide mb-1 font-medium">Mã hóa đơn</p>
+              <p className="text-neutral-heading font-mono font-semibold text-sm md:text-base truncate">{displayInvoiceCode}</p>
             </div>
           </div>
           <div className="flex items-start gap-2 md:gap-3 sm:col-span-2 lg:col-span-1">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Bác sĩ</p>
-              <p className="text-[#01304e] font-semibold text-sm md:text-base truncate">{displayDoctorName}</p>
+              <p className="text-xs text-neutral-text/60 uppercase tracking-wide mb-1 font-medium">Bác sĩ</p>
+              <p className="text-neutral-heading font-semibold text-sm md:text-base truncate">{displayDoctorName}</p>
             </div>
           </div>
         </div>
@@ -442,34 +442,34 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
 
       {/* Invoice Items Table*/}
 
-      <Card className="p-6">
+      <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-[#01304e] flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#3FB5FF]" />
+          <h3 className="text-lg font-semibold text-neutral-heading flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
             Chi tiết Dịch vụ/Vật tư
-            <Badge variant="outline" className="ml-2">{items.length} mục</Badge>
+            <Badge variant="outline" className="ml-2 border-neutral-border bg-neutral-muted text-neutral-text">{items.length} mục</Badge>
           </h3>
         </div>
 
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="w-[50px]">STT</TableHead>
-                <TableHead>Loại</TableHead>
-                <TableHead>Tên Dịch vụ/Vật tư</TableHead>
-                <TableHead className="text-center w-[100px]">Số lượng</TableHead>
-                <TableHead className="text-right w-[130px]">Đơn giá</TableHead>
-                <TableHead className="text-right w-[130px]">Thành tiền</TableHead>
-                <TableHead className="text-right w-[130px]">
+              <TableRow className="bg-neutral-muted/30">
+                <TableHead className="w-[50px] font-semibold text-neutral-heading">STT</TableHead>
+                <TableHead className="font-semibold text-neutral-heading">Loại</TableHead>
+                <TableHead className="font-semibold text-neutral-heading">Tên Dịch vụ/Vật tư</TableHead>
+                <TableHead className="text-center w-[100px] font-semibold text-neutral-heading">Số lượng</TableHead>
+                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">Đơn giá</TableHead>
+                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">Thành tiền</TableHead>
+                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">
                   <span className="flex items-center justify-end gap-1">
                     <Shield className="w-4 h-4 text-green-600" />
                     BH chi trả
                   </span>
                 </TableHead>
-                <TableHead className="text-right w-[130px]">
+                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">
                   <span className="flex items-center justify-end gap-1">
-                    <Wallet className="w-4 h-4 text-blue-600" />
+                    <Wallet className="w-4 h-4 text-primary" />
                     BN thanh toán
                   </span>
                 </TableHead>
@@ -477,30 +477,30 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             </TableHeader>
             <TableBody>
               {items.map((item, index) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{index + 1}</TableCell>
+                <TableRow key={item.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                  <TableCell className="font-medium text-neutral-text">{index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{getServiceIcon(item.serviceType)}</span>
-                      <span className="text-xs font-medium text-gray-600">{item.serviceType}</span>
+                      <span className="text-xs font-medium text-neutral-text/70">{item.serviceType}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="max-w-xs">
-                      <p className="text-sm font-medium text-[#01304e]">{item.name}</p>
+                      <p className="text-sm font-medium text-neutral-heading">{item.name}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-medium">{item.quantity}</TableCell>
-                  <TableCell className="text-right text-gray-700">
+                  <TableCell className="text-center font-medium text-neutral-text">{item.quantity}</TableCell>
+                  <TableCell className="text-right text-neutral-text">
                     {item.unitPrice.toLocaleString('vi-VN')}đ
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-[#01304e]">
+                  <TableCell className="text-right font-semibold text-neutral-heading">
                     {(item.quantity * item.unitPrice).toLocaleString('vi-VN')}đ
                   </TableCell>
                   <TableCell className="text-right font-semibold text-green-600">
                     {item.insurancePayAmount.toLocaleString('vi-VN')}đ
                   </TableCell>
-                  <TableCell className="text-right font-bold text-blue-600">
+                  <TableCell className="text-right font-bold text-primary">
                     {item.patientPayAmount.toLocaleString('vi-VN')}đ
                   </TableCell>
                 </TableRow>
@@ -512,12 +512,12 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
         {/* Totals Summary - Enhanced Spacing */}
         <div className="mt-6 space-y-4 max-w-lg ml-auto">
           {/* Subtotal */}
-          <div className="flex justify-between items-center pb-4 border-b-2 border-gray-200">
+          <div className="flex justify-between items-center pb-4 border-b-2 border-neutral-border">
             <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-gray-500" />
-              <span className="text-base font-medium text-gray-700">Tổng cộng</span>
+              <DollarSign className="w-5 h-5 text-neutral-text/60" />
+              <span className="text-base font-medium text-neutral-text">Tổng cộng</span>
             </div>
-            <span className="text-xl font-bold text-[#01304e] ml-8">
+            <span className="text-xl font-bold text-neutral-heading ml-8">
               {subtotal.toLocaleString('vi-VN')}đ
             </span>
           </div>
@@ -537,17 +537,17 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           </div>
 
           {/* Patient Payment - với background highlight */}
-          <div className="flex justify-between items-center pt-4 bg-gradient-to-r from-blue-50 to-blue-100 -mx-4 px-6 py-5 rounded-xl border-2 border-blue-200">
+          <div className="flex justify-between items-center pt-4 bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 px-6 py-5 rounded-xl border-2 border-primary/30">
             <div className="flex items-center gap-3">
-              <Wallet className="w-6 h-6 text-blue-600" />
+              <Wallet className="w-6 h-6 text-primary" />
               <div>
-                <span className="text-lg font-bold text-blue-900">
+                <span className="text-lg font-bold text-primary-strong">
                   Bệnh nhân thanh toán
                 </span>
-                <p className="text-xs text-blue-600 mt-0.5">Số tiền cần thu</p>
+                <p className="text-xs text-primary mt-0.5">Số tiền cần thu</p>
               </div>
             </div>
-            <span className="text-3xl font-bold text-[#3FB5FF] ml-8">
+            <span className="text-3xl font-bold text-primary ml-8">
               {patientPays.toLocaleString('vi-VN')}đ
             </span>
           </div>
@@ -557,9 +557,9 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
 
       {/* Payment Section */}
       {mode === 'payment' && !isPaid && invoiceData?.status === 'PENDING' && (
-        <Card className="p-6 border-2 border-blue-100">
-          <h3 className="text-lg font-semibold text-[#01304e] mb-4 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-[#3FB5FF]" />
+        <Card className="p-6 border-2 border-primary/20 bg-neutral-surface shadow-sm">
+          <h3 className="text-lg font-semibold text-neutral-heading mb-4 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-primary" />
             Thông tin Thanh toán
           </h3>
 
@@ -572,19 +572,19 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 <div
                   onClick={() => setPaymentMethod('CASH')}
                   className={`flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${paymentMethod === 'CASH'
-                    ? 'border-[#3FB5FF] bg-blue-50 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/10 shadow-sm'
+                    : 'border-neutral-border hover:border-neutral-subtle'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CASH' ? 'border-[#3FB5FF]' : 'border-gray-300'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CASH' ? 'border-primary' : 'border-neutral-border'
                     }`}>
                     {paymentMethod === 'CASH' && (
-                      <div className="w-3 h-3 rounded-full bg-[#3FB5FF]" />
+                      <div className="w-3 h-3 rounded-full bg-primary" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-[#01304e]">💵 Tiền mặt</div>
-                    <div className="text-sm text-gray-500">Thanh toán ngay tại quầy</div>
+                    <div className="font-semibold text-neutral-heading">💵 Tiền mặt</div>
+                    <div className="text-sm text-neutral-text/70">Thanh toán ngay tại quầy</div>
                   </div>
                 </div>
 
@@ -592,19 +592,19 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 <div
                   onClick={() => setPaymentMethod('BANK_TRANSFER')}
                   className={`flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${paymentMethod === 'BANK_TRANSFER'
-                    ? 'border-[#3FB5FF] bg-blue-50 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-primary/10 shadow-sm'
+                    : 'border-neutral-border hover:border-neutral-subtle'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'BANK_TRANSFER' ? 'border-[#3FB5FF]' : 'border-gray-300'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'BANK_TRANSFER' ? 'border-primary' : 'border-neutral-border'
                     }`}>
                     {paymentMethod === 'BANK_TRANSFER' && (
-                      <div className="w-3 h-3 rounded-full bg-[#3FB5FF]" />
+                      <div className="w-3 h-3 rounded-full bg-primary" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-[#01304e]">🏦 Chuyển khoản</div>
-                    <div className="text-sm text-gray-500">Quét mã QR PayOS</div>
+                    <div className="font-semibold text-neutral-heading">🏦 Chuyển khoản</div>
+                    <div className="text-sm text-neutral-text/70">Quét mã QR PayOS</div>
                   </div>
                 </div>
               </div>
@@ -632,7 +632,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-8 px-3 text-xs font-semibold text-[#3FB5FF] hover:bg-blue-100"
+                      className="h-8 px-3 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
                       onClick={() => setAmountReceived(patientPays.toString())}
                     >
                       Vừa đủ
@@ -692,7 +692,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             <Button
               size="lg"
               onClick={handleConfirmPayment}
-              className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 gap-2 rounded-[15px] shadow-lg px-8 text-base"
+              className="bg-primary hover:bg-primary-strong gap-2 rounded-[15px] shadow-lg px-8 text-base transition-all duration-200"
               disabled={isProcessing}
             >
               {isProcessing ? (

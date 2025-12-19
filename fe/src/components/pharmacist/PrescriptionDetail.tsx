@@ -537,50 +537,50 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
           </div>
         </div>
 
-        {/* Column 3: Actions - giữ nguyên UI */}
+        {/* Column 3: Actions */}
         <div className="col-span-3 space-y-4">
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5">
-            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">Ghi chú của Dược sĩ</h3>
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-bold text-neutral-heading mb-4">Ghi chú của Dược sĩ</h3>
             <textarea
               value={pharmacistNotes}
               onChange={(e) => setPharmacistNotes(e.target.value)}
               placeholder="Nhập ghi chú nội bộ hoặc gửi cho Bác sĩ..."
-              className="w-full h-[120px] p-3 rounded-lg border border-[#3295d0] font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333] resize-none focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+              className="w-full h-[120px] p-3 rounded-lg border border-neutral-gray-300 text-sm text-neutral-text resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
           </div>
 
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5 space-y-3">
-            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">Hành động</h3>
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 space-y-3 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-bold text-neutral-heading mb-4">Hành động</h3>
 <button
   onClick={handleDispense}
   disabled={!isInvoicePaid || isCheckingPayment}
-  className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] transition-colors ${
+  className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 shadow-sm ${
     isInvoicePaid && !isCheckingPayment
-      ? 'bg-[#28a745] text-white hover:bg-[#218838]'
-      : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+      ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
+      : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
   }`}
 >
   <CheckCircle className="w-5 h-5" />
-  {isCheckingPayment 
-    ? 'Đang kiểm tra thanh toán...' 
-    : isInvoicePaid 
-      ? 'Hoàn tất & Cấp phát' 
+  {isCheckingPayment
+    ? 'Đang kiểm tra thanh toán...'
+    : isInvoicePaid
+      ? 'Hoàn tất & Cấp phát'
       : 'Chờ thanh toán hóa đơn'}
 </button>
 
-            
+
             <button
               onClick={handleSendForReview}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#ffc107] text-[#856404] rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#e0a800] transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 text-white rounded-lg text-sm font-bold hover:bg-amber-600 transition-all duration-200 shadow-sm hover:shadow"
             >
               <Flag className="w-5 h-5" />
               Gửi BS xem xét lại
             </button>
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-[#3295d0] text-[#05619a] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f0f9ff] transition-colors">
+            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-neutral-surface border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary/5 transition-all duration-200 shadow-sm">
               <Printer className="w-5 h-5" />
               In nhãn thuốc
             </button>
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-[#3295d0] text-[#05619a] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f0f9ff] transition-colors">
+            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-neutral-surface border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary/5 transition-all duration-200 shadow-sm">
               <Save className="w-5 h-5" />
               Lưu nháp
             </button>
