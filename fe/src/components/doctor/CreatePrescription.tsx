@@ -195,6 +195,7 @@ export function CreatePrescriptionEnhanced({
             //onCreated?.(res.id);
         } catch (e: any) {
             // Lỗi sẽ được báo qua websocket (PrescriptionProcessNotificationEvent)
+            //toast.error(e.message || "Lỗi tạo đơn thuốc");
         }
     };
 
