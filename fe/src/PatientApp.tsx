@@ -14,7 +14,7 @@ import { PatientAppointments } from "./components/patient/PatientAppointments";
 import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecords";
 import { PatientPayment } from "./components/patient/PatientPayment";
 import { PatientProfile } from "./components/patient/PatientProfile";
-import { PatientChatbot } from './components/patient/PatientChatbot';
+import PatientChatbot from "./components/patient/PatientChatbot";
 
 interface PatientAppProps {
   onLogout: () => void;
@@ -25,7 +25,6 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState("home");
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     if (location.pathname.startsWith("/patient/dashboard")) {
@@ -85,12 +84,12 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
       <NewPatientHeader
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        onOpenChatbot={() => setIsChatbotOpen(true)}
+        onOpenChatbot={handleOpenChatbotFromHeader}
         onLogout={onLogout}
       />
 
-      <PatientChatbot />
-
+      {/* ✅ Self-contained Floating Chat Widget */}
+      <PatientChatbot onNavigate={handleNavigate} />
       {/* Main Content */}
       <main className="flex-1 w-full">
         <Routes>
@@ -116,15 +115,8 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
           <Route path="*" element={<Navigate to="/patient" replace />} />
         </Routes>
       </main>
-
       {/* Footer */}
       <PatientFooter />
-
-      {/* Chatbot */}
-      {/*<PatientChatbot */}
-      {/*  isOpen={isChatbotOpen}*/}
-      {/*  onClose={() => setIsChatbotOpen(false)}*/}
-      {/*/>*/}
     </div>
   );
 }
