@@ -144,14 +144,14 @@ export function PatientAppointments() {
   };
 
   return (
-    <div className="w-full bg-[#fcfeff] py-[40px] px-[20px] md:px-[80px]">
+    <div className="w-full bg-neutral-background py-[40px] px-[20px] md:px-[80px] min-h-screen">
       <div className="max-w-[1440px] mx-auto">
-        {/* DoctorHeader */}
+        {/* Header */}
         <div className="mb-[32px]">
-          <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] md:text-[32px] mb-[8px]">
+          <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-neutral-text text-[28px] md:text-[32px] mb-[8px]">
             Quản lý lịch hẹn
           </h1>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[16px]">
+          <p className="font-['Fz_Poppins:Regular',sans-serif] text-neutral-text/70 text-[16px]">
             Xem và quản lý tất cả các lịch hẹn của bạn
           </p>
         </div>
@@ -170,15 +170,15 @@ export function PatientAppointments() {
           {/* Upcoming Appointments Tab */}
           <TabsContent value="upcoming" className="space-y-[20px]">
             {upcomingAppointments.length === 0 ? (
-              <Card className="p-[40px] text-center border-[#ebf6fc]">
-                <Calendar className="w-[64px] h-[64px] text-[#d6edfa] mx-auto mb-[16px]" />
-                <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-[8px]">
+              <Card className="p-[40px] text-center border-neutral-border bg-neutral-surface">
+                <Calendar className="w-[64px] h-[64px] text-neutral-text/20 mx-auto mb-[16px]" />
+                <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-neutral-text text-[18px] mb-[8px]">
                   Chưa có lịch hẹn
                 </h3>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px] mb-[24px]">
+                <p className="font-['Fz_Poppins:Regular',sans-serif] text-neutral-text/70 text-[14px] mb-[24px]">
                   Bạn chưa có lịch hẹn nào sắp tới
                 </p>
-                <Button className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] text-white hover:shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)]">
+                <Button className="bg-gradient-to-r from-primary to-primary-strong text-white hover:shadow-lg transition-all duration-200">
                   <Calendar className="w-[18px] h-[18px] mr-[8px]" />
                   Đặt lịch hẹn mới
                 </Button>
@@ -186,7 +186,7 @@ export function PatientAppointments() {
             ) : (
               <>
                 {upcomingAppointments.map((appointment) => (
-                  <Card key={appointment.id} className="p-[24px] md:p-[32px] border-[#ebf6fc] hover:shadow-[0px_4px_20px_0px_rgba(63,181,255,0.15)] transition-all">
+                  <Card key={appointment.id} className="p-[24px] md:p-[32px] border-neutral-border bg-neutral-surface hover:shadow-lg hover:scale-[1.01] transition-all duration-200">
                     <div className="flex flex-col lg:flex-row gap-[24px]">
                       {/* Left side - Main info */}
                       <div className="flex-1 space-y-[16px]">

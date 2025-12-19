@@ -8,30 +8,30 @@ interface LabTechnicianHeaderProps {
 
 export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderProps) {
     return (
-        <header className="h-16 bg-white border-b border-[#ebf6fc] flex items-center justify-between px-6">
+        <header className="h-16 bg-neutral-surface border-b border-neutral-border flex items-center justify-between px-6 shadow-sm">
             <div className="flex items-center gap-4">
-                <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
+                <h1 className="font-semibold text-neutral-heading text-lg">
                     DentalCareX Laboratory
                 </h1>
             </div>
 
             <div className="flex items-center gap-3">
-                <button className="p-2 rounded-lg hover:bg-[#f8fcff] transition-colors relative">
-                    <Bell className="w-5 h-5 text-[#666666]" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-[#ff4444] rounded-full"></span>
+                <button className="p-2 rounded-lg hover:bg-neutral-muted transition-all duration-200 relative">
+                    <Bell className="w-5 h-5 text-neutral-text/70" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3 py-2 bg-[#f8fcff] rounded-lg">
-                    <div className="w-8 h-8 rounded-full bg-[#3fb5ff] flex items-center justify-center">
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-white text-[14px]">
+                <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-lg border border-primary/20">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span className="font-semibold text-white text-sm">
               LT
             </span>
                     </div>
                     <div>
-                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[14px]">
+                        <p className="font-medium text-neutral-heading text-sm">
                             Nguyễn Thị Lan
                         </p>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[11px]">
+                        <p className="font-normal text-neutral-text/60 text-xs">
                             Kỹ thuật viên
                         </p>
                     </div>
@@ -41,7 +41,7 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
                     variant="ghost"
                     size="sm"
                     onClick={onGoHome}
-                    className="text-[#666666] hover:text-[#3fb5ff]"
+                    className="text-neutral-text/70 hover:text-primary hover:bg-primary/10 transition-all duration-200"
                 >
                     <Home className="w-4 h-4" />
                 </Button>
@@ -50,7 +50,7 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
                     variant="ghost"
                     size="sm"
                     onClick={onLogout}
-                    className="text-[#666666] hover:text-[#ff4444]"
+                    className="text-neutral-text/70 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                 >
                     <LogOut className="w-4 h-4" />
                 </Button>

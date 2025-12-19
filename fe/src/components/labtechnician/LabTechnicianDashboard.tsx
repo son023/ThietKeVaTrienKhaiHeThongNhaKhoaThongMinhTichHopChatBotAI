@@ -20,29 +20,29 @@ export function LabTechnicianDashboard({
       title: "Xét nghiệm chờ xử lý",
       value: "12",
       icon: Clock,
-      color: "text-[#ff9f43]",
-      bgColor: "bg-[#fff5e6]",
+      color: "text-accent-orange",
+      bgColor: "bg-accent-orange/10",
     },
     {
       title: "Đang thực hiện",
       value: "5",
       icon: Activity,
-      color: "text-[#3fb5ff]",
-      bgColor: "bg-[#ebf6fc]",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Hoàn thành hôm nay",
       value: "28",
       icon: CheckCircle2,
-      color: "text-[#2ecc71]",
-      bgColor: "bg-[#e8f8f5]",
+      color: "text-green-600",
+      bgColor: "bg-green-100",
     },
     {
       title: "Cần xử lý khẩn",
       value: "3",
       icon: AlertCircle,
-      color: "text-[#ff4444]",
-      bgColor: "bg-[#ffe6e6]",
+      color: "text-red-600",
+      bgColor: "bg-red-100",
     },
   ];
 
@@ -112,13 +112,13 @@ export function LabTechnicianDashboard({
   const getPriorityBadge = (priority: string) => {
     if (priority === "urgent") {
       return (
-        <span className="px-2 py-1 bg-[#ffe6e6] text-[#ff4444] rounded-md font-['Fz_Poppins:Medium',sans-serif] text-[11px]">
+        <span className="px-2 py-1 bg-red-100 text-red-600 rounded-md font-medium text-xs">
           Khẩn cấp
         </span>
       );
     }
     return (
-      <span className="px-2 py-1 bg-[#f0f9ff] text-[#3fb5ff] rounded-md font-['Fz_Poppins:Medium',sans-serif] text-[11px]">
+      <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium text-xs">
         Bình thường
       </span>
     );
@@ -127,13 +127,13 @@ export function LabTechnicianDashboard({
   const getStatusBadge = (status: string) => {
     if (status === "in-progress") {
       return (
-        <span className="px-2 py-1 bg-[#ebf6fc] text-[#3fb5ff] rounded-md font-['Fz_Poppins:Medium',sans-serif] text-[11px]">
+        <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium text-xs">
           Đang thực hiện
         </span>
       );
     }
     return (
-      <span className="px-2 py-1 bg-[#fff5e6] text-[#ff9f43] rounded-md font-['Fz_Poppins:Medium',sans-serif] text-[11px]">
+      <span className="px-2 py-1 bg-accent-orange/10 text-accent-orange rounded-md font-medium text-xs">
         Chờ xử lý
       </span>
     );
@@ -143,10 +143,10 @@ export function LabTechnicianDashboard({
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+        <h1 className="font-bold text-neutral-heading text-3xl mb-2">
           Bảng điều khiển
         </h1>
-        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+        <p className="font-normal text-neutral-text/70 text-sm">
           Tổng quan công việc hôm nay
         </p>
       </div>
@@ -158,7 +158,7 @@ export function LabTechnicianDashboard({
           return (
             <Card
               key={index}
-              className="p-5 border-[#ebf6fc] hover:shadow-md transition-shadow"
+              className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-3">
                 <div
@@ -167,10 +167,10 @@ export function LabTechnicianDashboard({
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
               </div>
-              <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-1">
+              <h3 className="font-bold text-neutral-heading text-3xl mb-1">
                 {stat.value}
               </h3>
-              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+              <p className="font-normal text-neutral-text/70 text-sm">
                 {stat.title}
               </p>
             </Card>
@@ -181,9 +181,9 @@ export function LabTechnicianDashboard({
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Tests */}
-        <Card className="lg:col-span-2 border-[#ebf6fc]">
-          <div className="p-6 border-b border-[#ebf6fc]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
+        <Card className="lg:col-span-2 border-neutral-border bg-neutral-surface shadow-sm">
+          <div className="p-6 border-b border-neutral-border">
+            <h2 className="font-semibold text-neutral-heading text-lg">
               Xét nghiệm cần xử lý
             </h2>
           </div>
@@ -193,18 +193,18 @@ export function LabTechnicianDashboard({
                 <div
                   key={test.id}
                   onClick={() => onNavigateToTest(test.id)}
-                  className="p-4 bg-[#f8fcff] rounded-xl hover:bg-[#ebf6fc] transition-colors cursor-pointer"
+                  className="p-4 bg-primary/5 rounded-xl hover:bg-primary/10 transition-all duration-200 cursor-pointer border border-primary/20"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#3fb5ff] rounded-lg flex items-center justify-center">
+                      <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                         <Microscope className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[15px]">
+                        <h3 className="font-semibold text-neutral-heading text-sm">
                           {test.patientName}
                         </h3>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                        <p className="font-normal text-neutral-text/70 text-sm">
                           {test.testType}
                         </p>
                       </div>
@@ -214,7 +214,7 @@ export function LabTechnicianDashboard({
                       {getStatusBadge(test.status)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-[#666666] text-[12px]">
+                  <div className="flex items-center gap-4 text-neutral-text/70 text-xs">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       Yêu cầu bởi: {test.requestedBy}
@@ -231,9 +231,9 @@ export function LabTechnicianDashboard({
         </Card>
 
         {/* Recent Results */}
-        <Card className="border-[#ebf6fc]">
-          <div className="p-6 border-b border-[#ebf6fc]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px]">
+        <Card className="border-neutral-border bg-neutral-surface shadow-sm">
+          <div className="p-6 border-b border-neutral-border">
+            <h2 className="font-semibold text-neutral-heading text-lg">
               Kết quả gần đây
             </h2>
           </div>
@@ -242,21 +242,21 @@ export function LabTechnicianDashboard({
               {recentResults.map((result) => (
                 <div
                   key={result.id}
-                  className="pb-4 border-b border-[#ebf6fc] last:border-0"
+                  className="pb-4 border-b border-neutral-border last:border-0"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#2ecc71]" />
-                    <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <h3 className="font-semibold text-neutral-heading text-sm">
                       {result.patientName}
                     </h3>
                   </div>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px] mb-1">
+                  <p className="font-normal text-neutral-text/70 text-sm mb-1">
                     {result.testType}
                   </p>
-                  <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[12px] mb-1">
+                  <p className="font-medium text-primary text-xs mb-1">
                     {result.result}
                   </p>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[11px]">
+                  <p className="font-normal text-neutral-text/60 text-xs">
                     Hoàn thành lúc {result.completedAt}
                   </p>
                 </div>

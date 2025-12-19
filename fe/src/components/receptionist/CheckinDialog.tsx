@@ -167,34 +167,35 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="max-w-2xl bg-white">
+      <DialogContent className="max-w-2xl bg-neutral-surface border-neutral-border">
         <DialogHeader>
-          <DialogTitle>Hồ sơ ban đầu & Check-in</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-neutral-text text-xl font-bold">Hồ sơ ban đầu & Check-in</DialogTitle>
+          <DialogDescription className="text-neutral-text/70">
             Nhập thông tin dị ứng, bệnh nền, tiền sử răng miệng trước khi check-in.
           </DialogDescription>
         </DialogHeader>
 
         {appointment && (
-          <div className="text-sm text-gray-700">
-            <p className="font-medium">{appointment.patientName}</p>
-            <p className="text-gray-500">{appointment.serviceName}</p>
+          <div className="text-sm p-3 bg-neutral-muted rounded-lg border border-neutral-border">
+            <p className="font-semibold text-neutral-text">{appointment.patientName}</p>
+            <p className="text-neutral-text/70 mt-0.5">{appointment.serviceName}</p>
           </div>
         )}
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Địa chỉ</Label>
+              <Label className="text-neutral-text font-medium">Địa chỉ</Label>
               <Input
                 value={formData.address}
                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                 placeholder="Địa chỉ liên hệ"
                 disabled={loadingProfile}
+                className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
             <div className="space-y-2">
-              <Label>Số điện thoại</Label>
+              <Label className="text-neutral-text font-medium">Số điện thoại</Label>
               <Input
                 value={formData.contactPhone}
                 onChange={(e) =>
@@ -202,16 +203,17 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                 }
                 placeholder="Số điện thoại bệnh nhân"
                 disabled={loadingProfile}
+                className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
             <div className="space-y-2">
-              <Label>Nhóm máu</Label>
+              <Label className="text-neutral-text font-medium">Nhóm máu</Label>
               <Select
                 value={formData.bloodType}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, bloodType: value }))}
                 disabled={loadingProfile}
               >
-                <SelectTrigger className="bg-white">
+                <SelectTrigger className="bg-neutral-surface border-neutral-border">
                   <SelectValue placeholder="Chọn nhóm máu" />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,7 +236,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Số bảo hiểm</Label>
+              <Label className="text-neutral-text font-medium">Số bảo hiểm</Label>
               <Input
                 value={formData.insuranceNumber}
                 onChange={(e) =>
@@ -242,29 +244,34 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                 }
                 placeholder="Số thẻ BHYT (nếu có)"
                 disabled={loadingProfile}
+                className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Dị ứng (chọn trong danh mục)</Label>
-            <ScrollArea className="h-32 border rounded-md p-2">
+            <Label className="text-neutral-text font-medium">Dị ứng (chọn trong danh mục)</Label>
+            <ScrollArea className="h-32 border border-neutral-border rounded-lg p-3 bg-neutral-muted/20">
               {loadingAllergies ? (
-                <p className="text-sm text-gray-500">Đang tải danh mục dị ứng...</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                  <p className="text-sm text-neutral-text/70 font-medium">Đang tải danh mục dị ứng...</p>
+                </div>
               ) : allergies.length === 0 ? (
-                <p className="text-sm text-gray-500">Chưa có danh mục dị ứng</p>
+                <p className="text-sm text-neutral-text/60 text-center py-4">Chưa có danh mục dị ứng</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {allergies.map((allergy) => (
                     <label
                       key={allergy.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
+                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-surface/50 p-2 rounded transition-colors"
                     >
                       <Checkbox
                         checked={formData.allergyIds.includes(allergy.id)}
                         onCheckedChange={() => toggleAllergy(allergy.id)}
+                        className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
-                      <span>{allergy.name}</span>
+                      <span className="text-neutral-text">{allergy.name}</span>
                     </label>
                   ))}
                 </div>
@@ -273,33 +280,34 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
           </div>
 
           <div className="space-y-2">
-            <Label>Bệnh nền (mỗi dòng một bệnh)</Label>
+            <Label className="text-neutral-text font-medium">Bệnh nền (mỗi dòng một bệnh)</Label>
             <Textarea
               value={formData.underlyingDiseases}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, underlyingDiseases: e.target.value }))
               }
-              placeholder="Ví dụ: Tiểu đường type 2\nTăng huyết áp"
+              placeholder="Ví dụ: Tiểu đường type 2&#10;Tăng huyết áp"
               rows={3}
+              className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
             />
           </div>
 
-          {formError && <div className="text-sm text-red-600">{formError}</div>}
+          {formError && <div className="text-sm text-red-600 font-medium p-3 bg-red-50 border border-red-200 rounded-lg">{formError}</div>}
 
           {requireMedicalInfoMissing && (
-            <div className="text-xs text-orange-600">
+            <div className="text-xs text-accent-orange font-medium p-3 bg-accent-orange/10 border border-accent-orange/30 rounded-lg">
               Bắt buộc nhập ít nhất 1 dị ứng hoặc 1 bệnh nền trước khi check-in.
             </div>
           )}
 
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={close} disabled={saving}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-border">
+            <Button variant="outline" onClick={close} disabled={saving} className="border-neutral-border hover:bg-neutral-muted transition-all">
               Hủy
             </Button>
             <Button
               disabled={saving || requireMedicalInfoMissing}
               onClick={handleSubmit}
-              className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 flex items-center gap-2"
+              className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Đang lưu...' : 'Lưu hồ sơ & Check-in'}

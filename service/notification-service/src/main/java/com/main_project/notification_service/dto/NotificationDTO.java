@@ -23,4 +23,13 @@ public class NotificationDTO {
     private int retryCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+      // Thêm các field để map với InvoicePaidNotification
+    private String invoiceId;
+    private String dispenseOrderId;
+    private String appointmentId;
+    private String type; // INVOICE_PAID, etc.
+    private Long timestamp;
+
+
 }

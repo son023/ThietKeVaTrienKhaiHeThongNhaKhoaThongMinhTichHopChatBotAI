@@ -168,7 +168,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
 
 
   return (
-    <div className="flex h-screen bg-[#fcfeff]">
+    <div className="flex h-screen">
       <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DoctorHeader
@@ -177,7 +177,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
           doctor={doctor || undefined}
           isLoading={isLoadingDoctor}
         />
-        <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
+        <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route
               path="/doctor"

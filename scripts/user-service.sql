@@ -20,9 +20,10 @@ CREATE TABLE IF NOT EXISTS role (
     );
 
 CREATE TABLE IF NOT EXISTS user_role (
-                                         user_id UUID NOT NULL,
-                                         role_id UUID NOT NULL,
-                                         PRIMARY KEY (user_id, role_id),
+    id          UUID         NOT NULL,
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
+    PRIMARY KEY (user_id, role_id),
     CONSTRAINT fk_user_role_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
     );
@@ -46,52 +47,43 @@ admin_role_id CONSTANT UUID := '4c84022a-1111-4001-8001-000000000001';
     user_recept_linh CONSTANT UUID := 'd903022a-1000-4001-8001-000000000006';
 
 BEGIN
-    -- 1. INSERT INTO role
+
 INSERT INTO role (id, role_name) VALUES
-                                     (admin_role_id, 'ADMIN'),
-                                     (doctor_role_id, 'DOCTOR'),
-                                     (patient_role_id, 'PATIENT'),
-                                     (pharmacist_role_id, 'PHARMACIST'),
-                                     (recept_role_id, 'RECEPTIONIST')
-    ON CONFLICT (role_name) DO NOTHING;
+('00000000-0000-0000-0000-000000000001', 'ADMIN'),
+('00000000-0000-0000-0000-000000000002', 'PATIENT'),
+('00000000-0000-0000-0000-000000000003', 'DOCTOR'),
+('00000000-0000-0000-0000-000000000004', 'RECEPTIONIST'),
+('00000000-0000-0000-0000-000000000005', 'PHARMACIST'),
+('00000000-0000-0000-0000-000000000006', 'LAB_TECHNICIAN');
 
--- 2. INSERT INTO users (Tất cả các cột NOT NULL đều được cung cấp giá trị)
-INSERT INTO users (id, password, email, phone, full_name, is_active) VALUES
-                                                                                   -- ADMIN
-                                                                                   (user_admin, 'hashed_admin_pass', 'admin@hospital.com', '0901000001', 'Nguyễn Văn Admin', TRUE),
+-- =========================================================
+-- 2) USER
+-- =========================================================
+INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
+('00000000-0000-0000-0000-000000000101', '12345678', 'mai.pham01@gmail.com', '0900000001', 'Phạm Thị Ngọc Mai', 'true', '2025-11-20 08:10:00', '2025-12-10 09:15:00'),
+('00000000-0000-0000-0000-000000000102', '12345678', 'tuan.le02@gmail.com',    '0900000002', 'Lê Anh Tuấn',     'true', '2025-11-21 10:00:00', '2025-12-11 14:00:00'),
+('00000000-0000-0000-0000-000000000103', '12345678', 'linh.tran03@gmail.com',  '0900000003', 'Trần Thị Linh',   'true', '2025-11-22 09:30:00', '2025-12-12 11:20:00'),
 
-                                                                                   -- DOCTOR
-                                                                                   (user_doc_hieu, 'hashed_doc_hieu_pass', 'hieu.bs@hospital.com', '0901000002', 'Bác sĩ Hiếu (Tim mạch)', TRUE),
-                                                                                   (user_doc_mai,  'hashed_doc_mai_pass', 'mai.bs@hospital.com', '0901000007', 'Bác sĩ Mai (Nhi)', TRUE),
+('00000000-0000-0000-0000-000000000201', '12345678', 'dr.hung.pham@gmail.com', '0900000004', 'Phạm Quang Hùng', 'true', '2025-10-10 08:00:00', '2025-12-10 08:30:00'),
+('00000000-0000-0000-0000-000000000202', '12345678', 'dr.ha.nguyen@gmail.com', '0900000005', 'Nguyễn Thu Hà',   'true', '2025-10-12 08:00:00', '2025-12-10 08:35:00'),
 
-                                                                                   -- PATIENT
-                                                                                   (user_pat_an,  'hashed_pat_an_pass', 'patient.an@gmail.com', '0901000003', 'Trần Thị An', TRUE),
-                                                                                   (user_pat_minh,  'hashed_pat_minh_pass', 'patient.minh@gmail.com', '0901000008', 'Lê Văn Minh', TRUE),
+('00000000-0000-0000-0000-000000000301', '12345678', 'thu.recep@gmail.com',    '0900000006', 'Đặng Minh Thu',   'true', '2025-09-01 08:00:00', '2025-12-10 09:00:00'),
 
-                                                                                   -- PHARMACIST
-                                                                                   (user_pharma_hoa,  'hashed_pharma_hoa_pass', 'hoa.duoc@hospital.com', '0901000004', 'Dược sĩ Hoa', TRUE),
+('00000000-0000-0000-0000-000000000401', '12345678', 'khoa.pharm@gmail.com',   '0900000007', 'Vũ Quốc Khoa',    'true', '2025-09-05 08:00:00', '2025-12-10 09:05:00'),
+('00000000-0000-0000-0000-000000000501', '12345678', 'vy.lab@gmail.com',       '0900000008', 'Phan Bảo Vy',     'true', '2025-09-07 08:00:00', '2025-12-10 09:10:00');
 
-                                                                                   -- RECEPTIONIST (LỄ TÂN)
-                                                                                   (user_recept_linh,  'hashed_recept_linh_pass', 'linh.le@hospital.com', '0901000006', 'Lễ tân Linh', TRUE);
-
--- 3. INSERT INTO user_role (Gán vai trò cho người dùng)
-INSERT INTO user_role (user_id, role_id) VALUES
-                                             -- ADMIN
-                                             (user_admin, admin_role_id),
-
-                                             -- DOCTOR
-                                             (user_doc_hieu, doctor_role_id),
-                                             (user_doc_mai, doctor_role_id),
-
-                                             -- PATIENT
-                                             (user_pat_an, patient_role_id),
-                                             (user_pat_minh, patient_role_id),
-
-                                             -- PHARMACIST
-                                             (user_pharma_hoa, pharmacist_role_id),
-
-                                             -- RECEPTIONIST
-                                             (user_recept_linh, recept_role_id);
+-- =========================================================
+-- 3) USER_ROLE
+-- =========================================================
+INSERT INTO user_role (id, user_id, role_id) VALUES
+('00000000-0000-0000-0000-000000001001', '00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000002'),
+('00000000-0000-0000-0000-000000001002', '00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000002'),
+('00000000-0000-0000-0000-000000001003', '00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000002'),
+('00000000-0000-0000-0000-000000001004', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000003'),
+('00000000-0000-0000-0000-000000001005', '00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000003'),
+('00000000-0000-0000-0000-000000001006', '00000000-0000-0000-0000-000000000301', '00000000-0000-0000-0000-000000000004'),
+('00000000-0000-0000-0000-000000001007', '00000000-0000-0000-0000-000000000401', '00000000-0000-0000-0000-000000000005'),
+('00000000-0000-0000-0000-000000001008', '00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000006');
 
 END $$;
 CREATE TABLE IF NOT EXISTS public.token_entry

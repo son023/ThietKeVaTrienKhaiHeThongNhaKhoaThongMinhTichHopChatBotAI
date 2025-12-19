@@ -1,7 +1,7 @@
 package com.main_project.notification_service.service;
 
 import com.main_project.notification_service.dto.LabTestCompletedNotificationMessage;
-import com.main_project.notification_service.dto.NotificationMessage;
+import com.main_project.notification_service.dto.InvoicePaidNotificationMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class WebSocketNotificationService {
     public void sendAppointmentRollbackNotification(UUID appointmentId, String reason) {
         log.info("Sending appointment rollback notification for appointment {} reason={}", appointmentId, reason);
 
-        NotificationMessage message = new NotificationMessage(
+        InvoicePaidNotificationMessage message = new InvoicePaidNotificationMessage(
                 "APPOINTMENT_ROLLBACK",
                 appointmentId.toString(),
                 reason,
@@ -37,7 +37,7 @@ public class WebSocketNotificationService {
         log.info("Sending invoice paid notification for invoice {} appointment={}", invoiceId, appointmentId);
 
         // Tạo notification message mở rộng
-        NotificationMessage notification = NotificationMessage.builder()
+        InvoicePaidNotificationMessage notification = InvoicePaidNotificationMessage.builder()
                 .type("INVOICE_PAID")
                 .appointmentId(appointmentId != null ? appointmentId.toString() : null)
                 .invoiceId(invoiceId.toString())

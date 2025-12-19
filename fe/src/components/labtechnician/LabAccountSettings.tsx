@@ -33,95 +33,95 @@ export function LabAccountSettings() {
 
     return (
         <div className="p-6 space-y-6 max-w-4xl">
-            {/* DoctorHeader */}
+            {/* Header */}
             <div>
-                <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+                <h1 className="font-bold text-neutral-heading text-3xl mb-2">
                     Cài đặt tài khoản
                 </h1>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                <p className="font-normal text-neutral-text/70 text-sm">
                     Quản lý thông tin cá nhân và cài đặt hệ thống
                 </p>
             </div>
 
             {/* Profile Information */}
-            <Card className="p-6 border-[#ebf6fc]">
-                <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+            <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                     Thông tin cá nhân
                 </h2>
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Họ và tên
                             </Label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
                                 <Input
                                     type="text"
                                     value={profileData.fullName}
                                     onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                                    className="pl-10 border-[#ebf6fc]"
+                                    className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Email
                             </Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
                                 <Input
                                     type="email"
                                     value={profileData.email}
                                     onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                                    className="pl-10 border-[#ebf6fc]"
+                                    className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Số điện thoại
                             </Label>
                             <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
                                 <Input
                                     type="tel"
                                     value={profileData.phone}
                                     onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                    className="pl-10 border-[#ebf6fc]"
+                                    className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Chức vụ
                             </Label>
                             <Input
                                 type="text"
                                 value={profileData.position}
                                 disabled
-                                className="border-[#ebf6fc] bg-[#f8fcff]"
+                                className="border-neutral-border bg-neutral-muted/30"
                             />
                         </div>
 
                         <div className="md:col-span-2">
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Chuyên môn
                             </Label>
                             <Input
                                 type="text"
                                 value={profileData.specialization}
                                 onChange={(e) => setProfileData({ ...profileData, specialization: e.target.value })}
-                                className="border-[#ebf6fc]"
+                                className="border-neutral-border focus:border-primary focus:ring-primary/20"
                             />
                         </div>
                     </div>
 
                     <div className="pt-4">
-                        <Button onClick={handleSaveProfile} className="bg-[#3fb5ff] hover:bg-[#1e8bc3]">
+                        <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary-strong transition-all duration-200">
                             Lưu thay đổi
                         </Button>
                     </div>
@@ -129,45 +129,45 @@ export function LabAccountSettings() {
             </Card>
 
             {/* Change Password */}
-            <Card className="p-6 border-[#ebf6fc]">
-                <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+            <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                     Đổi mật khẩu
                 </h2>
                 <div className="space-y-4">
                     <div>
-                        <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                        <Label className="font-medium text-neutral-heading mb-2 block">
                             Mật khẩu hiện tại
                         </Label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
-                            <Input type="password" className="pl-10 border-[#ebf6fc]" />
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
+                            <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Mật khẩu mới
                             </Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
-                                <Input type="password" className="pl-10 border-[#ebf6fc]" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
+                                <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
                             </div>
                         </div>
 
                         <div>
-                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                            <Label className="font-medium text-neutral-heading mb-2 block">
                                 Xác nhận mật khẩu mới
                             </Label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
-                                <Input type="password" className="pl-10 border-[#ebf6fc]" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
+                                <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
                             </div>
                         </div>
                     </div>
 
                     <div className="pt-4">
-                        <Button onClick={handleChangePassword} className="bg-[#3fb5ff] hover:bg-[#1e8bc3]">
+                        <Button onClick={handleChangePassword} className="bg-primary hover:bg-primary-strong transition-all duration-200">
                             Đổi mật khẩu
                         </Button>
                     </div>
@@ -175,19 +175,19 @@ export function LabAccountSettings() {
             </Card>
 
             {/* Notification Settings */}
-            <Card className="p-6 border-[#ebf6fc]">
-                <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+            <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                     Cài đặt thông báo
                 </h2>
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-b border-[#ebf6fc]">
+                    <div className="flex items-center justify-between py-3 border-b border-neutral-border">
                         <div className="flex items-start gap-3">
-                            <Bell className="w-5 h-5 text-[#3fb5ff] mt-1" />
+                            <Bell className="w-5 h-5 text-primary mt-1" />
                             <div>
-                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[15px] mb-1">
+                                <p className="font-medium text-neutral-heading text-sm mb-1">
                                     Xét nghiệm mới
                                 </p>
-                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                                <p className="font-normal text-neutral-text/70 text-sm">
                                     Thông báo khi có yêu cầu xét nghiệm mới
                                 </p>
                             </div>
@@ -198,14 +198,14 @@ export function LabAccountSettings() {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-[#ebf6fc]">
+                    <div className="flex items-center justify-between py-3 border-b border-neutral-border">
                         <div className="flex items-start gap-3">
-                            <Bell className="w-5 h-5 text-[#ff4444] mt-1" />
+                            <Bell className="w-5 h-5 text-red-600 mt-1" />
                             <div>
-                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[15px] mb-1">
+                                <p className="font-medium text-neutral-heading text-sm mb-1">
                                     Xét nghiệm khẩn cấp
                                 </p>
-                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                                <p className="font-normal text-neutral-text/70 text-sm">
                                     Thông báo ưu tiên cho xét nghiệm khẩn cấp
                                 </p>
                             </div>
@@ -216,14 +216,14 @@ export function LabAccountSettings() {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-[#ebf6fc]">
+                    <div className="flex items-center justify-between py-3 border-b border-neutral-border">
                         <div className="flex items-start gap-3">
-                            <Bell className="w-5 h-5 text-[#ff9f43] mt-1" />
+                            <Bell className="w-5 h-5 text-accent-orange mt-1" />
                             <div>
-                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[15px] mb-1">
+                                <p className="font-medium text-neutral-heading text-sm mb-1">
                                     Bảo trì thiết bị
                                 </p>
-                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                                <p className="font-normal text-neutral-text/70 text-sm">
                                     Nhắc nhở lịch bảo trì thiết bị
                                 </p>
                             </div>
@@ -236,12 +236,12 @@ export function LabAccountSettings() {
 
                     <div className="flex items-center justify-between py-3">
                         <div className="flex items-start gap-3">
-                            <Bell className="w-5 h-5 text-[#9b59b6] mt-1" />
+                            <Bell className="w-5 h-5 text-purple-600 mt-1" />
                             <div>
-                                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#01304e] text-[15px] mb-1">
+                                <p className="font-medium text-neutral-heading text-sm mb-1">
                                     Báo cáo định kỳ
                                 </p>
-                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                                <p className="font-normal text-neutral-text/70 text-sm">
                                     Nhận báo cáo thống kê hàng tuần
                                 </p>
                             </div>

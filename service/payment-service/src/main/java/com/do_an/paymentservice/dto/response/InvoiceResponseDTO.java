@@ -9,8 +9,8 @@ import java.util.UUID;
 @Data
 public class InvoiceResponseDTO {
     private UUID id;
-    private String receptionistId;
-    private String appointmentId;
+    private UUID receptionistId;
+    private UUID appointmentId;
     private Integer totalAmount;
     private String currency;
     private String status;

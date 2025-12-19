@@ -88,26 +88,26 @@ export function TestResults() {
 
     return (
         <div className="p-6 space-y-6">
-            {/* DoctorHeader */}
+            {/* Header */}
             <div>
-                <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+                <h1 className="font-bold text-neutral-heading text-3xl mb-2">
                     Kết quả xét nghiệm
                 </h1>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                <p className="font-normal text-neutral-text/70 text-sm">
                     Lịch sử các xét nghiệm đã hoàn thành
                 </p>
             </div>
 
             {/* Search */}
-            <Card className="p-4 border-[#ebf6fc]">
+            <Card className="p-4 border-neutral-border bg-neutral-surface shadow-sm">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
                     <Input
                         type="text"
                         placeholder="Tìm kiếm bệnh nhân, mã BN, loại xét nghiệm..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 h-11 border-[#ebf6fc]"
+                        className="pl-10 h-11 border-neutral-border focus:border-primary focus:ring-primary/20"
                     />
                 </div>
             </Card>
@@ -115,35 +115,35 @@ export function TestResults() {
             {/* Results List */}
             <div className="grid gap-4">
                 {filteredResults.map((result) => (
-                    <Card key={result.id} className="border-[#ebf6fc] hover:shadow-md transition-shadow">
+                    <Card key={result.id} className="border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                         <div className="p-5">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[16px]">
+                                        <h3 className="font-semibold text-neutral-heading text-base">
                                             {result.patientName}
                                         </h3>
-                                        <Badge variant="outline" className="text-[11px]">
+                                        <Badge variant="outline" className="text-xs border-neutral-border">
                                             {result.patientId}
                                         </Badge>
                                         {result.hasImage && (
-                                            <Badge className="bg-[#ebf6fc] text-[#3fb5ff] hover:bg-[#ebf6fc]">
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
                                                 Có hình ảnh
                                             </Badge>
                                         )}
                                     </div>
 
-                                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[15px] mb-3">
+                                    <p className="font-medium text-primary text-sm mb-3">
                                         {result.testType}
                                     </p>
 
-                                    <div className="p-3 bg-[#f8fcff] rounded-lg mb-3">
-                                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
-                                            <span className="font-['Fz_Poppins:Medium',sans-serif]">Kết quả:</span> {result.result}
+                                    <div className="p-3 bg-primary/5 rounded-lg mb-3 border border-primary/20">
+                                        <p className="font-normal text-neutral-text/70 text-sm">
+                                            <span className="font-medium text-neutral-heading">Kết quả:</span> {result.result}
                                         </p>
                                     </div>
 
-                                    <div className="flex flex-wrap gap-4 text-[12px] text-[#666666]">
+                                    <div className="flex flex-wrap gap-4 text-sm text-neutral-text/70">
                                         <div className="flex items-center gap-1">
                                             <Calendar className="w-4 h-4" />
                                             <span>{result.completedAt}</span>
@@ -160,7 +160,7 @@ export function TestResults() {
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleViewResult(result.id)}
-                                        className="border-[#3fb5ff] text-[#3fb5ff] hover:bg-[#ebf6fc]"
+                                        className="border-primary text-primary hover:bg-primary/10 transition-all duration-200"
                                     >
                                         <Eye className="w-4 h-4 mr-2" />
                                         Xem
@@ -168,7 +168,7 @@ export function TestResults() {
                                     <Button
                                         size="sm"
                                         onClick={() => handleDownloadResult(result.id)}
-                                        className="bg-[#3fb5ff] hover:bg-[#1e8bc3]"
+                                        className="bg-primary hover:bg-primary-strong transition-all duration-200"
                                     >
                                         <Download className="w-4 h-4 mr-2" />
                                         Tải về
@@ -181,13 +181,13 @@ export function TestResults() {
             </div>
 
             {filteredResults.length === 0 && (
-                <Card className="p-12 border-[#ebf6fc]">
+                <Card className="p-12 border-neutral-border bg-neutral-surface">
                     <div className="text-center">
-                        <Search className="w-16 h-16 text-[#d6edfa] mx-auto mb-4" />
-                        <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#666666] text-[16px] mb-2">
+                        <Search className="w-16 h-16 text-neutral-muted mx-auto mb-4" />
+                        <h3 className="font-semibold text-neutral-text/70 text-base mb-2">
                             Không tìm thấy kết quả
                         </h3>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[14px]">
+                        <p className="font-normal text-neutral-text/60 text-sm">
                             Thử điều chỉnh từ khóa tìm kiếm
                         </p>
                     </div>

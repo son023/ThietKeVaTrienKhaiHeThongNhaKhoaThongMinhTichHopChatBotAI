@@ -1,10 +1,13 @@
-import { Card } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { User, CheckCircle2, AlertCircle, DollarSign } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
-import CheckinDialog from './CheckinDialog';
+import { Card } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { User, CheckCircle2, AlertCircle, DollarSign } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  appointmentController,
+  AppointmentDTO,
+} from "../../controllers/AppointmentController";
+import CheckinDialog from "./CheckinDialog";
 
 interface Appointment {
   id: string;
@@ -13,7 +16,13 @@ interface Appointment {
   time: string;
   doctor: string;
   phone: string;
-  status: 'waiting_confirm' | 'waiting_checkin' | 'checked_in' | 'in_treatment' | 'waiting_payment' | 'completed';
+  status:
+    | "waiting_confirm"
+    | "waiting_checkin"
+    | "checked_in"
+    | "in_treatment"
+    | "waiting_payment"
+    | "completed";
   service?: string;
 }
 
@@ -22,42 +31,46 @@ interface ReceptionistDashboardProps {
   refreshToken?: number;
 }
 
-export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: ReceptionistDashboardProps = {}) {
+export function ReceptionistDashboard({
+  onCreateInvoice,
+  refreshToken,
+}: ReceptionistDashboardProps = {}) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkinOpen, setCheckinOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(null);
 
-  const mapStatus = (status: string): Appointment['status'] => {
+  const mapStatus = (status: string): Appointment["status"] => {
     switch (status) {
-      case 'CONFIRMED':
-        return 'waiting_checkin';
-      case 'CHECKED':
-        return 'checked_in';
-      case 'IN_PROGRESS':
-        return 'in_treatment';
+      case "CONFIRMED":
+        return "waiting_checkin";
+      case "CHECKED":
+        return "checked_in";
+      case "IN_PROGRESS":
+        return "in_treatment";
       default:
-        return 'waiting_confirm';
+        return "waiting_confirm";
     }
   };
 
   const transformAppointment = (apt: AppointmentDTO): Appointment => {
     const startTime = new Date(apt.appointmentStartTime);
-    const timeStr = startTime.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const timeStr = startTime.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
-    
+
     return {
       id: apt.id,
       patientId: apt.patientId,
       patientName: `Bệnh nhân ${apt.patientId.substring(0, 8)}`,
       time: timeStr,
       doctor: `BS. ${apt.doctorId.substring(0, 8)}`,
-      phone: 'N/A',
+      phone: "N/A",
       status: mapStatus(apt.status),
-      service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
+      service: apt.medicalServices?.[0]?.serviceName || "Khám tổng quát",
     };
   };
 
@@ -67,13 +80,13 @@ export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: Recepti
         setLoading(true);
         const today = new Date();
         const appointmentDTOs = await appointmentController.getByDate(today);
-        
+
         const transformed = appointmentDTOs.map(transformAppointment);
         setAppointments(transformed);
         setError(null);
       } catch (err) {
-        console.error('Error loading appointments:', err);
-        setError('Không thể tải danh sách lịch hẹn');
+        console.error("Error loading appointments:", err);
+        setError("Không thể tải danh sách lịch hẹn");
       } finally {
         setLoading(false);
       }
@@ -83,185 +96,256 @@ export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: Recepti
   }, [refreshToken]);
 
   const statusConfig = {
-    waiting_confirm: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', count: 2 },
-    waiting_checkin: { label: 'Chờ check-in', color: 'bg-blue-100 text-blue-800 border-blue-200', count: 2 },
-    checked_in: { label: 'Đã check-in', color: 'bg-purple-100 text-purple-800 border-purple-200', count: 1 },
-    in_treatment: { label: 'Đang khám', color: 'bg-green-100 text-green-800 border-green-200', count: 1 },
-    waiting_payment: { label: 'Chờ thanh toán', color: 'bg-orange-100 text-orange-800 border-orange-200', count: 1 },
-    completed: { label: 'Hoàn tất', color: 'bg-gray-100 text-gray-800 border-gray-200', count: 0 },
+    waiting_confirm: {
+      label: "Chờ xác nhận",
+      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      count: 2,
+    },
+    waiting_checkin: {
+      label: "Chờ check-in",
+      color: "bg-blue-100 text-blue-800 border-blue-200",
+      count: 2,
+    },
+    checked_in: {
+      label: "Đã check-in",
+      color: "bg-purple-100 text-purple-800 border-purple-200",
+      count: 1,
+    },
+    in_treatment: {
+      label: "Đang khám",
+      color: "bg-green-100 text-green-800 border-green-200",
+      count: 1,
+    },
+    waiting_payment: {
+      label: "Chờ thanh toán",
+      color: "bg-orange-100 text-orange-800 border-orange-200",
+      count: 1,
+    },
+    completed: {
+      label: "Hoàn tất",
+      color: "bg-gray-100 text-gray-800 border-gray-200",
+      count: 0,
+    },
   };
 
   const getAppointmentsByStatus = (status: string) => {
-    return appointments.filter(apt => apt.status === status);
+    return appointments.filter((apt) => apt.status === status);
   };
 
   const handleAction = async (appointmentId: string, action: string) => {
     try {
-      if (action === 'checkin') {
+      if (action === "checkin") {
         const target = appointments.find((apt) => apt.id === appointmentId);
         if (!target) return;
         setSelectedAppointment(target);
         setCheckinOpen(true);
-      } else if (action === 'invoice' && onCreateInvoice) {
+      } else if (action === "invoice" && onCreateInvoice) {
         onCreateInvoice(appointmentId);
       } else {
         console.log(`Action ${action} on appointment ${appointmentId}`);
       }
     } catch (err) {
-      console.error('Error performing action:', err);
-      alert(`Lỗi: ${err instanceof Error ? err.message : 'Có lỗi xảy ra'}`);
+      console.error("Error performing action:", err);
+      alert(`Lỗi: ${err instanceof Error ? err.message : "Có lỗi xảy ra"}`);
     }
   };
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
       {/* Notifications */}
       <div className="space-y-3">
-        <Card className="p-4 border-blue-200 bg-blue-50">
+        <Card className="p-4 border-primary-light bg-neutral-muted hover:shadow-md transition-all duration-200">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-primary-strong mt-0.5 animate-pulse" />
             <div>
-              <p className="text-sm text-blue-900">
-                <strong>Bệnh nhân Nguyễn Văn A</strong> đã đặt lịch online lúc 08:45
+              <p className="text-sm text-neutral-text">
+                <strong className="font-semibold">
+                  Bệnh nhân Nguyễn Văn A
+                </strong>{" "}
+                đã đặt lịch online lúc 08:45
               </p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 border-orange-200 bg-orange-50">
+        <Card className="p-4 border-accent-orange bg-accent-orange/10 hover:shadow-md transition-all duration-200">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-accent-orange mt-0.5 animate-pulse" />
             <div>
-              <p className="text-sm text-orange-900">
-                <strong>Bệnh nhân Lê Văn C</strong> trễ hẹn 10 phút (10:00 AM)
+              <p className="text-sm text-neutral-text">
+                <strong className="font-semibold">Bệnh nhân Lê Văn C</strong>{" "}
+                trễ hẹn 10 phút (10:00 AM)
               </p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* DoctorHeader */}
-      <div>
-        <h1 className="text-2xl text-[#01304e] mb-2">Luồng Bệnh nhân hôm nay</h1>
-        <p className="text-gray-600">
-          {new Date().toLocaleDateString('vi-VN', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-neutral-text tracking-tight">
+          Luồng Bệnh nhân hôm nay
+        </h1>
+        <p className="text-neutral-text/70 font-medium">
+          {new Date().toLocaleDateString("vi-VN", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
           })}
         </p>
       </div>
 
       {loading && (
-        <div className="p-4 text-center text-gray-600">Đang tải dữ liệu...</div>
+        <Card className="p-8 border-neutral-border bg-neutral-surface">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            <p className="text-neutral-text/70 font-medium">
+              Đang tải dữ liệu...
+            </p>
+          </div>
+        </Card>
       )}
 
       {error && (
-        <div className="p-4 text-center text-red-600">{error}</div>
+        <Card className="p-6 border-red-200 bg-red-50">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-red-700 font-medium">{error}</p>
+          </div>
+        </Card>
       )}
 
       {/* Kanban Board */}
-        <div className="grid grid-cols-6 gap-3 overflow-x-auto pb-4">
-        {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map((status) => {
-          const config = statusConfig[status];
-          const statusAppointments = getAppointmentsByStatus(status);
-          
-          return (
-            <div key={status} className="min-w-[240px]">
-              {/* Column DoctorHeader */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs text-gray-700">{config.label}</h3>
-                  <Badge variant="outline" className={`${config.color} border text-xs px-2 py-0`}>
-                    {statusAppointments.length}
-                  </Badge>
-                </div>
-                <div className="h-1 bg-gray-200 rounded-full">
-                  <div className={`h-1 rounded-full ${config.color.split(' ')[0]}`} style={{ width: '100%' }} />
-                </div>
-              </div>
+      {!loading && !error && (
+        <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
+          {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map(
+            (status) => {
+              const config = statusConfig[status];
+              const statusAppointments = getAppointmentsByStatus(status);
 
-              {/* Cards */}
-              <div className="space-y-2">
-                {statusAppointments.map((apt) => (
-                  <Card key={apt.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer border-[#e8e8e8]">
-                    <div className="space-y-2">
-                      {/* Patient Info - Compact */}
-                      <div>
-                        <div className="flex items-start justify-between mb-1.5">
-                          <h4 className="text-xs text-[#01304e] line-clamp-1 pr-1">{apt.patientName}</h4>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">
-                            {apt.time}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-gray-600">
-                          <User className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{apt.doctor}</span>
-                        </div>
-                        {apt.service && (
-                          <p className="text-[10px] text-gray-500 mt-1 truncate" title={apt.service}>
-                            {apt.service}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Action Buttons - Compact */}
-                      <div className="pt-2 border-t">
-                        {status === 'waiting_confirm' && (
-                          <Button
-                            size="sm"
-                            className="w-full bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 h-7 text-xs"
-                            onClick={() => handleAction(apt.id, 'confirm')}
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Xác nhận
-                          </Button>
-                        )}
-                        {status === 'waiting_checkin' && (
-                          <Button
-                            size="sm"
-                            className="w-full bg-purple-600 hover:bg-purple-700 h-7 text-xs"
-                            onClick={() => handleAction(apt.id, 'checkin')}
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Check-in
-                          </Button>
-                        )}
-                        {status === 'waiting_payment' && (
-                          <Button
-                            size="sm"
-                            className="w-full bg-orange-600 hover:bg-orange-700 h-7 text-xs"
-                            onClick={() => handleAction(apt.id, 'invoice')}
-                          >
-                            <DollarSign className="w-3 h-3 mr-1" />
-                            Thanh toán
-                          </Button>
-                        )}
-                        {(status === 'checked_in' || status === 'in_treatment' || status === 'completed') && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full h-7 text-[10px]"
-                            onClick={() => handleAction(apt.id, 'view')}
-                          >
-                            Chi tiết
-                          </Button>
-                        )}
-                      </div>
+              return (
+                <div key={status} className="min-w-[240px]">
+                  {/* Column Header */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-neutral-text">
+                        {config.label}
+                      </h3>
+                      <Badge
+                        variant="outline"
+                        className={`${config.color} border-2 text-xs px-2.5 py-0.5 font-medium`}
+                      >
+                        {statusAppointments.length}
+                      </Badge>
                     </div>
-                  </Card>
-                ))}
-                
-                {statusAppointments.length === 0 && (
-                  <div className="text-center py-6 text-xs text-gray-400">
-                    Không có
+                    <div className="h-1.5 bg-neutral-tint rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          config.color.split(" ")[0]
+                        } transition-all duration-300`}
+                        style={{ width: "100%" }}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+
+                  {/* Cards */}
+                  <div className="space-y-3">
+                    {statusAppointments.map((apt) => (
+                      <Card
+                        key={apt.id}
+                        className="p-3 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer border-neutral-border bg-neutral-surface"
+                      >
+                        <div className="space-y-2.5">
+                          {/* Patient Info - Compact */}
+                          <div>
+                            <div className="flex items-start justify-between mb-1.5">
+                              <h4 className="text-xs font-semibold text-neutral-text line-clamp-1 pr-1">
+                                {apt.patientName}
+                              </h4>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] px-2 py-0.5 shrink-0 bg-neutral-muted border-neutral-border"
+                              >
+                                {apt.time}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-neutral-text/70">
+                              <User className="w-3 h-3 shrink-0 text-neutral-subtle" />
+                              <span className="truncate">{apt.doctor}</span>
+                            </div>
+                            {apt.service && (
+                              <p
+                                className="text-[10px] text-neutral-text/60 mt-1 truncate"
+                                title={apt.service}
+                              >
+                                {apt.service}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Action Buttons - Compact */}
+                          <div className="pt-2 border-t border-neutral-border">
+                            {status === "waiting_confirm" && (
+                              <Button
+                                size="sm"
+                                className="w-full bg-primary hover:bg-primary-strong h-7 text-xs font-medium shadow-sm transition-all duration-200"
+                                onClick={() => handleAction(apt.id, "confirm")}
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Xác nhận
+                              </Button>
+                            )}
+                            {status === "waiting_checkin" && (
+                              <Button
+                                size="sm"
+                                className="w-full bg-secondary-deep hover:bg-secondary-deep/90 h-7 text-xs font-medium shadow-sm transition-all duration-200"
+                                onClick={() => handleAction(apt.id, "checkin")}
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Check-in
+                              </Button>
+                            )}
+                            {status === "waiting_payment" && (
+                              <Button
+                                size="sm"
+                                className="w-full bg-accent-orange hover:bg-accent-orange/90 h-7 text-xs font-medium shadow-sm transition-all duration-200"
+                                onClick={() => handleAction(apt.id, "invoice")}
+                              >
+                                <DollarSign className="w-3 h-3 mr-1" />
+                                Thanh toán
+                              </Button>
+                            )}
+                            {(status === "checked_in" ||
+                              status === "in_treatment" ||
+                              status === "completed") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full h-7 text-[10px] border-neutral-border hover:bg-neutral-muted transition-all duration-200"
+                                onClick={() => handleAction(apt.id, "view")}
+                              >
+                                Chi tiết
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+
+                    {statusAppointments.length === 0 && (
+                      <Card className="p-6 border-neutral-border bg-neutral-muted/50">
+                        <div className="text-center text-xs text-neutral-text/40 font-medium">
+                          Không có
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
 
       <CheckinDialog
         open={checkinOpen}
@@ -283,7 +367,9 @@ export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: Recepti
           if (!selectedAppointment) return;
           setAppointments((prev) =>
             prev.map((apt) =>
-              apt.id === selectedAppointment.id ? { ...apt, status: 'checked_in' } : apt
+              apt.id === selectedAppointment.id
+                ? { ...apt, status: "checked_in" }
+                : apt
             )
           );
         }}
@@ -291,26 +377,48 @@ export function ReceptionistDashboard({ onCreateInvoice, refreshToken }: Recepti
 
       {/* Tasks Section */}
       <div className="mt-8">
-        <h2 className="text-xl text-[#01304e] mb-4">Việc cần làm</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-4">
+        <h2 className="text-2xl font-bold text-neutral-text mb-5 tracking-tight">
+          Việc cần làm
+        </h2>
+        <div className="grid grid-cols-2 gap-5">
+          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-lg transition-all duration-200">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-sm text-[#01304e]">Gọi điện xác nhận lịch hẹn ngày mai</h3>
-              <Badge className="bg-yellow-500">5 BN</Badge>
+              <h3 className="text-sm font-semibold text-neutral-text">
+                Gọi điện xác nhận lịch hẹn ngày mai
+              </h3>
+              <Badge className="bg-accent-lime text-neutral-text font-medium px-3 py-1">
+                5 BN
+              </Badge>
             </div>
-            <p className="text-xs text-gray-600 mb-3">Nhắc nhở bệnh nhân về lịch hẹn vào ngày mai</p>
-            <Button size="sm" variant="outline" className="w-full">
+            <p className="text-xs text-neutral-text/70 mb-4 leading-relaxed">
+              Nhắc nhở bệnh nhân về lịch hẹn vào ngày mai
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-neutral-border hover:bg-neutral-muted hover:text-strong hover:border-primary "
+            >
               Xem danh sách
             </Button>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-lg transition-all duration-200">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-sm text-[#01304e]">Theo dõi bệnh nhân trễ hẹn</h3>
-              <Badge className="bg-orange-500">2 BN</Badge>
+              <h3 className="text-sm font-semibold text-neutral-text">
+                Theo dõi bệnh nhân trễ hẹn
+              </h3>
+              <Badge className="bg-accent-orange text-white font-medium px-3 py-1">
+                2 BN
+              </Badge>
             </div>
-            <p className="text-xs text-gray-600 mb-3">Liên hệ với bệnh nhân chưa đến theo lịch</p>
-            <Button size="sm" variant="outline" className="w-full">
+            <p className="text-xs text-neutral-text/70 mb-4 leading-relaxed">
+              Liên hệ với bệnh nhân chưa đến theo lịch
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-neutral-border hover:text-strong hover:bg-neutral-muted hover:border-primary transition-all duration-200"
+            >
               Xem danh sách
             </Button>
           </Card>

@@ -271,9 +271,9 @@ const handleOpenTaskDialog = (task: any) => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-neutral-background">
+    <div className="p-6 space-y-6 bg-[var(--page-bg)]">
       <div className="mb-8">
-        <h1 className="typo-h2 mb-2">Bảng điều khiển - Hôm nay</h1>
+        <h1 className="typo-h2 mb-2">Bảng điều khiển</h1>
         <p className="text-neutral-text/60">Tổng quan công việc trong ngày của bạn</p>
       </div>
 

@@ -189,10 +189,12 @@ export function CreatePrescriptionEnhanced({
         };
 
         try {
-            const res = await prescriptionController.createPrescription(payload);
-            //toast.success("Đã tạo đơn thuốc thành công");
-            onCreated?.();
+            const res = await prescriptionController.createPrescription(payload)
+            //toast.success("Đã tạo đơn thuốc thành công")
+            // Nếu tạo đơn thành công thì mới callback để màn hình cha chuyển trang
+            //onCreated?.(res.id);
         } catch (e: any) {
+            // Lỗi sẽ được báo qua websocket (PrescriptionProcessNotificationEvent)
             //toast.error(e.message || "Lỗi tạo đơn thuốc");
         }
     };
@@ -209,7 +211,7 @@ export function CreatePrescriptionEnhanced({
     }
 
     return (
-        <div className="h-screen flex flex-col bg-neutral-background">
+        <div className="h-screen flex flex-col bg-[var(--page-bg)]">
             {/* Header */}
             <div className="bg-neutral-surface border-b border-neutral-border/30 px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
@@ -550,8 +552,27 @@ export function CreatePrescriptionEnhanced({
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-3 text-sm p-4 bg-red-50 rounded-lg border border-red-200">
-                        <p className="text-neutral-text">{errorDetail?.message || "Có lỗi xảy ra"}</p>
-                        {errorDetail?.reason && <p className="text-neutral-text/70">Chi tiết: {errorDetail.reason}</p>}
+                        <p className="text-neutral-text font-semibold">{errorDetail?.message || "Có lỗi xảy ra"}</p>
+                        {errorDetail?.step && (
+                            <p className="text-neutral-text/70">
+                                <span className="font-medium">Bước xử lý:</span> {errorDetail.step}
+                            </p>
+                        )}
+                        {errorDetail?.status && (
+                            <p className="text-neutral-text/70">
+                                <span className="font-medium">Trạng thái:</span> {errorDetail.status}
+                            </p>
+                        )}
+                        {errorDetail?.prescriptionId && (
+                            <p className="text-neutral-text/70">
+                                <span className="font-medium">Mã đơn thuốc:</span> <span className="font-mono">{errorDetail.prescriptionId.slice(-8)}</span>
+                            </p>
+                        )}
+                        {errorDetail?.reason && (
+                            <p className="text-neutral-text/70">
+                                <span className="font-medium">Chi tiết:</span> {errorDetail.reason}
+                            </p>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowErrorPopup(false)} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">Đóng</Button>
