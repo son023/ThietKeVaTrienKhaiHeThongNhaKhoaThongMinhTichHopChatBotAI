@@ -14,9 +14,7 @@ import { PatientAppointments } from "./components/patient/PatientAppointments";
 import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecords";
 import { PatientPayment } from "./components/patient/PatientPayment";
 import { PatientProfile } from "./components/patient/PatientProfile";
-// import { PatientChatbot } from './components/patient/PatientChatbot';
-import { FloatingChatWidget } from "./components/ui/FloatingChatWidget";
-import PatientChatbot from "./components/patient/PatientChatbot";
+import { PatientChatbot } from './components/patient/PatientChatbot';
 
 interface PatientAppProps {
   onLogout: () => void;
