@@ -114,8 +114,13 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
 
   // Nếu đã chọn medical history, hiển thị form tạo đơn thuốc
   if (selectedHistory) {
-    const appointment = appointments[selectedHistory.appointmentId];
-    
+    const appointment = selectedHistory.appointmentId ? appointments[selectedHistory.appointmentId] : undefined;
+
+    if (!selectedHistory.appointmentId || !selectedHistory.patientId) {
+      toast.error('Thiếu thông tin appointment hoặc patient');
+      return null;
+    }
+
     return (
       <CreatePrescriptionEnhanced
         appointmentId={selectedHistory.appointmentId}
@@ -182,8 +187,8 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredHistories.map((history) => {
-            const patient = patients[history.patientId];
-            const appointment = appointments[history.appointmentId];
+            const patient = history.patientId ? patients[history.patientId] : undefined;
+            const appointment = history.appointmentId ? appointments[history.appointmentId] : undefined;
 
             return (
               <Card

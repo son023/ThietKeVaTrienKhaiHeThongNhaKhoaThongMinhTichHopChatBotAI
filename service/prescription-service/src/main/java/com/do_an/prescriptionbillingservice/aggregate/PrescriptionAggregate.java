@@ -1,10 +1,9 @@
 package com.do_an.prescriptionbillingservice.aggregate;
 
-import com.do_an.common.command.CreatePrescriptionCommand;
 import com.do_an.common.event.PrescriptionCreatedEvent;
+import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.common.model.MedicineItem;
 import lombok.NoArgsConstructor;
-import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
@@ -20,7 +19,8 @@ public class PrescriptionAggregate {
     private UUID prescriptionId;
     private String status;
 
-    public PrescriptionAggregate(UUID prescriptionId, UUID invoiceId, UUID patientId, UUID doctorId, UUID medicalHistoryId, List<MedicineItem> items) {
+    public PrescriptionAggregate(UUID prescriptionId, UUID invoiceId, UUID patientId, UUID doctorId, UUID medicalHistoryId, List<MedicineItem> items,
+                                 List<InvoiceItemCheckerRequest> serviceItems) {
         //Kích hoạt Saga
         AggregateLifecycle.apply(new PrescriptionCreatedEvent(
                 prescriptionId,
@@ -28,7 +28,8 @@ public class PrescriptionAggregate {
                 patientId,
                 doctorId,
                 medicalHistoryId,
-                items
+                items,
+                serviceItems
         ));
 
 

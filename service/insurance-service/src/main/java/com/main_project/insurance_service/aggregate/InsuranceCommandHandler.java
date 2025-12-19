@@ -100,7 +100,7 @@ public class InsuranceCommandHandler {
             Integer totalInsurancePay = 0;
 
             InvoiceCheckerRequest requestDTO = command.getInvoiceCheckerRequest();
-
+            //Tính toán chi trả cho thuốc vaf dịch vụ
             for (InvoiceItemCheckerRequest itemRequest : requestDTO.getItems()) {
                 ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
                 InvoiceItemDTO dto = processedItem.getInvoiceItem();

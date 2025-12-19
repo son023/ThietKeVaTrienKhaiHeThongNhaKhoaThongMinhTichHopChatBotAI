@@ -2,6 +2,7 @@ package com.do_an.prescriptionbillingservice.saga;
 
 import com.do_an.common.command.*;
 import com.do_an.common.event.*;
+import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.common.model.MedicineItem;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -14,6 +15,7 @@ import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Saga
@@ -35,6 +37,7 @@ public class PrescriptionBillingSaga {
     private String doctorId;
 
     private List<MedicineItem> medicineItems;
+    private List<InvoiceItemCheckerRequest> serviceItems;
     private Integer discountAmount;
 
 
@@ -46,6 +49,7 @@ public class PrescriptionBillingSaga {
         this.patientId = event.getPatientId();
         this.medicineItems = event.getItems();
         this.invoiceId = event.getInvoiceId();
+        this.serviceItems = event.getServiceItems();
 
 
         SagaLifecycle.associateWith("invoiceId", String.valueOf(this.invoiceId));
@@ -102,6 +106,8 @@ public class PrescriptionBillingSaga {
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineChargesAddedEvent event) {
         this.insuranceClaimId = UUID.randomUUID();
+        Set<InvoiceItemCheckerRequest> items = event.getInvoiceItemCheckerRequest().getItems();
+        items.addAll(this.serviceItems);
         log.info("✅ STEP 2 OK: Phí thuốc đã thêm. -> STEP 3: Gửi lệnh thẩm định bảo hiểm (ClaimId: {})", this.insuranceClaimId);
         commandGateway.send(new ValidateInsuranceCommand(
                 this.insuranceClaimId,
