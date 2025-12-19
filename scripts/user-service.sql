@@ -48,7 +48,6 @@ admin_role_id CONSTANT UUID := '4c84022a-1111-4001-8001-000000000001';
 
 BEGIN
 
-
 INSERT INTO role (id, role_name) VALUES
 ('00000000-0000-0000-0000-000000000001', 'ADMIN'),
 ('00000000-0000-0000-0000-000000000002', 'PATIENT'),
@@ -60,7 +59,7 @@ INSERT INTO role (id, role_name) VALUES
 -- =========================================================
 -- 2) USER
 -- =========================================================
-INSERT INTO users (id, password, email, phone, full_name, is_active, created_at, updated_at) VALUES
+INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
 ('00000000-0000-0000-0000-000000000101', '12345678', 'mai.pham01@gmail.com', '0900000001', 'Phạm Thị Ngọc Mai', 'true', '2025-11-20 08:10:00', '2025-12-10 09:15:00'),
 ('00000000-0000-0000-0000-000000000102', '12345678', 'tuan.le02@gmail.com',    '0900000002', 'Lê Anh Tuấn',     'true', '2025-11-21 10:00:00', '2025-12-11 14:00:00'),
 ('00000000-0000-0000-0000-000000000103', '12345678', 'linh.tran03@gmail.com',  '0900000003', 'Trần Thị Linh',   'true', '2025-11-22 09:30:00', '2025-12-12 11:20:00'),

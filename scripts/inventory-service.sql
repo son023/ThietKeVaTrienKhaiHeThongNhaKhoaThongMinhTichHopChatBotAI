@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.dispense_order
     create_at          TIMESTAMP,
     doctor_id          UUID,
     medical_history_id UUID,
-    prescription       UUID,
+    prescription       VARCHAR(255),
     status             VARCHAR(255),  -- PENDING, COMPLETED, CANCELLED
     update_at          TIMESTAMP,
     pharmacist_id      UUID,
