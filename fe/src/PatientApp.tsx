@@ -15,6 +15,8 @@ import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecord
 import { PatientPayment } from "./components/patient/PatientPayment";
 import { PatientProfile } from "./components/patient/PatientProfile";
 // import { PatientChatbot } from './components/patient/PatientChatbot';
+import { FloatingChatWidget } from "./components/ui/FloatingChatWidget";
+import PatientChatbot from "./components/patient/PatientChatbot";
 
 interface PatientAppProps {
   onLogout: () => void;
@@ -69,6 +71,16 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
     }
   };
 
+  // Header muốn "open chatbot" nhưng widget là self-contained (không nhận prop isOpen).
+  // Giải pháp: trigger click vào FAB của widget khi đang đóng.
+  const handleOpenChatbotFromHeader = () => {
+    const openBtn = document.querySelector(
+      'button[aria-label="Mở chat"]'
+    ) as HTMLButtonElement | null;
+
+    openBtn?.click();
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#fcfeff]">
       {/* Fixed DoctorHeader */}
@@ -78,6 +90,8 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
         onOpenChatbot={() => setIsChatbotOpen(true)}
         onLogout={onLogout}
       />
+
+      <PatientChatbot />
 
       {/* Main Content */}
       <main className="flex-1 w-full">
