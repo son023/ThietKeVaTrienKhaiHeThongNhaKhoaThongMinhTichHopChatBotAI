@@ -1,288 +1,374 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Circle } from "lucide-react";
-import { Button } from "./button";
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { Card } from '../ui/card';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { authController } from '../../controllers';
+import ReactMarkdown from 'react-markdown';
+
+const API_BASE_URL = "http://localhost:8080/chatbot-service/api";
 
 interface Message {
   id: string;
-  type: "user" | "bot";
-  content: string;
+  text: string;
+  sender: 'bot' | 'user';
   timestamp: Date;
+  quickReplies?: string[];
 }
 
 interface PatientChatbotProps {
-  botName?: string;
-  welcomeMessage?: string;
-  onSendMessage?: (message: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (page: string) => void;
 }
 
-export function PatientChatbot({
-  botName = "DentalCare Assistant",
-  welcomeMessage = "Xin chào! Tôi có thể giúp gì cho bạn?",
-  onSendMessage,
-}: PatientChatbotProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "bot",
-      content: welcomeMessage,
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
+export function PatientChatbot({ isOpen, onClose, onNavigate }: PatientChatbotProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [userId, setUserId] = useState<string>("");
 
-  // Auto-scroll to bottom when new messages arrive
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef<number>(0);
+
+  // --- 2. INIT & LOAD HISTORY ---
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (!isOpen) return;
+
+    const currentUser = authController.getCurrentUser();
+    let currentId = "";
+
+    if (currentUser && currentUser.id) {
+      currentId = currentUser.id.toString();
+    } else {
+      const storedGuestId = localStorage.getItem("dental_guest_id");
+      if (storedGuestId) {
+        currentId = storedGuestId;
+      } else {
+        currentId = crypto.randomUUID();
+        localStorage.setItem("dental_guest_id", currentId);
+      }
+    }
+
+    setUserId(currentId);
+    setMessages([]);
+    setHasMoreHistory(true);
+    fetchHistory(currentId, undefined, true);
+  }, [isOpen]);
+
+  // --- 3. FETCH HISTORY ---
+  const fetchHistory = async (uid: string, beforeTime?: string, isFirstLoad = false) => {
+    try {
+      setIsLoadingHistory(true);
+
+      let url = `${API_BASE_URL}/history/${uid}?limit=20`;
+      if (beforeTime) {
+        url += `&before_time=${beforeTime}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const newMessages: Message[] = data.map((msg: any) => ({
+        id: msg.id,
+        text: msg.content,
+        sender: msg.role === 'bot' ? 'bot' : 'user',
+        timestamp: new Date(msg.timestamp),
+        quickReplies: []
+      })).reverse();
+
+      if (newMessages.length < 20) {
+        setHasMoreHistory(false);
+      }
+
+      if (isFirstLoad) {
+        if (newMessages.length === 0) {
+          // --- PHẦN BẠN YÊU CẦU: LỜI CHÀO MẶC ĐỊNH ---
+          setMessages([{
+            id: 'welcome',
+            text: 'Xin chào! 👋\nTôi là trợ lý ảo **Dental AI**.\n\nTôi có thể giúp bạn tra cứu:\n- 🏥 Thông tin phòng khám\n- 💊 Triệu chứng & Bệnh lý\n- 📅 Đặt lịch hẹn\n\nBạn cần hỗ trợ gì không?',
+            sender: 'bot',
+            timestamp: new Date(),
+            // Các lựa chọn mặc định
+            quickReplies: ['Giờ làm việc?', 'Địa chỉ ở đâu?', 'Đặt lịch hẹn']
+          }]);
+        } else {
+          setMessages(newMessages);
+          setTimeout(scrollToBottom, 100);
+        }
+      } else {
+        if (scrollContainerRef.current) {
+          prevScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+        }
+        setMessages(prev => [...newMessages, ...prev]);
+      }
+
+    } catch (error) {
+      console.error("Lỗi tải lịch sử:", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // --- SCROLL LOGIC ---
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop } = e.currentTarget;
+    if (scrollTop === 0 && !isLoadingHistory && hasMoreHistory && messages.length > 0) {
+      const oldestMessage = messages[0];
+      if (oldestMessage.id !== 'welcome') {
+        fetchHistory(userId, oldestMessage.timestamp.toISOString());
+      }
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!isLoadingHistory && prevScrollHeightRef.current > 0 && scrollContainerRef.current) {
+      const newScrollHeight = scrollContainerRef.current.scrollHeight;
+      scrollContainerRef.current.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+      prevScrollHeightRef.current = 0;
+    }
+  }, [messages, isLoadingHistory]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (!isLoadingHistory && prevScrollHeightRef.current === 0) {
+      scrollToBottom();
     }
   }, [messages, isTyping]);
 
-  // Focus input when chat opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+  const handleFAQClick = (type: string) => {
+    if (type === 'Đặt lịch hẹn') {
+      onNavigate('home'); // Hoặc 'appointments' tùy vào trang bạn muốn tới
+      onClose(); // Đóng chatbot lại để nhìn thấy trang mới
+      return;
     }
-  }, [isOpen]);
-
-  const handleToggleChat = () => {
-    setIsOpen(!isOpen);
+    handleSendMessage(type);
   };
 
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
+  // --- SEND MESSAGE ---
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: inputValue,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-
-    // Call custom handler if provided
-    if (onSendMessage) {
-      onSendMessage(inputValue);
+    // THÊM ĐOẠN NÀY VÀO ĐẦU HÀM
+    if (text === 'Đặt lịch hẹn') {
+      onNavigate('home');
+      onClose();
+      return;
     }
 
-    // Simulate bot typing
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      text: text.trim(),
+      sender: 'user',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setInputValue('');
     setIsTyping(true);
 
-    // Simulate bot response (replace with actual API call)
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "bot",
-        content: "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 1500);
-  };
+    // 1. Kiểm tra nếu là câu hỏi FAQ để trả lời ngay
+    const faqData: Record<string, string> = {
+      'Giờ làm việc': '**Giờ làm việc phòng khám:**\n\n🕐 **09:00 - 21:00**\n📅 Tất cả các ngày trong tuần.',
+      'Địa chỉ': '**Địa chỉ phòng khám:**\n📍 Tầng 2, TTTM Mandarin Garden 2\nPhường Tân Mai, Quận Hoàng Mai, Hà Nội',
+    };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+    if (faqData[text]) {
+      setTimeout(() => {
+        const botMsg: Message = {
+          id: Date.now().toString(),
+          text: faqData[text],
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botMsg]);
+        setIsTyping(false);
+      }, 600);
+      return; // Thoát hàm, không gọi lên AI nữa
+    }
+
+    // 2. API Call
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          message: text.trim()
+        }),
+      });
+
+      const data = await response.json();
+      if (data.status === 'success') {
+        const botMsg: Message = {
+          id: Date.now().toString() + '_ai',
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date(),
+          quickReplies: ['Đặt lịch hẹn']
+        };
+        setMessages(prev => [...prev, botMsg]);
+      } else {
+        throw new Error("API Error");
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString() + '_err',
+        text: "Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.",
+        sender: 'bot',
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage(inputValue);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <>
-      {/* Chat Box Container */}
-      <div
-        className={`fixed bottom-24 right-6 w-full max-w-[400px] sm:w-[400px] transition-all duration-300 origin-bottom-right z-50 ${
-          isOpen
-            ? "scale-100 opacity-100 translate-y-0"
-            : "scale-95 opacity-0 translate-y-4 pointer-events-none"
-        }`}
-      >
-        <div className="bg-neutral-surface rounded-2xl shadow-2xl border border-neutral-border overflow-hidden flex flex-col h-[600px] max-h-[80vh]">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary-strong p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Bot className="w-5 h-5 text-white" />
+      <div className="fixed bottom-[20px] right-[20px] z-50 w-[380px] max-w-[calc(100vw-40px)] h-[600px] max-h-[calc(100vh-40px)]">
+        <Card className="w-full h-full flex flex-col shadow-[0px_8px_32px_0px_rgba(0,0,0,0.12)] border-[#ebf6fc] overflow-hidden">
+          {/* HEADER */}
+          <div className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] p-[20px] flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-[12px]">
+              <div className="w-[40px] h-[40px] bg-white/20 rounded-[10px] flex items-center justify-center">
+                <Bot className="w-[24px] h-[24px] text-white" />
               </div>
               <div>
                 <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-white text-[16px]">
-                  {botName}
+                  Trợ lý Nha Khoa
                 </h3>
-                <div className="flex items-center gap-1.5">
-                  <Circle className="w-2 h-2 text-green-400 fill-green-400 animate-pulse" />
-                  <span className="font-['Fz_Poppins:Regular',sans-serif] text-white/90 text-[12px]">
-                    Đang hoạt động
-                  </span>
-                </div>
+                <p className="font-['Fz_Poppins:Regular',sans-serif] text-white/80 text-[12px]">
+                  Hỗ trợ chuyên môn 24/7
+                </p>
               </div>
             </div>
-            <button
-              onClick={handleToggleChat}
-              className="w-8 h-8 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-              aria-label="Đóng chat"
-            >
-              <X className="w-5 h-5 text-white" />
+            <button onClick={onClose} className="w-[32px] h-[32px] bg-white/20 hover:bg-white/30 rounded-[8px] flex items-center justify-center transition-colors">
+              <X className="w-[20px] h-[20px] text-white" />
             </button>
           </div>
-
-          {/* Messages List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-muted/30">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-start gap-2 ${
-                  message.type === "user" ? "flex-row-reverse" : "flex-row"
-                }`}
-              >
-                {/* Avatar */}
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.type === "user"
-                      ? "bg-primary"
-                      : "bg-neutral-gray-200"
-                  }`}
+          {/* PHẦN GHIM CÂU HỎI THƯỜNG GẶP */}
+          <div className="px-[20px] py-[10px] bg-white border-b border-[#ebf6fc] flex gap-[8px] overflow-x-auto no-scrollbar flex-shrink-0">
+            {['Giờ làm việc', 'Địa chỉ', 'Đặt lịch hẹn'].map((item) => (
+                <button
+                    key={item}
+                    onClick={() => handleFAQClick(item)}
+                    className="whitespace-nowrap px-[12px] py-[6px] bg-[#f0f9ff] text-[#1e8bc3] rounded-full text-[12px] font-medium border border-[#3fb5ff]/20 hover:bg-[#3fb5ff] hover:text-white transition-all"
                 >
-                  {message.type === "user" ? (
-                    <User className="w-4 h-4 text-white" />
-                  ) : (
-                    <Bot className="w-4 h-4 text-neutral-heading" />
-                  )}
-                </div>
-
-                {/* Message Bubble */}
-                <div
-                  className={`flex flex-col max-w-[75%] ${
-                    message.type === "user" ? "items-end" : "items-start"
-                  }`}
-                >
-                  <div
-                    className={`rounded-2xl px-4 py-2.5 ${
-                      message.type === "user"
-                        ? "bg-primary text-white rounded-br-sm"
-                        : "bg-neutral-surface border border-neutral-border text-neutral-heading rounded-bl-sm"
-                    }`}
-                  >
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] leading-relaxed">
-                      {message.content}
-                    </p>
-                  </div>
-                  <span className="font-['Fz_Poppins:Regular',sans-serif] text-neutral-gray-400 text-[11px] mt-1 px-1">
-                    {formatTime(message.timestamp)}
-                  </span>
-                </div>
-              </div>
+                  {item}
+                </button>
             ))}
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <div className="flex items-start gap-2">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-neutral-gray-200">
-                  <Bot className="w-4 h-4 text-neutral-heading" />
+          </div>
+          {/* CHAT BODY */}
+          <div
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-[20px] space-y-[16px] bg-[#fcfeff]"
+          >
+            {isLoadingHistory && (
+                <div className="flex justify-center py-2">
+                  <Loader2 className="w-5 h-5 text-[#3fb5ff] animate-spin" />
                 </div>
-                <div className="bg-neutral-surface border border-neutral-border rounded-2xl rounded-bl-sm px-4 py-3">
-                  <div className="flex gap-1">
-                    <div
-                      className="w-2 h-2 bg-neutral-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-neutral-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-neutral-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
-                  </div>
-                </div>
-              </div>
             )}
 
-            {/* Scroll anchor */}
+            {messages.map((message) => (
+                <div key={message.id}>
+                  <div className={`flex gap-[12px] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-[32px] h-[32px] rounded-[8px] flex items-center justify-center flex-shrink-0 ${message.sender === 'bot' ? 'bg-gradient-to-br from-[#3fb5ff] to-[#1e8bc3]' : 'bg-[#e0e0e0]'}`}>
+                      {message.sender === 'bot' ? <Bot className="w-[18px] h-[18px] text-white" /> : <User className="w-[18px] h-[18px] text-[#666666]" />}
+                    </div>
+
+                    <div className={`max-w-[70%] ${message.sender === 'user' ? 'items-end' : ''}`}>
+                      <div className={`rounded-[12px] p-[12px] ${message.sender === 'bot' ? 'bg-white border border-[#ebf6fc]' : 'bg-gradient-to-br from-[#3fb5ff] to-[#1e8bc3] text-white'}`}>
+
+                        {/* --- SỬ DỤNG REACT MARKDOWN ĐỂ RENDER TEXT --- */}
+                        <div className={`font-['Fz_Poppins:Regular',sans-serif] text-[14px] leading-[1.6] ${message.sender === 'bot' ? 'text-[#333333]' : 'text-white'}`}>
+                          <ReactMarkdown
+                              components={{
+                                // Tùy chỉnh các thẻ HTML bên trong Markdown cho đẹp
+                                strong: ({node, ...props}) => <span className="font-bold" {...props} />,
+                                ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
+                                ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2" {...props} />,
+                                li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                                p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                              }}
+                          >
+                            {message.text}
+                          </ReactMarkdown>
+                        </div>
+
+                      </div>
+                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[11px] mt-[4px] px-[4px]">
+                        {message.timestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick Replies */}
+                  {message.quickReplies && message.quickReplies.length > 0 && message.sender === 'bot' && (
+                      <div className="flex flex-wrap gap-[8px] mt-[12px] ml-[44px]">
+                        {message.quickReplies.map((reply, index) => (
+                            <button
+                                key={index}
+                                onClick={() => handleSendMessage(reply)}
+                                className="px-[12px] py-[8px] bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px] hover:bg-[#ebf6fc] transition-colors"
+                            >
+                              {reply}
+                            </button>
+                        ))}
+                      </div>
+                  )}
+                </div>
+            ))}
+
+            {isTyping && (
+                <div className="flex gap-[12px]">
+                  <div className="w-[32px] h-[32px] bg-gradient-to-br from-[#3fb5ff] to-[#1e8bc3] rounded-[8px] flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-[18px] h-[18px] text-white" />
+                  </div>
+                  <div className="bg-white border border-[#ebf6fc] rounded-[12px] p-[12px]">
+                    <div className="flex gap-[4px]">
+                      <div className="w-[8px] h-[8px] bg-[#3fb5ff] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-[8px] h-[8px] bg-[#3fb5ff] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-[8px] h-[8px] bg-[#3fb5ff] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="p-4 bg-neutral-surface border-t border-neutral-border">
-            <div className="flex items-end gap-2">
-              <div className="flex-1 relative">
-                <input
-                  ref={inputRef}
-                  type="text"
+          {/* INPUT FORM */}
+          <div className="p-[16px] bg-white border-t border-[#ebf6fc] flex-shrink-0">
+            <form onSubmit={handleSubmit} className="flex gap-[8px]">
+              <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Nhập tin nhắn..."
-                  className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-neutral-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-['Fz_Poppins:Regular',sans-serif] text-[14px] bg-neutral-surface text-neutral-heading placeholder:text-neutral-gray-400"
-                />
-              </div>
+                  placeholder="Nhập câu hỏi (ví dụ: đau răng, tẩy trắng)..."
+                  className="flex-1 font-['Fz_Poppins:Regular',sans-serif]"
+                  disabled={isTyping}
+              />
               <Button
-                onClick={handleSendMessage}
-                disabled={inputValue.trim() === ""}
-                className="h-12 w-12 rounded-xl bg-primary hover:bg-primary-strong disabled:bg-neutral-gray-200 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center p-0"
+                  type="submit"
+                  disabled={!inputValue.trim() || isTyping}
+                  className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] hover:shadow-[0px_4px_16px_0px_rgba(63,181,255,0.4)] transition-all px-[16px]"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-[18px] h-[18px]" />
               </Button>
-            </div>
-
-            {/* Quick Actions (Optional) */}
-            <div className="flex gap-2 mt-3 flex-wrap">
-              <button
-                onClick={() => setInputValue("Đặt lịch hẹn")}
-                className="px-3 py-1.5 text-[12px] font-['Fz_Poppins:Medium',sans-serif] text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
-              >
-                Đặt lịch hẹn
-              </button>
-              <button
-                onClick={() => setInputValue("Hỏi về dịch vụ")}
-                className="px-3 py-1.5 text-[12px] font-['Fz_Poppins:Medium',sans-serif] text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
-              >
-                Dịch vụ
-              </button>
-              <button
-                onClick={() => setInputValue("Tư vấn miễn phí")}
-                className="px-3 py-1.5 text-[12px] font-['Fz_Poppins:Medium',sans-serif] text-primary bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
-              >
-                Tư vấn
-              </button>
-            </div>
+            </form>
           </div>
-        </div>
+        </Card>
       </div>
-
-      {/* FAB (Floating Action Button) */}
-      <button
-        onClick={handleToggleChat}
-        className={`fixed bottom-6 right-6 w-16 h-16 rounded-full bg-primary hover:bg-primary-strong shadow-lg hover:shadow-xl transition-all duration-300 z-50 flex items-center justify-center group ${
-          isOpen ? "rotate-90" : "rotate-0"
-        }`}
-        aria-label={isOpen ? "Đóng chat" : "Mở chat"}
-      >
-        {isOpen ? (
-          <X className="w-7 h-7 text-white transition-transform duration-300" />
-        ) : (
-          <MessageCircle className="w-7 h-7 text-white transition-transform duration-300 group-hover:scale-110" />
-        )}
-
-        {/* Pulse animation when closed */}
-        {!isOpen && (
-          <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75" />
-        )}
-      </button>
-    </>
   );
 }
