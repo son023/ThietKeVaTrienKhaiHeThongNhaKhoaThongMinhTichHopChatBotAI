@@ -17,3 +17,5 @@ prescription-fe/package-lock.json
 __pycache__/
 venv/
 .vscode/
+intent_model/
+ner_model_final/
