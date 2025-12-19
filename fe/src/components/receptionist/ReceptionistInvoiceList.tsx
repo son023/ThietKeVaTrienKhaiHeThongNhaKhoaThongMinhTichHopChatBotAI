@@ -3,7 +3,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Search, Plus, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
 import { paymentController, PaymentMethod } from '../../controllers/PaymentController';
@@ -54,19 +54,33 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const appointmentCache: Record<string, AppointmentDTO> = {};
-  const userCache: Record<string, UserDTO> = {};
+  const appointmentCacheRef = useRef<Record<string, AppointmentDTO>>({});
+  const userCacheRef = useRef<Record<string, UserDTO>>({});
 
   const getAppointment = async (id?: string) => {
     if (!id) return undefined;
-    if (!appointmentCache[id]) appointmentCache[id] = await appointmentController.getById(id);
-    return appointmentCache[id];
+    try {
+      if (!appointmentCacheRef.current[id]) {
+        appointmentCacheRef.current[id] = await appointmentController.getById(id);
+      }
+      return appointmentCacheRef.current[id];
+    } catch (error) {
+      console.error(`Error fetching appointment ${id}:`, error);
+      return undefined;
+    }
   };
 
   const getUser = async (id?: string) => {
     if (!id) return undefined;
-    if (!userCache[id]) userCache[id] = await userController.getById(id);
-    return userCache[id];
+    try {
+      if (!userCacheRef.current[id]) {
+        userCacheRef.current[id] = await userController.getById(id);
+      }
+      return userCacheRef.current[id];
+    } catch (error) {
+      console.error(`Error fetching user ${id}:`, error);
+      return undefined;
+    }
   };
 
 
@@ -88,11 +102,26 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
       const data = await invoiceController.listInvoices(apiStatusFilter);
 
+      console.log('Raw invoice data from backend:', data);
+      console.log(`Received ${data.length} invoices from backend`);
 
-      // Map backend data to frontend format
-      const mappedInvoices = await Promise.all(data.map(mapInvoiceFromBackend));
+      // Map backend data to frontend format with error handling
+      const mappedInvoices = await Promise.allSettled(
+        data.map((invoice) => mapInvoiceFromBackend(invoice))
+      );
 
-      setInvoices(mappedInvoices);
+      // Filter out failed mappings and extract successful ones
+      const successfulInvoices = mappedInvoices
+        .filter((result): result is PromiseFulfilledResult<Invoice> => result.status === 'fulfilled')
+        .map((result) => result.value);
+
+      const failedMappings = mappedInvoices.filter((result) => result.status === 'rejected');
+      if (failedMappings.length > 0) {
+        console.warn(`${failedMappings.length} invoices failed to map:`, failedMappings);
+      }
+
+      console.log(`Successfully mapped ${successfulInvoices.length} invoices`);
+      setInvoices(successfulInvoices);
 
       if (showRefreshIndicator) {
         toast.success('Đã làm mới danh sách hóa đơn');
@@ -143,59 +172,88 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
 
   const mapInvoiceFromBackend = async (invoice: InvoiceDTO): Promise<Invoice> => {
-    const appointment = await getAppointment(invoice.appointmentId);
-    const patientUser = await getUser(appointment?.patientId);
-    const doctorUser = await getUser(appointment?.doctorId);
+    try {
+      console.log(`Mapping invoice ${invoice.id}, appointmentId: ${invoice.appointmentId}`);
+      
+      const appointment = await getAppointment(invoice.appointmentId);
+      console.log(`Appointment for ${invoice.id}:`, appointment ? 'found' : 'not found');
+      
+      const patientUser = await getUser(appointment?.patientId);
+      const doctorUser = await getUser(appointment?.doctorId);
 
-    // Lấy phương thức thanh toán từ payment-service
-    let paymentMethodText: string | undefined = undefined;
+      // Lấy phương thức thanh toán từ payment-service
+      let paymentMethodText: string | undefined = undefined;
 
-    if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
-      try {
-        const payments = await paymentController.getPaymentsByInvoice(invoice.id);
+      if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
+        try {
+          const payments = await paymentController.getPaymentsByInvoice(invoice.id);
 
-        if (payments.length > 0) {
-          // Lấy payment gần nhất (payment cuối cùng trong mảng)
-          const latestPayment = payments[payments.length - 1];
+          if (payments.length > 0) {
+            // Lấy payment gần nhất (payment cuối cùng trong mảng)
+            const latestPayment = payments[payments.length - 1];
 
-          // Map payment method sang tiếng Việt
-          switch (latestPayment.paymentMethod) {
-            case PaymentMethod.CASH:
-              paymentMethodText = 'Tiền mặt';
-              break;
-            case PaymentMethod.BANK_TRANSFER:
-              paymentMethodText = 'Chuyển khoản';
-              break;
-            default:
-              paymentMethodText = 'Không xác định';
+            // Map payment method sang tiếng Việt
+            switch (latestPayment.paymentMethod) {
+              case PaymentMethod.CASH:
+                paymentMethodText = 'Tiền mặt';
+                break;
+              case PaymentMethod.BANK_TRANSFER:
+                paymentMethodText = 'Chuyển khoản';
+                break;
+              default:
+                paymentMethodText = 'Không xác định';
+            }
           }
+        } catch (error) {
+          console.error('Error fetching payment method for invoice:', invoice.id, error);
+          // Fallback nếu lỗi
+          paymentMethodText = invoice.status === 'PAID' ? 'Đã thanh toán' : undefined;
         }
-      } catch (error) {
-        console.error('Error fetching payment method for invoice:', invoice.id, error);
-        // Fallback nếu lỗi
-        paymentMethodText = invoice.status === 'PAID' ? 'Đã thanh toán' : undefined;
       }
-    }
 
-    return {
-      id: invoice.id,
-      code: invoice.id.substring(0, 8).toUpperCase(),
-      patientName: patientUser?.fullName || 'Bệnh nhân',
-      patientCode: patientUser?.id
-        ? `BN${patientUser.id.slice(-6).toUpperCase()}`
-        : '—',
-      date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
-      amount: invoice.patientTotalPay ?? 0,
-      status: mapStatusToFrontend(invoice.status),
-      paymentMethod: paymentMethodText,
-    };
+      const mappedInvoice = {
+        id: invoice.id,
+        code: invoice.id.substring(0, 8).toUpperCase(),
+        patientName: patientUser?.fullName || 'Bệnh nhân',
+        patientCode: patientUser?.id
+          ? `BN${patientUser.id.slice(-6).toUpperCase()}`
+          : '—',
+        date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
+        amount: invoice.patientTotalPay ?? 0,
+        status: mapStatusToFrontend(invoice.status),
+        paymentMethod: paymentMethodText,
+      };
+
+      console.log(`Successfully mapped invoice ${invoice.id}:`, mappedInvoice);
+      return mappedInvoice;
+    } catch (error) {
+      console.error(`Error mapping invoice ${invoice.id}:`, error);
+      // Return a basic invoice even if mapping fails partially
+      return {
+        id: invoice.id,
+        code: invoice.id.substring(0, 8).toUpperCase(),
+        patientName: 'Bệnh nhân',
+        patientCode: '—',
+        date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        doctor: 'BS. Đang cập nhật',
+        amount: invoice.patientTotalPay ?? 0,
+        status: mapStatusToFrontend(invoice.status),
+        paymentMethod: undefined,
+      };
+    }
   };
 
   const getStatusBadge = (status: string) => {

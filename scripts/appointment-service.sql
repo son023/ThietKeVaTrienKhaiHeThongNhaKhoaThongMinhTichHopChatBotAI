@@ -204,8 +204,9 @@ VALUES
     ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000002'),
 
     -- Dịch vụ 3 cho Lịch hẹn 2
-    ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000003'); -- Tư vấn dinh dưỡng
-    CREATE TABLE IF NOT EXISTS public.token_entry
+    ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000003');
+
+CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
     segment integer NOT NULL,
