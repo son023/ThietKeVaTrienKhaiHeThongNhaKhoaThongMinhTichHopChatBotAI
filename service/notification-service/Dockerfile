@@ -1,9 +1,22 @@
-FROM gradle:7.6.1-jdk17 AS build
-WORKDIR /app
-COPY . .
-RUN gradle clean bootJar --no-daemon
+FROM gradle:8.1.1-jdk17 AS build
 
-FROM openjdk:17-jdk-slim
+WORKDIR /workspace
+
+# Build and publish common module to mavenLocal inside the build container
+COPY service/common /workspace/common
+RUN cd /workspace/common && gradle --no-daemon publishToMavenLocal -x test
+
+# Copy notification-service sources
+COPY service/notification-service /workspace/app
+WORKDIR /workspace/app
+
+# Build the bootable jar (tests skipped for speed in container builds)
+RUN gradle --no-daemon bootJar -x test
+
+FROM eclipse-temurin:17-jdk-jammy
+
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+
+COPY --from=build /workspace/app/build/libs/*.jar app.jar
+
 ENTRYPOINT ["java", "-jar", "app.jar"]

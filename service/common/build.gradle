@@ -1,20 +1,18 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'
+    id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'maven-publish'
 }
 
 group = 'com.do_an'
-version = '0.0.1-SNAPSHOT'
-description = 'common'
+version = '1.0.0'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-
 
 bootJar {
     enabled = false
@@ -23,8 +21,6 @@ bootJar {
 jar {
     enabled = true
 }
-
-
 
 repositories {
     mavenCentral()
@@ -42,9 +38,13 @@ dependencies {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
         }
+    }
+
+    repositories {
+        mavenLocal()
     }
 }
 
