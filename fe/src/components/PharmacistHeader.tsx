@@ -1,10 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Bell, ChevronDown, Home, X, CheckCircle } from 'lucide-react';
+import { Search, Bell, Home, X, CheckCircle, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification } from '../services/websocketService';
 import { authController } from '../controllers/AuthController';
 import { useNotifications } from '../contexts/NotificationContext';
 import { Logo } from './ui/logo';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface PharmacistHeaderProps {
   onLogout: () => void;
@@ -13,10 +21,8 @@ interface PharmacistHeaderProps {
 
 
 export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -32,9 +38,6 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
   // Đóng dropdown khi click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
@@ -48,40 +51,35 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
 
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-[80px] bg-white border-b border-[#e5e7eb] shadow-sm z-50">
-      <div className="flex items-center justify-between h-full px-6">
-        {/* Logo */}
-        <Logo />
+    <header className="fixed top-0 right-0 left-[260px] h-[80px] bg-white border-b border-gray-200 z-40 flex items-center justify-between px-8">
+      {/* Logo */}
+      <Logo />
 
-        {/* Search Bar */}
-        <div className="flex-1 max-w-[500px] mx-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#05619a]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm thuốc, hoạt chất, đơn thuốc..."
-              className="w-full h-[44px] pl-11 pr-4 rounded-lg border border-[#3295d0] bg-[#fcfeff] font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333] placeholder:text-[#999999] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent transition-all"
-            />
-          </div>
+      {/* Search Bar */}
+      <div className="flex-1 max-w-xl mx-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm kiếm thuốc, hoạt chất, đơn thuốc..."
+            className="w-full pl-10 bg-[#f8f9fa] border-gray-200 h-10 px-4 rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent transition-all"
+          />
         </div>
+      </div>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-4">
-          {/* ✅ Notifications với dropdown */}
+      {/* Action Buttons */}
+      <div className="flex items-center gap-4">
+          {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-lg hover:bg-[#f0f9ff] transition-colors"
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <Bell className="w-6 h-6 text-[#05619a]" />
+              <Bell className="w-5 h-5 text-gray-600" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-5 h-5 bg-[#dc3545] rounded-full flex items-center justify-center">
-                  <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-white text-[11px]">
-                    {unreadCount}
-                  </span>
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
             {/* Notifications Dropdown */}
@@ -159,12 +157,40 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
             )}
           </div>
 
-          {/* User Avatar & Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            {/* ... existing user dropdown code ... */}
-          </div>
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
+                <Avatar className="w-10 h-10">
+                  <AvatarFallback className="bg-[#3FB5FF] text-white">DS</AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="text-sm text-[#01304e]">Dược sĩ</p>
+                  <p className="text-xs text-gray-500">Pharmacist</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="cursor-pointer">
+                Tài khoản của tôi
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {onGoHome && (
+                <>
+                  <DropdownMenuItem onClick={onGoHome} className="cursor-pointer">
+                    <Home className="w-4 h-4 mr-2" />
+                    Trang chủ
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-600">
+                <LogOut className="w-4 h-4 mr-2" />
+                Đăng xuất
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
-    </div>
+      </header>
   );
 }

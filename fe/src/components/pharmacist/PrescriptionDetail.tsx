@@ -303,9 +303,9 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   // Hiển thị loading
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#3fb5ff]" />
-        <span className="ml-3 text-[#05619a]">Đang tải dữ liệu...</span>
+      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <RefreshCw className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-sm text-neutral-gray-500">Đang tải dữ liệu...</p>
       </div>
     );
   }
@@ -320,20 +320,20 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
     : '---';
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <button
             onClick={onBack}
-            className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff] hover:text-[#05619a] mb-2 transition-colors"
+            className="text-sm font-medium text-primary hover:text-primary-strong mb-2 transition-colors"
           >
             ← Quay lại danh sách
           </button>
-          <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e]">
+          <h1 className="typo-h2 text-neutral-heading mb-1">
             Đơn thuốc #{prescriptionId.substring(0, 8)}...
           </h1>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-base text-neutral-gray-500">
             {doctorName} • {dispenseOrder?.createAt ? new Date(dispenseOrder.createAt).toLocaleString('vi-VN') : '---'}
           </p>
         </div>
@@ -341,13 +341,13 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
       {/* Allergy Alert - Dữ liệu từ patient.patientAllergies */}
       {allergies.length > 0 && (
-        <div className="bg-[#f8d7da] border-2 border-[#dc3545] rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="w-6 h-6 text-[#dc3545] flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 border-2 border-red-500 rounded-xl p-5 flex items-start gap-3 shadow-sm">
+          <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#721c24] mb-1">
+            <p className="text-base font-bold text-red-800 mb-1">
               🛑 CẢNH BÁO DỊ ỨNG
             </p>
-            <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#721c24]">
+            <p className="text-sm font-medium text-red-700">
               {allergies.join(', ')}
             </p>
           </div>
@@ -358,57 +358,57 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
       <div className="grid grid-cols-12 gap-6">
         {/* Column 1: Patient Info */}
         <div className="col-span-3 space-y-4">
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5">
-            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-bold text-neutral-heading mb-4">
               Thông tin Bệnh nhân
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">Tên bệnh nhân</p>
-                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">{patientName}</p>
+                <p className="text-xs text-neutral-gray-500 mb-1">Tên bệnh nhân</p>
+                <p className="text-sm font-medium text-neutral-text">{patientName}</p>
               </div>
               <div>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">Mã BN</p>
-                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">{patientId}</p>
+                <p className="text-xs text-neutral-gray-500 mb-1">Mã BN</p>
+                <p className="text-sm font-semibold text-primary">{patientId}</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">Tuổi</p>
-                  <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">{patientAge}</p>
+                  <p className="text-xs text-neutral-gray-500 mb-1">Tuổi</p>
+                  <p className="text-sm font-medium text-neutral-text">{patientAge}</p>
                 </div>
                 <div>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">Giới tính</p>
-                  <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">{patientGender}</p>
+                  <p className="text-xs text-neutral-gray-500 mb-1">Giới tính</p>
+                  <p className="text-sm font-medium text-neutral-text">{patientGender}</p>
                 </div>
               </div>
               <div>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">SĐT</p>
-                <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">{patientPhone}</p>
+                <p className="text-xs text-neutral-gray-500 mb-1">SĐT</p>
+                <p className="text-sm font-medium text-neutral-text">{patientPhone}</p>
               </div>
             </div>
           </div>
 
           {/* Bác sĩ kê đơn - Ghi chú từ MedicalHistory */}
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5">
-            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-bold text-neutral-heading mb-4">
               Bác sĩ kê đơn
             </h3>
-            <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#05619a] mb-3">
+            <p className="text-sm font-semibold text-primary mb-3">
               {doctorName}
             </p>
-            <div className="bg-[#f8f9fa] rounded p-3">
-              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+            <div className="bg-neutral-gray-50 rounded-lg p-3">
+              <p className="text-xs text-neutral-gray-500 mb-2">
                 Ghi chú của Bác sĩ:
               </p>
-              <div className="space-y-1 font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#333333] whitespace-pre-line">
+              <div className="space-y-1 text-sm text-neutral-text whitespace-pre-line">
                  {doctorNotes || 'Không có ghi chú'}
             </div>
             </div>
           </div>
 
           {/* Thuốc đang sử dụng - Từ lịch sử đơn thuốc */}
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm p-5">
-            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-4">
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-bold text-neutral-heading mb-4">
               Thuốc đang sử dụng
             </h3>
             {currentMedications.length > 0 ? (
@@ -416,25 +416,25 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                 {currentMedications.slice(0, 5).map((med, index) => (
                   <li
                     key={index}
-                    className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#333333] flex items-center gap-2"
+                    className="text-sm text-neutral-text flex items-center gap-2"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#3fb5ff]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></span>
                     {med.name} {med.quantity && `(${med.quantity})`}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#6c757d]">
+              <p className="text-sm text-neutral-gray-500">
                 Chưa có lịch sử dùng thuốc
               </p>
             )}
           </div>
         </div>
 
-        {/* Column 2: Prescription Details - giữ nguyên UI */}
+        {/* Column 2: Prescription Details */}
         <div className="col-span-6 space-y-4">
-          <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
-            <div className="flex items-center gap-2 border-b border-[#e5e7eb] px-5">
+          <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-neutral-gray-200 bg-neutral-surface px-2 pt-2">
               {[
                 { id: 'prescription' as const, label: 'Chi tiết Đơn thuốc' },
                 { id: 'history' as const, label: 'Lịch sử cấp phát' },
@@ -442,9 +442,9 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${activeTab === tab.id
-                      ? 'border-[#3fb5ff] text-[#3fb5ff]'
-                      : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === tab.id
+                      ? 'border-primary text-primary bg-neutral-muted'
+                      : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
                     }`}
                 >
                   {tab.label}
@@ -452,66 +452,66 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
               ))}
             </div>
 
-            <div className="p-5">
+            <div className="p-6">
               {activeTab === 'prescription' && (
                 <div className="space-y-4">
                   {prescriptionMeds.length > 0 ? prescriptionMeds.map((med) => (
                     <div
                       key={med.id}
-                      className="p-4 rounded-lg border border-[#e5e7eb] hover:border-[#3fb5ff] transition-all"
+                      className="p-5 rounded-xl border border-neutral-gray-200 hover:border-primary hover:shadow-md transition-all duration-200"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-1">
+                          <p className="text-base font-bold text-neutral-heading mb-1">
                             {med.name}
                           </p>
-                          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#05619a]">
+                          <p className="text-sm text-neutral-gray-600">
                             Số lượng: {med.quantity} {med.unit}
                           </p>
                         </div>
                         {med.stockStatus === 'available' ? (
-                          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#d4edda] text-[#155724] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                            <CheckCircle className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+                            <CheckCircle className="w-3.5 h-3.5" />
                             Còn hàng ({med.stockCount})
                           </span>
                         ) : med.stockStatus === 'low' ? (
-                          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#fff3cd] text-[#856404] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                            <AlertTriangle className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold">
+                            <AlertTriangle className="w-3.5 h-3.5" />
                             Sắp hết ({med.stockCount})
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#f8d7da] text-[#721c24] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                            <XCircle className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-red-800 border border-red-200 text-xs font-semibold">
+                            <XCircle className="w-3.5 h-3.5" />
                             Hết hàng
                           </span>
                         )}
                       </div>
-                      <div className="bg-[#f8f9fa] rounded p-3 space-y-1">
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+                      <div className="bg-neutral-gray-50 rounded-lg p-4 space-y-2">
+                        <p className="text-xs text-neutral-gray-500 mb-1">
                           Liều dùng:
                         </p>
-                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[13px] text-[#333333]">
+                        <p className="text-sm font-medium text-neutral-text">
                           {med.dosage}
                         </p>
                         {med.frequency && (
-                          <p className="font-['Fz_Poppins:Medium',sans-serif] text-[13px] text-[#333333]">
+                          <p className="text-sm font-medium text-neutral-text">
                             Tần suất: {med.frequency}
                           </p>
                         )}
                         {med.duration && (
-                          <p className="font-['Fz_Poppins:Medium',sans-serif] text-[13px] text-[#333333]">
+                          <p className="text-sm font-medium text-neutral-text">
                             Thời gian: {med.duration}
                           </p>
                         )}
                         {med.usageInstructions && (
-                          <p className="font-['Fz_Poppins:Medium',sans-serif] text-[13px] text-[#333333]">
+                          <p className="text-sm font-medium text-neutral-text">
                             HDSD: {med.usageInstructions}
                           </p>
                         )}
                       </div>
                     </div>
                   )) : (
-                    <p className="text-center text-[#6c757d] py-8">Chưa có thuốc trong đơn</p>
+                    <p className="text-center text-neutral-gray-500 py-8">Chưa có thuốc trong đơn</p>
                   )}
                 </div>
               )}
@@ -520,16 +520,16 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
               {activeTab === 'history' && (
                 <div className="space-y-3">
                   {dispensingHistory.length > 0 ? dispensingHistory.map((record) => (
-                    <div key={record.id} className="p-4 rounded-lg border border-[#e5e7eb]">
+                    <div key={record.id} className="p-5 rounded-xl border border-neutral-gray-200 hover:shadow-md transition-all duration-200">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">{record.id}</p>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d]">{record.date}</p>
+                        <p className="text-sm font-semibold text-primary">{record.id}</p>
+                        <p className="text-xs text-neutral-gray-500">{record.date}</p>
                       </div>
-                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#05619a] mb-2">{record.doctor}</p>
-                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#333333]">{record.medications.join(', ')}</p>
+                      <p className="text-sm text-neutral-gray-600 mb-2">{record.doctor}</p>
+                      <p className="text-sm text-neutral-text">{record.medications.join(', ')}</p>
                     </div>
                   )) : (
-                    <p className="text-center text-[#6c757d] py-8">Chưa có lịch sử cấp phát</p>
+                    <p className="text-center text-neutral-gray-500 py-8">Chưa có lịch sử cấp phát</p>
                   )}
                 </div>
               )}

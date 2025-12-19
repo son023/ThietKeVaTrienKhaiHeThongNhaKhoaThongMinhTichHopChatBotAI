@@ -1,4 +1,4 @@
-import { Home, FileText, Package, TruckIcon, BarChart3, User } from 'lucide-react';
+import { LayoutDashboard, FileText, Package, TruckIcon, BarChart3, Settings } from 'lucide-react';
 
 interface PharmacistSidebarProps {
   currentPage: string;
@@ -7,12 +7,12 @@ interface PharmacistSidebarProps {
 
 export function PharmacistSidebar({ currentPage, onPageChange }: PharmacistSidebarProps) {
   const menuItems = [
-    { id: 'dashboard', label: 'Bảng điều khiển', icon: Home },
+    { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
     { id: 'prescriptions', label: 'Đơn thuốc', icon: FileText },
     { id: 'inventory', label: 'Kho thuốc', icon: Package },
     { id: 'import-export', label: 'Nhập/Xuất thuốc', icon: TruckIcon },
     { id: 'reports', label: 'Báo cáo', icon: BarChart3 },
-    { id: 'account', label: 'Tài khoản của tôi', icon: User },
+    { id: 'account', label: 'Tài khoản của tôi', icon: Settings },
   ];
 
   return (
