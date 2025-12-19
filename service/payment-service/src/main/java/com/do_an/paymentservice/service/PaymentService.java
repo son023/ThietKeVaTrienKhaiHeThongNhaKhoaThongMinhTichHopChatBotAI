@@ -39,7 +39,6 @@ public class PaymentService {
     private final PayOS payOS;
     private final PaymentMapper paymentMapper;
     private final InvoiceClient invoiceClient;
-
     private final CommandGateway commandGateway;
 
     @Value("${payos.return-url}")
@@ -193,9 +192,9 @@ public class PaymentService {
             log.info("Đã chuyển đổi {} InvoiceItem thành PayOS ItemData", payosItems.size());
 
             // Tính tổng tiền từ items
-            int totalAmountInt = payosItems.stream()
-                    .mapToInt(item -> item.getPrice() * item.getQuantity())
-                    .sum();
+//            int totalAmountInt = payosItems.stream()
+//                    .mapToInt(item -> item.getPrice() * item.getQuantity())
+//                    .sum();
 
             String invoiceId = request.getInvoiceId().toString();
             invoiceId = invoiceId.substring(invoiceId.length() - 17);
@@ -205,7 +204,7 @@ public class PaymentService {
             long expiredAtUnix = (System.currentTimeMillis() / 1000) + 900;
             PaymentData paymentData = PaymentData.builder()
                     .orderCode(orderCode)
-                    .amount(totalAmountInt)
+                    .amount(request.getTotalAmount())
                     .description("Hoa don: " + invoiceId)
                     .items(payosItems)
                     .returnUrl(returnUrl)
@@ -260,7 +259,7 @@ public class PaymentService {
         return invoiceItems.stream()
                 .map(item -> {
                     // Tính giá từ itemTotal hoặc quantity * unitPrice
-                    int itemPrice = item.getPatientPayAmount().intValue();
+                    int itemPrice = item.getUnitPrice();
 
                     // Tên item: serviceType hoặc description
                     String serviceType = item.getServiceType();
@@ -283,7 +282,6 @@ public class PaymentService {
                             }
                             break;
                     }
-
 
 
                     return ItemData.builder()

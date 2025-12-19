@@ -1,5 +1,6 @@
 package com.do_an.common.event;
 
+import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.common.model.MedicineItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,4 +19,5 @@ public class PrescriptionCreatedEvent {
     private UUID doctorId;
     private UUID medicalHistoryId;
     private List<MedicineItem> items;
+    List<InvoiceItemCheckerRequest> serviceItems;
 }

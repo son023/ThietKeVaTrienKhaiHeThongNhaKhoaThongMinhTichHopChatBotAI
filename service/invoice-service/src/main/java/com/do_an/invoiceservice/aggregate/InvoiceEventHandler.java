@@ -81,6 +81,7 @@ public class InvoiceEventHandler {
                 addedAmount += (medicineItem.getQuantity() * medicineItem.getUnitPrice());
             }
 
+            invoice.setPatientTotalPay((invoice.getPatientTotalPay() != null ? invoice.getTotalAmount() : 0) + addedAmount);
             invoice.setTotalAmount((invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0) + addedAmount);
 
             Invoice invoiceSaved = invoiceRepository.save(invoice);
