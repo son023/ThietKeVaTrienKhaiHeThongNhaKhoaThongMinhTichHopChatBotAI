@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useParams,
-  useLocation,
-  Navigate
-} from 'react-router-dom';
+import { Routes, Route, useNavigate, useParams, useLocation, Navigate } from 'react-router-dom';
 
 import { PharmacistHeader } from './components/PharmacistHeader';
 import { PharmacistSidebar } from './components/PharmacistSidebar';
