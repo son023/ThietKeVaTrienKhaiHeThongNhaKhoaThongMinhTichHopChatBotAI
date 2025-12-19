@@ -39,6 +39,7 @@ public class PaymentService {
     private final PayOS payOS;
     private final PaymentMapper paymentMapper;
     private final InvoiceClient invoiceClient;
+    private final PatientClient patientClient;
     private final CommandGateway commandGateway;
 
     @Value("${payos.return-url}")
@@ -146,6 +147,7 @@ public class PaymentService {
                 .build();
 
         paymentRepository.save(payment);
+
 
         // GỬI LỆNH ĐỂ ĐỒNG BỘ TRẠNG THÁI QUA AXON (Dù đã thành công)
         // Việc này giúp Saga nhận biết và có thể bắn event notification thống nhất

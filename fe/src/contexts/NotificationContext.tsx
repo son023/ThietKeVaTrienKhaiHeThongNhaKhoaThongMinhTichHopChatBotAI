@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification } from '../services/websocketService';
+import { notificationController, NotificationDTO } from '../controllers/NotificationController';
 import { authController } from '../controllers/AuthController';
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
@@ -19,10 +20,12 @@ export interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
+  loading: boolean;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => void;
   clearAllNotifications: () => void;
+  refreshNotifications: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -42,6 +45,47 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children, userId }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+    // Convert NotificationDTO từ backend sang Notification frontend
+    const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
+      return {
+        id: dto.id,
+        type: dto.templateId ?? 'INVOICE_PAID',
+        title: '💰 Hóa đơn đã được thanh toán',
+        message: dto.message,
+        timestamp: new Date(dto.createdAt).getTime(),
+        read: dto.status === 'read',
+      };
+    }, []);
+
+
+      // Load notifications từ backend
+  const loadNotifications = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const dtos = await notificationController.getByUserId(userId);
+      const mappedNotifications = dtos.map(mapDTOToNotification);
+      setNotifications(mappedNotifications);
+      console.log(`[NotificationContext] Loaded ${mappedNotifications.length} notifications from backend`);
+    } catch (error) {
+      console.error('[NotificationContext] Failed to load notifications:', error);
+      toast.error('Không thể tải lịch sử thông báo');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, mapDTOToNotification]);
+
+    // Load notifications khi component mount hoặc userId thay đổi
+    useEffect(() => {
+      loadNotifications();
+    }, [loadNotifications]);
+
 
   // ✅ Subscribe WebSocket khi component mount hoặc userId thay đổi
   useEffect(() => {
@@ -59,21 +103,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const unsubscribe = subscribeToInvoicePaid(userId, (notification: InvoicePaidNotification) => {
       console.log('[NotificationContext] Invoice paid notification received:', notification);
 
-      // Tạo notification object
-      const newNotification: Notification = {
-        id: `invoice-paid-${Date.now()}-${Math.random()}`,
+      const tempNotification: Notification = {
+        id: `ws-${Date.now()}`, // tạm
         type: 'INVOICE_PAID',
         title: '💰 Hóa đơn đã được thanh toán',
-        message: notification.message || 'Hóa đơn đã được thanh toán thành công. Có thể cấp phát đơn thuốc.',
-        timestamp: notification.timestamp || Date.now(),
+        message: notification.message,
+        timestamp: Date.now(),
         read: false,
-        invoiceId: notification.invoiceId,
-        dispenseOrderId: notification.dispenseOrderId,
-        appointmentId: notification.appointmentId,
       };
 
-      // Thêm vào danh sách notifications
-      setNotifications(prev => [newNotification, ...prev]);
+      setNotifications(prev => [tempNotification, ...prev]);
 
       // ✅ Hiển thị popup toast
       toast.success(
@@ -87,21 +126,32 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }
       );
     });
-
+    // Sync lại DB sau 1–2s
+    setTimeout(loadNotifications, 1500);
     return () => {
       unsubscribe();
     };
-  }, [userId]);
+  }, [userId, loadNotifications]);
 
-  const markAsRead = useCallback((id: string) => {
-    setNotifications(prev =>
-      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
-    );
+  const markAsRead = useCallback(async (id: string) => {
+    try {
+      await notificationController.markAsRead(id);
+      setNotifications(prev =>
+        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+      );
+    } catch (error) {
+      console.error('[NotificationContext] Failed to mark notification as read:', error);
+      // Vẫn update UI dù API fail
+      setNotifications(prev =>
+        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+      );
+    }
   }, []);
 
-  const markAllAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-  }, []);
+  const markAllAsRead = useCallback(async () => {
+    const unreadNotifications = notifications.filter(n => !n.read);
+    await Promise.all(unreadNotifications.map(n => markAsRead(n.id)));
+  }, [notifications, markAsRead]);
 
   const deleteNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
@@ -113,15 +163,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+
   return (
     <NotificationContext.Provider
       value={{
         notifications,
         unreadCount,
+        loading,
         markAsRead,
         markAllAsRead,
         deleteNotification,
         clearAllNotifications,
+        refreshNotifications: loadNotifications,
       }}
     >
       {children}

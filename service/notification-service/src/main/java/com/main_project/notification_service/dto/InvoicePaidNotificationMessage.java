@@ -3,12 +3,11 @@ package com.main_project.notification_service.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @Builder
 @AllArgsConstructor
-public class NotificationMessage {
+public class InvoicePaidNotificationMessage {
     private String type;
     private String appointmentId;
     private String reason; // Có thể dùng để chứa invoiceId hoặc dispenseOrderId
@@ -17,7 +16,7 @@ public class NotificationMessage {
     private String dispenseOrderId; // ✅ THÊM (optional)
     private Long timestamp; // ✅ THÊM
 
-    public NotificationMessage(String type, String appointmentId, String reason, String message) {
+    public InvoicePaidNotificationMessage(String type, String appointmentId, String reason, String message) {
         this.type = type;
         this.appointmentId = appointmentId;
         this.reason = reason;

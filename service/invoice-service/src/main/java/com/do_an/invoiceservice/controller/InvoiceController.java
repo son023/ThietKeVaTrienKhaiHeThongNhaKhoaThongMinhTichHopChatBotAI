@@ -181,5 +181,6 @@ public class InvoiceController {
         List<InvoiceResponseDTO> invoices = invoiceService.getInvoicesByAppointmentId(appointmentId);
         return ResponseEntity.ok(invoices);
     }
+    
 
 }
