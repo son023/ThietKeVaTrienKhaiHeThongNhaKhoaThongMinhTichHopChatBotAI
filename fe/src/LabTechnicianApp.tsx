@@ -67,14 +67,14 @@ export default function LabTechnicianApp({
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-neutral-background">
       <LabTechnicianSidebar
         currentPage={currentPage}
         onNavigate={handleSidebarNavigate}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="flex-1 overflow-y-auto bg-neutral-background">
           <Routes>
             <Route
               path="/lab"

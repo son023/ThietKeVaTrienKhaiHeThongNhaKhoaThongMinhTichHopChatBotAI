@@ -27,8 +27,8 @@ export function LabTechnicianSidebar({
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#ebf6fc] flex flex-col">
-      <div className="p-6 border-b border-[#ebf6fc]">
+    <aside className="w-64 bg-neutral-surface border-r border-neutral-border flex flex-col shadow-sm">
+      <div className="p-6 border-b border-neutral-border">
         <Logo />
       </div>
 
@@ -42,14 +42,14 @@ export function LabTechnicianSidebar({
               <li key={item.id}>
                 <button
                   onClick={() => onNavigate(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-[#3fb5ff] text-white shadow-md"
-                      : "text-[#666666] hover:bg-[#f8fcff] hover:text-[#3fb5ff]"
+                      ? "bg-primary text-white shadow-md"
+                      : "text-neutral-text hover:bg-primary/10 hover:text-primary"
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-white" : ""}`} />
-                  <span className="font-['Fz_Poppins:Medium',sans-serif] text-[14px]">
+                  <span className="font-medium text-sm">
                     {item.label}
                   </span>
                 </button>
