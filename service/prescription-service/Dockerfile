@@ -6,8 +6,8 @@ WORKDIR /workspace
 COPY service/common /workspace/common
 RUN cd /workspace/common && gradle --no-daemon publishToMavenLocal -x test
 
-# Copy notification-service sources
-COPY service/notification-service /workspace/app
+# Copy prescription-service sources
+COPY service/prescription-service /workspace/app
 WORKDIR /workspace/app
 
 # Build the bootable jar (tests skipped for speed in container builds)
