@@ -249,9 +249,9 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl text-[#01304e]">Thanh toán & Hóa đơn</h1>
+            <h1 className="text-2xl font-bold text-neutral-heading">Thanh toán & Hóa đơn</h1>
           </div>
-          <p className="text-gray-600">Quản lý hóa đơn và thanh toán</p>
+          <p className="text-neutral-text/70 font-medium">Quản lý hóa đơn và thanh toán</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -269,7 +269,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           </Button>
           <Button
             onClick={onCreateInvoice}
-            className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
+            className="bg-primary hover:bg-primary-strong rounded-[15px] shadow-lg transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
             Tạo Hóa đơn mới
@@ -279,52 +279,52 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4 border-[#e8e8e8]">
+        <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Chờ thanh toán</span>
+            <span className="text-sm text-neutral-text/70 font-medium">Chờ thanh toán</span>
             <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
               <DollarSign className="w-4 h-4 text-red-600" />
             </div>
           </div>
-          <p className="text-2xl text-[#01304e] mb-1">{unpaidInvoices.length}</p>
-          <p className="text-xs text-gray-500">{totalUnpaid.toLocaleString('vi-VN')}đ</p>
+          <p className="text-2xl text-neutral-heading font-bold mb-1">{unpaidInvoices.length}</p>
+          <p className="text-xs text-neutral-text/60">{totalUnpaid.toLocaleString('vi-VN')}đ</p>
         </Card>
 
-        <Card className="p-4 border-[#e8e8e8]">
+        <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Đã thanh toán</span>
+            <span className="text-sm text-neutral-text/70 font-medium">Đã thanh toán</span>
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <DollarSign className="w-4 h-4 text-green-600" />
             </div>
           </div>
-          <p className="text-2xl text-[#01304e] mb-1">{paidInvoices.length}</p>
-          <p className="text-xs text-gray-500">{totalPaid.toLocaleString('vi-VN')}đ</p>
+          <p className="text-2xl text-neutral-heading font-bold mb-1">{paidInvoices.length}</p>
+          <p className="text-xs text-neutral-text/60">{totalPaid.toLocaleString('vi-VN')}đ</p>
         </Card>
 
-        <Card className="p-4 border-[#e8e8e8]">
+        <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Thanh toán 1 phần</span>
+            <span className="text-sm text-neutral-text/70 font-medium">Thanh toán 1 phần</span>
             <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
               <DollarSign className="w-4 h-4 text-yellow-600" />
             </div>
           </div>
-          <p className="text-2xl text-[#01304e] mb-1">{partialInvoices.length}</p>
-          <p className="text-xs text-gray-500">Cần hoàn tất</p>
+          <p className="text-2xl text-neutral-heading font-bold mb-1">{partialInvoices.length}</p>
+          <p className="text-xs text-neutral-text/60">Cần hoàn tất</p>
         </Card>
 
-        <Card className="p-4 border-[#e8e8e8]">
+        <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Tổng doanh thu hôm nay</span>
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-neutral-text/70 font-medium">Tổng doanh thu hôm nay</span>
+            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-primary" />
             </div>
           </div>
-          <p className="text-2xl text-[#3FB5FF]">{totalPaid.toLocaleString('vi-VN')}đ</p>
+          <p className="text-2xl text-primary font-bold">{totalPaid.toLocaleString('vi-VN')}đ</p>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 border-[#e8e8e8]">
+      <Card className="p-4 border-neutral-border bg-neutral-surface shadow-sm">
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -378,7 +378,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
         </TabsList>
 
         <TabsContent value="all">
-          <Card className="border-[#e8e8e8]">
+          <Card className="border-neutral-border bg-neutral-surface shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -394,21 +394,21 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
               </TableHeader>
               <TableBody>
                 {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="cursor-pointer hover:bg-gray-50">
-                    <TableCell className="font-mono">{invoice.code}</TableCell>
+                  <TableRow key={invoice.id} className="cursor-pointer hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                    <TableCell className="font-mono text-neutral-text">{invoice.code}</TableCell>
                     <TableCell>
                       <div>
-                        <p className="text-sm text-[#01304e]">{invoice.patientName}</p>
-                        <p className="text-xs text-gray-500">{invoice.patientCode}</p>
+                        <p className="text-sm text-neutral-heading font-medium">{invoice.patientName}</p>
+                        <p className="text-xs text-neutral-text/60">{invoice.patientCode}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{invoice.date}</TableCell>
-                    <TableCell className="text-sm">{invoice.doctor}</TableCell>
-                    <TableCell className="text-right text-[#01304e]">
+                    <TableCell className="text-sm text-neutral-text">{invoice.date}</TableCell>
+                    <TableCell className="text-sm text-neutral-text">{invoice.doctor}</TableCell>
+                    <TableCell className="text-right text-neutral-heading font-semibold">
                       {invoice.amount.toLocaleString('vi-VN')}đ
                     </TableCell>
                     <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm text-neutral-text">
                       {invoice.paymentMethod || '-'}
                     </TableCell>
                     <TableCell className="text-right">
@@ -416,7 +416,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                         {invoice.status === 'unpaid' && (
                           <Button
                             size="sm"
-                            className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90"
+                            className="bg-primary hover:bg-primary-strong transition-all duration-200"
                             onClick={() => onViewInvoice(invoice.id, 'payment')}
                           >
                             <DollarSign className="w-3 h-3 mr-1" />
@@ -426,6 +426,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                         <Button
                           size="sm"
                           variant="outline"
+                          className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all"
                           onClick={() => onViewInvoice(invoice.id, 'view')}
                         >
                           <FileText className="w-3 h-3 mr-1" />
@@ -440,15 +441,15 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
             {filteredInvoices.length === 0 && (
               <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Không tìm thấy hóa đơn</p>
+                <FileText className="w-12 h-12 text-neutral-text/20 mx-auto mb-3" />
+                <p className="text-neutral-text/60 font-medium">Không tìm thấy hóa đơn</p>
               </div>
             )}
           </Card>
         </TabsContent>
 
         <TabsContent value="unpaid">
-          <Card className="border-[#e8e8e8]">
+          <Card className="border-neutral-border bg-neutral-surface shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -500,7 +501,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
         </TabsContent>
 
         <TabsContent value="paid">
-          <Card className="border-[#e8e8e8]">
+          <Card className="border-neutral-border bg-neutral-surface shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>

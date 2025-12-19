@@ -1,15 +1,15 @@
-import { Bell, Plus, Search, LogOut, Home } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Logo } from './ui/logo';
+import { Bell, Plus, Search, LogOut, Home } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Logo } from "./ui/logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { Avatar, AvatarFallback } from './ui/avatar';
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface ReceptionistHeaderProps {
   onLogout: () => void;
@@ -19,12 +19,15 @@ interface ReceptionistHeaderProps {
   onSearch: (query: string) => void;
 }
 
-export function ReceptionistHeader({ onLogout, onGoHome, onNewAppointment, onNewPatient, onSearch }: ReceptionistHeaderProps) {
+export function ReceptionistHeader({
+  onLogout,
+  onGoHome,
+  onNewAppointment,
+  onNewPatient,
+  onSearch,
+}: ReceptionistHeaderProps) {
   return (
     <header className="fixed top-0 right-0 left-[260px] h-[80px] bg-white border-b border-gray-200 z-40 flex items-center justify-between px-8">
-      {/* Logo */}
-      <Logo />
-
       {/* Search Bar */}
       <div className="flex-1 max-w-xl mx-8">
         <div className="relative">
@@ -70,7 +73,9 @@ export function ReceptionistHeader({ onLogout, onGoHome, onNewAppointment, onNew
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
               <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-[#3FB5FF] text-white">LT</AvatarFallback>
+                <AvatarFallback className="bg-[#3FB5FF] text-white">
+                  LT
+                </AvatarFallback>
               </Avatar>
               <div className="text-left">
                 <p className="text-sm text-[#01304e]">Lễ tân</p>
@@ -92,7 +97,10 @@ export function ReceptionistHeader({ onLogout, onGoHome, onNewAppointment, onNew
                 <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-600">
+            <DropdownMenuItem
+              onClick={onLogout}
+              className="cursor-pointer text-red-600"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Đăng xuất
             </DropdownMenuItem>

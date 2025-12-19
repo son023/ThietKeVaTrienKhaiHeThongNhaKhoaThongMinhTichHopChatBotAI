@@ -31,71 +31,71 @@ export function LabReports() {
 
     return (
         <div className="p-6 space-y-6">
-            {/* DoctorHeader */}
+            {/* Header */}
             <div>
-                <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+                <h1 className="font-bold text-neutral-heading text-3xl mb-2">
                     Báo cáo thống kê
                 </h1>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                <p className="font-normal text-neutral-text/70 text-sm">
                     Phân tích hiệu suất và xu hướng xét nghiệm
                 </p>
             </div>
 
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-[#ebf6fc] rounded-lg flex items-center justify-center">
-                            <BarChart3 className="w-5 h-5 text-[#3fb5ff]" />
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <BarChart3 className="w-5 h-5 text-primary" />
                         </div>
-                        <TrendingUp className="w-5 h-5 text-[#2ecc71] ml-auto" />
+                        <TrendingUp className="w-5 h-5 text-green-600 ml-auto" />
                     </div>
-                    <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px] mb-1">
+                    <h3 className="font-bold text-neutral-heading text-2xl mb-1">
                         3,118
                     </h3>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                    <p className="font-normal text-neutral-text/70 text-sm">
                         Tổng xét nghiệm (6 tháng)
                     </p>
                 </Card>
 
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-[#e8f8f5] rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-[#2ecc71]" />
+                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-green-600" />
                         </div>
                     </div>
-                    <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px] mb-1">
+                    <h3 className="font-bold text-neutral-heading text-2xl mb-1">
                         520
                     </h3>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                    <p className="font-normal text-neutral-text/70 text-sm">
                         Trung bình/tháng
                     </p>
                 </Card>
 
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-[#fff5e6] rounded-lg flex items-center justify-center">
-                            <BarChart3 className="w-5 h-5 text-[#ff9f43]" />
+                        <div className="w-10 h-10 bg-accent-orange/10 rounded-lg flex items-center justify-center">
+                            <BarChart3 className="w-5 h-5 text-accent-orange" />
                         </div>
                     </div>
-                    <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px] mb-1">
+                    <h3 className="font-bold text-neutral-heading text-2xl mb-1">
                         327
                     </h3>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                    <p className="font-normal text-neutral-text/70 text-sm">
                         Tháng này (đến nay)
                     </p>
                 </Card>
 
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-[#f0e6ff] rounded-lg flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-[#9b59b6]" />
+                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-purple-600" />
                         </div>
                     </div>
-                    <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px] mb-1">
+                    <h3 className="font-bold text-neutral-heading text-2xl mb-1">
                         +12%
                     </h3>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                    <p className="font-normal text-neutral-text/70 text-sm">
                         So với tháng trước
                     </p>
                 </Card>
@@ -104,8 +104,8 @@ export function LabReports() {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Monthly Test Distribution */}
-                <Card className="p-6 border-[#ebf6fc]">
-                    <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+                <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                    <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                         Phân bố xét nghiệm theo tháng
                     </h2>
                     <ResponsiveContainer width="100%" height={300}>
@@ -131,8 +131,8 @@ export function LabReports() {
                 </Card>
 
                 {/* Weekly Trend */}
-                <Card className="p-6 border-[#ebf6fc]">
-                    <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+                <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                    <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                         Xu hướng tuần này
                     </h2>
                     <ResponsiveContainer width="100%" height={300}>
@@ -162,27 +162,27 @@ export function LabReports() {
             </div>
 
             {/* Test Type Statistics */}
-            <Card className="p-6 border-[#ebf6fc]">
-                <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[18px] mb-6">
+            <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
+                <h2 className="font-semibold text-neutral-heading text-lg mb-6">
                     Thống kê theo loại xét nghiệm
                 </h2>
                 <div className="space-y-4">
                     {testTypeStats.map((stat, index) => (
                         <div key={index}>
                             <div className="flex items-center justify-between mb-2">
-                <span className="font-['Fz_Poppins:Medium',sans-serif] text-[#666666] text-[14px]">
+                <span className="font-medium text-neutral-text/70 text-sm">
                   {stat.type}
                 </span>
                                 <div className="flex items-center gap-3">
-                  <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[14px]">
+                  <span className="font-semibold text-neutral-heading text-sm">
                     {stat.count}
                   </span>
-                                    <span className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[13px] w-12 text-right">
+                                    <span className="font-normal text-neutral-text/60 text-sm w-12 text-right">
                     {stat.percentage}%
                   </span>
                                 </div>
                             </div>
-                            <div className="h-3 bg-[#f0f0f0] rounded-full overflow-hidden">
+                            <div className="h-3 bg-neutral-muted rounded-full overflow-hidden">
                                 <div
                                     className="h-full transition-all"
                                     style={{

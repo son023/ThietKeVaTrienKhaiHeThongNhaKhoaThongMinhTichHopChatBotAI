@@ -283,25 +283,25 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#3fb5ff]" />
-        <span className="ml-3 text-[#05619a]">Đang tải dữ liệu...</span>
+      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <RefreshCw className="w-10 h-10 animate-spin text-primary" />
+        <span className="text-sm text-neutral-gray-500">Đang tải dữ liệu...</span>
       </div>
     );
   }
 
   if (!drug) {
     return (
-      <div className="p-6">
+      <div className="p-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff] hover:text-[#05619a] mb-3 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-strong mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Quay lại Quản lý Kho
         </button>
         <div className="text-center py-12">
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
+          <p className="text-sm text-neutral-gray-500">
             Không tìm thấy thông tin thuốc
           </p>
         </div>
@@ -314,44 +314,44 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
     : drug.name.split(' ')[0];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
       <div>
         <button
           onClick={onBack}
-          className="flex items-center gap-2 font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff] hover:text-[#05619a] mb-3 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-strong mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Quay lại Quản lý Kho
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
+            <h1 className="typo-h2 text-neutral-heading mb-2">
               {drug.name}
             </h1>
-            <div className="flex items-center gap-4">
-              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+            <div className="flex items-center gap-4 text-neutral-gray-500">
+              <p className="text-sm">
                 Công dụng: {activeIngredient}
               </p>
-              <span className="text-[#e5e7eb]">|</span>
-              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+              <span className="text-neutral-gray-300">|</span>
+              <p className="text-sm">
                 Mã thuốc: {drug.id.substring(0, 8).toUpperCase()}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d] mb-1">
+            <p className="text-sm text-neutral-gray-500 mb-1">
               Tổng Tồn kho
             </p>
-            <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[32px] text-[#28a745]">
-              {totalStock} <span className="text-[18px]">{drug.unit || 'đơn vị'}</span>
+            <p className="text-4xl font-bold text-emerald-600">
+              {totalStock} <span className="text-lg">{drug.unit || 'đơn vị'}</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#e5e7eb]">
+      <div className="flex items-center gap-2 border-b border-neutral-gray-200 bg-neutral-surface rounded-t-xl px-2 pt-2">
         {[
           { id: 'batches' as const, label: 'Quản lý Lô & Hạn sử dụng' },
           { id: 'ledger' as const, label: 'Lịch sử Nhập/Xuất' },
@@ -361,9 +361,9 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${activeTab === tab.id
-              ? 'border-[#3fb5ff] text-[#3fb5ff]'
-              : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+            className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === tab.id
+              ? 'border-primary text-primary bg-neutral-muted'
+              : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
               }`}
           >
             {tab.label}
@@ -372,100 +372,102 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
+      <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
         {activeTab === 'batches' && (
           <div>
-            <div className="p-5 border-b border-[#e5e7eb] flex items-center justify-between">
-              <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+            <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50 flex items-center justify-between">
+              <h2 className="typo-h4 text-neutral-heading">
                 Danh sách các lô trong kho ({batches.length})
               </h2>
               <button
                 onClick={() => setShowAddLotDialog(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow"
               >
                 <Plus className="w-4 h-4" />
                 Nhập lô mới
               </button>
             </div>
-            <div className="p-5">
+            <div className="p-6">
               {batches.length > 0 ? (
-                <table className="w-full">
-                  <thead className="border-b border-[#e5e7eb]">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        Số lô
-                      </th>
-                      <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        Số lượng
-                      </th>
-                      <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        HSD
-                      </th>
-                      <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        Còn lại (ngày)
-                      </th>
-                      <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        Trạng thái
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {batches.map((batch) => (
-                      <tr
-                        key={batch.id}
-                        className="border-b border-[#e5e7eb] hover:bg-[#f8f9fa] transition-colors"
-                      >
-                        <td className="px-4 py-4 font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">
-                          {batch.lotNo}
-                        </td>
-                        <td className="px-4 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                          {batch.quantityOnHand} {drug.unit || 'đơn vị'}
-                        </td>
-                        <td className="px-4 py-4 text-center font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                          {formatDate(batch.expireDate)}
-                        </td>
-                        <td className="px-4 py-4 text-center font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                          {batch.expireDate ? (
-                            batch.daysUntilExpiry >= 0 ? (
-                              <span className={batch.daysUntilExpiry <= 30 ? 'text-[#ffc107]' : ''}>
-                                {batch.daysUntilExpiry} ngày
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-neutral-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-bold text-neutral-heading">
+                          Số lô
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                          Số lượng
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                          HSD
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                          Còn lại (ngày)
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                          Trạng thái
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-gray-100">
+                      {batches.map((batch) => (
+                        <tr
+                          key={batch.id}
+                          className="hover:bg-neutral-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-4 text-sm font-semibold text-primary">
+                            {batch.lotNo}
+                          </td>
+                          <td className="px-4 py-4 text-center text-sm font-bold text-neutral-heading">
+                            {batch.quantityOnHand} {drug.unit || 'đơn vị'}
+                          </td>
+                          <td className="px-4 py-4 text-center text-sm text-neutral-text">
+                            {formatDate(batch.expireDate)}
+                          </td>
+                          <td className="px-4 py-4 text-center text-sm text-neutral-text">
+                            {batch.expireDate ? (
+                              batch.daysUntilExpiry >= 0 ? (
+                                <span className={batch.daysUntilExpiry <= 30 ? 'text-amber-600 font-semibold' : ''}>
+                                  {batch.daysUntilExpiry} ngày
+                                </span>
+                              ) : (
+                                <span className="text-red-600 font-semibold">Đã hết hạn</span>
+                              )
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            {batch.status === 'expired' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-red-800 border border-red-200 text-xs font-semibold">
+                                <AlertTriangle className="w-3 h-3" />
+                                Đã hết hạn
+                              </span>
+                            ) : batch.status === 'out-of-stock' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-semibold">
+                                <AlertTriangle className="w-3 h-3" />
+                                Hết hàng
+                              </span>
+                            ) : batch.status === 'expiring' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold">
+                                <AlertTriangle className="w-3 h-3" />
+                                Cảnh báo HSD
                               </span>
                             ) : (
-                              <span className="text-[#dc3545]">Đã hết hạn</span>
-                            )
-                          ) : (
-                            'N/A'
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          {batch.status === 'expired' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#f8d7da] text-[#721c24] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                              <AlertTriangle className="w-3 h-3" />
-                              Đã hết hạn
-                            </span>
-                          ) : batch.status === 'out-of-stock' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#dc3545] text-white font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                              <AlertTriangle className="w-3 h-3" />
-                              Hết hàng
-                            </span>
-                          ) : batch.status === 'expiring' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#fff3cd] text-[#856404] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                              <AlertTriangle className="w-3 h-3" />
-                              Cảnh báo HSD
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 rounded-full bg-[#d4edda] text-[#155724] font-['Fz_Poppins:Medium',sans-serif] text-[12px]">
-                              Bình thường
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                              <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold">
+                                Bình thường
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
+                <div className="text-center py-12">
+                  <p className="text-sm text-neutral-gray-500">
                     Chưa có lô hàng nào
                   </p>
                 </div>
@@ -476,45 +478,45 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
 
         {activeTab === 'ledger' && (
           <div>
-            <div className="p-5 border-b border-[#e5e7eb]">
-              <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+            <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50">
+              <h2 className="typo-h4 text-neutral-heading">
                 Lịch sử Nhập/Xuất kho
               </h2>
             </div>
-            <div className="p-5">
+            <div className="p-6">
               {ledgerRecords.length > 0 ? (
                 <div className="space-y-3">
                   {ledgerRecords.map((record, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-lg border border-[#e5e7eb] hover:border-[#3fb5ff] transition-all"
+                      className="p-5 rounded-lg border border-neutral-gray-200 hover:border-primary hover:shadow-sm transition-all duration-200"
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <span
-                            className={`px-3 py-1 rounded-full font-['Fz_Poppins:Medium',sans-serif] text-[12px] ${record.quantity > 0
-                              ? 'bg-[#d4edda] text-[#155724]'
-                              : 'bg-[#fff3cd] text-[#856404]'
+                            className={`px-4 py-1.5 rounded-full text-xs font-semibold ${record.quantity > 0
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              : 'bg-amber-100 text-amber-800 border border-amber-200'
                               }`}
                           >
                             {record.action}
                           </span>
                           <span
-                            className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] ${record.quantity > 0 ? 'text-[#28a745]' : 'text-[#ffc107]'
+                            className={`text-lg font-bold ${record.quantity > 0 ? 'text-emerald-600' : 'text-amber-600'
                               }`}
                           >
                             {record.quantity > 0 ? '+' : ''}{record.quantity} {drug.unit || 'đơn vị'}
                           </span>
                         </div>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#6c757d]">
+                        <p className="text-xs text-neutral-gray-500">
                           {record.date}
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#05619a]">
+                        <p className="text-sm text-neutral-gray-600">
                           {record.person}
                         </p>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#333333]">
+                        <p className="text-sm text-neutral-text">
                           {record.note}
                         </p>
                       </div>
@@ -522,8 +524,8 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
+                <div className="text-center py-12">
+                  <p className="text-sm text-neutral-gray-500">
                     Chưa có lịch sử giao dịch
                   </p>
                 </div>
@@ -533,42 +535,42 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
         )}
 
         {activeTab === 'info' && (
-          <div className="p-5">
+          <div className="p-6">
             <div className="space-y-6">
               <div>
-                <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-3">
+                <h3 className="text-lg font-bold text-neutral-heading mb-4">
                   Thông tin cơ bản
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-[#f8f9fa]">
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 rounded-xl bg-neutral-gray-50 border border-neutral-gray-100">
+                    <p className="text-xs text-neutral-gray-500 mb-2 font-medium">
                       Tên biệt dược
                     </p>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="text-sm font-semibold text-neutral-heading">
                       {drug.name}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-[#f8f9fa]">
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+                  <div className="p-5 rounded-xl bg-neutral-gray-50 border border-neutral-gray-100">
+                    <p className="text-xs text-neutral-gray-500 mb-2 font-medium">
                       Công dụng / Mô tả
                     </p>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="text-sm font-semibold text-neutral-heading">
                       {drug.description || 'Chưa có mô tả'}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-[#f8f9fa]">
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+                  <div className="p-5 rounded-xl bg-neutral-gray-50 border border-neutral-gray-100">
+                    <p className="text-xs text-neutral-gray-500 mb-2 font-medium">
                       Đơn vị
                     </p>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="text-sm font-semibold text-neutral-heading">
                       {drug.unit || 'N/A'}
                     </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-[#f8f9fa]">
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mb-1">
+                  <div className="p-5 rounded-xl bg-neutral-gray-50 border border-neutral-gray-100">
+                    <p className="text-xs text-neutral-gray-500 mb-2 font-medium">
                       Giá bán
                     </p>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="text-sm font-semibold text-neutral-heading">
                       {drug.salePrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(drug.salePrice) : 'N/A'}
                     </p>
                   </div>
@@ -579,23 +581,23 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
         )}
 
         {activeTab === 'settings' && (
-          <div className="p-5">
+          <div className="p-6">
             <div className="max-w-2xl space-y-6">
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Ngưỡng cảnh báo tồn kho
                 </label>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
                     defaultValue={20}
-                    className="flex-1 h-[44px] px-4 rounded-lg border border-[#3295d0] font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                    className="flex-1 h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   />
-                  <span className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
+                  <span className="text-sm text-neutral-gray-500">
                     {drug.unit || 'đơn vị'}
                   </span>
                 </div>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#6c757d] mt-1">
+                <p className="text-xs text-neutral-gray-500 mt-2">
                   Cảnh báo khi tồn kho xuống dưới ngưỡng này
                 </p>
               </div>
@@ -603,11 +605,11 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
               <div className="flex items-center gap-3 pt-4">
                 <button
                   onClick={() => toast.success('Đã lưu cài đặt thành công')}
-                  className="px-6 py-3 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors"
+                  className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow"
                 >
                   Lưu thay đổi
                 </button>
-                <button className="px-6 py-3 bg-white border border-[#e5e7eb] text-[#6c757d] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f8f9fa] transition-colors">
+                <button className="px-6 py-3 bg-neutral-surface border border-neutral-gray-200 text-neutral-gray-600 rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200">
                   Hủy
                 </button>
               </div>
@@ -618,10 +620,10 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
 
       {/* Add Lot Dialog */}
       {showAddLotDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-[#e5e7eb]">
-              <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[20px] text-[#01304e]">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-gray-200 bg-neutral-gray-50 sticky top-0 rounded-t-2xl">
+              <h2 className="typo-h4 text-neutral-heading">
                 Nhập lô mới
               </h2>
               <button
@@ -629,15 +631,15 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                   setShowAddLotDialog(false);
                   resetForm();
                 }}
-                className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors"
+                className="p-2 hover:bg-neutral-gray-200 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-[#6c757d]" />
+                <X className="w-5 h-5 text-neutral-gray-600" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitAddLot} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitAddLot} className="p-6 space-y-5">
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Số lô <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -645,14 +647,14 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                   value={formData.lotNo}
                   onChange={(e) => setFormData({ ...formData, lotNo: e.target.value })}
                   placeholder="Ví dụ: LOT-2025-001"
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
                     Số lượng <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -661,13 +663,13 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                     onChange={(e) => setFormData({ ...formData, quantityOnHand: parseInt(e.target.value) || 0 })}
                     min="1"
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
                     Giá nhập (VNĐ) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -676,39 +678,39 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                     onChange={(e) => setFormData({ ...formData, costPrice: parseInt(e.target.value) || 0 })}
                     min="0"
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Hạn sử dụng
                 </label>
                 <input
                   type="date"
                   value={formData.expireDate}
                   onChange={(e) => setFormData({ ...formData, expireDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e5e7eb]">
+              <div className="flex items-center justify-end gap-3 pt-5 border-t border-neutral-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddLotDialog(false);
                     resetForm();
                   }}
-                  className="px-6 py-3 border border-[#e5e7eb] text-[#333333] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f8f9fa] transition-colors"
+                  className="px-6 py-3 border border-neutral-gray-200 text-neutral-text rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-3 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow"
                 >
                   {submitting ? (
                     <>

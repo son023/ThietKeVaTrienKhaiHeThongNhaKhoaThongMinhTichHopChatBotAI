@@ -46,109 +46,117 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* DoctorHeader */}
+    <div className="p-8 space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
+        <h1 className="typo-h2 text-neutral-heading mb-2">
           Bảng điều khiển
         </h1>
-        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+        <p className="text-base text-neutral-gray-500">
           Chào mừng trở lại, Dược sĩ Nguyễn Văn A
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <FileText className="w-8 h-8 text-[#3fb5ff]" />
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-primary">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <FileText className="w-7 h-7 text-primary" />
+            </div>
+            <span className="text-3xl font-bold text-neutral-heading">
               12
             </span>
           </div>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600 font-medium">
             Danh sách đơn thuốc
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <Package className="w-8 h-8 text-[#ffc107]" />
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-accent-orange">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-amber-50">
+              <Package className="w-7 h-7 text-amber-600" />
+            </div>
+            <span className="text-3xl font-bold text-neutral-heading">
               8
             </span>
           </div>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600 font-medium">
             Thuốc sắp hết hàng
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <AlertTriangle className="w-8 h-8 text-[#dc3545]" />
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-red-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-red-50">
+              <AlertTriangle className="w-7 h-7 text-red-600" />
+            </div>
+            <span className="text-3xl font-bold text-neutral-heading">
               5
             </span>
           </div>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600 font-medium">
             Thuốc sắp hết hạn
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <TrendingUp className="w-8 h-8 text-[#28a745]" />
-            <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-emerald-500">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-emerald-50">
+              <TrendingUp className="w-7 h-7 text-emerald-600" />
+            </div>
+            <span className="text-3xl font-bold text-neutral-heading">
               45
             </span>
           </div>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600 font-medium">
             Đơn đã cấp hôm nay
           </p>
         </div>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Đơn thuốc mới */}
-        <div className="col-span-2 bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="p-5 border-b border-[#e5e7eb]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+        <div className="lg:col-span-2 bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50">
+            <h2 className="typo-h4 text-neutral-heading">
               Đơn thuốc mới (Chờ cấp phát)
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-4">
             {newPrescriptions.map((prescription) => (
               <div
                 key={prescription.id}
-                className="p-4 rounded-lg border border-[#e5e7eb] hover:border-[#3fb5ff] hover:shadow-md transition-all cursor-pointer"
+                className="p-5 rounded-lg border border-neutral-gray-200 hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer group"
                 onClick={() => onNavigate('prescription-detail', prescription.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#f0f9ff] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-[#3fb5ff]" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-neutral-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <Calendar className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                      <p className="font-semibold text-neutral-heading mb-1">
                         {prescription.patient}
                       </p>
-                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#05619a]">
+                      <p className="text-sm text-neutral-gray-500">
                         {prescription.doctor} • {prescription.time}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`px-3 py-1 rounded-full font-['Fz_Poppins:Medium',sans-serif] text-[12px] ${
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
                         prescription.status === 'Chờ cấp'
-                          ? 'bg-[#fff3cd] text-[#856404]'
-                          : 'bg-[#f8d7da] text-[#721c24]'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-red-100 text-red-800 border border-red-200'
                       }`}
                     >
                       {prescription.status}
                     </span>
-                    <button className="px-4 py-2 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[12px] hover:bg-[#3fb5ff]/90 transition-colors">
+                    <button className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow">
                       Xem & Cấp phát
                     </button>
                   </div>
@@ -159,21 +167,21 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
         </div>
 
         {/* Việc cần làm nhanh */}
-        <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="p-5 border-b border-[#e5e7eb]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50">
+            <h2 className="typo-h4 text-neutral-heading">
               Việc cần làm nhanh
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-4">
             {quickActions.map((action, index) => (
               <div
                 key={index}
-                className="p-4 rounded-lg bg-[#fff3cd] border border-[#ffc107] cursor-pointer hover:shadow-md transition-all"
+                className="p-4 rounded-lg bg-amber-50 border border-amber-200 cursor-pointer hover:shadow-md hover:bg-amber-100 transition-all duration-200"
               >
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-[#ffc107] flex-shrink-0 mt-0.5" />
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#856404]">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-900 font-medium leading-relaxed">
                     {action.label}
                   </p>
                 </div>
@@ -184,31 +192,33 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
       </div>
 
       {/* Cảnh báo Kho */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Thuốc sắp hết hàng */}
-        <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="p-5 border-b border-[#e5e7eb]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50">
+            <h2 className="typo-h4 text-neutral-heading">
               Thuốc sắp hết hàng
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-4">
             {lowStockDrugs.map((drug, index) => (
               <div
                 key={index}
-                className="p-4 rounded-lg border border-[#ffc107] bg-[#fff3cd] cursor-pointer hover:shadow-md transition-all"
+                className="p-5 rounded-lg border border-amber-300 bg-amber-50 cursor-pointer hover:shadow-md hover:bg-amber-100 transition-all duration-200 group"
                 onClick={() => onNavigate('inventory')}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="font-semibold text-neutral-heading mb-1.5">
                       {drug.name}
                     </p>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#856404]">
-                      Tồn kho: {drug.stock} {drug.unit} / Ngưỡng: {drug.threshold} {drug.unit}
+                    <p className="text-sm text-amber-800">
+                      Tồn kho: <span className="font-semibold">{drug.stock} {drug.unit}</span> / Ngưỡng: {drug.threshold} {drug.unit}
                     </p>
                   </div>
-                  <Package className="w-6 h-6 text-[#ffc107]" />
+                  <div className="p-3 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition-colors">
+                    <Package className="w-6 h-6 text-amber-700" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -216,29 +226,31 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
         </div>
 
         {/* Thuốc sắp hết hạn */}
-        <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="p-5 border-b border-[#e5e7eb]">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e]">
+        <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-neutral-gray-200 bg-neutral-gray-50">
+            <h2 className="typo-h4 text-neutral-heading">
               Thuốc sắp hết hạn
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-6 space-y-4">
             {expiringDrugs.map((drug, index) => (
               <div
                 key={index}
-                className="p-4 rounded-lg border border-[#dc3545] bg-[#f8d7da] cursor-pointer hover:shadow-md transition-all"
+                className="p-5 rounded-lg border border-red-300 bg-red-50 cursor-pointer hover:shadow-md hover:bg-red-100 transition-all duration-200 group"
                 onClick={() => onNavigate('inventory')}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e]">
+                    <p className="font-semibold text-neutral-heading mb-1.5">
                       {drug.name}
                     </p>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#721c24]">
-                      Lô {drug.batch} • HSD: {drug.expiry} • Còn {drug.daysLeft} ngày
+                    <p className="text-sm text-red-800">
+                      Lô {drug.batch} • HSD: {drug.expiry} • Còn <span className="font-semibold">{drug.daysLeft} ngày</span>
                     </p>
                   </div>
-                  <AlertTriangle className="w-6 h-6 text-[#dc3545]" />
+                  <div className="p-3 rounded-lg bg-red-100 group-hover:bg-red-200 transition-colors">
+                    <AlertTriangle className="w-6 h-6 text-red-700" />
+                  </div>
                 </div>
               </div>
             ))}

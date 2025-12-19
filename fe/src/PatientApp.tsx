@@ -1,14 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { NewPatientHeader } from './components/patient/NewPatientHeader';
-import { PatientFooter } from './components/patient/PatientFooter';
-import { PatientHome } from './components/patient/PatientHome';
-import { PatientDashboard } from './components/patient/PatientDashboard';
-import { PatientAppointments } from './components/patient/PatientAppointments';
-import { PatientMedicalRecords } from './components/patient/PatientMedicalRecords';
-import { PatientPayment } from './components/patient/PatientPayment';
-import { PatientProfile } from './components/patient/PatientProfile';
+import { useState, useEffect } from "react";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
+import { NewPatientHeader } from "./components/public/NewPatientHeader";
+import { PatientFooter } from "./components/patient/PatientFooter";
+import { PatientHome } from "./components/patient/PatientHome";
+import { PatientDashboard } from "./components/patient/PatientDashboard";
+import { PatientAppointments } from "./components/patient/PatientAppointments";
+import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecords";
+import { PatientPayment } from "./components/patient/PatientPayment";
+import { PatientProfile } from "./components/patient/PatientProfile";
 // import { PatientChatbot } from './components/patient/PatientChatbot';
+import { FloatingChatWidget } from "./components/ui/FloatingChatWidget";
+import PatientChatbot from "./components/patient/PatientChatbot";
 
 interface PatientAppProps {
   onLogout: () => void;
@@ -18,49 +26,59 @@ interface PatientAppProps {
 export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState("home");
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/patient/dashboard')) {
-      setCurrentPage('dashboard');
-    } else if (location.pathname.startsWith('/patient/appointments')) {
-      setCurrentPage('appointments');
-    } else if (location.pathname.startsWith('/patient/payment')) {
-      setCurrentPage('payment');
-    } else if (location.pathname.startsWith('/patient/medical-records')) {
-      setCurrentPage('medical-records');
-    } else if (location.pathname.startsWith('/patient/profile')) {
-      setCurrentPage('profile');
+    if (location.pathname.startsWith("/patient/dashboard")) {
+      setCurrentPage("dashboard");
+    } else if (location.pathname.startsWith("/patient/appointments")) {
+      setCurrentPage("appointments");
+    } else if (location.pathname.startsWith("/patient/payment")) {
+      setCurrentPage("payment");
+    } else if (location.pathname.startsWith("/patient/medical-records")) {
+      setCurrentPage("medical-records");
+    } else if (location.pathname.startsWith("/patient/profile")) {
+      setCurrentPage("profile");
     } else {
-      setCurrentPage('home');
+      setCurrentPage("home");
     }
   }, [location.pathname]);
 
   const handleNavigate = (page: string) => {
     switch (page) {
-      case 'home':
-        navigate('/patient');
+      case "home":
+        navigate("/patient");
         break;
-      case 'dashboard':
-        navigate('/patient/dashboard');
+      case "dashboard":
+        navigate("/patient/dashboard");
         break;
-      case 'appointments':
-        navigate('/patient/appointments');
+      case "appointments":
+        navigate("/patient/appointments");
         break;
-      case 'payment':
-        navigate('/patient/payment');
+      case "payment":
+        navigate("/patient/payment");
         break;
-      case 'medical-records':
-        navigate('/patient/medical-records');
+      case "medical-records":
+        navigate("/patient/medical-records");
         break;
-      case 'profile':
-        navigate('/patient/profile');
+      case "profile":
+        navigate("/patient/profile");
         break;
       default:
-        navigate('/patient');
+        navigate("/patient");
         break;
     }
+  };
+
+  // Header muốn "open chatbot" nhưng widget là self-contained (không nhận prop isOpen).
+  // Giải pháp: trigger click vào FAB của widget khi đang đóng.
+  const handleOpenChatbotFromHeader = () => {
+    const openBtn = document.querySelector(
+      'button[aria-label="Mở chat"]'
+    ) as HTMLButtonElement | null;
+
+    openBtn?.click();
   };
 
   return (
@@ -70,7 +88,10 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onOpenChatbot={() => setIsChatbotOpen(true)}
+        onLogout={onLogout}
       />
+
+      <PatientChatbot />
 
       {/* Main Content */}
       <main className="flex-1 w-full">
@@ -87,18 +108,12 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
             path="/patient/appointments"
             element={<PatientAppointments />}
           />
-          <Route
-            path="/patient/payment"
-            element={<PatientPayment />}
-          />
+          <Route path="/patient/payment" element={<PatientPayment />} />
           <Route
             path="/patient/medical-records"
             element={<PatientMedicalRecords />}
           />
-          <Route
-            path="/patient/profile"
-            element={<PatientProfile />}
-          />
+          <Route path="/patient/profile" element={<PatientProfile />} />
           {/* fallback trong PatientApp */}
           <Route path="*" element={<Navigate to="/patient" replace />} />
         </Routes>

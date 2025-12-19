@@ -43,14 +43,14 @@ export function PharmacyReports() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* DoctorHeader */}
+    <div className="p-8 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
+          <h1 className="typo-h2 text-neutral-heading mb-2">
             Báo cáo dược
           </h1>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-base text-neutral-gray-500">
             Thống kê và phân tích dữ liệu kho thuốc
           </p>
         </div>
@@ -58,14 +58,14 @@ export function PharmacyReports() {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="h-[44px] px-4 rounded-lg border border-[#3295d0] font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+            className="h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text bg-neutral-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           >
             <option value="7days">7 ngày qua</option>
             <option value="30days">30 ngày qua</option>
             <option value="90days">90 ngày qua</option>
             <option value="custom">Tùy chỉnh</option>
           </select>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow">
             <Download className="w-4 h-4" />
             Xuất báo cáo
           </button>
@@ -73,58 +73,66 @@ export function PharmacyReports() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <Package className="w-8 h-8 text-[#3fb5ff]" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-neutral-surface p-6 rounded-xl border border-neutral-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Package className="w-8 h-8 text-primary" />
+            </div>
           </div>
-          <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e] mb-1">
+          <p className="text-3xl font-bold text-neutral-heading mb-1">
             120
           </p>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600">
             Tổng loại thuốc
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <TrendingUp className="w-8 h-8 text-[#28a745]" />
+        <div className="bg-neutral-surface p-6 rounded-xl border border-neutral-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-emerald-50">
+              <TrendingUp className="w-8 h-8 text-emerald-600" />
+            </div>
           </div>
-          <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e] mb-1">
+          <p className="text-3xl font-bold text-neutral-heading mb-1">
             1,245
           </p>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600">
             Đơn cấp phát (tháng này)
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <Calendar className="w-8 h-8 text-[#ffc107]" />
+        <div className="bg-neutral-surface p-6 rounded-xl border border-neutral-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-amber-50">
+              <Calendar className="w-8 h-8 text-amber-600" />
+            </div>
           </div>
-          <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[24px] text-[#01304e] mb-1">
+          <p className="text-3xl font-bold text-neutral-heading mb-1">
             5
           </p>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600">
             Lô sắp hết hạn
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-lg border border-[#e5e7eb] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <DollarSign className="w-8 h-8 text-[#3fb5ff]" />
+        <div className="bg-neutral-surface p-6 rounded-xl border border-neutral-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <DollarSign className="w-8 h-8 text-primary" />
+            </div>
           </div>
-          <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[20px] text-[#01304e] mb-1">
+          <p className="text-2xl font-bold text-neutral-heading mb-1">
             450M
           </p>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-sm text-neutral-gray-600">
             Tổng giá trị tồn kho
           </p>
         </div>
       </div>
 
       {/* Report Type Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#e5e7eb]">
+      <div className="flex items-center gap-2 border-b border-neutral-gray-200 bg-neutral-surface rounded-t-xl px-2 pt-2">
         {[
           { id: 'inventory' as const, label: 'Báo cáo Xuất - Nhập - Tồn' },
           { id: 'dispensing' as const, label: 'Top thuốc cấp phát' },
@@ -134,10 +142,10 @@ export function PharmacyReports() {
           <button
             key={tab.id}
             onClick={() => setReportType(tab.id)}
-            className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${
+            className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${
               reportType === tab.id
-                ? 'border-[#3fb5ff] text-[#3fb5ff]'
-                : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+                ? 'border-primary text-primary bg-neutral-muted'
+                : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
             }`}
           >
             {tab.label}
@@ -146,10 +154,10 @@ export function PharmacyReports() {
       </div>
 
       {/* Report Content */}
-      <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm">
+      <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
         {reportType === 'inventory' && (
           <div className="p-6">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e] mb-6">
+            <h2 className="text-lg font-bold text-neutral-heading mb-6">
               Báo cáo Xuất - Nhập - Tồn (Top 5 thuốc)
             </h2>
             <ResponsiveContainer width="100%" height={400}>
@@ -169,115 +177,119 @@ export function PharmacyReports() {
 
         {reportType === 'dispensing' && (
           <div className="p-6">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e] mb-6">
+            <h2 className="text-lg font-bold text-neutral-heading mb-6">
               Top 5 thuốc cấp phát nhiều nhất
             </h2>
-            <table className="w-full">
-              <thead className="border-b border-[#e5e7eb]">
-                <tr>
-                  <th className="px-4 py-3 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    #
-                  </th>
-                  <th className="px-4 py-3 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Tên thuốc
-                  </th>
-                  <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Số lượng cấp phát
-                  </th>
-                  <th className="px-4 py-3 text-right font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Giá trị
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {topDispensedDrugs.map((drug, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-[#e5e7eb] hover:bg-[#f8f9fa] transition-colors"
-                  >
-                    <td className="px-4 py-4 font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#3fb5ff]">
-                      {index + 1}
-                    </td>
-                    <td className="px-4 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {drug.name}
-                    </td>
-                    <td className="px-4 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      {drug.quantity} viên
-                    </td>
-                    <td className="px-4 py-4 text-right font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#28a745]">
-                      {formatCurrency(drug.value)}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-neutral-gray-200 bg-neutral-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-neutral-heading">
+                      #
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-neutral-heading">
+                      Tên thuốc
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                      Số lượng cấp phát
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-bold text-neutral-heading">
+                      Giá trị
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-neutral-gray-100">
+                  {topDispensedDrugs.map((drug, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-neutral-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-4 text-sm font-bold text-primary">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-neutral-text font-medium">
+                        {drug.name}
+                      </td>
+                      <td className="px-4 py-4 text-center text-sm font-bold text-neutral-heading">
+                        {drug.quantity} viên
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-bold text-emerald-600">
+                        {formatCurrency(drug.value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {reportType === 'expiring' && (
           <div className="p-6">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e] mb-6">
+            <h2 className="text-lg font-bold text-neutral-heading mb-6">
               Danh sách thuốc sắp hết hạn (trong 90 ngày tới)
             </h2>
-            <table className="w-full">
-              <thead className="border-b border-[#e5e7eb]">
-                <tr>
-                  <th className="px-4 py-3 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Tên thuốc
-                  </th>
-                  <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Số lô
-                  </th>
-                  <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    HSD
-                  </th>
-                  <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Số lượng
-                  </th>
-                  <th className="px-4 py-3 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                    Còn lại
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {expiringDrugs.map((drug, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b border-[#e5e7eb] ${
-                      drug.daysLeft < 30 ? 'bg-[#f8d7da]' : 'bg-[#fff3cd]'
-                    }`}
-                  >
-                    <td className="px-4 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {drug.name}
-                    </td>
-                    <td className="px-4 py-4 text-center font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">
-                      {drug.batch}
-                    </td>
-                    <td className="px-4 py-4 text-center font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {drug.expiry}
-                    </td>
-                    <td className="px-4 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      {drug.quantity} viên
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span
-                        className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] ${
-                          drug.daysLeft < 30 ? 'text-[#dc3545]' : 'text-[#ffc107]'
-                        }`}
-                      >
-                        {drug.daysLeft} ngày
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-neutral-gray-200 bg-neutral-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-neutral-heading">
+                      Tên thuốc
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                      Số lô
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                      HSD
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                      Số lượng
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-bold text-neutral-heading">
+                      Còn lại
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-neutral-gray-100">
+                  {expiringDrugs.map((drug, index) => (
+                    <tr
+                      key={index}
+                      className={`${
+                        drug.daysLeft < 30 ? 'bg-red-50' : 'bg-amber-50'
+                      }`}
+                    >
+                      <td className="px-4 py-4 text-sm text-neutral-text font-medium">
+                        {drug.name}
+                      </td>
+                      <td className="px-4 py-4 text-center text-sm font-semibold text-primary">
+                        {drug.batch}
+                      </td>
+                      <td className="px-4 py-4 text-center text-sm text-neutral-text">
+                        {drug.expiry}
+                      </td>
+                      <td className="px-4 py-4 text-center text-sm font-bold text-neutral-heading">
+                        {drug.quantity} viên
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span
+                          className={`text-sm font-bold ${
+                            drug.daysLeft < 30 ? 'text-red-600' : 'text-amber-600'
+                          }`}
+                        >
+                          {drug.daysLeft} ngày
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {reportType === 'value' && (
           <div className="p-6">
-            <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e] mb-6">
+            <h2 className="text-lg font-bold text-neutral-heading mb-6">
               Xu hướng giá trị tồn kho (6 tháng gần nhất)
             </h2>
             <ResponsiveContainer width="100%" height={400}>

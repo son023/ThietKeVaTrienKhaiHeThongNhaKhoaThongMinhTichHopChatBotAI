@@ -244,19 +244,19 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
   const getStockStatusBadge = (quantity: number) => {
     if (quantity === 0) {
       return (
-        <span className="px-3 py-1 rounded-full bg-[#f8d7da] text-[#721c24] text-xs font-medium">
+        <span className="px-3 py-1.5 rounded-full bg-red-100 text-red-800 border border-red-200 text-xs font-semibold">
           Hết hàng
         </span>
       );
     } else if (quantity < 50) {
       return (
-        <span className="px-3 py-1 rounded-full bg-[#fff3cd] text-[#856404] text-xs font-medium">
+        <span className="px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold">
           Sắp hết
         </span>
       );
     } else {
       return (
-        <span className="px-3 py-1 rounded-full bg-[#d4edda] text-[#155724] text-xs font-medium">
+        <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold">
           Còn hàng
         </span>
       );
@@ -282,28 +282,28 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[28px] text-[#01304e] mb-2">
+          <h1 className="typo-h2 text-neutral-heading mb-2">
             Quản lý nhập/xuất thuốc
           </h1>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
+          <p className="text-base text-neutral-gray-500">
             Quản lý phiếu nhập và phiếu xuất kho
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowExportDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dc3545] text-[#dc3545] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#fff5f5] transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-neutral-surface border border-red-500 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-all duration-200 shadow-sm"
           >
             <XCircle className="w-4 h-4" />
             Tạo phiếu xuất kho
           </button>
           <button
             onClick={() => setShowImportDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow"
           >
             <Plus className="w-4 h-4" />
             Nhập hàng vào kho
@@ -312,106 +312,108 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#e5e7eb]">
+      <div className="flex items-center gap-2 border-b border-neutral-gray-200 bg-neutral-surface rounded-t-xl px-2 pt-2">
         <button
           onClick={() => setActiveTab('import')}
-          className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${activeTab === 'import'
-            ? 'border-[#3fb5ff] text-[#3fb5ff]'
-            : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+          className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === 'import'
+            ? 'border-primary text-primary bg-neutral-muted'
+            : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
             }`}
         >
-          Lịch sử nhập kho ({importRecords.length})
+          Lịch sử nhập kho <span className="ml-1.5 px-2 py-0.5 rounded-full bg-neutral-gray-100 text-neutral-gray-700 text-xs font-bold">{importRecords.length}</span>
         </button>
         <button
           onClick={() => setActiveTab('export')}
-          className={`px-4 py-3 font-['Fz_Poppins:Medium',sans-serif] text-[14px] border-b-2 transition-all ${activeTab === 'export'
-            ? 'border-[#3fb5ff] text-[#3fb5ff]'
-            : 'border-transparent text-[#6c757d] hover:text-[#3fb5ff]'
+          className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === 'export'
+            ? 'border-primary text-primary bg-neutral-muted'
+            : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
             }`}
         >
-          Lịch sử xuất kho ({exportRecords.length})
+          Lịch sử xuất kho <span className="ml-1.5 px-2 py-0.5 rounded-full bg-neutral-gray-100 text-neutral-gray-700 text-xs font-bold">{exportRecords.length}</span>
         </button>
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-lg border border-[#e5e7eb] shadow-sm overflow-hidden">
+      <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm overflow-hidden">
         {activeTab === 'import' && (
           <>
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3fb5ff]"></div>
-                <p className="mt-4 text-[#6c757d]">Đang tải...</p>
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                <p className="text-sm text-neutral-gray-500">Đang tải...</p>
               </div>
             ) : importRecords.length > 0 ? (
-              <table className="w-full">
-                <thead className="bg-[#f8f9fa] border-b border-[#e5e7eb]">
-                  <tr>
-                    <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Số lô
-                    </th>
-                    <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Tên thuốc
-                    </th>
-                    <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Số lượng
-                    </th>
-                    <th className="px-6 py-4 text-right font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Giá nhập
-                    </th>
-                    <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Hạn sử dụng
-                    </th>
-                    <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {importRecords.map((record) => (
-                    <tr
-                      key={record.id}
-                      className="border-b border-[#e5e7eb] hover:bg-[#f8f9fa] transition-colors"
-                    >
-                      <td className="px-6 py-4 font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">
-                        {record.lotNo}
-                      </td>
-                      <td className="px-6 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                        {record.medicineName || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                        {record.quantityOnHand}
-                      </td>
-                      <td className="px-6 py-4 text-right font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#28a745]">
-                        {formatCurrency(record.costPrice)}
-                      </td>
-                      <td className="px-6 py-4 text-center font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#05619a]">
-                        {formatDate(record.expireDate)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center">
-                          {getStockStatusBadge(record.quantityOnHand)}
-                        </div>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-neutral-gray-50 border-b border-neutral-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                        Số lô
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                        Tên thuốc
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                        Số lượng
+                      </th>
+                      <th className="px-6 py-4 text-right text-sm font-bold text-neutral-heading">
+                        Giá nhập
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                        Hạn sử dụng
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                        Trạng thái
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-gray-100">
+                    {importRecords.map((record) => (
+                      <tr
+                        key={record.id}
+                        className="hover:bg-neutral-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm font-semibold text-primary">
+                          {record.lotNo}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-neutral-text font-medium">
+                          {record.medicineName || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                          {record.quantityOnHand}
+                        </td>
+                        <td className="px-6 py-4 text-right text-sm font-bold text-emerald-600">
+                          {formatCurrency(record.costPrice)}
+                        </td>
+                        <td className="px-6 py-4 text-center text-sm text-neutral-gray-600">
+                          {formatDate(record.expireDate)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex justify-center">
+                            {getStockStatusBadge(record.quantityOnHand)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="p-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#f8f9fa] flex items-center justify-center">
-                  <Package className="w-10 h-10 text-[#6c757d]" />
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-neutral-gray-50 flex items-center justify-center">
+                  <Package className="w-10 h-10 text-neutral-gray-400" />
                 </div>
-                <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] text-[#01304e] mb-2">
+                <h3 className="text-lg font-bold text-neutral-heading mb-2">
                   Chưa có lịch sử nhập kho
                 </h3>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d] mb-4">
+                <p className="text-sm text-neutral-gray-500 mb-4">
                   Bắt đầu nhập hàng vào kho để quản lý tồn kho
                 </p>
                 <button
                   onClick={() => setShowImportDialog(true)}
-                  className="px-6 py-3 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow"
                 >
-                  <Plus className="w-4 h-4 inline mr-2" />
+                  <Plus className="w-4 h-4" />
                   Nhập hàng đầu tiên
                 </button>
               </div>
@@ -420,105 +422,107 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
         )}
 
         {activeTab === 'export' && (
-          <table className="w-full">
-            <thead className="bg-[#f8f9fa] border-b border-[#e5e7eb]">
-              <tr>
-                <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Số lô
-                </th>
-                <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Tên thuốc
-                </th>
-                <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Số lượng
-                </th>
-                <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Lý do
-                </th>
-                <th className="px-6 py-4 text-left font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Dược sĩ
-                </th>
-                <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Đơn thuốc
-                </th>
-                <th className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                  Ngày xuất
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-neutral-gray-50 border-b border-neutral-gray-200">
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#3fb5ff]"></div>
-                  </td>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                    Số lô
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                    Tên thuốc
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                    Số lượng
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                    Lý do
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-neutral-heading">
+                    Dược sĩ
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                    Đơn thuốc
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-neutral-heading">
+                    Ngày xuất
+                  </th>
                 </tr>
-              ) : exportRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-[#f8f9fa] flex items-center justify-center">
-                      <Package className="w-8 h-8 text-[#6c757d]" />
-                    </div>
-                    <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] text-[#01304e] mb-1">
-                      Chưa có phiếu xuất kho
-                    </h3>
-                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
-                      Tạo phiếu xuất kho đầu tiên của bạn
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                exportRecords.map((record) => (
-                  <tr
-                    key={record.id}
-                    className="border-b border-[#e5e7eb] hover:bg-[#f8f9fa] transition-colors"
-                  >
-                    <td className="px-6 py-4 font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#3fb5ff]">
-                      {record.lotNo || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {record.medicineName || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-center font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#dc3545]">
-                      {record.quantity}
-                    </td>
-                    <td className="px-6 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {record.reason}
-                    </td>
-                    <td className="px-6 py-4 font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#333333]">
-                      {record.pharmacistName || <span className="text-[#6c757d]">-</span>}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {record.dispenseOrderId ? (
-                        <button
-                          onClick={() => handleViewPrescription(record.dispenseOrderId!)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#3fb5ff] text-white hover:bg-[#3fb5ff]/90 transition-colors font-['Fz_Poppins:Medium',sans-serif] text-[13px]"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Xem đơn
-                        </button>
-                      ) : (
-                        <span className="text-[#6c757d] text-sm">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#05619a]">
-                      {formatDateTime(record.exportedAt)}
+              </thead>
+              <tbody className="divide-y divide-neutral-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : exportRecords.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-neutral-gray-50 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-neutral-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-bold text-neutral-heading mb-1">
+                        Chưa có phiếu xuất kho
+                      </h3>
+                      <p className="text-sm text-neutral-gray-500">
+                        Tạo phiếu xuất kho đầu tiên của bạn
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  exportRecords.map((record) => (
+                    <tr
+                      key={record.id}
+                      className="hover:bg-neutral-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-sm font-semibold text-primary">
+                        {record.lotNo || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-text font-medium">
+                        {record.medicineName || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-center text-sm font-bold text-red-600">
+                        {record.quantity}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-text">
+                        {record.reason}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-text">
+                        {record.pharmacistName || <span className="text-neutral-gray-400">-</span>}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {record.dispenseOrderId ? (
+                          <button
+                            onClick={() => handleViewPrescription(record.dispenseOrderId!)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-primary-strong transition-all duration-200 text-xs font-semibold shadow-sm"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            Xem đơn
+                          </button>
+                        ) : (
+                          <span className="text-neutral-gray-400 text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center text-xs text-neutral-gray-600">
+                        {formatDateTime(record.exportedAt)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Import Dialog */}
       {showImportDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Dialog Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#e5e7eb]">
-              <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[20px] text-[#01304e]">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-gray-200 bg-neutral-gray-50 sticky top-0 rounded-t-2xl">
+              <h2 className="typo-h4 text-neutral-heading">
                 Nhập hàng vào kho
               </h2>
               <button
@@ -526,23 +530,23 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   setShowImportDialog(false);
                   resetForm();
                 }}
-                className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors"
+                className="p-2 hover:bg-neutral-gray-200 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-[#6c757d]" />
+                <X className="w-5 h-5 text-neutral-gray-600" />
               </button>
             </div>
 
             {/* Dialog Content */}
-            <form onSubmit={handleSubmitImport} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitImport} className="p-6 space-y-5">
               {/* Medicine Select */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Chọn thuốc <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.medicineId}
                   onChange={(e) => setFormData({ ...formData, medicineId: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   required
                 >
                   <option value="">-- Chọn thuốc --</option>
@@ -556,7 +560,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
 
               {/* Lot Number */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Số lô <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -564,7 +568,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   value={formData.lotNo}
                   onChange={(e) => setFormData({ ...formData, lotNo: e.target.value })}
                   placeholder="Ví dụ: LOT-2025-001"
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -573,7 +577,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
               <div className="grid grid-cols-2 gap-4">
                 {/* Quantity */}
                 <div>
-                  <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
                     Số lượng <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -582,14 +586,14 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                     onChange={(e) => setFormData({ ...formData, quantityOnHand: parseInt(e.target.value) || 0 })}
                     min="1"
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     required
                   />
                 </div>
 
                 {/* Cost Price */}
                 <div>
-                  <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
                     Giá nhập (VNĐ) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -598,7 +602,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                     onChange={(e) => setFormData({ ...formData, costPrice: parseInt(e.target.value) || 0 })}
                     min="0"
                     placeholder="0"
-                    className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                    className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     required
                   />
                 </div>
@@ -606,33 +610,33 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
 
               {/* Expire Date */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Hạn sử dụng
                 </label>
                 <input
                   type="date"
                   value={formData.expireDate}
                   onChange={(e) => setFormData({ ...formData, expireDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
               </div>
 
               {/* Dialog Footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e5e7eb]">
+              <div className="flex items-center justify-end gap-3 pt-5 border-t border-neutral-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowImportDialog(false);
                     resetForm();
                   }}
-                  className="px-6 py-3 border border-[#e5e7eb] text-[#333333] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f8f9fa] transition-colors"
+                  className="px-6 py-3 border border-neutral-gray-200 text-neutral-text rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-3 bg-[#3fb5ff] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#3fb5ff]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow"
                 >
                   {submitting ? (
                     <>
@@ -654,11 +658,11 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
 
       {/* Export Dialog */}
       {showExportDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Dialog Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#e5e7eb]">
-              <h2 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[20px] text-[#01304e]">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-gray-200 bg-neutral-gray-50 sticky top-0 rounded-t-2xl">
+              <h2 className="typo-h4 text-neutral-heading">
                 Xuất kho thủ công
               </h2>
               <button
@@ -666,23 +670,23 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   setShowExportDialog(false);
                   resetExportForm();
                 }}
-                className="p-2 hover:bg-[#f8f9fa] rounded-lg transition-colors"
+                className="p-2 hover:bg-neutral-gray-200 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-[#6c757d]" />
+                <X className="w-5 h-5 text-neutral-gray-600" />
               </button>
             </div>
 
             {/* Dialog Content */}
-            <form onSubmit={handleSubmitExport} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitExport} className="p-6 space-y-5">
               {/* Inventory Lot Select */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Chọn lô hàng <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={exportFormData.inventoryLotId}
                   onChange={(e) => setExportFormData({ ...exportFormData, inventoryLotId: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#dc3545] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                   required
                 >
                   <option value="">-- Chọn lô hàng --</option>
@@ -693,8 +697,8 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   ))}
                 </select>
                 {exportFormData.inventoryLotId && (
-                  <p className="mt-2 text-sm text-[#6c757d] font-['Fz_Poppins:Regular',sans-serif]">
-                    Tồn kho hiện tại: <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e]">
+                  <p className="mt-2 text-sm text-neutral-gray-500">
+                    Tồn kho hiện tại: <span className="font-bold text-neutral-heading">
                       {importRecords.find(lot => lot.id === exportFormData.inventoryLotId)?.quantityOnHand || 0}
                     </span>
                   </p>
@@ -703,7 +707,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
 
               {/* Quantity */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Số lượng xuất <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -712,20 +716,20 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   onChange={(e) => setExportFormData({ ...exportFormData, quantity: parseInt(e.target.value) || 0 })}
                   min="1"
                   placeholder="0"
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#dc3545] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
 
               {/* Reason */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Lý do xuất kho <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={exportFormData.reason}
                   onChange={(e) => setExportFormData({ ...exportFormData, reason: e.target.value })}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#dc3545] focus:border-transparent"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                   required
                 >
                   <option value="">-- Chọn lý do --</option>
@@ -738,7 +742,7 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
 
               {/* Notes */}
               <div>
-                <label className="block font-['Fz_Poppins:Medium',sans-serif] text-[14px] text-[#01304e] mb-2">
+                <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Ghi chú
                 </label>
                 <textarea
@@ -746,26 +750,26 @@ export function ImportExportManagement({ onNavigate }: ImportExportManagementPro
                   onChange={(e) => setExportFormData({ ...exportFormData, notes: e.target.value })}
                   placeholder="Nhập ghi chú (tùy chọn)"
                   rows={3}
-                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-lg font-['Fz_Poppins:Regular',sans-serif] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#dc3545] focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-neutral-gray-200 rounded-xl text-sm text-neutral-text placeholder:text-neutral-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all"
                 />
               </div>
 
               {/* Dialog Footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e5e7eb]">
+              <div className="flex items-center justify-end gap-3 pt-5 border-t border-neutral-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowExportDialog(false);
                     resetExportForm();
                   }}
-                  className="px-6 py-3 border border-[#e5e7eb] text-[#333333] rounded-lg font-['Fz_Poppins:Medium',sans-serif] text-[14px] hover:bg-[#f8f9fa] transition-colors"
+                  className="px-6 py-3 border border-neutral-gray-200 text-neutral-text rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-3 bg-[#dc3545] text-white rounded-lg font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] hover:bg-[#dc3545]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow"
                 >
                   {submitting ? (
                     <>

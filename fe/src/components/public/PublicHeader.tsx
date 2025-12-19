@@ -32,7 +32,9 @@ export function PublicHeader({
     <header className="fixed top-0 left-0 right-0 bg-[#fcfeff] h-[104px] z-50 shadow-sm">
       <div className="container mx-auto px-20 h-full flex items-center justify-between">
         {/* Logo */}
-        <div onClick={() => handleMenuClick("home")}>{/* <Logo /> */}</div>
+        <div onClick={() => handleMenuClick("home")}>
+          <Logo />
+        </div>
 
         {/* Navigation Menu */}
         <nav className="flex items-center gap-[30px]">

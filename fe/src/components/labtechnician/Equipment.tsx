@@ -80,21 +80,21 @@ export function Equipment() {
         switch (status) {
             case 'operational':
                 return (
-                    <Badge className="bg-[#e8f8f5] text-[#2ecc71] hover:bg-[#e8f8f5]">
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Hoạt động tốt
                     </Badge>
                 );
             case 'maintenance':
                 return (
-                    <Badge className="bg-[#fff5e6] text-[#ff9f43] hover:bg-[#fff5e6]">
+                    <Badge className="bg-accent-orange/10 text-accent-orange hover:bg-accent-orange/10">
                         <Wrench className="w-3 h-3 mr-1" />
                         Đang bảo trì
                     </Badge>
                 );
             case 'warning':
                 return (
-                    <Badge className="bg-[#ffe6e6] text-[#ff4444] hover:bg-[#ffe6e6]">
+                    <Badge className="bg-red-100 text-red-600 hover:bg-red-100">
                         <AlertTriangle className="w-3 h-3 mr-1" />
                         Cần bảo trì
                     </Badge>
@@ -109,9 +109,9 @@ export function Equipment() {
     };
 
     const getUsageColor = (percentage: number) => {
-        if (percentage < 60) return 'bg-[#2ecc71]';
-        if (percentage < 80) return 'bg-[#ff9f43]';
-        return 'bg-[#ff4444]';
+        if (percentage < 60) return 'bg-green-600';
+        if (percentage < 80) return 'bg-accent-orange';
+        return 'bg-red-600';
     };
 
     const handleScheduleMaintenance = (id: string) => {
@@ -120,60 +120,60 @@ export function Equipment() {
 
     return (
         <div className="p-6 space-y-6">
-            {/* DoctorHeader */}
+            {/* Header */}
             <div>
-                <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+                <h1 className="font-bold text-neutral-heading text-3xl mb-2">
                     Quản lý thiết bị
                 </h1>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                <p className="font-normal text-neutral-text/70 text-sm">
                     Theo dõi trạng thái và bảo trì thiết bị xét nghiệm
                 </p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#e8f8f5] rounded-xl flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-[#2ecc71]" />
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px]">
+                            <h3 className="font-bold text-neutral-heading text-2xl">
                                 {equipment.filter(e => e.status === 'operational').length}
                             </h3>
-                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                            <p className="font-normal text-neutral-text/70 text-sm">
                                 Hoạt động tốt
                             </p>
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#fff5e6] rounded-xl flex items-center justify-center">
-                            <Wrench className="w-6 h-6 text-[#ff9f43]" />
+                        <div className="w-12 h-12 bg-accent-orange/10 rounded-xl flex items-center justify-center">
+                            <Wrench className="w-6 h-6 text-accent-orange" />
                         </div>
                         <div>
-                            <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px]">
+                            <h3 className="font-bold text-neutral-heading text-2xl">
                                 {equipment.filter(e => e.status === 'maintenance').length}
                             </h3>
-                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                            <p className="font-normal text-neutral-text/70 text-sm">
                                 Đang bảo trì
                             </p>
                         </div>
                     </div>
                 </Card>
 
-                <Card className="p-5 border-[#ebf6fc]">
+                <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#ffe6e6] rounded-xl flex items-center justify-center">
-                            <AlertTriangle className="w-6 h-6 text-[#ff4444]" />
+                        <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-red-600" />
                         </div>
                         <div>
-                            <h3 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[24px]">
+                            <h3 className="font-bold text-neutral-heading text-2xl">
                                 {equipment.filter(e => e.status === 'warning').length}
                             </h3>
-                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
+                            <p className="font-normal text-neutral-text/70 text-sm">
                                 Cần bảo trì
                             </p>
                         </div>
@@ -187,20 +187,20 @@ export function Equipment() {
                     const usagePercentage = getUsagePercentage(item.usageCount, item.maxUsage);
 
                     return (
-                        <Card key={item.id} className="border-[#ebf6fc] hover:shadow-md transition-shadow">
+                        <Card key={item.id} className="border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                             <div className="p-5">
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[16px]">
+                                            <h3 className="font-semibold text-neutral-heading text-base">
                                                 {item.name}
                                             </h3>
                                             {getStatusBadge(item.status)}
                                         </div>
-                                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px] mb-1">
+                                        <p className="font-normal text-neutral-text/70 text-sm mb-1">
                                             Model: {item.model}
                                         </p>
-                                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[13px]">
+                                        <p className="font-normal text-neutral-text/60 text-sm">
                                             📍 {item.location}
                                         </p>
                                     </div>
@@ -209,7 +209,7 @@ export function Equipment() {
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleScheduleMaintenance(item.id)}
-                                        className="border-[#3fb5ff] text-[#3fb5ff] hover:bg-[#ebf6fc]"
+                                        className="border-primary text-primary hover:bg-primary/10 transition-all duration-200"
                                     >
                                         <Settings className="w-4 h-4 mr-2" />
                                         Bảo trì
@@ -219,14 +219,14 @@ export function Equipment() {
                                 {/* Usage Progress */}
                                 <div className="mb-4">
                                     <div className="flex items-center justify-between mb-2">
-                    <span className="font-['Fz_Poppins:Medium',sans-serif] text-[#666666] text-[13px]">
+                    <span className="font-medium text-neutral-text/70 text-sm">
                       Mức độ sử dụng
                     </span>
-                                        <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[13px]">
+                                        <span className="font-semibold text-neutral-heading text-sm">
                       {item.usageCount} / {item.maxUsage} lần
                     </span>
                                     </div>
-                                    <div className="h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
+                                    <div className="h-2 bg-neutral-muted rounded-full overflow-hidden">
                                         <div
                                             className={`h-full ${getUsageColor(usagePercentage)} transition-all`}
                                             style={{ width: `${usagePercentage}%` }}
@@ -235,25 +235,25 @@ export function Equipment() {
                                 </div>
 
                                 {/* Maintenance Info */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#ebf6fc]">
-                                    <div className="flex items-center gap-2 text-[13px]">
-                                        <Calendar className="w-4 h-4 text-[#666666]" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-neutral-border">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Calendar className="w-4 h-4 text-neutral-text/70" />
                                         <div>
-                                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999]">
+                                            <p className="font-normal text-neutral-text/60">
                                                 Bảo trì lần cuối
                                             </p>
-                                            <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#666666]">
+                                            <p className="font-medium text-neutral-text">
                                                 {item.lastMaintenance}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[13px]">
-                                        <Calendar className="w-4 h-4 text-[#666666]" />
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Calendar className="w-4 h-4 text-neutral-text/70" />
                                         <div>
-                                            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999]">
+                                            <p className="font-normal text-neutral-text/60">
                                                 Bảo trì tiếp theo
                                             </p>
-                                            <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#666666]">
+                                            <p className="font-medium text-neutral-text">
                                                 {item.nextMaintenance}
                                             </p>
                                         </div>

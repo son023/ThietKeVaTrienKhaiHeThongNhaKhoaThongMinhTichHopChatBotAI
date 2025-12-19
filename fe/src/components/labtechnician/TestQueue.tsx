@@ -172,40 +172,40 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
 
     const getStatusBadge = (status?: string) => {
         const st = status;
-        if (st === 'COMPLETE') return { label: 'COMPLETE', className: 'border-[#2ecc71] text-[#2ecc71]' };
-        if (st === 'IN_PROGRESS') return { label: 'IN_PROGRESS', className: 'border-[#3fb5ff] text-[#3fb5ff]' };
-        if (st === 'ACCEPTED') return { label: 'ACCEPTED', className: 'border-[#1e8bc3] text-[#1e8bc3]' };
-        if (st === 'REQUEST') return { label: 'REQUEST', className: 'border-[#ff9f43] text-[#ff9f43]' };
-        return { label: st || 'UNKNOWN', className: 'border-[#ff9f43] text-[#ff9f43]' };
+        if (st === 'COMPLETE') return { label: 'COMPLETE', className: 'border-green-600 text-green-600' };
+        if (st === 'IN_PROGRESS') return { label: 'IN_PROGRESS', className: 'border-primary text-primary' };
+        if (st === 'ACCEPTED') return { label: 'ACCEPTED', className: 'border-primary-strong text-primary-strong' };
+        if (st === 'REQUEST') return { label: 'REQUEST', className: 'border-accent-orange text-accent-orange' };
+        return { label: st || 'UNKNOWN', className: 'border-accent-orange text-accent-orange' };
     };
 
     return (
         <div className="p-6 space-y-6">
-            {/* DoctorHeader */}
+            {/* Header */}
             <div>
-                <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[28px] mb-2">
+                <h1 className="font-bold text-neutral-heading text-3xl mb-2">
                     Hàng đợi xét nghiệm
                 </h1>
-                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[14px]">
+                <p className="font-normal text-neutral-text/70 text-sm">
                     Quản lý và thực hiện các yêu cầu xét nghiệm
                 </p>
             </div>
 
             {/* Search and Filter */}
-            <Card className="p-4 border-[#ebf6fc]">
+            <Card className="p-4 border-neutral-border bg-neutral-surface shadow-sm">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
                         <Input
                             type="text"
                             placeholder="Tìm kiếm bệnh nhân, mã BN, loại xét nghiệm..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 h-11 border-[#ebf6fc]"
+                            className="pl-10 h-11 border-neutral-border focus:border-primary focus:ring-primary/20"
                         />
                     </div>
                     <Tabs value={selectedFilter} onValueChange={setSelectedFilter} className="w-auto">
-                        <TabsList className="bg-[#f8fcff]">
+                        <TabsList className="bg-primary/5">
                             <TabsTrigger value="all">Tất cả</TabsTrigger>
                             <TabsTrigger value="pending">Chờ xử lý</TabsTrigger>
                             <TabsTrigger value="in-progress">Đang thực hiện</TabsTrigger>
@@ -217,29 +217,29 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
             {/* Tests List */}
             <div className="grid gap-4">
                 {filteredTests.map((test) => (
-                    <Card key={test.id} className="border-[#ebf6fc] hover:shadow-md transition-shadow">
+                    <Card key={test.id} className="border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
                         <div className="p-5">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-[#ebf6fc] rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <FileText className="w-6 h-6 text-[#3fb5ff]" />
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <FileText className="w-6 h-6 text-primary" />
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e] text-[16px]">
+                                            <h3 className="font-semibold text-neutral-heading text-base">
                                                 {test.labTestType?.name || 'Lab test'}
                                             </h3>
-                                            <Badge variant="outline" className="text-[11px]">
+                                            <Badge variant="outline" className="text-xs border-neutral-border">
                                                 {test.appointmentId || 'N/A'}
                                             </Badge>
                                         </div>
-                                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#3fb5ff] text-[15px] mb-2">
+                                        <p className="font-medium text-primary text-sm mb-2">
                                             Bác sĩ: {test.doctorName || test.doctorId || 'N/A'}
                                         </p>
-                                        <p className="font-['Fz_Poppins:Medium',sans-serif] text-[#2ecc71] text-[14px] mb-2">
+                                        <p className="font-medium text-green-600 text-sm mb-2">
                                             Bệnh nhân: {test.patientName || (test.appointmentId ? `Appointment: ${test.appointmentId.substring(0, 8)}...` : 'Chưa có thông tin')}
                                         </p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px] text-[#666666]">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-neutral-text/70">
                                             <div className="flex items-center gap-2">
                                                 <User className="w-4 h-4" />
                                                 <span>Technician: {test.labTechnicianName || test.labTechnicianId || 'Chưa gán'}</span>
@@ -254,9 +254,9 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                             </div>
                                         </div>
                                         {test.instructions && (
-                                            <div className="mt-3 p-3 bg-[#f8fcff] rounded-lg">
-                                                <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[13px]">
-                                                    <span className="font-['Fz_Poppins:Medium',sans-serif]">Ghi chú:</span> {test.instructions}
+                                            <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                                                <p className="font-normal text-neutral-text/70 text-sm">
+                                                    <span className="font-medium text-neutral-heading">Ghi chú:</span> {test.instructions}
                                                 </p>
                                             </div>
                                         )}
@@ -269,7 +269,7 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                             size="sm"
                                             onClick={() => handleAccept(test.id)}
                                             disabled={processingId === test.id}
-                                            className="bg-[#ff9f43] hover:bg-[#fb8c00]"
+                                            className="bg-accent-orange hover:bg-accent-orange/90 transition-all duration-200"
                                         >
                                             Nhận
                                         </Button>
@@ -279,7 +279,7 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                             size="sm"
                                             onClick={() => handleStartTest(test.id)}
                                             disabled={processingId === test.id}
-                                            className="bg-[#3fb5ff] hover:bg-[#1e8bc3]"
+                                            className="bg-primary hover:bg-primary-strong transition-all duration-200"
                                         >
                                             Bắt đầu
                                         </Button>
@@ -287,20 +287,20 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                     {test.status === 'IN_PROGRESS' && (
                                         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                                             <DialogTrigger asChild>
-                                                <Button size="sm" className="bg-[#2ecc71] hover:bg-[#27ae60]">
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 transition-all duration-200">
                                                     <Upload className="w-4 h-4 mr-2" />
                                                     Tải kết quả
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="max-w-[640px] bg-white">
+                                            <DialogContent className="max-w-[640px] bg-neutral-surface">
                                                 <DialogHeader>
-                                                    <DialogTitle className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e]">
+                                                    <DialogTitle className="font-semibold text-neutral-heading">
                                                         Tải lên kết quả xét nghiệm
                                                     </DialogTitle>
                                                 </DialogHeader>
                                                 <div className="space-y-4 py-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                        <Label className="font-medium text-neutral-heading mb-2 block">
                                                             File hình ảnh/kết quả
                                                         </Label>
                                                         <div className="md:col-span-2">
@@ -309,7 +309,7 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                                                 accept="image/*,.pdf"
                                                                 multiple
                                                                 onChange={handleFileUpload}
-                                                                className="border-[#ebf6fc]"
+                                                                className="border-neutral-border focus:border-primary focus:ring-primary/20"
                                                             />
                                                             {uploadedFiles.length > 0 && (
                                                                 <div className="mt-2 space-y-1">
@@ -343,13 +343,13 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <Label className="font-['Fz_Poppins:Medium',sans-serif] text-[#333333] mb-2 block">
+                                                            <Label className="font-medium text-neutral-heading mb-2 block">
                                                                 Đơn vị (units)
                                                             </Label>
                                                         <select
                                                             value={resultUnits}
                                                             onChange={(e) => setResultUnits(e.target.value)}
-                                                            className="w-full h-10 rounded-md border border-[#ebf6fc] bg-white px-3 text-sm"
+                                                            className="w-full h-10 rounded-md border border-neutral-border bg-neutral-surface px-3 text-sm focus:border-primary focus:ring-primary/20"
                                                         >
                                                             <option value="">Chọn đơn vị</option>
                                                             <option value="mg/dL">mg/dL</option>
@@ -442,7 +442,7 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                             variant="outline"
                                             onClick={() => handleSubmitResult(test.id)}
                                             disabled={processingId === test.id}
-                                            className="border-[#2ecc71] text-[#2ecc71]"
+                                            className="border-green-600 text-green-600 hover:bg-green-50 transition-all duration-200"
                                         >
                                             {processingId === test.id ? 'Đang hoàn thành...' : 'Hoàn thành'}
                                         </Button>
@@ -461,13 +461,13 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
             </div>
 
             {filteredTests.length === 0 && (
-                <Card className="p-12 border-[#ebf6fc]">
+                <Card className="p-12 border-neutral-border bg-neutral-surface">
                     <div className="text-center">
-                        <FileText className="w-16 h-16 text-[#d6edfa] mx-auto mb-4" />
-                        <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#666666] text-[16px] mb-2">
+                        <FileText className="w-16 h-16 text-neutral-muted mx-auto mb-4" />
+                        <h3 className="font-semibold text-neutral-text/70 text-base mb-2">
                             Không tìm thấy xét nghiệm
                         </h3>
-                        <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#999999] text-[14px]">
+                        <p className="font-normal text-neutral-text/60 text-sm">
                             Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm
                         </p>
                     </div>
