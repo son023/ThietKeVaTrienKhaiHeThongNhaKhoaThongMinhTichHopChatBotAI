@@ -2,7 +2,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
-import { ChevronLeft, ChevronRight, ClipboardPlus, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardPlus, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { appointmentController } from '../../controllers/AppointmentController';
 import CheckinDialog from './CheckinDialog';
@@ -55,12 +55,12 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
   const timeSlots = Array.from({ length: 13 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`);
 
   const statusColors = {
-    waiting_confirm: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    waiting_checkin: 'bg-blue-100 text-blue-800 border-blue-300',
-    checked_in: 'bg-purple-100 text-purple-800 border-purple-300',
-    in_treatment: 'bg-green-100 text-green-800 border-green-300',
-    waiting_payment: 'bg-orange-100 text-orange-800 border-orange-300',
-    completed: 'bg-gray-100 text-gray-800 border-gray-300',
+    waiting_confirm: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    waiting_checkin: 'bg-primary/10 text-primary-strong border-primary/30',
+    checked_in: 'bg-purple-50 text-purple-700 border-purple-200',
+    in_treatment: 'bg-green-50 text-green-700 border-green-200',
+    waiting_payment: 'bg-accent-orange/10 text-accent-orange border-accent-orange/30',
+    completed: 'bg-neutral-muted text-neutral-text border-neutral-border',
   };
 
   const toggleDoctor = (doctorId: string) => {
@@ -321,22 +321,22 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
 
       {/* Legend */}
       <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-6 text-sm flex-wrap">
           <span className="text-neutral-text font-semibold">Trạng thái:</span>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-yellow-400 ring-2 ring-offset-1 ring-yellow-200" />
+            <div className="w-4 h-4 rounded bg-yellow-500 ring-2 ring-offset-1 ring-yellow-200" />
             <span className="text-neutral-text">Chờ xác nhận</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-400 ring-2 ring-offset-1 ring-blue-200" />
+            <div className="w-4 h-4 rounded bg-primary ring-2 ring-offset-1 ring-primary/30" />
             <span className="text-neutral-text">Đã xác nhận</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-purple-400 ring-2 ring-offset-1 ring-purple-200" />
+            <div className="w-4 h-4 rounded bg-purple-500 ring-2 ring-offset-1 ring-purple-200" />
             <span className="text-neutral-text">Đã check-in</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-400 ring-2 ring-offset-1 ring-green-200" />
+            <div className="w-4 h-4 rounded bg-green-500 ring-2 ring-offset-1 ring-green-200" />
             <span className="text-neutral-text">Đang khám</span>
           </div>
         </div>

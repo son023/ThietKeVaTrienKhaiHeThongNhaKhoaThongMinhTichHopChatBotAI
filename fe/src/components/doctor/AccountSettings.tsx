@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 export function AccountSettings() {
     return (
-        <div className="p-6 bg-neutral-background min-h-screen">
+        <div className="p-6 bg-[var(--page-bg)] min-h-screen">
             <div className="mb-8">
                 <h1 className="typo-h2 mb-2">Tài khoản của tôi</h1>
                 <p className="text-neutral-text/60">Quản lý thông tin cá nhân và cài đặt</p>

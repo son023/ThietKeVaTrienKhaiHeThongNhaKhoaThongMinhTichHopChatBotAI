@@ -51,12 +51,10 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
 
 
   return (
-    <header className="fixed top-0 right-0 left-[260px] h-[80px] bg-white border-b border-gray-200 z-40 flex items-center justify-between px-8">
-      {/* Logo */}
-      <Logo />
-
+    <header className="bg-white border-b border-[#e8e8e8] px-6 py-4 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+      <div className="flex items-center justify-between">
       {/* Search Bar */}
-      <div className="flex-1 max-w-xl mx-8">
+      <div className="flex-1 max-w-xl mr-8">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -191,6 +189,7 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </header>
+      </div>
+    </header>
   );
 }

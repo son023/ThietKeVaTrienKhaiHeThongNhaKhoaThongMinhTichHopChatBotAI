@@ -250,24 +250,28 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
           </div>
 
           <div className="space-y-2">
-            <Label>Dị ứng (chọn trong danh mục)</Label>
-            <ScrollArea className="h-32 border rounded-md p-2">
+            <Label className="text-neutral-text font-medium">Dị ứng (chọn trong danh mục)</Label>
+            <ScrollArea className="h-32 border border-neutral-border rounded-lg p-3 bg-neutral-muted/20">
               {loadingAllergies ? (
-                <p className="text-sm text-gray-500">Đang tải danh mục dị ứng...</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                  <p className="text-sm text-neutral-text/70 font-medium">Đang tải danh mục dị ứng...</p>
+                </div>
               ) : allergies.length === 0 ? (
-                <p className="text-sm text-gray-500">Chưa có danh mục dị ứng</p>
+                <p className="text-sm text-neutral-text/60 text-center py-4">Chưa có danh mục dị ứng</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {allergies.map((allergy) => (
                     <label
                       key={allergy.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
+                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-surface/50 p-2 rounded transition-colors"
                     >
                       <Checkbox
                         checked={formData.allergyIds.includes(allergy.id)}
                         onCheckedChange={() => toggleAllergy(allergy.id)}
+                        className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
-                      <span>{allergy.name}</span>
+                      <span className="text-neutral-text">{allergy.name}</span>
                     </label>
                   ))}
                 </div>
@@ -276,14 +280,15 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
           </div>
 
           <div className="space-y-2">
-            <Label>Bệnh nền (mỗi dòng một bệnh)</Label>
+            <Label className="text-neutral-text font-medium">Bệnh nền (mỗi dòng một bệnh)</Label>
             <Textarea
               value={formData.underlyingDiseases}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, underlyingDiseases: e.target.value }))
               }
-              placeholder="Ví dụ: Tiểu đường type 2\nTăng huyết áp"
+              placeholder="Ví dụ: Tiểu đường type 2&#10;Tăng huyết áp"
               rows={3}
+              className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
             />
           </div>
 

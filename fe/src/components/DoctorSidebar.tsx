@@ -52,20 +52,6 @@ export function DoctorSidebar({ currentPage, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#e8e8e8]">
-        <button
-          onClick={() => {
-            if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-              // Handle logout logic here
-              console.log("Đăng xuất");
-            }
-          }}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-[10px] text-red-600 hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Đăng xuất</span>
-        </button>
-      </div>
     </aside>
   );
 }

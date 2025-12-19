@@ -103,7 +103,7 @@ export function MyPatients({ onNavigateToPatient, onNavigateToAppointments }: My
   };
 
   return (
-    <div className="p-6 bg-neutral-background min-h-screen">
+    <div className="p-6 bg-[var(--page-bg)] min-h-screen">
       <div className="mb-8">
         <h1 className="typo-h2 mb-2">Bệnh nhân của tôi</h1>
         <p className="text-neutral-text/60 mb-6">

@@ -209,7 +209,7 @@ export function CreatePrescriptionEnhanced({
     }
 
     return (
-        <div className="h-screen flex flex-col bg-neutral-background">
+        <div className="h-screen flex flex-col bg-[var(--page-bg)]">
             {/* Header */}
             <div className="bg-neutral-surface border-b border-neutral-border/30 px-6 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
