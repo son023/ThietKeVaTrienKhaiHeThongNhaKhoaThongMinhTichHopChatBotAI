@@ -91,7 +91,7 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
       {/* ✅ Self-contained Floating Chat Widget */}
       <PatientChatbot onNavigate={handleNavigate} />
       {/* Main Content */}
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full mt-24">
         <Routes>
           <Route
             path="/patient"
