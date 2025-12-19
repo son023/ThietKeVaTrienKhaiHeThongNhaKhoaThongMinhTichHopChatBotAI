@@ -29,11 +29,13 @@ export interface InvoicePaidNotification {
 }
 
 export interface PrescriptionErrorNotification {
-  type: string;
+  type?: string;
   message: string;
-  appointmentId?: string;
   doctorId?: string;
-  reason?: string;
+  prescriptionId?: string;
+  step?: string; // INVENTORY, INVOICE, INSURANCE
+  status?: string; // SUCCESS, FAILED
+  reason?: string; // Fallback for error details
   timestamp?: number;
 }
 
@@ -47,19 +49,19 @@ export const connectWebSocket = (): Client | null => {
 
   console.log('[WebSocket] Attempting to connect to http://localhost:8080/ws');
   const socket = new SockJS('http://localhost:8080/ws');
-  
+
   socket.onopen = () => {
     console.log('[WebSocket] SockJS connection opened');
   };
-  
+
   socket.onclose = (event) => {
     console.log('[WebSocket] SockJS connection closed', event);
   };
-  
+
   socket.onerror = (error) => {
     console.error('[WebSocket] SockJS connection error:', error);
   };
-  
+
   stompClient = new Client({
     webSocketFactory: () => socket as any,
     reconnectDelay: 5000,
@@ -94,7 +96,7 @@ export const subscribeToAppointmentRollback = (
   onAppointmentRollback: (notification: AppointmentRollbackNotification) => void
 ): () => void => {
   console.log(`[WebSocket] Subscribing to appointment rollback for: ${appointmentId}`);
-  
+
   if (!stompClient) {
     console.log('[WebSocket] No client found, creating new connection...');
     connectWebSocket();
@@ -126,7 +128,7 @@ export const subscribeToAppointmentRollback = (
             console.error('[WebSocket] Error parsing websocket message:', error);
           }
         });
-        
+
         activeSubscriptions.set(appointmentId, subscription);
         console.log(`[WebSocket] ✅ Successfully subscribed to ${topic}`);
         console.log(`[WebSocket] Total active subscriptions: ${activeSubscriptions.size}`);
@@ -305,13 +307,16 @@ export const subscribeToPrescriptionError = (
             const rawNotification = JSON.parse(message.body);
             console.log('[WebSocket] Parsed notification:', rawNotification);
 
-            // Map từ backend format sang frontend format
+            // Map từ PrescriptionProcessNotificationEvent sang frontend format
+            // Backend gửi: { doctorId, prescriptionId, step, status, message }
             const notification: PrescriptionErrorNotification = {
               type: rawNotification.type || 'PRESCRIPTION_ERROR',
-              message: rawNotification.message || rawNotification.reason || 'Có lỗi khi tạo đơn thuốc',
-              appointmentId: rawNotification.appointmentId,
+              message: rawNotification.message || 'Có lỗi khi tạo đơn thuốc',
               doctorId: rawNotification.doctorId,
-              reason: rawNotification.reason,
+              prescriptionId: rawNotification.prescriptionId,
+              step: rawNotification.step, // INVENTORY, INVOICE, INSURANCE
+              status: rawNotification.status, // SUCCESS, FAILED
+              reason: rawNotification.reason || (rawNotification.status === 'FAILED' ? `Lỗi ở bước ${rawNotification.step || 'UNKNOWN'}` : undefined),
               timestamp: rawNotification.timestamp || Date.now(),
             };
 

@@ -11,6 +11,14 @@ export interface NotificationDTO {
   retryCount: number;
   createdAt: string;
   updatedAt: string;
+
+  invoiceId?: string;
+  dispenseOrderId?: string;
+  appointmentId?: string;
+  type?: string;
+  timestamp?: number;
+
+
 }
 
 class NotificationController {

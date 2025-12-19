@@ -34,4 +34,6 @@ public interface InvoiceClient {
      */
     @PatchMapping("/invoice-service/invoices/{id}/cancel")
     InvoiceResponseDTO cancelInvoice(@PathVariable("id") UUID invoiceId);
+
+
 }
