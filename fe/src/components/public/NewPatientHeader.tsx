@@ -181,13 +181,13 @@ export function NewPatientHeader({
               key={item.id}
               variant="ghost"
               onClick={() => handleMenuClick(item.id)}
-              className={`min-w-0 px-3 font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] hover:text-[#3fb5ff] transition-colors ${
+              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${
                 activeMenu === item.id
                   ? "text-primary hover:text-primary hover:bg-accent"
                   : ""
               }`}
             >
-              <span className="block max-w-[120px] truncate">{item.label}</span>
+              {item.label}
             </Button>
           ))}
         </nav>
