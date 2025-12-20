@@ -41,8 +41,8 @@ interface InvoiceItem {
   name: string;
   quantity: number;
   unitPrice: number;
-  insurancePayAmount: number;
-  patientPayAmount: number;
+  insurancePayAmount: number | null;
+  patientPayAmount: number | null;
 }
 
 interface ReceptionistInvoiceProps {
@@ -213,8 +213,8 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           name: item.description || item.serviceType,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          insurancePayAmount: item.insurancePayAmount,
-          patientPayAmount: item.patientPayAmount,
+          insurancePayAmount: item.insurancePayAmount ?? null,
+          patientPayAmount: item.patientPayAmount ?? null,
         }));
         setItems(mappedItems);
       }
@@ -249,10 +249,10 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
   const subtotal = invoiceData?.totalAmount || items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
 
   // Bảo hiểm chi trả (đây là "discount")
-  const insurancePays = invoiceData?.insuranceTotalPay || items.reduce((sum, item) => sum + item.insurancePayAmount, 0);
+  const insurancePays = invoiceData?.insuranceTotalPay || items.reduce((sum, item) => sum + (item.insurancePayAmount ?? 0), 0);
 
   // Bệnh nhân phải trả
-  const patientPays = invoiceData?.patientTotalPay || items.reduce((sum, item) => sum + item.patientPayAmount, 0);
+  const patientPays = invoiceData?.patientTotalPay || items.reduce((sum, item) => sum + (item.patientPayAmount ?? 0), 0);
 
   // Tiền thừa (chỉ cho tiền mặt)
   const change = amountReceived ? Math.max(0, parseInt(amountReceived) - patientPays) : 0;
@@ -498,10 +498,10 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                     {(item.quantity * item.unitPrice).toLocaleString('vi-VN')}đ
                   </TableCell>
                   <TableCell className="text-right font-semibold text-green-600">
-                    {item.insurancePayAmount.toLocaleString('vi-VN')}đ
+                    {(item.insurancePayAmount ?? 0).toLocaleString('vi-VN')}đ
                   </TableCell>
                   <TableCell className="text-right font-bold text-primary">
-                    {item.patientPayAmount.toLocaleString('vi-VN')}đ
+                    {(item.patientPayAmount ?? 0).toLocaleString('vi-VN')}đ
                   </TableCell>
                 </TableRow>
               ))}

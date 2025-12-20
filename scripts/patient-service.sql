@@ -87,17 +87,14 @@ CREATE TABLE IF NOT EXISTS public.medical_history
     appointment_id     UUID,
     created_at         TIMESTAMP WITH TIME ZONE,
     symptoms           VARCHAR(255),
-    treatment          VARCHAR(255),
-    diagnosis          VARCHAR(255),
-    disease            VARCHAR(255),
     updated_at         TIMESTAMP WITH TIME ZONE,
-                                     patient_user_id UUID NOT NULL, -- Khóa ngoại tham chiếu đến patient
+                                     patient_profile_id UUID NOT NULL, -- Khóa ngoại tham chiếu đến patient
 
                                      CONSTRAINT medical_history_pkey PRIMARY KEY (id),
 
     -- Khóa ngoại: Liên kết với bảng patient
     CONSTRAINT fk_medical_history_patient
-    FOREIGN KEY (patient_user_id)
+    FOREIGN KEY (patient_profile_id)
     REFERENCES public.patient (user_id)
                                  ON DELETE CASCADE
     );
@@ -178,20 +175,50 @@ CREATE INDEX idx_patient_allergy_allergy_id ON public.patient_allergy (allergy_i
 -- Insert sample data
 -- -------------------------
 INSERT INTO patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number) VALUES
-('00000000-0000-0000-0000-000000000101', '2002-03-18', 'FEMALE', '12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM', '0905123456', 'O+', 'HS-790123456'),
-('00000000-0000-0000-0000-000000000102', '2001-11-02', 'MALE',   '85 Lê Lợi, Q. Hải Châu, Đà Nẵng',          '0912345678', 'A+', 'HS-790223344'),
-('00000000-0000-0000-0000-000000000103', '2003-07-25', 'FEMALE', '220 Cầu Giấy, Q. Cầu Giấy, Hà Nội',         '0987654321', 'B+', 'HS-790998877');
+('00000000-0000-0000-0000-000000000101','2002-03-18','FEMALE','12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM','0905123456','O_POSITIVE','HS-790123456'),
+('00000000-0000-0000-0000-000000000102','2001-11-02','MALE','85 Lê Lợi, Q. Hải Châu, Đà Nẵng','0912345678','A_POSITIVE','HS-790223344'),
+('00000000-0000-0000-0000-000000000103','2003-07-25','FEMALE','220 Cầu Giấy, Q. Cầu Giấy, Hà Nội','0987654321','B_POSITIVE','HS-790998877');
 
 -- =========================================================
 -- 10) MEDICAL_HISTORY  (gắn appointment + patient + condition)
 -- =========================================================
-INSERT INTO medical_history (id, symptoms, treatment, diagnosis, disease, created_at, updated_at, appointment_id, patient_user_id) VALUES
-('00000000-0000-0000-0000-000000007001', 'Đau răng khi nhai', 'Trám composite', 'Sâu răng r16', 'Caries', '2025-12-16 09:20:00', '2025-12-16 09:20:00', '00000000-0000-0000-0000-000000005001', '00000000-0000-0000-0000-000000000101'),
-('00000000-0000-0000-0000-000000007002', 'Đau nhức kéo dài',  'Điều trị tủy',  'Viêm tủy r36', 'Pulpitis','2025-12-17 10:40:00','2025-12-17 10:40:00', '00000000-0000-0000-0000-000000005002', '00000000-0000-0000-0000-000000000102'),
-('00000000-0000-0000-0000-000000007003', 'Chảy máu chân răng', 'Cạo vôi',      'Viêm lợi',     'Gingivitis','2025-12-16 15:00:00','2025-12-16 15:00:00', '00000000-0000-0000-0000-000000005003', '00000000-0000-0000-0000-000000000103'),
-('00000000-0000-0000-0000-000000007004', 'Răng mẻ, ê nhẹ',     'Trám phục hồi', 'Mẻ răng',      'Chipped tooth','2025-12-18 16:40:00','2025-12-18 16:40:00','00000000-0000-0000-0000-000000005004','00000000-0000-0000-0000-000000000101'),
-('00000000-0000-0000-0000-000000007005', 'Đau vùng răng khôn', 'Nhổ răng',      'Răng khôn mọc lệch','Impacted tooth','2025-12-19 11:10:00','2025-12-19 11:10:00','00000000-0000-0000-0000-000000005005','00000000-0000-0000-0000-000000000103');
+INSERT INTO medical_history
+(id, symptoms, created_at, updated_at, appointment_id, patient_profile_id)
+VALUES
+('00000000-0000-0000-0000-000000007001',
+ 'Đau răng khi nhai',
+ '2025-12-16 09:20:00+07',
+ '2025-12-16 09:20:00+07',
+ '00000000-0000-0000-0000-000000005001',
+ '00000000-0000-0000-0000-000000000101'),
 
+('00000000-0000-0000-0000-000000007002',
+ 'Đau nhức kéo dài',
+ '2025-12-17 10:40:00+07',
+ '2025-12-17 10:40:00+07',
+ '00000000-0000-0000-0000-000000005002',
+ '00000000-0000-0000-0000-000000000102'),
+
+('00000000-0000-0000-0000-000000007003',
+ 'Chảy máu chân răng',
+ '2025-12-16 15:00:00+07',
+ '2025-12-16 15:00:00+07',
+ '00000000-0000-0000-0000-000000005003',
+ '00000000-0000-0000-0000-000000000103'),
+
+('00000000-0000-0000-0000-000000007004',
+ 'Răng mẻ, ê nhẹ',
+ '2025-12-18 16:40:00+07',
+ '2025-12-18 16:40:00+07',
+ '00000000-0000-0000-0000-000000005004',
+ '00000000-0000-0000-0000-000000000101'),
+
+('00000000-0000-0000-0000-000000007005',
+ 'Đau vùng răng khôn',
+ '2025-12-19 11:10:00+07',
+ '2025-12-19 11:10:00+07',
+ '00000000-0000-0000-0000-000000005005',
+ '00000000-0000-0000-0000-000000000103');
 
 -- =========================================================
 -- 9) CONDITION + ALLERGY + UNDERLYING_DISEASE + PATIENT_ALLERGY + TOOTH_ISSUE
@@ -232,3 +259,94 @@ INSERT INTO tooth_issue (id, tooth_number, status, description, diagnosed_date, 
 ('00000000-0000-0000-0000-000000006405', 48, 'OPEN', 'Răng khôn mọc lệch',      '2025-12-19', 'Có chỉ định nhổ',       '00000000-0000-0000-0000-000000000103'),
 ('00000000-0000-0000-0000-000000006406', 21, 'OPEN', 'Ê buốt khi ăn lạnh',      '2025-12-18', 'Theo dõi thêm',         '00000000-0000-0000-0000-000000000102');
 
+CREATE TABLE IF NOT EXISTS public.token_entry
+(
+    processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    segment integer NOT NULL,
+    owner character varying(255) COLLATE pg_catalog."default",
+    "timestamp" character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    token oid,
+    token_type character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT token_entry_pkey PRIMARY KEY (processor_name, segment)
+)
+
+TABLESPACE pg_default;
+
+CREATE TABLE IF NOT EXISTS public.saga_entry
+(
+    saga_id character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    revision character varying(255) COLLATE pg_catalog."default",
+    saga_type character varying(255) COLLATE pg_catalog."default",
+    serialized_saga oid,
+    CONSTRAINT saga_entry_pkey PRIMARY KEY (saga_id)
+)
+
+TABLESPACE pg_default;
+
+CREATE TABLE IF NOT EXISTS public.dead_letter_entry
+(
+    dead_letter_id character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    cause_message character varying(1023) COLLATE pg_catalog."default",
+    cause_type character varying(255) COLLATE pg_catalog."default",
+    diagnostics oid,
+    enqueued_at timestamp(6) with time zone NOT NULL,
+    last_touched timestamp(6) with time zone,
+    aggregate_identifier character varying(255) COLLATE pg_catalog."default",
+    event_identifier character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    message_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    meta_data oid,
+    payload oid NOT NULL,
+    payload_revision character varying(255) COLLATE pg_catalog."default",
+    payload_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    sequence_number bigint,
+    time_stamp character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    token oid,
+    token_type character varying(255) COLLATE pg_catalog."default",
+    type character varying(255) COLLATE pg_catalog."default",
+    processing_group character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    processing_started timestamp(6) with time zone,
+    sequence_identifier character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    sequence_index bigint NOT NULL,
+    CONSTRAINT dead_letter_entry_pkey PRIMARY KEY (dead_letter_id),
+    CONSTRAINT ukhlr8io86j74qy298xf720n16v UNIQUE (processing_group, sequence_identifier, sequence_index)
+)
+
+TABLESPACE pg_default;
+
+
+CREATE INDEX IF NOT EXISTS idxe67wcx5fiq9hl4y4qkhlcj9cg
+    ON public.dead_letter_entry USING btree
+    (processing_group COLLATE pg_catalog."default" ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idxrwucpgs6sn93ldgoeh2q9k6bn
+    ON public.dead_letter_entry USING btree
+    (processing_group COLLATE pg_catalog."default" ASC NULLS LAST, sequence_identifier COLLATE pg_catalog."default" ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;
+
+CREATE TABLE IF NOT EXISTS public.association_value_entry
+(
+    id bigint NOT NULL,
+    association_key character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    association_value character varying(255) COLLATE pg_catalog."default",
+    saga_id character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    saga_type character varying(255) COLLATE pg_catalog."default",
+    CONSTRAINT association_value_entry_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+
+CREATE INDEX IF NOT EXISTS idxgv5k1v2mh6frxuy5c0hgbau94
+    ON public.association_value_entry USING btree
+    (saga_id COLLATE pg_catalog."default" ASC NULLS LAST, saga_type COLLATE pg_catalog."default" ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idxk45eqnxkgd8hpdn6xixn8sgft
+    ON public.association_value_entry USING btree
+    (saga_type COLLATE pg_catalog."default" ASC NULLS LAST, association_key COLLATE pg_catalog."default" ASC NULLS LAST, association_value COLLATE pg_catalog."default" ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;

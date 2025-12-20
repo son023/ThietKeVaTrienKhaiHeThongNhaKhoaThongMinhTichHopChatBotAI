@@ -39,7 +39,6 @@ public class PaymentService {
     private final PayOS payOS;
     private final PaymentMapper paymentMapper;
     private final InvoiceClient invoiceClient;
-    private final PatientClient patientClient;
     private final CommandGateway commandGateway;
 
     @Value("${payos.return-url}")
