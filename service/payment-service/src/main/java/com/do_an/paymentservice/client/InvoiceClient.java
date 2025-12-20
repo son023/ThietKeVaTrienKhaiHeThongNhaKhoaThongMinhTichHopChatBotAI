@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @FeignClient(
     name = "invoice-service",
-    url = "${invoice.service.url:http://localhost:8091}"
+    url = "${invoice.service.url:http://localhost:8086}" // URL của invoice-service
 )
 public interface InvoiceClient {
     

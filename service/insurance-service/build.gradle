@@ -14,7 +14,6 @@ java {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -36,9 +35,9 @@ dependencies {
 
     // Thêm Axon Framework
     implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
-
+    
     // Thêm dependency vào common module
-    implementation 'com.do_an:common:1.0.0'
+    implementation project(':service:common')
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
