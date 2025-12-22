@@ -150,7 +150,7 @@ public class PaymentService {
 
         // GỬI LỆNH ĐỂ ĐỒNG BỘ TRẠNG THÁI QUA AXON (Dù đã thành công)
         // Việc này giúp Saga nhận biết và có thể bắn event notification thống nhất
-        commandGateway.send(new CreatePaymentCommand(
+        commandGateway.sendAndWait(new CreatePaymentCommand(
                 payment.getId(),
                 payment.getInvoiceId(),
                 payment.getTotalAmount()

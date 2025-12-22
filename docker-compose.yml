@@ -29,7 +29,7 @@ x-spring-template: &spring-template
 
 services:
   axon-server:
-    image: axoniq/axonserver:4.6.8
+    image: axoniq/axonserver
     container_name: axon-server
     restart: always
     ports:
@@ -351,8 +351,28 @@ services:
     environment:
       <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification-service
+      INVENTORY_SERVICE_URL: http://inventory-service:8084
     ports:
       - "8094:8094"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - microservice-network
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
 
 networks:
   microservice-network:
@@ -364,3 +384,4 @@ volumes:
   axon-config:
   redis-data:
   postgres-data:
+  pgadmin-data:
