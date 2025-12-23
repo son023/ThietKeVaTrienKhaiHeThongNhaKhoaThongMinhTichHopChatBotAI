@@ -3,7 +3,6 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   ArrowLeft,
   Printer,
@@ -34,6 +33,9 @@ import {
   TableRow,
 } from '../ui/table';
 import { usePayOS, PayOSConfig } from '@payos/payos-checkout';
+import { PDFViewer, pdf } from '@react-pdf/renderer';
+import { InvoicePdfDocument } from './InvoicePdfDocument';
+import { Download, X } from 'lucide-react';
 
 interface InvoiceItem {
   id: string;
@@ -44,6 +46,26 @@ interface InvoiceItem {
   insurancePayAmount: number | null;
   patientPayAmount: number | null;
 }
+
+interface NormalizedInvoiceItem {
+  serviceType: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  insurancePayAmount: number;
+  patientPayAmount: number;
+}
+
+const normalizeInvoiceItem = (item: InvoiceItem): NormalizedInvoiceItem => ({
+  serviceType: item.serviceType,
+  name: item.name,
+  quantity: item.quantity,
+  unitPrice: item.unitPrice,
+  insurancePayAmount: item.insurancePayAmount ?? 0,
+  patientPayAmount: item.patientPayAmount ?? 0,
+});
+
+
 
 interface ReceptionistInvoiceProps {
   invoiceId?: string;
@@ -166,6 +188,11 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
+  // State cho PDF preview dialog
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
   // ===== LOAD INVOICE DATA FROM BACKEND =====
   useEffect(() => {
     if (invoiceId) {
@@ -217,6 +244,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           patientPayAmount: item.patientPayAmount ?? null,
         }));
         setItems(mappedItems);
+
       }
 
       // 6. Check if already paid
@@ -330,12 +358,85 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
   // Get service icon
   const getServiceIcon = (serviceType: string) => {
     switch (serviceType) {
-      case 'Medicine':
+      case 'MEDICINE':
         return '💊';
-      case 'Dental':
+      case 'SERVICE':
         return '🦷';
       default:
         return '📋';
+    }
+  };
+
+  // ===== PDF PREVIEW & DOWNLOAD FUNCTIONS =====
+  const handleOpenPrintPreview = () => {
+    if (!invoiceData) {
+      toast.error('Không có dữ liệu hóa đơn để in');
+      return;
+    }
+
+    // Kiểm tra dữ liệu cần thiết
+    if (!items || items.length === 0) {
+      toast.error('Hóa đơn chưa có chi tiết dịch vụ');
+      return;
+    }
+
+    setPdfError(null);
+    console.log('Opening PDF preview with data:', {
+      invoiceData,
+      itemsCount: items.length,
+      patientData,
+      doctorData,
+    });
+    setShowPdfPreview(true);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!invoiceData) return;
+
+    try {
+      setIsDownloadingPdf(true);
+
+      const docInstance = (
+        <InvoicePdfDocument
+          invoiceData={invoiceData}
+          items={items.map(normalizeInvoiceItem)}
+          patientData={patientData}
+          doctorData={doctorData}
+          appointmentData={appointmentData}
+          subtotal={subtotal}
+          insurancePays={insurancePays}
+          patientPays={patientPays}
+          isPaid={isPaid}
+          paymentData={paymentData}
+          paymentMethod={paymentMethod}
+          amountReceived={amountReceived}
+          change={change}
+        />
+      );
+
+      const blob = await pdf(docInstance).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      const fileName = `HoaDon_${displayInvoiceCode}_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(url);
+      toast.success('✅ Đã tải file PDF thành công!', {
+        description: `File: ${fileName}`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Lỗi khi tạo file PDF', {
+        description: error instanceof Error ? error.message : 'Vui lòng thử lại',
+      });
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -385,7 +486,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button
             variant="outline"
             className="gap-2 rounded-[10px]"
@@ -399,11 +500,16 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             )}
             Làm mới
           </Button>
-          <Button variant="outline" className="gap-2 rounded-[10px]">
+          <Button
+            variant="outline"
+            className="gap-2 rounded-[10px]"
+            onClick={handleOpenPrintPreview}
+            disabled={!invoiceData}
+          >
             <Printer className="w-4 h-4" />
             In Hóa đơn
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Invoice Info Card*/}
@@ -506,6 +612,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 </TableRow>
               ))}
             </TableBody>
+
           </Table>
         </div>
 
@@ -537,17 +644,17 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           </div>
 
           {/* Patient Payment - với background highlight */}
-          <div className="flex justify-between items-center pt-4 bg-gradient-to-r from-primary/5 to-primary/10 -mx-4 px-6 py-5 rounded-xl border-2 border-primary/30">
+          <div className="flex justify-between items-center pt-4 bg-gradient-to-r from-blue-50 to-blue-100 -mx-4 px-6 py-5 rounded-xl border-2 border-blue-200">
             <div className="flex items-center gap-3">
-              <Wallet className="w-6 h-6 text-primary" />
+              <Wallet className="w-6 h-6 text-blue-600" />
               <div>
-                <span className="text-lg font-bold text-primary-strong">
+                <span className="text-lg font-bold text-blue-900">
                   Bệnh nhân thanh toán
                 </span>
-                <p className="text-xs text-primary mt-0.5">Số tiền cần thu</p>
+                <p className="text-xs text-blue-600 mt-0.5">Số tiền cần thu</p>
               </div>
             </div>
-            <span className="text-3xl font-bold text-primary ml-8">
+            <span className="text-3xl font-bold text-[#3FB5FF] ml-8">
               {patientPays.toLocaleString('vi-VN')}đ
             </span>
           </div>
@@ -572,19 +679,19 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 <div
                   onClick={() => setPaymentMethod('CASH')}
                   className={`flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${paymentMethod === 'CASH'
-                    ? 'border-primary bg-primary/10 shadow-sm'
-                    : 'border-neutral-border hover:border-neutral-subtle'
+                    ? 'border-[#3FB5FF] bg-blue-50 shadow-sm'
+                    : 'border-gray-200 hover:border-gray-300'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CASH' ? 'border-primary' : 'border-neutral-border'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CASH' ? 'border-[#3FB5FF]' : 'border-gray-300'
                     }`}>
                     {paymentMethod === 'CASH' && (
-                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      <div className="w-3 h-3 rounded-full bg-[#3FB5FF]" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-neutral-heading">💵 Tiền mặt</div>
-                    <div className="text-sm text-neutral-text/70">Thanh toán ngay tại quầy</div>
+                    <div className="font-semibold text-[#01304e]">💵 Tiền mặt</div>
+                    <div className="text-sm text-gray-500">Thanh toán ngay tại quầy</div>
                   </div>
                 </div>
 
@@ -592,19 +699,19 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 <div
                   onClick={() => setPaymentMethod('BANK_TRANSFER')}
                   className={`flex items-center space-x-3 border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${paymentMethod === 'BANK_TRANSFER'
-                    ? 'border-primary bg-primary/10 shadow-sm'
-                    : 'border-neutral-border hover:border-neutral-subtle'
+                    ? 'border-[#3FB5FF] bg-blue-50 shadow-sm'
+                    : 'border-gray-200 hover:border-gray-300'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'BANK_TRANSFER' ? 'border-primary' : 'border-neutral-border'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'BANK_TRANSFER' ? 'border-[#3FB5FF]' : 'border-gray-300'
                     }`}>
                     {paymentMethod === 'BANK_TRANSFER' && (
-                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      <div className="w-3 h-3 rounded-full bg-[#3FB5FF]" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-neutral-heading">🏦 Chuyển khoản</div>
-                    <div className="text-sm text-neutral-text/70">Quét mã QR PayOS</div>
+                    <div className="font-semibold text-[#01304e]">🏦 Chuyển khoản</div>
+                    <div className="text-sm text-gray-500">Quét mã QR PayOS</div>
                   </div>
                 </div>
               </div>
@@ -632,7 +739,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-8 px-3 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+                      className="h-8 px-3 text-xs font-semibold text-[#3FB5FF] hover:bg-blue-100"
                       onClick={() => setAmountReceived(patientPays.toString())}
                     >
                       Vừa đủ
@@ -692,7 +799,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             <Button
               size="lg"
               onClick={handleConfirmPayment}
-              className="bg-primary hover:bg-primary-strong gap-2 rounded-[15px] shadow-lg px-8 text-base transition-all duration-200"
+              className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 gap-2 rounded-[15px] shadow-lg px-8 text-base"
               disabled={isProcessing}
             >
               {isProcessing ? (
@@ -795,7 +902,8 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
               <Button
                 variant="outline"
                 className="gap-2 rounded-[10px] border-green-600 text-green-700 hover:bg-green-50"
-                onClick={() => console.log('In hóa đơn')}
+                onClick={handleOpenPrintPreview}
+                disabled={!invoiceData}
               >
                 <Printer className="w-4 h-4" />
                 In hóa đơn
@@ -929,6 +1037,96 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
           id="embedded-payment-container"
           className="fixed inset-0 z-[9999]"
         />
+      )}
+
+      {/* PDF Preview - Fullscreen Overlay */}
+      {showPdfPreview && invoiceData && (
+        <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b bg-white shadow-sm flex-shrink-0">
+            <h2 className="text-xl font-bold text-[#01304e]">Xem trước hóa đơn (PDF)</h2>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={handleDownloadPdf}
+                className="rounded-[10px] gap-2"
+                disabled={isDownloadingPdf}
+              >
+                {isDownloadingPdf ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang tạo file...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Tải về
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowPdfPreview(false)}
+                className="rounded-[10px]"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* PDF Viewer - Fullscreen */}
+          <div className="flex-1 overflow-hidden bg-gray-100 relative min-h-0">
+            {pdfError ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center p-6">
+                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <p className="text-red-600 font-semibold mb-2">Lỗi khi tải PDF</p>
+                  <p className="text-gray-600 text-sm mb-4">{pdfError}</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPdfError(null);
+                      setShowPdfPreview(false);
+                    }}
+                  >
+                    Đóng
+                  </Button>
+                </div>
+              </div>
+            ) : invoiceData && items && items.length > 0 ? (
+              <div className="w-full h-full" style={{ minHeight: '600px' }}>
+                <PDFViewer
+                  width="100%"
+                  height="100%"
+                >
+                  <InvoicePdfDocument
+                    invoiceData={invoiceData}
+                    items={items.map(normalizeInvoiceItem)}
+                    patientData={patientData}
+                    doctorData={doctorData}
+                    appointmentData={appointmentData}
+                    subtotal={subtotal}
+                    insurancePays={insurancePays}
+                    patientPays={patientPays}
+                    isPaid={isPaid}
+                    paymentData={paymentData}
+                    paymentMethod={paymentMethod}
+                    amountReceived={amountReceived}
+                    change={change}
+                  />
+                </PDFViewer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+                  <p className="text-gray-600">Đang tải PDF...</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

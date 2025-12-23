@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification } from '../services/websocketService';
+import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification, isConnected } from '../services/websocketService';
 import { notificationController, NotificationDTO } from '../controllers/NotificationController';
-import { authController } from '../controllers/AuthController';
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
 
@@ -94,10 +93,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       return;
     }
 
-    console.log('[NotificationContext] Setting up WebSocket subscription for user:', userId);
 
+    if (!isConnected()) {
+      console.log('[NotificationContext] Setting up WebSocket subscription for user:', userId);
+      connectWebSocket();
+    }
     // Kết nối WebSocket
-    connectWebSocket();
 
     // Subscribe vào invoice paid notifications
     const unsubscribe = subscribeToInvoicePaid(userId, (notification: InvoicePaidNotification) => {

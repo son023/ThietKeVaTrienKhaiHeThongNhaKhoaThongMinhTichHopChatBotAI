@@ -12,7 +12,7 @@ import { prescriptionController } from "../../controllers/PrescriptionController
 import { patientController } from "../../controllers/PatientController";
 import { PatientWithUser } from "../../models/Patient";
 import { medicalHistoryController, MedicalHistoryDTO } from "../../controllers/MedicalHistoryController";
-import { subscribeToPrescriptionError, PrescriptionErrorNotification, connectWebSocket } from "../../services/websocketService";
+import { subscribeToPrescriptionError, PrescriptionErrorNotification, connectWebSocket, isConnected } from "../../services/websocketService";
 import { MedicineSearchInput } from "./MedicineSearchInput";
 import { MedicineWithStock } from "../../controllers/InventoryController";
 
@@ -64,14 +64,29 @@ export function CreatePrescriptionEnhanced({
 
     useEffect(() => {
         loadPatientData();
-        connectWebSocket();
+
+        // ✅ Đảm bảo WebSocket được kết nối trước khi subscribe
+        if (!isConnected()) {
+            console.log('[CreatePrescription] Connecting WebSocket...');
+            connectWebSocket();
+        }
+
         if (doctorId) {
+            console.log('[CreatePrescription] Subscribing to prescription errors for doctor:', doctorId);
             const unsub = subscribeToPrescriptionError(doctorId, (n) => {
+                console.log('[CreatePrescription] Received prescription error notification:', n);
                 setErrorDetail(n);
                 setShowErrorPopup(true);
-                toast.error(n.message);
+                toast.error(n.message, {
+                    description: n.step ? `Bước: ${n.step}` : undefined,
+                    duration: 5000,
+                });
             });
-            return () => unsub();
+
+            return () => {
+                console.log('[CreatePrescription] Cleaning up WebSocket subscription');
+                unsub();
+            };
         }
     }, [doctorId, patientId]);
 
@@ -227,10 +242,10 @@ export function CreatePrescriptionEnhanced({
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
+                    {/* <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
                         <Printer className="w-4 h-4 mr-2" />
                         Xem trước
-                    </Button>
+                    </Button> */}
                     <Button onClick={handleSubmit} disabled={items.length === 0} className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                         <Save className="w-4 h-4 mr-2" />
                         Lưu đơn thuốc
@@ -566,11 +581,6 @@ export function CreatePrescriptionEnhanced({
                         {errorDetail?.prescriptionId && (
                             <p className="text-neutral-text/70">
                                 <span className="font-medium">Mã đơn thuốc:</span> <span className="font-mono">{errorDetail.prescriptionId.slice(-8)}</span>
-                            </p>
-                        )}
-                        {errorDetail?.reason && (
-                            <p className="text-neutral-text/70">
-                                <span className="font-medium">Chi tiết:</span> {errorDetail.reason}
                             </p>
                         )}
                     </div>

@@ -29,13 +29,11 @@ export interface InvoicePaidNotification {
 }
 
 export interface PrescriptionErrorNotification {
-  type?: string;
+  step: string;
   message: string;
-  doctorId?: string;
   prescriptionId?: string;
-  step?: string; // INVENTORY, INVOICE, INSURANCE
-  status?: string; // SUCCESS, FAILED
-  reason?: string; // Fallback for error details
+  doctorId?: string;
+  status?: string;
   timestamp?: number;
 }
 
@@ -52,6 +50,7 @@ export const connectWebSocket = (): Client | null => {
 
   socket.onopen = () => {
     console.log('[WebSocket] SockJS connection opened');
+
   };
 
   socket.onclose = (event) => {
@@ -310,13 +309,11 @@ export const subscribeToPrescriptionError = (
             // Map từ PrescriptionProcessNotificationEvent sang frontend format
             // Backend gửi: { doctorId, prescriptionId, step, status, message }
             const notification: PrescriptionErrorNotification = {
-              type: rawNotification.type || 'PRESCRIPTION_ERROR',
+              step: rawNotification.step,
               message: rawNotification.message || 'Có lỗi khi tạo đơn thuốc',
-              doctorId: rawNotification.doctorId,
               prescriptionId: rawNotification.prescriptionId,
-              step: rawNotification.step, // INVENTORY, INVOICE, INSURANCE
-              status: rawNotification.status, // SUCCESS, FAILED
-              reason: rawNotification.reason || (rawNotification.status === 'FAILED' ? `Lỗi ở bước ${rawNotification.step || 'UNKNOWN'}` : undefined),
+              doctorId: rawNotification.doctorId,
+              status: rawNotification.status,
               timestamp: rawNotification.timestamp || Date.now(),
             };
 
