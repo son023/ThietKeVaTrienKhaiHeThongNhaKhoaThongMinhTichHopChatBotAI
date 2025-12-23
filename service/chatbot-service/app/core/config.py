@@ -24,6 +24,8 @@ class Settings:
     # Model config
     INTENT_MODEL_PATH = os.getenv("INTENT_MODEL_PATH") 
     NER_MODEL_PATH = os.getenv("NER_MODEL_PATH")
+
+    EMBEDDING_MODEL_NAME = "keepitreal/vietnamese-sbert"
     
     DEVICE = "cuda" if os.getenv("USE_GPU") == "true" else "cpu"
 
