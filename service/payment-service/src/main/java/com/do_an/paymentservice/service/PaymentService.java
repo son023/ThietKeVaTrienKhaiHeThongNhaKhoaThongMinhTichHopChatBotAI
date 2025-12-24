@@ -2,12 +2,12 @@ package com.do_an.paymentservice.service;
 
 import com.do_an.common.command.CreatePaymentCommand;
 import com.do_an.common.command.UpdatePaymentStatusCommand;
+import com.do_an.paymentservice.client.InventoryClient;
 import com.do_an.paymentservice.client.InvoiceClient;
+import com.do_an.paymentservice.client.PatientClient;
 import com.do_an.paymentservice.dto.request.CreatePaymentRequestDTO;
 import com.do_an.paymentservice.dto.request.UpdatePaymentRequestDTO;
-import com.do_an.paymentservice.dto.response.InvoiceItemResponseDTO;
-import com.do_an.paymentservice.dto.response.InvoiceResponseDTO;
-import com.do_an.paymentservice.dto.response.PaymentResponseDTO;
+import com.do_an.paymentservice.dto.response.*;
 import com.do_an.paymentservice.entity.Payment;
 import com.do_an.paymentservice.entity.PaymentMethod;
 import com.do_an.paymentservice.entity.PaymentStatus;
@@ -38,7 +38,9 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PayOS payOS;
     private final PaymentMapper paymentMapper;
+    private final InventoryClient inventoryClient;
     private final InvoiceClient invoiceClient;
+    private final PatientClient patientClient;
     private final CommandGateway commandGateway;
 
     @Value("${payos.return-url}")
@@ -59,10 +61,15 @@ public class PaymentService {
 
         // Lấy thông tin Invoice từ invoice-service (bao gồm danh sách InvoiceItem)
         InvoiceResponseDTO invoice;
+        UUID dispenseOrderId;
         try {
             invoice = invoiceClient.getInvoiceById(request.getInvoiceId());
             log.info("Đã lấy thông tin Invoice: {}, Status: {}, TotalAmount: {}", 
                     invoice.getId(), invoice.getStatus(), invoice.getTotalAmount());
+
+            MedicalHistoryResponseDTO medicalHistoryResponseDTO =  patientClient.getByAppointment(invoice.getAppointmentId()).get(0);
+            DispenseOrderResponse dispenseOrderResponse = inventoryClient.getByMedicalHistoryId(medicalHistoryResponseDTO.getId());
+            dispenseOrderId = dispenseOrderResponse.getId();
             
             // Kiểm tra Invoice có items không
             if (invoice.getItems() == null || invoice.getItems().isEmpty()) {
@@ -100,9 +107,9 @@ public class PaymentService {
         }
 
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
-            return handleCashPayment(request, invoice);
+            return handleCashPayment(request, invoice, dispenseOrderId);
         } else {
-            return handleBankTransferPayment(request, invoice);
+            return handleBankTransferPayment(request, invoice, dispenseOrderId);
         }
     }
 
@@ -133,7 +140,7 @@ public class PaymentService {
      * Xử lý thanh toán tiền mặt
      */
     @Transactional
-    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice) {
+    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId) {
         log.info("Xử lý thanh toán CASH cho Invoice: {}", request.getInvoiceId());
 
         Payment payment = Payment.builder()
@@ -153,6 +160,7 @@ public class PaymentService {
         commandGateway.sendAndWait(new CreatePaymentCommand(
                 payment.getId(),
                 payment.getInvoiceId(),
+                dispenseOrderId,
                 payment.getTotalAmount()
         ));
 
@@ -180,7 +188,7 @@ public class PaymentService {
      * Sử dụng InvoiceItem để tạo ItemData chi tiết cho payOS
      */
     @Transactional
-    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice) {
+    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId) {
         log.info("Xử lý thanh toán BANK_TRANSFER cho Invoice: {}", request.getInvoiceId());
 
         try {
@@ -234,6 +242,7 @@ public class PaymentService {
             commandGateway.send(new CreatePaymentCommand(
                     payment.getId(),          // ID của Payment vừa tạo
                     payment.getInvoiceId(),   // ID hóa đơn
+                    dispenserOrderId,
                     payment.getTotalAmount()
             ));
 

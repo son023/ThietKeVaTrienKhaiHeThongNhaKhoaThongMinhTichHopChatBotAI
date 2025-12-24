@@ -7,13 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentInitiatedEvent {
-    private UUID paymentId;
-    private UUID invoiceId;
+public class MedicineReservationSoldEvent {
     private UUID dispenseOrderId;
-    //private UUID doctorId; // Để gửi thông báo
 }

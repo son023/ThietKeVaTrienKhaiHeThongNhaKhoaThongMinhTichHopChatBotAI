@@ -164,6 +164,9 @@ public class PrescriptionBillingSaga {
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InvoiceDiscountAppliedSuccessEvent event) {
         log.info("🎉 [SAGA COMPLETED] PRE-BILLING HOÀN TẤT: Hóa đơn đã sẵn sàng để thanh toán.");
+        commandGateway.send(new MarkPrescripAsReleaseCommand(
+                this.dispenseOrderId
+        ));
         notifyUser(
                 event.getPrescriptionId(),
                 "COMPLETED",
@@ -189,7 +192,7 @@ public class PrescriptionBillingSaga {
     // ❌ ROLLBACK HOÀN TẤT: Đã trả thuốc về kho
     @EndSaga
     @SagaEventHandler(associationProperty = "prescriptionId")
-    public void on(MedicineReservationReleasedEvent event) {
+    public void on(MedicineReservationReturnEvent event) {
         log.warn("⚠️ [SAGA ROLLED BACK] Đã hoàn tác toàn bộ: Thuốc đã được trả về kho.");
         notifyUser(
                 event.getPrescriptionId(),
@@ -237,6 +240,9 @@ public class PrescriptionBillingSaga {
         //Thay đổi: Xác minh bảo hiểm lỗi thì không cập nhật hoá đơn và tiếp tục sang thanh toán
 
         log.warn("⚠️ [SAGA STEP 3 SKIPPED] Bảo hiểm không hợp lệ: {}. Tiếp tục với thanh toán không bảo hiểm.", event.getReason());
+        commandGateway.send(new MarkPrescripAsReleaseCommand(
+                this.dispenseOrderId
+        ));
 
         notifyUser(
                 event.getPrescriptionId(),
@@ -277,7 +283,7 @@ public class PrescriptionBillingSaga {
     }
 
     private void triggerRollbackInventory(UUID prescriptionId) {
-        commandGateway.send(new ReleaseMedicineReservationCommand(
+        commandGateway.send(new ReturnMedicineReservationCommand(
                 this.dispenseOrderId,
                 prescriptionId
                 //this.medicineItems

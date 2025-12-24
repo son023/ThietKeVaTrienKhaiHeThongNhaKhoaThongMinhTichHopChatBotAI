@@ -22,6 +22,10 @@ public interface IDispenseOrderService {
     List<DispenseOrderResponse> getAllByStatuses(List<String> statuses);
 
     Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId);
+
+    DispenseOrderResponse getByMedicalHistoryId(UUID id);
+
+    Map<String, Object> getPrescriptionStatusByMedicalHistoryId(UUID medicalHistoryId);
 }
 
 

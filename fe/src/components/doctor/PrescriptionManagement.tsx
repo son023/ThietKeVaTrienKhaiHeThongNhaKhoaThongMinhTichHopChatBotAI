@@ -10,6 +10,7 @@ import { patientController } from '../../controllers/PatientController';
 import { PatientWithUser } from '../../models/Patient';
 import { authController } from '../../controllers/AuthController';
 import { CreatePrescriptionEnhanced } from './CreatePrescription';
+import { prescriptionController } from '../../controllers/PrescriptionController';
 import { toast } from 'sonner';
 
 interface PrescriptionManagementProps {
@@ -23,6 +24,7 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHistory, setSelectedHistory] = useState<MedicalHistoryDTO | null>(null);
+  const [statusMap, setStatusMap] = useState<Record<string, { status: string; prescriptionId?: string }>>({});
   
   const currentUser = authController.getCurrentUser();
   const doctorId = currentUser?.id;
@@ -66,6 +68,19 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
       
       setMedicalHistories(allHistories);
 
+      // Lấy trạng thái đơn thuốc theo medical history
+      const statusEntries = await Promise.all(
+        allHistories.map(async (h) => {
+          try {
+            const status = await prescriptionController.getPrescriptionStatusByMedicalHistoryId(h.id);
+            return [h.id, status] as const;
+          } catch {
+            return [h.id, { status: 'NONE' }] as const;
+          }
+        })
+      );
+      setStatusMap(Object.fromEntries(statusEntries));
+
       // Lấy thông tin patients
       const patientIds = Array.from(new Set(allHistories.map(h => h.patientId).filter(Boolean)));
       const patientsData = await Promise.all(
@@ -89,6 +104,14 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
   };
 
   const handleSelectHistory = (history: MedicalHistoryDTO) => {
+    const status = statusMap[history.id];
+    const blocked = status && (status.status === 'SOLD' || status.status === 'RELEASED');
+    if (blocked) {
+      toast.info('Hồ sơ đã có đơn thuốc', {
+        description: 'Chỉ có thể xem/sửa đơn hiện có.',
+      });
+      return;
+    }
     setSelectedHistory(history);
   };
 
@@ -189,6 +212,8 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
           {filteredHistories.map((history) => {
             const patient = history.patientId ? patients[history.patientId] : undefined;
             const appointment = history.appointmentId ? appointments[history.appointmentId] : undefined;
+            const status = statusMap[history.id];
+            const blocked = status && (status.status === 'SOLD' || status.status === 'RELEASED');
 
             return (
               <Card
@@ -255,15 +280,20 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="ml-4 rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all"
+                      disabled={!!blocked}
+                      className={`ml-4 rounded-lg border border-primary/20 transition-all ${blocked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-primary hover:text-white'}`}
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (blocked && status?.prescriptionId) {
+                          window.open(`/pharmacist/prescriptions/${status.prescriptionId}`, "_blank");
+                          return;
+                        }
                         handleSelectHistory(history);
                       }}
                     >
                       <Pill className="w-4 h-4 mr-2" />
-                      Kê đơn
-                      <ChevronRight className="w-4 h-4 ml-1" />
+                      {blocked ? 'Xem/Sửa đơn thuốc' : 'Kê đơn'}
+                      {!blocked && <ChevronRight className="w-4 h-4 ml-1" />}
                     </Button>
                   </div>
                 </CardContent>

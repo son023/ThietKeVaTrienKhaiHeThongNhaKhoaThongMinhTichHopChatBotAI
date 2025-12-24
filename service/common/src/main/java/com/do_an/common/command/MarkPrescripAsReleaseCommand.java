@@ -10,10 +10,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatePaymentCommand {
+public class MarkPrescripAsReleaseCommand {
     @TargetAggregateIdentifier
-    private UUID paymentId;
-    private UUID invoiceId;
     private UUID dispenseOrderId;
-    private Integer amount;
 }

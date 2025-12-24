@@ -41,6 +41,18 @@ class PrescriptionController {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.message || "Tạo đơn thuốc thất bại");
         }
+        return res.json();
+    }
+
+    async getPrescriptionStatusByMedicalHistoryId(medicalHistoryId: string): Promise<{ status: string; dispenseOrderId?: string; prescriptionId?: string; medicalHistoryId?: string }> {
+        const url = createApiUrl(`${this.baseUrl}/medical-history/${medicalHistoryId}/status`);
+        const res = await fetch(url, {
+            headers: getApiHeaders(true),
+        });
+        if (!res.ok) {
+            throw new Error("Không lấy được trạng thái đơn thuốc");
+        }
+        return res.json();
     }
 }
 

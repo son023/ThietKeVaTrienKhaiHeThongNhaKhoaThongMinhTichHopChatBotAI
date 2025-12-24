@@ -21,4 +21,7 @@ public interface InventoryClient {
     @GetMapping("/inventory-service/dispense-orders/prescription/{id}")
     DispenseOrderResponse getByPrescriptionId(@PathVariable UUID id);
 
+    @GetMapping("/inventory-service/dispense-orders/medical-history/{id}")
+    DispenseOrderResponse getByMedicalHistoryId(@PathVariable UUID id);
+
 }

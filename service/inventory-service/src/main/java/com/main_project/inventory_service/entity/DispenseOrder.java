@@ -30,7 +30,7 @@ public class DispenseOrder {
     @Column(length = 255)
     private String status;
 
-    @Column(name = "medical_history_id", length = 50)
+    @Column(name = "medical_history_id", length = 50, unique = true)
     private UUID medicalHistoryId;
 
     @Column(name = "doctor_id", length = 50)

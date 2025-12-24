@@ -90,6 +90,19 @@ public class DispenseOrderController {
         return ResponseEntity.ok(status);
     }
 
+    @GetMapping("/medical-history/{id}")
+    public ResponseEntity<DispenseOrderResponse> getByMedicalHistoryId(@PathVariable UUID id) {
+        DispenseOrderResponse response = dispenseOrderService.getByMedicalHistoryId(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/medical-history/{medicalHistoryId}/prescription-status")
+    public ResponseEntity<Map<String, Object>> getPrescriptionStatusByMedicalHistory(
+            @PathVariable UUID medicalHistoryId) {
+        Map<String, Object> status = dispenseOrderService.getPrescriptionStatusByMedicalHistoryId(medicalHistoryId);
+        return ResponseEntity.ok(status);
+    }
+
 }
 
 

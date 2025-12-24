@@ -30,6 +30,7 @@ public class PaymentAggregate {
 
     @AggregateIdentifier
     private UUID paymentId;
+    private UUID invoiceId;
     private PaymentStatus status;
 
 
@@ -40,7 +41,8 @@ public class PaymentAggregate {
     public PaymentAggregate(CreatePaymentCommand command) {
         AggregateLifecycle.apply(new PaymentInitiatedEvent(
                 command.getPaymentId(),
-                command.getInvoiceId()
+                command.getInvoiceId(),
+                command.getDispenseOrderId()
         ));
     }
 
@@ -62,7 +64,6 @@ public class PaymentAggregate {
             ));
     }
 
-    private UUID invoiceId;
 
 
     @EventSourcingHandler

@@ -37,6 +37,7 @@ public class PaymentProcessingSaga {
 
     private UUID paymentId;
     private UUID invoiceId;
+    private UUID dispenseOrderId;
     private String deadlineId;
 
     @StartSaga
@@ -44,6 +45,7 @@ public class PaymentProcessingSaga {
     public void on(PaymentInitiatedEvent event) {
         this.paymentId = event.getPaymentId();
         this.invoiceId = event.getInvoiceId();
+        this.dispenseOrderId = event.getDispenseOrderId();
         log.info("Bắt đầu phiên thanh toán: {}", paymentId);
 
         // Timeout 30 phút cho mã QR
@@ -56,11 +58,11 @@ public class PaymentProcessingSaga {
         log.info("Thanh toán thành công. Cập nhật Invoice {} sang PAID.", event.getInvoiceId());
 
         cancelDeadline();
-        
-        commandGateway.send(new MarkInvoiceAsPaidCommand(event.getInvoiceId()));
 
-        //Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
-        //commandGateway.send(new ConfirmMedicineDispenseCommand());
+        commandGateway.sendAndWait(new MarkInvoiceAsPaidCommand(event.getInvoiceId()));
+
+        //Gửi lệnh sang Inventory để đổi trạng thái từ RELEASE -> SOLD
+        commandGateway.send(new MarkPrescripAsSoldCommand(this.dispenseOrderId));
     }
 
     @EndSaga
@@ -85,11 +87,11 @@ public class PaymentProcessingSaga {
 
     }
 
-    
+
     @DeadlineHandler(deadlineName = "paymentSessionTimeout")
     public void onTimeout() {
         log.info("Saga: Timeout 30p. Tự động đánh dấu Payment là FAILED.");
-        
+
         commandGateway.send(new UpdatePaymentStatusCommand(
                 paymentId,
                 PaymentStatus.TIMEOUT.toString(),
@@ -109,5 +111,5 @@ public class PaymentProcessingSaga {
 
     }
 
-    
+
 }
