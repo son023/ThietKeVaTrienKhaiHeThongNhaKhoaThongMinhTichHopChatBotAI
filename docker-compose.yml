@@ -29,7 +29,7 @@ x-spring-template: &spring-template
 
 services:
   axon-server:
-    image: axoniq/axonserver
+    image: axoniq/axonserver:4.6.8
     container_name: axon-server
     restart: always
     ports:
