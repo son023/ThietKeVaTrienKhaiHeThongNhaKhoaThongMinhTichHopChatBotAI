@@ -74,6 +74,7 @@ services:
       - ./scripts/invoice-service.sql:/scripts/invoice-service.sql
       - ./scripts/inventory-service.sql:/scripts/inventory-service.sql
       - ./scripts/insurance-service.sql:/scripts/insurance-service.sql
+      - ./scripts/axon.sql:/scripts/axon.sql
 
   registry-service:
     build:
@@ -86,10 +87,10 @@ services:
     ports:
       - "8761:8761"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1" ]
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 40s
 
   gateway:

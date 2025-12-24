@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.patient
     gender           VARCHAR(50),
     address          TEXT,
     contact_phone    VARCHAR(50),
-    blood_type       VARCHAR(10),
+    blood_type       VARCHAR(20),
     insurance_number VARCHAR(100),
 
     CONSTRAINT patient_pkey PRIMARY KEY (user_id)
