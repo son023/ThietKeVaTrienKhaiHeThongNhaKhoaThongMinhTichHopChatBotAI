@@ -232,6 +232,14 @@ CREATE TABLE IF NOT EXISTS public.association_value_entry
 TABLESPACE pg_default;
 
 
+CREATE SEQUENCE public.association_value_entry_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
 CREATE INDEX IF NOT EXISTS idxgv5k1v2mh6frxuy5c0hgbau94
     ON public.association_value_entry USING btree
     (saga_id COLLATE pg_catalog."default" ASC NULLS LAST, saga_type COLLATE pg_catalog."default" ASC NULLS LAST)

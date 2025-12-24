@@ -24,10 +24,8 @@ import {
 } from "../ui/dialog";
 import { toast } from "sonner";
 import {
-  invoiceController,
-  InvoiceDTO,
+  invoiceController, InvoiceDTO
 } from "../../controllers/InvoiceController";
-import { paymentController } from "../../controllers/PaymentController";
 import { authController } from "../../controllers/AuthController";
 
 // Mock data - Pending Invoices
@@ -243,38 +241,6 @@ interface PaymentMethod {
   name: string;
 }
 
-// Mock data - InvoiceDTO
-interface InvoiceDTO {
-  id: string;
-  date: string;
-  service: string;
-  doctor: string;
-  amount: number;
-  dueDate?: string;
-  status: string;
-  items: { name: string; quantity: number; price: number }[];
-  patientId: string;
-  issueAt: string; // Added for backend mapping
-  paidAt?: string; // Added for backend mapping
-  totalAmount?: number; // Added for backend mapping
-  insuranceTotalPay?: number; // Added for backend mapping
-  patientTotalPay?: number; // Added for backend mapping
-  appointmentId?: string; // Added for backend mapping
-}
-
-// Mock data - InvoiceResponseDTO
-interface InvoiceResponseDTO {
-  id: string;
-  date: string;
-  service: string;
-  doctor: string;
-  amount: number;
-  paidDate?: string;
-  paymentMethod?: string;
-  status: string;
-  items: { name: string; quantity: number; price: number }[];
-  patientId: string;
-}
 
 // Map backend invoice to display format
 const mapInvoiceFromBackend = (invoice: InvoiceDTO): InvoiceDisplay => {
