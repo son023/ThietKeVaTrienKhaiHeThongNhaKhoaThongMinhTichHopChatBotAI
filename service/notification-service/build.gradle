@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.3' // Giảm xuống phiên bản ổn định nhất của Spring Boot 3.x
-	id 'io.spring.dependency-management' version '1.1.4' // Phiên bản tương thích với Spring Boot 3.2.x
+	id 'org.springframework.boot' version '3.2.3' // Gi???m xu???ng phi??n b???n ???n ?????nh nh???t c???a Spring Boot 3.x
+	id 'io.spring.dependency-management' version '1.1.4' // Phi??n b???n t????ng th??ch v???i Spring Boot 3.2.x
 }
 
 group = 'com.main-project'
@@ -14,11 +14,12 @@ java {
 }
 
 repositories {
+    mavenLocal()
 	mavenCentral()
 }
 
 ext {
-	set('springCloudVersion', "2023.0.0") // Phiên bản Spring Cloud tương thích với Spring Boot 3.2.x
+	set('springCloudVersion', "2023.0.0") // Phi??n b???n Spring Cloud t????ng th??ch v???i Spring Boot 3.2.x
 }
 
 dependencies {
@@ -42,7 +43,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 
     implementation 'org.axonframework:axon-spring-boot-starter:4.12.2'
-    implementation project(':service:common')
+    implementation 'com.do_an:common:1.0.0'
 }
 
 dependencyManagement {
@@ -54,3 +55,8 @@ dependencyManagement {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+
+
+
+
