@@ -1,9 +1,13 @@
 package com.main_project.inventory_service.aggregate;
 
+import com.do_an.common.command.MarkPrescripAsReleaseCommand;
+import com.do_an.common.command.MarkPrescripAsSoldCommand;
 import com.do_an.common.command.ReserveMedicineCommand;
 import com.do_an.common.model.MedicineItem;
+import com.main_project.inventory_service.entity.DispenseOrder;
 import com.main_project.inventory_service.entity.InventoryLot;
 import com.main_project.inventory_service.entity.Medicine;
+import com.main_project.inventory_service.repository.DispenseOrderRepository;
 import com.main_project.inventory_service.repository.InventoryLotRepository;
 import com.main_project.inventory_service.repository.MedicineRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class InventoryCommandHandler {
-
+    private final DispenseOrderRepository dispenseOrderRepository;
     private final InventoryLotRepository inventoryLotRepository;
     private final MedicineRepository medicineRepository;
 
@@ -75,6 +79,43 @@ public class InventoryCommandHandler {
 
         log.info("Validation thành công. Khởi tạo Aggregate.");
 
-        inventoryAggregateRepository.newInstance(() -> new InventoryAggregate(command));
+        inventoryAggregateRepository.newInstance(() -> new InventoryAggregate(command.getDispenseOrderId(), command.getPrescriptionId(), command.getDoctorId(),
+                command.getMedicalHistoryId(), command.getItems()));
     }
+
+
+    @CommandHandler
+    @Transactional
+    public void handle(MarkPrescripAsReleaseCommand command) throws Exception{
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(command.getDispenseOrderId())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + command.getDispenseOrderId()));
+
+        if ("CANCELLED".equals(dispenseOrder.getStatus())) {
+            throw new IllegalStateException("Không thể cấp phát đơn thuốc đã bị hủy.");
+        }
+
+
+
+        inventoryAggregateRepository.load(command.getDispenseOrderId().toString())
+                .execute(aggregate -> aggregate.applyPrescriptionRelease(
+                        command.getDispenseOrderId()
+                ));
+    }
+
+    @CommandHandler
+    @Transactional
+    public void handle(MarkPrescripAsSoldCommand command) throws Exception{
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(command.getDispenseOrderId())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + command.getDispenseOrderId()));
+
+        if ("CANCELLED".equals(dispenseOrder.getStatus())) {
+            throw new IllegalStateException("Không thể cấp phát đơn thuốc đã bị hủy.");
+        }
+
+        inventoryAggregateRepository.load(command.getDispenseOrderId().toString())
+                .execute(aggregate -> aggregate.applyPrescriptionRelease(
+                        command.getDispenseOrderId()
+                ));
+    }
+
 }

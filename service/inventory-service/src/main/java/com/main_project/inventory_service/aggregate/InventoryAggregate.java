@@ -1,9 +1,11 @@
 package com.main_project.inventory_service.aggregate;
 
-import com.do_an.common.command.ReleaseMedicineReservationCommand;
-import com.do_an.common.command.ReserveMedicineCommand;
-import com.do_an.common.event.MedicineReservationReleasedEvent;
+import com.do_an.common.command.ReturnMedicineReservationCommand;
+import com.do_an.common.event.MedicineReservationReleaseEvent;
+import com.do_an.common.event.MedicineReservationReturnEvent;
+import com.do_an.common.event.MedicineReservationSoldEvent;
 import com.do_an.common.event.MedicineReservedEvent;
+import com.do_an.common.model.MedicineItem;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -12,6 +14,7 @@ import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -21,23 +24,35 @@ public class InventoryAggregate {
     @AggregateIdentifier
     private UUID dispenseOrderId;
 
-    public InventoryAggregate(ReserveMedicineCommand command) {
+    public InventoryAggregate(UUID dispenseOrderId, UUID prescriptionId, UUID doctorId, UUID medicalHistoryId, List<MedicineItem> items) {
         AggregateLifecycle.apply(new MedicineReservedEvent(
-                command.getDispenseOrderId(),
-                command.getPrescriptionId(),
-                command.getDoctorId(),
-                command.getMedicalHistoryId(),
-                command.getItems()
+                dispenseOrderId,
+                prescriptionId,
+                doctorId,
+                medicalHistoryId,
+                items
+        ));
+    }
+
+    public void applyPrescriptionRelease(UUID dispenseOrderId){
+        AggregateLifecycle.apply(new MedicineReservationReleaseEvent(
+                dispenseOrderId
+        ));
+    }
+
+    public void applyPrescriptionSold(UUID dispenseOrderId){
+        AggregateLifecycle.apply(new MedicineReservationSoldEvent(
+                dispenseOrderId
         ));
     }
 
     @CommandHandler
-    public void handle(ReleaseMedicineReservationCommand command) {
-            // Emit success event
-            AggregateLifecycle.apply(new MedicineReservationReleasedEvent(
-                    command.getPrescriptionId(),
-                    command.getDispenseOrderId()
-            ));
+    public void handle(ReturnMedicineReservationCommand command) {
+        // Emit success event
+        AggregateLifecycle.apply(new MedicineReservationReturnEvent(
+                command.getPrescriptionId(),
+                command.getDispenseOrderId()
+        ));
     }
 
     @EventSourcingHandler
@@ -46,8 +61,13 @@ public class InventoryAggregate {
     }
 
     @EventSourcingHandler
-    public void on(MedicineReservationReleasedEvent event) {
+    public void on(MedicineReservationReturnEvent event) {
         this.dispenseOrderId = event.getDispenseOrderId();
     }
-    
+
+
+    @EventSourcingHandler
+    public void on(MedicineReservationReleaseEvent event){
+        this.dispenseOrderId = event.getDispenseOrderId();
+    }
 }

@@ -14,5 +14,6 @@ public class CreatePaymentCommand {
     @TargetAggregateIdentifier
     private UUID paymentId;
     private UUID invoiceId;
+    private UUID dispenseOrderId;
     private Integer amount;
 }

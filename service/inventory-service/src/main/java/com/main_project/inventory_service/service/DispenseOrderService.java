@@ -156,6 +156,32 @@ public class DispenseOrderService implements IDispenseOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getPrescriptionStatusByMedicalHistoryId(UUID medicalHistoryId) {
+        // Các trạng thái chặn việc tạo đơn thuốc mới
+        List<String> blockingStatuses = List.of("SOLD", "RELEASED");
+
+        // Ưu tiên tìm đơn ở trạng thái chặn
+        return dispenseOrderRepository
+                .findFirstByMedicalHistoryIdAndStatusInOrderByCreateAtDesc(medicalHistoryId, blockingStatuses)
+                .map(order -> buildStatusResponse(order))
+                // Nếu không có, trả về đơn gần nhất (có thể đang RESERVED/IN_PROGRESS/FAILED...)
+                .orElseGet(() -> dispenseOrderRepository
+                        .findFirstByMedicalHistoryIdOrderByCreateAtDesc(medicalHistoryId)
+                        .map(order -> buildStatusResponse(order))
+                        .orElse(Map.of("status", "NONE")));
+    }
+
+    private Map<String, Object> buildStatusResponse(DispenseOrder order) {
+        Map<String, Object> status = new HashMap<>();
+        status.put("status", order.getStatus());
+        status.put("dispenseOrderId", order.getId());
+        status.put("prescriptionId", order.getPrescription());
+        status.put("medicalHistoryId", order.getMedicalHistoryId());
+        return status;
+    }
+
+    @Override
 @Transactional(readOnly = true)
 public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) {
     DispenseOrder order = dispenseOrderRepository.findById(dispenseOrderId)
@@ -178,6 +204,14 @@ public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) 
     
     return result;
 }
+
+    @Override
+    public DispenseOrderResponse getByMedicalHistoryId(UUID id) {
+        DispenseOrder order = dispenseOrderRepository.findByMedicalHistoryId(id).get();
+        return mapToResponse(order);
+    }
+
+
 }
 
 

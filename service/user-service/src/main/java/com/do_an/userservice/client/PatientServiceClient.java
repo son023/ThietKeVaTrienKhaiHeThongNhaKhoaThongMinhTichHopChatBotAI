@@ -6,9 +6,12 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "patient-service", path = "/patient-service/patients")
+@FeignClient(name = "patient-service",
+             url = "${patient.service.url:http://localhost:8089}"
+
+)
 public interface PatientServiceClient {
 
-    @PostMapping
+    @PostMapping("/patient-service/patients")
     PatientResponse createPatient(@RequestBody PatientCreateRequest request);
 }

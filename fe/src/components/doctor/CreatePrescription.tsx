@@ -12,7 +12,7 @@ import { prescriptionController } from "../../controllers/PrescriptionController
 import { patientController } from "../../controllers/PatientController";
 import { PatientWithUser } from "../../models/Patient";
 import { medicalHistoryController, MedicalHistoryDTO } from "../../controllers/MedicalHistoryController";
-import { subscribeToPrescriptionError, PrescriptionErrorNotification, connectWebSocket } from "../../services/websocketService";
+import { subscribeToPrescriptionError, PrescriptionErrorNotification, connectWebSocket, isConnected } from "../../services/websocketService";
 import { MedicineSearchInput } from "./MedicineSearchInput";
 import { MedicineWithStock } from "../../controllers/InventoryController";
 
@@ -58,22 +58,67 @@ export function CreatePrescriptionEnhanced({
     const [errorDetail, setErrorDetail] = useState<PrescriptionErrorNotification | null>(null);
     const [loading, setLoading] = useState(true);
     const [showPreview, setShowPreview] = useState(false);
+    const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string }>({ status: 'LOADING' });
+    const [checkingStatus, setCheckingStatus] = useState(false);
 
     const currentUser = authController.getCurrentUser();
     const doctorId = currentUser?.id;
 
     useEffect(() => {
         loadPatientData();
-        connectWebSocket();
+        checkPrescriptionStatus();
+
+        // ✅ Đảm bảo WebSocket được kết nối trước khi subscribe
+        if (!isConnected()) {
+            console.log('[CreatePrescription] Connecting WebSocket...');
+            connectWebSocket();
+        }
+
         if (doctorId) {
+            console.log('[CreatePrescription] Subscribing to prescription errors for doctor:', doctorId);
             const unsub = subscribeToPrescriptionError(doctorId, (n) => {
+                console.log('[CreatePrescription] Received prescription error notification:', n);
                 setErrorDetail(n);
                 setShowErrorPopup(true);
-                toast.error(n.message);
+                toast.error(
+                    <div style={{ whiteSpace: "pre-line" }}>
+                        {n.message}
+                    </div>,
+                    {
+                        duration: 5000,
+                    }
+                );
+
+                if(n.status === 'SUCCESS'){
+                // Tự động onBack sau 1.5 giây để người dùng kịp đọc thông báo
+                    setTimeout(() => {
+                        onBack?.();
+                    }, 3000);
+
+                }
+
             });
-            return () => unsub();
+
+            return () => {
+                console.log('[CreatePrescription] Cleaning up WebSocket subscription');
+                unsub();
+            };
         }
     }, [doctorId, patientId]);
+
+    const checkPrescriptionStatus = async () => {
+        if (!medicalHistoryId) return;
+        try {
+            setCheckingStatus(true);
+            const status = await prescriptionController.getPrescriptionStatusByMedicalHistoryId(medicalHistoryId);
+            setStatusInfo(status);
+        } catch (err) {
+            console.warn('Không thể lấy trạng thái đơn thuốc', err);
+            setStatusInfo({ status: 'NONE' });
+        } finally {
+            setCheckingStatus(false);
+        }
+    };
 
     const loadPatientData = async () => {
         try {
@@ -157,6 +202,7 @@ export function CreatePrescriptionEnhanced({
         if (!doctorId) return toast.error("Không xác định bác sĩ");
         if (!medicalHistoryId || !patientId) return toast.error("Thiếu thông tin");
         if (items.length === 0) return toast.error("Chưa có thuốc trong đơn");
+        if (isBlocked) return toast.error("Hồ sơ đã có đơn thuốc ở trạng thái không cho phép tạo mới");
 
         // Validate
         for (const item of items) {
@@ -200,12 +246,46 @@ export function CreatePrescriptionEnhanced({
     };
 
     const totalAmount = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    const isBlocked = statusInfo.status === 'SOLD' || statusInfo.status === 'RELEASED';
+
+    if (checkingStatus) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-neutral-background">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-neutral-text/60">Đang kiểm tra trạng thái đơn thuốc...</p>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-neutral-background">
                 <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
                 <p className="text-neutral-text/60">Đang tải thông tin...</p>
+            </div>
+        );
+    }
+
+    if (isBlocked) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-neutral-background">
+                <h2 className="typo-h3 mb-2">Hồ sơ đã có đơn thuốc</h2>
+                <p className="text-neutral-text/60 mb-4">Trạng thái: {statusInfo.status}</p>
+                <div className="flex gap-3">
+                    {statusInfo.prescriptionId && (
+                        <Button
+                            onClick={() => onCreated?.(statusInfo.prescriptionId!)}
+                            className="bg-primary text-white"
+                        >
+                            Xem / Sửa đơn thuốc
+                        </Button>
+                    )}
+                    {onBack && (
+                        <Button variant="outline" onClick={onBack}>
+                            Quay lại
+                        </Button>
+                    )}
+                </div>
             </div>
         );
     }
@@ -227,10 +307,10 @@ export function CreatePrescriptionEnhanced({
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
+                    {/* <Button variant="outline" onClick={() => setShowPreview(true)} disabled={items.length === 0} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">
                         <Printer className="w-4 h-4 mr-2" />
                         Xem trước
-                    </Button>
+                    </Button> */}
                     <Button onClick={handleSubmit} disabled={items.length === 0} className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
                         <Save className="w-4 h-4 mr-2" />
                         Lưu đơn thuốc
@@ -543,42 +623,37 @@ export function CreatePrescriptionEnhanced({
             </div>
 
             {/* Error Dialog */}
-            <Dialog open={showErrorPopup} onOpenChange={setShowErrorPopup}>
-                <DialogContent className="rounded-2xl border-neutral-border/20 bg-neutral-surface">
-                    <DialogHeader>
-                        <DialogTitle className="text-red-600 typo-h3 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5" />
-                            Lỗi khi tạo đơn thuốc
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3 text-sm p-4 bg-red-50 rounded-lg border border-red-200">
-                        <p className="text-neutral-text font-semibold">{errorDetail?.message || "Có lỗi xảy ra"}</p>
-                        {errorDetail?.step && (
-                            <p className="text-neutral-text/70">
-                                <span className="font-medium">Bước xử lý:</span> {errorDetail.step}
-                            </p>
-                        )}
-                        {errorDetail?.status && (
-                            <p className="text-neutral-text/70">
-                                <span className="font-medium">Trạng thái:</span> {errorDetail.status}
-                            </p>
-                        )}
-                        {errorDetail?.prescriptionId && (
-                            <p className="text-neutral-text/70">
-                                <span className="font-medium">Mã đơn thuốc:</span> <span className="font-mono">{errorDetail.prescriptionId.slice(-8)}</span>
-                            </p>
-                        )}
-                        {errorDetail?.reason && (
-                            <p className="text-neutral-text/70">
-                                <span className="font-medium">Chi tiết:</span> {errorDetail.reason}
-                            </p>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowErrorPopup(false)} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">Đóng</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/*<Dialog open={showErrorPopup} onOpenChange={setShowErrorPopup}>*/}
+            {/*    <DialogContent className="rounded-2xl border-neutral-border/20 bg-neutral-surface">*/}
+            {/*        <DialogHeader>*/}
+            {/*            <DialogTitle className="text-red-600 typo-h3 flex items-center gap-2">*/}
+            {/*                <AlertTriangle className="w-5 h-5" />*/}
+            {/*                Lỗi khi tạo đơn thuốc*/}
+            {/*            </DialogTitle>*/}
+            {/*        </DialogHeader>*/}
+            {/*        <div className="space-y-3 text-sm p-4 bg-red-50 rounded-lg border border-red-200">*/}
+            {/*            <p className="text-neutral-text font-semibold">{errorDetail?.message || "Có lỗi xảy ra"}</p>*/}
+            {/*            {errorDetail?.step && (*/}
+            {/*                <p className="text-neutral-text/70">*/}
+            {/*                    <span className="font-medium">Bước xử lý:</span> {errorDetail.step}*/}
+            {/*                </p>*/}
+            {/*            )}*/}
+            {/*            {errorDetail?.status && (*/}
+            {/*                <p className="text-neutral-text/70">*/}
+            {/*                    <span className="font-medium">Trạng thái:</span> {errorDetail.status}*/}
+            {/*                </p>*/}
+            {/*            )}*/}
+            {/*            {errorDetail?.prescriptionId && (*/}
+            {/*                <p className="text-neutral-text/70">*/}
+            {/*                    <span className="font-medium">Mã đơn thuốc:</span> <span className="font-mono">{errorDetail.prescriptionId.slice(-8)}</span>*/}
+            {/*                </p>*/}
+            {/*            )}*/}
+            {/*        </div>*/}
+            {/*        <DialogFooter>*/}
+            {/*            <Button variant="outline" onClick={() => setShowErrorPopup(false)} className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all">Đóng</Button>*/}
+            {/*        </DialogFooter>*/}
+            {/*    </DialogContent>*/}
+            {/*</Dialog>*/}
 
             {/* Preview Dialog */}
             <Dialog open={showPreview} onOpenChange={setShowPreview}>

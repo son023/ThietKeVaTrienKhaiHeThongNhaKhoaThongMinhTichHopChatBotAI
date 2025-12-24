@@ -10,6 +10,8 @@ import { patientController } from '../../controllers/PatientController';
 import { PatientWithUser } from '../../models/Patient';
 import { authController } from '../../controllers/AuthController';
 import { CreatePrescriptionEnhanced } from './CreatePrescription';
+import { ViewPrescription } from './ViewPrescription';
+import { prescriptionController } from '../../controllers/PrescriptionController';
 import { toast } from 'sonner';
 
 interface PrescriptionManagementProps {
@@ -23,7 +25,9 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHistory, setSelectedHistory] = useState<MedicalHistoryDTO | null>(null);
-  
+  const [statusMap, setStatusMap] = useState<Record<string, { status: string; prescriptionId?: string; dispenseOrderId?: string }>>({});
+  const [viewingPrescriptionId, setViewingPrescriptionId] = useState<string | null>(null);
+
   const currentUser = authController.getCurrentUser();
   const doctorId = currentUser?.id;
 
@@ -40,10 +44,10 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
 
     try {
       setLoading(true);
-      
+
       // Lấy tất cả appointments của bác sĩ
       const doctorAppointments = await appointmentController.getByDoctorId(doctorId);
-      
+
       // Lọc chỉ lấy appointments đã hoàn thành hoặc đang khám
       const completedAppointments = doctorAppointments.filter(
         apt => apt.status === 'COMPLETED' || apt.status === 'IN_PROGRESS' || apt.status === 'PROGRESSING'
@@ -60,16 +64,29 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
       const historiesPromises = completedAppointments.map(apt =>
         medicalHistoryController.getByAppointmentId(apt.id).catch(() => [])
       );
-      
+
       const historiesArrays = await Promise.all(historiesPromises);
       const allHistories = historiesArrays.flat();
-      
+
       setMedicalHistories(allHistories);
+
+      // Lấy trạng thái đơn thuốc theo medical history
+      const statusEntries = await Promise.all(
+        allHistories.map(async (h) => {
+          try {
+            const status = await prescriptionController.getPrescriptionStatusByMedicalHistoryId(h.id);
+            return [h.id, status] as const;
+          } catch {
+            return [h.id, { status: 'NONE' }] as const;
+          }
+        })
+      );
+      setStatusMap(Object.fromEntries(statusEntries));
 
       // Lấy thông tin patients
       const patientIds = Array.from(new Set(allHistories.map(h => h.patientId).filter(Boolean)));
       const patientsData = await Promise.all(
-        patientIds.map(pid => 
+        patientIds.map(pid =>
           patientController.getWithUserById(pid).catch(() => null)
         )
       );
@@ -89,11 +106,24 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
   };
 
   const handleSelectHistory = (history: MedicalHistoryDTO) => {
+    const status = statusMap[history.id];
+    const blocked = status && (status.status === 'SOLD' || status.status === 'RELEASED');
+    if (blocked) {
+      // toast.info('Hồ sơ đã có đơn thuốc', {
+      //   description: 'Chỉ có thể xem/sửa đơn hiện có.',
+      // });
+      return;
+    }
     setSelectedHistory(history);
+  };
+
+  const handleViewPrescription = (dispenseOrderId: string) => {
+    setViewingPrescriptionId(dispenseOrderId);
   };
 
   const handleBackToList = () => {
     setSelectedHistory(null);
+    setViewingPrescriptionId(null);
     loadData(); // Reload danh sách
   };
 
@@ -101,16 +131,26 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
     const patient = patients[history.patientId];
     const patientName = patient?.user?.fullName?.toLowerCase() || '';
     const symptoms = history.symptoms?.toLowerCase() || '';
-    const conditions = (history.conditions || []).map(c => 
+    const conditions = (history.conditions || []).map(c =>
       `${c.name || ''} ${c.treatment || ''} ${c.status || ''}`
     ).join(' ').toLowerCase();
     const query = searchQuery.toLowerCase();
-    
-    return patientName.includes(query) || 
-           symptoms.includes(query) || 
-           conditions.includes(query) ||
-           history.id.toLowerCase().includes(query);
+
+    return patientName.includes(query) ||
+      symptoms.includes(query) ||
+      conditions.includes(query) ||
+      history.id.toLowerCase().includes(query);
   });
+
+  // Nếu đang xem chi tiết đơn thuốc
+  if (viewingPrescriptionId) {
+    return (
+      <ViewPrescription
+        dispenseOrderId={viewingPrescriptionId}
+        onBack={handleBackToList}
+      />
+    );
+  }
 
   // Nếu đã chọn medical history, hiển thị form tạo đơn thuốc
   if (selectedHistory) {
@@ -189,6 +229,8 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
           {filteredHistories.map((history) => {
             const patient = history.patientId ? patients[history.patientId] : undefined;
             const appointment = history.appointmentId ? appointments[history.appointmentId] : undefined;
+            const status = statusMap[history.id];
+            const blocked = status && (status.status === 'SOLD' || status.status === 'RELEASED');
 
             return (
               <Card
@@ -225,7 +267,7 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
                             </div>
                           </div>
                         )}
-                        
+
                         {history.conditions && history.conditions.length > 0 && (
                           <div className="flex items-start gap-2">
                             <FileText className="w-4 h-4 text-[#333333]/60 mt-0.5" />
@@ -255,16 +297,29 @@ export function PrescriptionManagement({ onBack }: PrescriptionManagementProps) 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="ml-4 rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all"
+                      className="
+    ml-4 rounded-lg border border-primary/20
+    transition-all duration-200
+    hover:bg-primary hover:text-white
+    hover:shadow-md
+    group
+  "
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (blocked && status?.dispenseOrderId) {
+                          handleViewPrescription(status.dispenseOrderId);
+                          return;
+                        }
                         handleSelectHistory(history);
                       }}
                     >
-                      <Pill className="w-4 h-4 mr-2" />
-                      Kê đơn
-                      <ChevronRight className="w-4 h-4 ml-1" />
+                      <Pill className="w-4 h-4 mr-2 transition-transform group-hover:scale-110" />
+                      {blocked ? 'Xem/Sửa đơn thuốc' : 'Kê đơn'}
+                      {!blocked && (
+                        <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                      )}
                     </Button>
+
                   </div>
                 </CardContent>
               </Card>

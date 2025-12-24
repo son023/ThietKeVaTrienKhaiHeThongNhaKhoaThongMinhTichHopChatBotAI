@@ -1,22 +1,38 @@
-FROM gradle:8.1.1-jdk17 AS build
-
+# ========================================================
+# STAGE 1: Build Stage
+# ========================================================
+FROM gradle:8.5-jdk17 AS builder
 WORKDIR /workspace
 
-# Build and publish common module to mavenLocal inside the build container
-COPY service/common /workspace/common
-RUN cd /workspace/common && gradle --no-daemon publishToMavenLocal -x test
+# 1. Copy file cấu hình Gradle để tận dụng Cache Layer
+# Chỉ copy build.gradle của common (để tránh lỗi nếu thiếu settings.gradle)
+COPY service/common/build.gradle /workspace/common/
+# Copy đầy đủ cấu hình của clinical-service
+COPY service/clinical-service/build.gradle service/clinical-service/settings.gradle /workspace/clinical-service/
 
-# Copy clinical-service sources
-COPY service/clinical-service /workspace/app
-WORKDIR /workspace/app
+# 2. Build Module Common (Bắt buộc vì clinical-service cần thư viện này cho Saga/Events)
+COPY service/common/src /workspace/common/src
+WORKDIR /workspace/common
+# Publish common vào mavenLocal bên trong container
+RUN gradle publishToMavenLocal -x test --no-daemon
 
-# Build the bootable jar (tests skipped for speed in container builds)
-RUN gradle --no-daemon bootJar -x test
+# 3. Build Clinical Service
+COPY service/clinical-service/src /workspace/clinical-service/src
+WORKDIR /workspace/clinical-service
+# Build ra file .jar (bỏ qua test để tăng tốc độ build)
+RUN gradle bootJar -x test --no-daemon
 
-FROM eclipse-temurin:17-jdk-jammy
-
+# ========================================================
+# STAGE 2: Runtime Stage
+# ========================================================
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-COPY --from=build /workspace/app/build/libs/*.jar app.jar
+# 1. Copy file JAR từ giai đoạn builder sang
+COPY --from=builder /workspace/clinical-service/build/libs/*.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 2. Cấu hình RAM tự động (Giới hạn 75% RAM container để tránh OOM Kill)
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
+
+# 3. Chạy ứng dụng
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

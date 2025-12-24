@@ -2,7 +2,7 @@ package com.do_an.paymentservice.aggregate;
 
 
 import com.do_an.common.command.CancelInsuranceClaimCommand;
-import com.do_an.common.command.ReleaseMedicineReservationCommand;
+import com.do_an.common.command.ReturnMedicineReservationCommand;
 import com.do_an.common.event.*;
 import com.do_an.paymentservice.client.InventoryClient;
 import com.do_an.paymentservice.dto.response.DispenseOrderResponse;
@@ -88,7 +88,7 @@ public class PaymentEventHandler {
         UUID dispenseOrderId = dispenseOrderResponse.getId();
 
         //Cập nhật Inventory: Chuyển DispenseOrder sang CANCELLED và trả lại số lượng
-        commandGateway.send(new ReleaseMedicineReservationCommand(
+        commandGateway.send(new ReturnMedicineReservationCommand(
                 dispenseOrderId,
                 event.getPrescriptionId()
 

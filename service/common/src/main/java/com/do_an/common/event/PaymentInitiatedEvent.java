@@ -14,5 +14,6 @@ import java.util.UUID;
 public class PaymentInitiatedEvent {
     private UUID paymentId;
     private UUID invoiceId;
+    private UUID dispenseOrderId;
     //private UUID doctorId; // Để gửi thông báo
 }
