@@ -103,22 +103,15 @@ export function LabTestDetailDialog({
                     </div>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onOpenChange(false)}
-                  className="text-neutral-text/70 rounded-lg hover:bg-neutral-muted transition-all"
-                >
-                  Đóng
-                </Button>
+               
               </div>
             </CardHeader>
           </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-5">
             {/* Basic Information */}
-            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-              <CardHeader className="p-5 pb-3">
+            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm lg:col-span-4">
+              <CardHeader className="p-5 pb-2">
                 <CardTitle className="text-sm font-semibold text-neutral-text flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-primary/10">
                     <FileText className="w-4 h-4 text-primary" />
@@ -126,19 +119,22 @@ export function LabTestDetailDialog({
                   Thông tin cơ bản
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="px-7 pt-2 pb-7 space-y-4">
                 {labTest.instructions && (
-                  <div className="text-sm">
-                    <span className="font-semibold text-neutral-text">Hướng dẫn: </span>
+                  <div className="text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-neutral-text/60" />
+                    <span className="font-semibold text-neutral-text">Ghi chú: </span>
                     <span className="text-neutral-text/70">{labTest.instructions}</span>
                   </div>
                 )}
 
-                {labTest.labTechnicianId && (
+                {(labTest.labTechnicianName || labTest.labTechnicianId) && (
                   <div className="text-sm flex items-center gap-2">
                     <User className="w-4 h-4 text-neutral-text/60" />
                     <span className="font-semibold text-neutral-text">Nhân viên lab: </span>
-                    <span className="text-neutral-text/70">{labTest.labTechnicianId}</span>
+                    <span className="text-neutral-text/70">
+                      {labTest.labTechnicianName || labTest.labTechnicianId}
+                    </span>
                   </div>
                 )}
 
@@ -151,12 +147,26 @@ export function LabTestDetailDialog({
                     </span>
                   </div>
                 )}
+
+                {(labTest.resultDate || (labTest.status && (labTest.status === 'COMPLETE' || labTest.status === 'COMPLETED') && labTest.updatedAt)) && (
+                  <div className="text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-neutral-text/60" />
+                    <span className="font-semibold text-neutral-text">Hoàn thành lúc: </span>
+                    <span className="text-neutral-text/70">
+                      {labTest.resultDate 
+                        ? new Date(labTest.resultDate).toLocaleString("vi-VN")
+                        : labTest.updatedAt 
+                        ? new Date(labTest.updatedAt).toLocaleString("vi-VN")
+                        : 'N/A'}
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Test Results */}
             {(parsedStructure || labTest.units || labTest.referenceRange || labTest.abnormalFlag) && (
-              <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+              <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm lg:col-span-6">
                 <CardHeader className="p-5 pb-3">
                   <CardTitle className="text-sm font-semibold text-neutral-text flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-primary/10">
@@ -231,7 +241,7 @@ export function LabTestDetailDialog({
               </CardHeader>
               <CardContent className="p-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {labTestAttachments.map((file) => {
+                  {labTestAttachments.map((file: MedicalAttachmentDTO) => {
                     const fileUrl = getFileUrl(file.filePath);
                     const isImage = isImageFile(file.type, file.filePath);
                     const fileName = file.filePath

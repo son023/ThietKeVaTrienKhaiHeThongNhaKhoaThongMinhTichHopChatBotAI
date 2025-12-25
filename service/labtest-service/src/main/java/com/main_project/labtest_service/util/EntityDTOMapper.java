@@ -39,9 +39,12 @@ public class EntityDTOMapper {
                 var user = userServiceClient.getUserById(entity.getLabTechnician().getUserId());
                 if (user != null && user.getFullname() != null) {
                     dto.setLabTechnicianName(user.getFullname());
+                } else {
+                    dto.setLabTechnicianName(entity.getLabTechnician().getUserId().toString());
                 }
             } catch (Exception e) {
-                log.warn("Failed to fetch lab technician name for userId: {}", entity.getLabTechnician().getUserId(), e);
+                log.warn("Failed to fetch lab technician name for userId: {}, using ID as fallback", entity.getLabTechnician().getUserId(), e);
+                dto.setLabTechnicianName(entity.getLabTechnician().getUserId().toString());
             }
         }
         dto.setDoctorId(entity.getDoctorId());

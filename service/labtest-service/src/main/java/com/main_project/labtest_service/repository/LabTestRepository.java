@@ -23,6 +23,6 @@ public interface LabTestRepository extends JpaRepository<LabTest, UUID> {
         @Query("SELECT DISTINCT l FROM LabTest l LEFT JOIN FETCH l.labTestType LEFT JOIN FETCH l.medicalAttachments WHERE l.id = :id")
         java.util.Optional<LabTest> findByIdWithRelations(UUID id);
 
-        @Query("SELECT DISTINCT l FROM LabTest l LEFT JOIN FETCH l.labTestType LEFT JOIN FETCH l.medicalAttachments")
+        @Query("SELECT DISTINCT l FROM LabTest l LEFT JOIN FETCH l.labTestType LEFT JOIN FETCH l.medicalAttachments ORDER BY l.createdAt DESC")
         List<LabTest> findAllWithRelations();
 }
