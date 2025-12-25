@@ -68,50 +68,15 @@ CREATE INDEX idx_lab_test_type ON lab_test(lab_test_type_id);
 CREATE INDEX idx_lab_test_technician ON lab_test(lab_technician_id);
 CREATE INDEX idx_attachment_test ON medical_attachment(lab_test_id);
 
-WITH InsertTechnician AS (
-    INSERT INTO lab_technician (user_id, license_number)
-    VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'LCN-KTV-001') -- ID KTV cố định
-    RETURNING user_id AS tech_id
-),
-InsertTypeBlood AS (
-    INSERT INTO lab_test_type (name, description)
-    VALUES ('Huyết học', 'Phân tích tế bào máu ngoại vi')
-    RETURNING id AS type_blood_id
-),
-InsertTypeLiver AS (
-    INSERT INTO lab_test_type (name, description)
-    VALUES ('Chức năng Gan', 'Đánh giá men gan (AST, ALT)')
-    RETURNING id AS type_liver_id
-)
-,
-InsertLabTestBlood AS (
-    INSERT INTO lab_test (
-        id,appointment_id, medical_history_id, doctor_id, lab_technician_id, lab_test_type_id,
-        price, status, result_date, instructions, units, structure_json, abnormal_flag, reference_range
-    )
-    SELECT
-        'b1c1d1e1-1f2f-3000-4444-555566667777',
-        '44444444-0000-0000-0000-000000000001',
-        gen_random_uuid(), -- ID Lịch sử Y tế giả lập
-        gen_random_uuid(), -- ID Bác sĩ giả lập
-        (SELECT tech_id FROM InsertTechnician),
-        (SELECT type_blood_id FROM InsertTypeBlood),
-        250000,
-        'COMPLETED',
-        NOW() - INTERVAL '3 days',
-        'Nhịn ăn 8 tiếng',
-        'K/uL',
-        '{"WBC": 12.5, "RBC": 4.8, "HGB": 14.5, "HCT": 45.0}',
-        'WBC_HIGH',
-        'WBC (4-10 K/uL)'
-    RETURNING id AS test_blood_id
-)
-INSERT INTO medical_attachment (lab_test_id, file_path, type)
-SELECT
-    (SELECT test_blood_id FROM InsertLabTestBlood),
-    '/uploads/reports/2025/huyoet_hoc_001.pdf',
-    'application/pdf'
-;
+INSERT INTO lab_technician (user_id, license_number)
+VALUES ('00000000-0000-0000-0000-000000000501', 'LCN-KTV-001');
+
+INSERT INTO lab_test_type (name, description)
+VALUES ('Huyết học', 'Phân tích tế bào máu ngoại vi');
+
+INSERT INTO lab_test_type (name, description)
+VALUES ('Chức năng Gan', 'Đánh giá men gan (AST, ALT)');
+
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
