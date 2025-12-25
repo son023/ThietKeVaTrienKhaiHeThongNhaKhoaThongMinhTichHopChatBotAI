@@ -1,78 +1,38 @@
 package com.main_project.inventory_service.controller;
 
-import com.main_project.inventory_service.dto.*;
-import com.main_project.inventory_service.entity.StockLedger;
-import com.main_project.inventory_service.iservice.IInventoryLotService;
-import jakarta.validation.Valid;
+import com.main_project.inventory_service.entity.InventoryLot;
+import com.main_project.inventory_service.service.InventoryLotService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/inventory-service/inventory-lots")
 @RequiredArgsConstructor
 public class InventoryLotController {
-    private final IInventoryLotService inventoryLotService;
+    private final InventoryLotService inventoryLotService;
+
+    @GetMapping("/check-stock/{medicineId}")
+    public Boolean checkStock(@PathVariable UUID medicineId) {
+        // Nhận request kiểm tra tồn kho theo ID thuốc
+        // Gọi service để kiểm tra tồn kho
+        // Trả về response với kết quả kiểm tra tồn kho
+    }
 
     @PostMapping
-    public ResponseEntity<InventoryLotResponse> create(@Valid @RequestBody InventoryLotRequest request) {
-        InventoryLotResponse response = inventoryLotService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public InventoryLotDTO create(@RequestBody InventoryLotDTO inventoryLot) {
+        // Nhận request tạo lô tồn kho
+        // Gọi service để tạo lô tồn kho
+        // Trả về response với lô tồn kho đã tạo
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<InventoryLotResponse> update(@PathVariable UUID id, 
-                                                        @Valid @RequestBody InventoryLotRequest request) {
-        InventoryLotResponse response = inventoryLotService.update(id, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<InventoryLotResponse> getById(@PathVariable UUID id) {
-        InventoryLotResponse response = inventoryLotService.getById(id);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<InventoryLotResponse>> getAll() {
-        List<InventoryLotResponse> responses = inventoryLotService.getAll();
-        return ResponseEntity.ok(responses);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        inventoryLotService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ==================== MANUAL EXPORT ENDPOINTS ====================
-
-    @PostMapping("/export")
-    public ResponseEntity<ManualExportResponse> exportStock(@Valid @RequestBody ManualExportRequest request) {
-        ManualExportResponse response = inventoryLotService.exportStock(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @GetMapping("/exports")
-    public ResponseEntity<List<ManualExportResponse>> getAllManualExports() {
-        List<ManualExportResponse> responses = inventoryLotService.getAllManualExports();
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/all-exports")
-    public ResponseEntity<List<ManualExportResponse>> getAllExports() {
-        List<ManualExportResponse> responses = inventoryLotService.getAllExports();
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/{lotId}/stock-ledgers")
-    public ResponseEntity<List<StockLedgerResponse>> getStockLedgersByLotId(@PathVariable UUID lotId) {
-        List<StockLedgerResponse> stockLedgers = inventoryLotService.getStockLedgersByLotId(lotId);
-        return ResponseEntity.ok(stockLedgers);
+    @PutMapping
+    public InventoryLotDTO update(@RequestBody InventoryLotDTO inventoryLot) {
+        // Nhận request cập nhật lô tồn kho
+        // Gọi service để cập nhật lô tồn kho
+        // Trả về response với lô tồn kho đã cập nhật
     }
 }
 

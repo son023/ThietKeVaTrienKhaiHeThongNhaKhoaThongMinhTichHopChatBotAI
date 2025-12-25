@@ -9,16 +9,15 @@ import java.util.UUID;
 
 @Repository
 public interface StockLedgerRepository extends JpaRepository<StockLedger, UUID> {
-    // Find all StockLedger entries by referenceId (DispenseItem.id)
-    List<StockLedger> findByReferenceId(UUID referenceId);
     
-    // Find all StockLedger entries by referenceId and type
-    List<StockLedger> findByReferenceIdAndType(UUID referenceId, String type);
-    
-    // Find all StockLedger entries by referenceType
-    List<StockLedger> findByReferenceType(String referenceType);
+    // Lưu StockLedger vào database
+    Optional<StockLedger> save(StockLedgerDTO stockLedger);
 
-    List<StockLedger> findByInventoryLotId(UUID inventoryLotId);
+    // Cập nhật StockLedger vào  database
+    Optional<StockLedger> update(StockLedgerDTO stockLedger);
+
+    // Tìm tất cả StockLedger theo ID tham chiếu và loại
+    List<StockLedger> findAllByReferenceIdAndType(UUID referenceId, String type);
 }
 
 
