@@ -34,6 +34,7 @@ class Neo4jRepository:
                 url=settings.NEO4J_URI,
                 username=settings.NEO4J_USER,
                 password=settings.NEO4J_PASS,
+                database="neo4j",
                 index_name="dental_entity_index",
                 embedding_node_property="embedding",
                 retrieval_query=self.retrieval_query  # <--- QUAN TRỌNG: Gắn query vào đây!

@@ -2,6 +2,7 @@
 import json
 import sys
 import os
+import time
 from neo4j_db import Neo4jConnection
 
 # --- IMPORT THƯ VIỆN CHUẨN ---
@@ -13,10 +14,29 @@ except ImportError:
     sys.exit(1)
 
 # --- CẤU HÌNH ---
-DATA_FILE_PATH = "kb_v4_final_train.json"
-NEO4J_URI = "bolt://localhost:7687"
-NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "password123"
+DATA_FILE_PATH = os.getenv("KB_DATA_FILE", "kb_v4_final_train.json")
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+
+is_docker = os.path.exists("/.dockerenv")
+if is_docker:
+    env_uri = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
+    if "localhost" in env_uri or "127.0.0.1" in env_uri:
+        NEO4J_URI = "bolt://neo4j:7687"
+        print(f"⚠️  Phát hiện localhost trong NEO4J_URI, đã tự động chuyển sang tên service Docker")
+    else:
+        NEO4J_URI = env_uri
+    default_neo4j_uri = "bolt://neo4j:7687"
+else:
+    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    default_neo4j_uri = "bolt://localhost:7687"
+
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password123")
+NEO4J_DATABASE = "neo4j"
+print(f"\n📋 Cấu hình kết nối:")
+print(f"   NEO4J_URI: {NEO4J_URI}")
+print(f"   NEO4J_USER: {NEO4J_USER}")
+print(f"   KB_DATA_FILE: {DATA_FILE_PATH}")
 
 # Tên model embedding (Dùng model này khá tốt cho tiếng Việt y khoa)
 MODEL_NAME = "keepitreal/vietnamese-sbert"
@@ -42,12 +62,66 @@ except Exception as e:
     print(f"❌ Lỗi kết nối Neo4j: {e}")
     sys.exit(1)
 
+def ensure_database_exists():
+    """Đảm bảo database 'neo4j' tồn tại và đang online"""
+    print(f"\n🔍 Kiểm tra database '{NEO4J_DATABASE}'...")
+    
+    try:
+        with db.driver.session(database="system") as session:
+            result = session.run(
+                "SHOW DATABASES WHERE name = $db_name",
+                db_name=NEO4J_DATABASE
+            )
+            records = list(result)
+            
+            if not records:
+                print(f" Database '{NEO4J_DATABASE}' chưa tồn tại. Đang tạo...")
+                session.run(f"CREATE DATABASE {NEO4J_DATABASE} IF NOT EXISTS")
+                print(f" Đã tạo database '{NEO4J_DATABASE}'")
+                time.sleep(3)  # Đợi database được tạo
+            else:
+                db_info = records[0]
+                current_status = db_info.get("currentStatus", "unknown")
+                requested_status = db_info.get("requestedStatus", "unknown")
+                
+                print(f"   Status hiện tại: {current_status}")
+                print(f"   Status yêu cầu: {requested_status}")
+                
+                if current_status != "online":
+                    print(f" Đang start database '{NEO4J_DATABASE}'...")
+                    session.run(f"START DATABASE {NEO4J_DATABASE}")
+                    print(f" Đợi database '{NEO4J_DATABASE}' khởi động...")
+                    
+                    max_wait = 30
+                    wait_interval = 2
+                    for i in range(max_wait // wait_interval):
+                        time.sleep(wait_interval)
+                        result = session.run(
+                            "SHOW DATABASES WHERE name = $db_name",
+                            db_name=NEO4J_DATABASE
+                        )
+                        db_info = list(result)[0]
+                        if db_info.get("currentStatus") == "online":
+                            print(f" Database '{NEO4J_DATABASE}' đã online!")
+                            return
+                        print(f"   Đợi... ({(i+1)*wait_interval}s)")
+                    
+                    print(f"  Database mất nhiều thời gian để start, nhưng sẽ tiếp tục...")
+                else:
+                    print(f" Database '{NEO4J_DATABASE}' đã online và sẵn sàng!")
+                    
+    except Exception as e:
+        print(f"  Không thể kiểm tra/tạo database: {e}")
+        print(f"   Sẽ thử kết nối trực tiếp...")
+
+ensure_database_exists()
+
 def clear_database():
     print("\n🧹 Đang dọn dẹp dữ liệu và Index cũ...")
     query_data = "MATCH (n) DETACH DELETE n"
     query_drop_index = "DROP INDEX dental_entity_index IF EXISTS"
     try:
-        with db.driver.session() as session:
+        with db.driver.session(database=NEO4J_DATABASE) as session:
             session.run(query_data)
             session.run(query_drop_index)
         print("✅ Đã xóa sạch Database và Index cũ!")
@@ -62,7 +136,7 @@ def add_common_label_for_indexing():
     target_labels = ['Disease', 'Symptom', 'Treatment', 'Advice', 'Cause']
 
     count = 0
-    with db.driver.session() as session:
+    with db.driver.session(database=NEO4J_DATABASE) as session:
         for label in target_labels:
             query = f"MATCH (n:{label}) SET n:Searchable"
             result = session.run(query)
@@ -89,6 +163,7 @@ def create_vector_index():
             url=NEO4J_URI,
             username=NEO4J_USER,
             password=NEO4J_PASSWORD,
+            database=NEO4J_DATABASE, 
             index_name="dental_entity_index",
             node_label="Searchable",
             text_node_properties=["text"], # <--- QUAN TRỌNG: Phải khớp với DB
