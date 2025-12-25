@@ -2,6 +2,7 @@ package com.main_project.notification_service.service;
 
 import com.main_project.notification_service.dto.LabTestCompletedNotificationMessage;
 import com.main_project.notification_service.dto.InvoicePaidNotificationMessage;
+import com.main_project.notification_service.dto.PrescriptionDispensedNotificationMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -83,5 +84,35 @@ public class WebSocketNotificationService {
         }
     }
 
+    public void sendPrescriptionDispensedNotification(
+            UUID dispenseOrderId,
+            UUID prescriptionId,
+            UUID medicalHistoryId,
+            UUID appointmentId,
+            UUID pharmacistId,
+            String pharmacistName,
+            String message) {
+        log.info("Sending prescription dispensed notification for dispenseOrder {} pharmacist={}", 
+                dispenseOrderId, pharmacistName);
+
+        // ✅ Tạo DTO thông báo
+        PrescriptionDispensedNotificationMessage notification = PrescriptionDispensedNotificationMessage.builder()
+                .type("PRESCRIPTION_DISPENSED")
+                .dispenseOrderId(dispenseOrderId != null ? dispenseOrderId.toString() : null)
+                .prescriptionId(prescriptionId != null ? prescriptionId.toString() : null)
+                .medicalHistoryId(medicalHistoryId != null ? medicalHistoryId.toString() : null)
+                .appointmentId(appointmentId != null ? appointmentId.toString() : null)
+                .pharmacistId(pharmacistId != null ? pharmacistId.toString() : null)
+                .pharmacistName(pharmacistName)
+                .message(message != null ? message : "Đơn thuốc đã được cấp phát thành công")
+                .timestamp(System.currentTimeMillis())
+                .build();
+
+        // Gửi tới topic chung cho tất cả receptionists
+        String topic = "/topic/prescription-dispensed";
+        messagingTemplate.convertAndSend(topic, notification);
+        
+        log.info("Prescription dispensed notification sent to topic {} for dispenseOrder {}", topic, dispenseOrderId);
+    }
 
 }

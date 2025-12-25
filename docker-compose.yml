@@ -277,6 +277,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory-service
       INVOICE_SERVICE_URL: http://invoice-service:8091
       PATIENT_SERVICE_URL: http://patient-service:8089
+      USER_SERVICE_URL: http://user-service:8085
     ports:
       - "8084:8084"
 

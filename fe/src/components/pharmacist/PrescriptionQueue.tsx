@@ -38,7 +38,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
       let status = '';
       switch (activeTab) {
         case 'pending':
-          status = 'RESERVED'; // Đã giữ thuốc, chờ cấp phát
+          status = 'RELEASED'; // Đã giữ thuốc, chờ cấp phát
           break;
         // case 'review':
         //   status = 'IN_PROGRESS'; // Đang xem xét
@@ -148,16 +148,16 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   const loadCounts = async () => {
     try {
-      //const [reserved, inProgress, sold, cancelled] = await Promise.all([
-      const [reserved, sold, cancelled] = await Promise.all([
-        inventoryController.getDispenseOrdersByStatus('RESERVED'),
+      //const [released, inProgress, sold, cancelled] = await Promise.all([
+      const [released, sold, cancelled] = await Promise.all([
+        inventoryController.getDispenseOrdersByStatus('RELEASED'),
         // inventoryController.getDispenseOrdersByStatus('IN_PROGRESS'),
         inventoryController.getDispenseOrdersByStatus('SOLD'),
         inventoryController.getDispenseOrdersByStatus('CANCELLED'),
       ]);
 
       setCounts({
-        pending: reserved.length,
+        pending: released.length,
         // review: inProgress.length,
         dispensed: sold.length,
         cancelled: cancelled.length,
@@ -183,7 +183,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
-      RESERVED: {
+      RELEASED: {
         label: 'Chờ cấp',
         className: 'px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200'
       },
@@ -201,7 +201,9 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
       },
     };
 
-    const statusInfo = statusMap[status] || statusMap.RESERVED;
+    const statusInfo = statusMap[status] || statusMap.RELEASED
+
+    ;
     return (
       <span className={`${statusInfo.className} text-xs font-semibold`}>
         {statusInfo.label}
