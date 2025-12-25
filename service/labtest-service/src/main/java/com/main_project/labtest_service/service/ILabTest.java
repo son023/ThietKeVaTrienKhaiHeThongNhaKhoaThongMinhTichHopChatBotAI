@@ -10,7 +10,7 @@ public interface ILabTest {
     LabTestDTO createLabTest(LabTestRequestDTO requestDTO);
     LabTestDTO requestLabTest(LabTestRequestDTO requestDTO);
     LabTestDTO updateLabTest(UUID id, LabTestRequestDTO requestDTO);
-    LabTestDTO acceptLabTest(UUID id);
+    LabTestDTO acceptLabTest(UUID id, UUID labTechnicianId);
     LabTestDTO startLabTest(UUID id);
     LabTestDTO completeLabTest(UUID id);
     void deleteLabTest(UUID id);

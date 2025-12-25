@@ -59,8 +59,8 @@ public class LabTestController {
     }
 
     @PostMapping("/{id}/accept")
-    public ResponseEntity<LabTestDTO> acceptLabTest(@PathVariable UUID id) {
-        LabTestDTO labTestDTO = labTestService.acceptLabTest(id);
+    public ResponseEntity<LabTestDTO> acceptLabTest(@PathVariable UUID id, @RequestBody(required = false) LabTestRequestDTO dto) {
+        LabTestDTO labTestDTO = labTestService.acceptLabTest(id, dto != null ? dto.getLabTechnicianId() : null);
         labTestDTO.setStatus("ACCEPTED");
         return ResponseEntity.ok(labTestDTO);
     }

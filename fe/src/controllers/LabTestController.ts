@@ -24,10 +24,12 @@ class LabTestController {
     return this.handleResponse<LabTestDTO[]>(res);
   }
 
-  async accept(id: string): Promise<LabTestDTO> {
+  async accept(id: string, labTechnicianId?: string): Promise<LabTestDTO> {
+    const body = labTechnicianId ? JSON.stringify({ labTechnicianId }) : undefined;
     const res = await fetch(createApiUrl(this.baseUrl, id, "accept"), {
       method: "POST",
       headers: getApiHeaders(true),
+      body: body,
     });
     return this.handleResponse<LabTestDTO>(res);
   }
