@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +23,7 @@ public class PatientRequestDTO {
     private UUID userId;
 
     @Past(message = "Date of birth must be in the past")
-    private ZonedDateTime dob;
+    private LocalDate dob;
 
     @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
     private String gender;

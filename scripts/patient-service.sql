@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS public.condition CASCADE;
 CREATE TABLE IF NOT EXISTS public.patient
 (
     user_id          UUID NOT NULL,
-    dob              TIMESTAMP WITH TIME ZONE,
+    dob              DATE,
     gender           VARCHAR(50),
     address          TEXT,
     contact_phone    VARCHAR(50),
@@ -175,9 +175,9 @@ CREATE INDEX idx_patient_allergy_allergy_id ON public.patient_allergy (allergy_i
 -- Insert sample data
 -- -------------------------
 INSERT INTO patient (user_id, dob, gender, address, contact_phone, blood_type, insurance_number) VALUES
-('00000000-0000-0000-0000-000000000101','2002-03-18','FEMALE','12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM','0905123456','O_POSITIVE','HS-790123456'),
-('00000000-0000-0000-0000-000000000102','2001-11-02','MALE','85 Lê Lợi, Q. Hải Châu, Đà Nẵng','0912345678','A_POSITIVE','HS-790223344'),
-('00000000-0000-0000-0000-000000000103','2003-07-25','FEMALE','220 Cầu Giấy, Q. Cầu Giấy, Hà Nội','0987654321','B_POSITIVE','HS-790998877');
+('00000000-0000-0000-0000-000000000101', DATE '2002-03-18','FEMALE','12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM','0905123456','O_POSITIVE','HS-790123456'),
+('00000000-0000-0000-0000-000000000102',DATE '2001-11-02','MALE','85 Lê Lợi, Q. Hải Châu, Đà Nẵng','0912345678','A_POSITIVE','HS-790223344'),
+('00000000-0000-0000-0000-000000000103',DATE '2003-07-25','FEMALE','220 Cầu Giấy, Q. Cầu Giấy, Hà Nội','0987654321','B_POSITIVE','HS-790998877');
 
 -- =========================================================
 -- 10) MEDICAL_HISTORY  (gắn appointment + patient + condition)
