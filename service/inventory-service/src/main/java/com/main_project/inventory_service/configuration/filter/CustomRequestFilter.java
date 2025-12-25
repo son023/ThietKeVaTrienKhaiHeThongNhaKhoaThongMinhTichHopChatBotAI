@@ -1,6 +1,5 @@
 package com.main_project.inventory_service.configuration.filter;
 
-import com.main_project.inventory_service.dto.UserDTO;
 import com.main_project.inventory_service.exceptions.enums.ErrorCode;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
