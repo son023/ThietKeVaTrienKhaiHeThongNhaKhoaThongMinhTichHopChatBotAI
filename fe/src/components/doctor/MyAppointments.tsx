@@ -232,9 +232,9 @@ export function MyAppointments({
     onNavigateToPatient(patientId, appointmentId);
   };
 
-  const handleView = (patientId: string, e: React.MouseEvent) => {
+  const handleView = (patientId: string, appointmentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onNavigateToPatient(patientId);
+    onNavigateToPatient(patientId, appointmentId);
   };
 
   return (
@@ -344,7 +344,7 @@ export function MyAppointments({
                             size="sm"
                             variant="outline"
                             className="rounded-[10px] border-[#3FB5FF] text-[#3FB5FF]"
-                            onClick={(e) => apt.patientId && handleView(apt.patientId, e)}
+                            onClick={(e) => apt.patientId && handleView(apt.patientId, apt.id, e)}
                           >
                             Xem
                           </Button>
