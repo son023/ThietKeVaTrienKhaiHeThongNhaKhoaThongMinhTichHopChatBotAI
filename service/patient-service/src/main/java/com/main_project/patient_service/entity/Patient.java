@@ -40,7 +40,7 @@ public class Patient {
     private UUID userId;
 
     @Column(name = "dob")
-    private ZonedDateTime dob;
+    private LocalDate dob;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 50)
@@ -250,7 +250,7 @@ public class Patient {
     /**
      * Updates the patient's basic information.
      */
-    public void updateBasicInfo(ZonedDateTime dob, Gender gender, String address,
+    public void updateBasicInfo(LocalDate dob, Gender gender, String address,
                                 String contactPhone, BloodType bloodType, String insuranceNumber) {
         this.dob = dob;
         this.gender = gender;

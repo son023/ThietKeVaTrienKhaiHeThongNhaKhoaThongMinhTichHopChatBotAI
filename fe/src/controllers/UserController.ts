@@ -1,6 +1,15 @@
 import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
 import { UserDTO } from "../models";
 
+export interface UpdateUserRequestDTO {
+  email?: string;
+  fullName?: string;
+  phone?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  roleNames?: string[];
+}
+
 class UserController {
   private baseUrl = API_CONFIG.ENDPOINTS.USERS;
 
@@ -77,6 +86,16 @@ class UserController {
       acc[userId] = user;
       return acc;
     }, {} as Record<string, UserDTO>);
+  }
+
+  async update(id: string, data: UpdateUserRequestDTO): Promise<UserDTO> {
+    const res = await fetch(createApiUrl(this.baseUrl, id), {
+      method: "PUT",
+      headers: getApiHeaders(true),
+      body: JSON.stringify(data),
+    });
+    const user = await this.handleResponse<RawUser>(res);
+    return this.normalizeUser(user);
   }
 }
 

@@ -12,3 +12,4 @@ export * from './LabTestController';
 export * from './LabTestTypeController';
 export * from './MedicalAttachmentController';
 export * from './InventoryController';
+export * from './InsuranceController';
