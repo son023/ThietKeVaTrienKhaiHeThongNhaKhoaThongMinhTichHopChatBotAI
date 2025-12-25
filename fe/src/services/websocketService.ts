@@ -37,6 +37,19 @@ export interface PrescriptionErrorNotification {
   timestamp?: number;
 }
 
+// ✅ Interface cho PrescriptionDispensedNotification DTO từ backend
+export interface PrescriptionDispensedNotification {
+  type: string;
+  dispenseOrderId?: string;
+  prescriptionId?: string;
+  medicalHistoryId?: string;
+  appointmentId?: string;
+  pharmacistId?: string;
+  pharmacistName?: string;
+  message: string;
+  timestamp?: number;
+}
+
 
 
 export const connectWebSocket = (): Client | null => {
@@ -471,6 +484,108 @@ export const subscribeToDoctorNotifications = (
       subscription.unsubscribe();
       activeSubscriptions.delete(subscriptionKey);
       console.log(`[WebSocket] Unsubscribed from doctor notifications for doctor: ${doctorId}`);
+    }
+  };
+};
+
+// ✅ Subscribe to prescription dispensed notifications (broadcast to all receptionists)
+export const subscribeToPrescriptionDispensed = (
+  userId: string,
+  onNotification: (notification: PrescriptionDispensedNotification) => void
+): (() => void) => {
+  console.log(`[WebSocket] Subscribing to prescription dispensed notifications for user: ${userId}`);
+
+  if (!stompClient) {
+    console.log('[WebSocket] No client found, creating new connection...');
+    connectWebSocket();
+  }
+
+  // Topic broadcast cho tất cả receptionists
+  const topic = `/topic/prescription-dispensed`;
+  console.log(`[WebSocket] Topic: ${topic}`);
+
+  const subscriptionKey = `prescription-dispensed-${userId}`;
+  if (activeSubscriptions.has(subscriptionKey)) {
+    console.log(`[WebSocket] Unsubscribing from existing subscription for: ${subscriptionKey}`);
+    const existingSub = activeSubscriptions.get(subscriptionKey);
+    existingSub?.unsubscribe();
+    activeSubscriptions.delete(subscriptionKey);
+  }
+
+  let retryCount = 0;
+  const maxRetries = 50;
+
+  const subscribe = () => {
+    if (stompClient && stompClient.connected) {
+      try {
+        const subscription = stompClient.subscribe(topic, (message: IMessage) => {
+          console.log(`[WebSocket] 📨 Message received on topic ${topic}:`, message.body);
+          try {
+            // ✅ Parse DTO từ backend
+            const rawNotification = JSON.parse(message.body);
+            console.log('[WebSocket] Raw notification from backend:', rawNotification);
+
+            // ✅ Map DTO từ backend sang frontend format
+            const notification: PrescriptionDispensedNotification = {
+              type: rawNotification.type || 'PRESCRIPTION_DISPENSED',
+              dispenseOrderId: rawNotification.dispenseOrderId || undefined,
+              prescriptionId: rawNotification.prescriptionId || undefined,
+              medicalHistoryId: rawNotification.medicalHistoryId || undefined,
+              appointmentId: rawNotification.appointmentId || undefined,
+              pharmacistId: rawNotification.pharmacistId || undefined,
+              pharmacistName: rawNotification.pharmacistName || 'Dược sĩ',
+              message: rawNotification.message || 'Đơn thuốc đã được cấp phát thành công',
+              timestamp: rawNotification.timestamp || Date.now(),
+            };
+
+            console.log('[WebSocket] ✅ Parsed PrescriptionDispensedNotification:', notification);
+            onNotification(notification);
+          } catch (error) {
+            console.error('[WebSocket] ❌ Error parsing prescription dispensed message:', error);
+            console.error('[WebSocket] Raw message body:', message.body);
+          }
+        });
+
+        activeSubscriptions.set(subscriptionKey, subscription);
+        console.log(`[WebSocket] ✅ Successfully subscribed to ${topic}`);
+        console.log(`[WebSocket] Total active subscriptions: ${activeSubscriptions.size}`);
+      } catch (error) {
+        console.error('[WebSocket] ❌ Error subscribing:', error);
+      }
+    } else {
+      retryCount++;
+      if (retryCount < maxRetries) {
+        console.log(`[WebSocket] Waiting for connection... (${retryCount}/${maxRetries})`);
+        setTimeout(subscribe, 100);
+      } else {
+        console.error('[WebSocket] ❌ Failed to subscribe: Connection timeout');
+      }
+    }
+  };
+
+  if (stompClient?.connected) {
+    console.log('[WebSocket] Already connected, subscribing immediately');
+    subscribe();
+  } else {
+    console.log('[WebSocket] Not connected yet, waiting for connection...');
+    const checkConnection = setInterval(() => {
+      if (stompClient?.connected) {
+        clearInterval(checkConnection);
+        console.log('[WebSocket] Connection established, subscribing now');
+        subscribe();
+      } else if (retryCount >= maxRetries) {
+        clearInterval(checkConnection);
+        console.error('[WebSocket] ❌ Connection timeout');
+      }
+    }, 100);
+  }
+
+  return () => {
+    const subscription = activeSubscriptions.get(subscriptionKey);
+    if (subscription) {
+      subscription.unsubscribe();
+      activeSubscriptions.delete(subscriptionKey);
+      console.log(`[WebSocket] Unsubscribed from prescription dispensed notifications for user: ${userId}`);
     }
   };
 };

@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification, isConnected } from '../services/websocketService';
+import {
+  connectWebSocket,
+  subscribeToInvoicePaid,
+  subscribeToPrescriptionDispensed, // ✅ Thêm import
+  InvoicePaidNotification,
+  PrescriptionDispensedNotification, // ✅ Thêm import
+  isConnected
+} from '../services/websocketService';
 import { notificationController, NotificationDTO } from '../controllers/NotificationController';
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
@@ -46,20 +53,29 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-    // Convert NotificationDTO từ backend sang Notification frontend
-    const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
-      return {
-        id: dto.id,
-        type: dto.templateId ?? 'INVOICE_PAID',
-        title: '💰 Hóa đơn đã được thanh toán',
-        message: dto.message,
-        timestamp: new Date(dto.createdAt).getTime(),
-        read: dto.status === 'read',
-      };
-    }, []);
+  // Convert NotificationDTO từ backend sang Notification frontend
+  const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
+    // ✅ Xử lý các loại notification khác nhau
+    let title = '💰 Hóa đơn đã được thanh toán';
+    if (dto.templateId === 'PRESCRIPTION_DISPENSED') {
+      title = '✅ Đơn thuốc đã được cấp phát';
+    }
+
+    return {
+      id: dto.id,
+      type: dto.templateId ?? 'INVOICE_PAID',
+      title,
+      message: dto.message,
+      timestamp: new Date(dto.createdAt).getTime(),
+      read: dto.status === 'read',
+      invoiceId: dto.invoiceId,
+      dispenseOrderId: dto.dispenseOrderId,
+      appointmentId: dto.appointmentId,
+    };
+  }, []);
 
 
-      // Load notifications từ backend
+  // Load notifications từ backend
   const loadNotifications = useCallback(async () => {
     if (!userId) {
       setLoading(false);
@@ -80,10 +96,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, [userId, mapDTOToNotification]);
 
-    // Load notifications khi component mount hoặc userId thay đổi
-    useEffect(() => {
-      loadNotifications();
-    }, [loadNotifications]);
+  // Load notifications khi component mount hoặc userId thay đổi
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
 
   // ✅ Subscribe WebSocket khi component mount hoặc userId thay đổi
@@ -101,16 +117,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     // Kết nối WebSocket
 
     // Subscribe vào invoice paid notifications
-    const unsubscribe = subscribeToInvoicePaid(userId, (notification: InvoicePaidNotification) => {
+    const unsubscribeInvoicePaid = subscribeToInvoicePaid(userId, (notification: InvoicePaidNotification) => {
       console.log('[NotificationContext] Invoice paid notification received:', notification);
 
       const tempNotification: Notification = {
-        id: `ws-${Date.now()}`, // tạm
+        id: `ws-invoice-${Date.now()}-${Math.random()}`,
         type: 'INVOICE_PAID',
         title: '💰 Hóa đơn đã được thanh toán',
         message: notification.message,
-        timestamp: Date.now(),
+        timestamp: notification.timestamp || Date.now(),
         read: false,
+        invoiceId: notification.invoiceId,
+        dispenseOrderId: notification.dispenseOrderId,
+        appointmentId: notification.appointmentId,
       };
 
       setNotifications(prev => [tempNotification, ...prev]);
@@ -127,10 +146,50 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }
       );
     });
+
+    // ✅ Subscribe vào prescription dispensed notifications
+    const unsubscribePrescriptionDispensed = subscribeToPrescriptionDispensed(
+      userId,
+      (notification: PrescriptionDispensedNotification) => {
+        console.log('[NotificationContext] 📨 Prescription dispensed notification received:', notification);
+
+        // ✅ Parse DTO từ backend và tạo notification
+        const tempNotification: Notification = {
+          id: `ws-prescription-${Date.now()}-${Math.random()}`,
+          type: 'PRESCRIPTION_DISPENSED',
+          title: '✅ Đơn thuốc đã được cấp phát',
+          message: notification.message || `Đơn thuốc đã được dược sĩ ${notification.pharmacistName || 'dược sĩ'} cấp phát thành công`,
+          timestamp: notification.timestamp || Date.now(),
+          read: false,
+          dispenseOrderId: notification.dispenseOrderId,
+          appointmentId: notification.appointmentId,
+        };
+
+        setNotifications(prev => [tempNotification, ...prev]);
+
+        // ✅ Hiển thị toast với thông tin từ DTO
+        toast.success(
+          <div>
+            <p className="font-semibold">✅ Đơn thuốc đã được cấp phát</p>
+            <p className="text-sm">{notification.message}</p>
+            {notification.pharmacistName && (
+              <p className="text-xs text-gray-500">Dược sĩ: {notification.pharmacistName}</p>
+            )}
+          </div>,
+          {
+            duration: 5000,
+            icon: <CheckCircle className="w-5 h-5 text-green-500" />,
+          }
+        );
+      }
+    );
+
     // Sync lại DB sau 1–2s
     setTimeout(loadNotifications, 1500);
+
     return () => {
-      unsubscribe();
+      unsubscribeInvoicePaid();
+      unsubscribePrescriptionDispensed(); // ✅ Cleanup
     };
   }, [userId, loadNotifications]);
 

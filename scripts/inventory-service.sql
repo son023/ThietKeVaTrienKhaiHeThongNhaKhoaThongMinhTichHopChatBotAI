@@ -191,6 +191,15 @@ VALUES
     ('2f989fbe-5479-4d63-a929-1e42833dcbeb', 'LOT2025_A', '2026-12-31', 1000, 800, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
     ('db3ca0f0-9d9a-4664-b8a6-f86e62d98756', 'LOT2025_B', '2026-12-31', 1000, 1500, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
+-- 3. Insert Pharmacist (Dược sĩ)
+INSERT INTO public.pharmacist (user_id, certificate, degree)
+VALUES (
+           '00000000-0000-0000-0000-000000000401',
+           'Chứng chỉ A',
+           'Bằng cấp A'
+       );
+
+
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,

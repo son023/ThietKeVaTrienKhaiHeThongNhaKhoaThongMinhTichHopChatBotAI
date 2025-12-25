@@ -1,4 +1,4 @@
-package com.main_project.inventory_service.configuration.filter;
+package com.main_project.inventory_service.dto;
 
 import lombok.Builder;
 import lombok.Data;

@@ -277,6 +277,12 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
   const handleDispense = async () => {
     try {
+      // ✅ Kiểm tra nếu đã SOLD thì không cho phép
+      if (dispenseOrder?.status === 'SOLD') {
+        toast.error('Đơn thuốc đã được cấp phát. Không thể cấp phát lại.');
+        return;
+      }
+
       if (!isInvoicePaid) {
         //toast.error('Hóa đơn chưa được thanh toán. Vui lòng đợi bệnh nhân thanh toán.');
         return;
@@ -290,7 +296,12 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
       await inventoryController.markAsSold(prescriptionId, currentUser.id);
       toast.success('Đơn thuốc đã được cấp phát thành công!');
-      setTimeout(() => onBack(), 1500);
+      
+      // ✅ Reload data để cập nhật status
+      await loadData();
+      
+      // Không tự động quay lại nữa, để người dùng thấy nút đã bị disable
+      // setTimeout(() => onBack(), 1500);
     } catch (error) {
       toast.error('Không thể cấp phát đơn thuốc');
     }
@@ -553,9 +564,9 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
             <h3 className="text-lg font-bold text-neutral-heading mb-4">Hành động</h3>
 <button
   onClick={handleDispense}
-  disabled={!isInvoicePaid || isCheckingPayment}
+  disabled={!isInvoicePaid || isCheckingPayment || dispenseOrder?.status === 'SOLD'}
   className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 shadow-sm ${
-    isInvoicePaid && !isCheckingPayment
+    isInvoicePaid && !isCheckingPayment && dispenseOrder?.status !== 'SOLD'
       ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
       : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
   }`}
@@ -563,9 +574,11 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   <CheckCircle className="w-5 h-5" />
   {isCheckingPayment
     ? 'Đang kiểm tra thanh toán...'
-    : isInvoicePaid
-      ? 'Hoàn tất & Cấp phát'
-      : 'Chờ thanh toán hóa đơn'}
+    : dispenseOrder?.status === 'SOLD'
+      ? 'Đã cấp phát'
+      : isInvoicePaid
+        ? 'Hoàn tất & Cấp phát'
+        : 'Chờ thanh toán hóa đơn'}
 </button>
 
 

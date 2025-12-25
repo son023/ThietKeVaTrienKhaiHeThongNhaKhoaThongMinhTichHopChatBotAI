@@ -2,10 +2,12 @@ package com.main_project.inventory_service.service;
 
 import com.main_project.inventory_service.client.InvoiceClient;
 import com.main_project.inventory_service.client.PatientClient;
-import com.main_project.inventory_service.dto.DispenseOrderRequest;
-import com.main_project.inventory_service.dto.DispenseOrderResponse;
-import com.main_project.inventory_service.dto.InvoiceResponseDTO;
-import com.main_project.inventory_service.dto.MedicalHistoryResponseDTO;
+import com.main_project.inventory_service.client.UserClient;
+import com.main_project.inventory_service.dto.*;
+import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventhandling.GenericEventMessage;
+import com.do_an.common.event.PrescriptionDispensedEvent;
+import lombok.extern.slf4j.Slf4j;
 import com.main_project.inventory_service.entity.DispenseOrder;
 import com.main_project.inventory_service.entity.Pharmacist;
 import com.main_project.inventory_service.iservice.IDispenseOrderService;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DispenseOrderService implements IDispenseOrderService {
 
     private final DispenseOrderRepository dispenseOrderRepository;
@@ -30,6 +33,8 @@ public class DispenseOrderService implements IDispenseOrderService {
 
     private final InvoiceClient invoiceClient;
     private final PatientClient patientClient;
+    private final UserClient userClient;
+    private final EventBus eventBus;
 
     @Override
     @Transactional
@@ -129,8 +134,48 @@ public class DispenseOrderService implements IDispenseOrderService {
         order.setPharmacist(pharmacist);
         order.setStatus("SOLD");
 
-        dispenseOrderRepository.save(order);
-        return mapToResponse(order);
+        DispenseOrder savedOrder = dispenseOrderRepository.save(order);
+        
+        // ✅ PUBLISH EVENT để gửi thông báo cho lễ tân
+        try {
+            // Lấy appointmentId từ medicalHistory
+            MedicalHistoryResponseDTO mh = patientClient.getMedicalHistory(order.getMedicalHistoryId());
+            UUID appointmentId = mh.getAppointmentId();
+            
+            // Lấy tên dược sĩ từ user-service
+            String pharmacistName = "Dược sĩ";
+            try {
+                UserDTO user = userClient.getUserById(pharmacist.getUserId());
+                pharmacistName = user.getFullname() != null ? user.getFullname() : pharmacistName;
+            } catch (Exception e) {
+                log.warn("Could not get pharmacist name from user-service: {}", e.getMessage());
+            }
+            
+            // Tạo message
+            String message = String.format(
+                "Đơn thuốc #%s đã được dược sĩ %s cấp phát thành công.",
+                id.toString().substring(0, 8),
+                pharmacistName
+            );
+            
+            PrescriptionDispensedEvent event = new PrescriptionDispensedEvent(
+                savedOrder.getId(),
+                savedOrder.getPrescription(),
+                savedOrder.getMedicalHistoryId(),
+                appointmentId,
+                pharmacistId,
+                pharmacistName,
+                message
+            );
+            
+            eventBus.publish(GenericEventMessage.asEventMessage(event));
+            log.info("✅ Published PrescriptionDispensedEvent for dispenseOrder: {}", savedOrder.getId());
+        } catch (Exception e) {
+            log.error("❌ Lỗi khi publish PrescriptionDispensedEvent: {}", e.getMessage(), e);
+            // Không throw exception để không ảnh hưởng đến việc cập nhật status
+        }
+        
+        return mapToResponse(savedOrder);
     }
 
     @Override
