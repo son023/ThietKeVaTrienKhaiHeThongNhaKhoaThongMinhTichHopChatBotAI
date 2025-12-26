@@ -246,7 +246,6 @@ public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) 
     result.put("isPaid", isPaid);
     result.put("invoiceId", invoices.isEmpty() ? null : invoices.get(0).getId());
     result.put("invoiceStatus", invoices.isEmpty() ? "NOT_FOUND" : invoices.get(0).getStatus());
-    
     return result;
 }
 

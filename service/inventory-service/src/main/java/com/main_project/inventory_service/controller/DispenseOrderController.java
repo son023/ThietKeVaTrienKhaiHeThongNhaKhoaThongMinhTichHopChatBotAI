@@ -83,7 +83,6 @@ public class DispenseOrderController {
         }
     }
 
-
     @GetMapping("/{id}/payment-status")
     public ResponseEntity<Map<String, Object>> getPaymentStatusOfPrescription(@PathVariable UUID id) {
         Map<String, Object> status = dispenseOrderService.getPaymentStatusOfPrescription(id);

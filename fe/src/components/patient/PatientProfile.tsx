@@ -78,7 +78,6 @@ export function PatientProfile() {
       let patientData = null;
       try {
         patientData = await patientController.getById(currentUser.id);
-        console.log("patientData", patientData);
 
         setPatient(patientData);
       } catch (error) {

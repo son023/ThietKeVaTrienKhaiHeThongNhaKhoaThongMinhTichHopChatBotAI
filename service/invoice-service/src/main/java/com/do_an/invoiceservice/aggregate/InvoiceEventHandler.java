@@ -342,15 +342,12 @@ public class InvoiceEventHandler {
             invoice.setPaidAt(LocalDateTime.now());
             invoiceRepository.save(invoice);
 
-            //Gửi lệnh sang Inventory để đổi trạng thái từ RESERVED -> SOLD
-            //inventoryClient.markAsSold()
 
-
-            // ✅ PHÁT EVENT ĐỂ INVENTORY-SERVICE BIẾT
+            // ✅ PHÁT EVENT ĐỂ NOTIFICATION-SERVICE BIẾT
             eventBus.publish(asEventMessage(new InvoicePaidNotificationEvent(
                     event.getInvoiceId(),
                     invoice.getAppointmentId(),
-                    "Hóa đơn" + event.getInvoiceId() + "đã được thanh toán thành công"
+                    "Hóa đơn " + event.getInvoiceId() + " đã được thanh toán thành công"
             )));
 
             log.info("Đã cập nhật Invoice {} thành công (PAID).", invoice.getId());

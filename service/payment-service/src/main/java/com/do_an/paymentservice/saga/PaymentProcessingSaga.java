@@ -3,21 +3,16 @@ package com.do_an.paymentservice.saga;
 
 
 import com.do_an.common.command.*;
-import com.do_an.common.event.InvoiceCancelledEvent;
 import com.do_an.common.event.PaymentFailedEvent;
 import com.do_an.common.event.PaymentInitiatedEvent;
 import com.do_an.common.event.PaymentProcessedEvent;
-import com.do_an.paymentservice.client.InventoryClient;
-import com.do_an.paymentservice.dto.response.DispenseOrderResponse;
 import com.do_an.paymentservice.entity.PaymentStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
-import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
-import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +56,7 @@ public class PaymentProcessingSaga {
 
         commandGateway.sendAndWait(new MarkInvoiceAsPaidCommand(event.getInvoiceId()));
 
-        //Gửi lệnh sang Inventory để đổi trạng thái từ RELEASE -> SOLD
+        //Gửi lệnh sang Inventory để đổi trạng thái từ RELEASED -> SOLD
         commandGateway.send(new MarkPrescripAsSoldCommand(this.dispenseOrderId));
     }
 

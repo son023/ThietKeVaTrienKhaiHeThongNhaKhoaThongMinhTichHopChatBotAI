@@ -198,6 +198,14 @@ export function CreatePrescriptionEnhanced({
         });
     };
 
+    const formatGender = (gender?: string) => {
+        if (!gender) return "-";
+        const g = gender.toLowerCase();
+        if (g === "male") return "Nam";
+        if (g === "female") return "Nữ";
+        return "Khác";
+    };
+
     const handleSubmit = async () => {
         if (!doctorId) return toast.error("Không xác định bác sĩ");
         if (!medicalHistoryId || !patientId) return toast.error("Thiếu thông tin");
@@ -341,7 +349,7 @@ export function CreatePrescriptionEnhanced({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm text-neutral-text/60 mb-1">Giới tính</p>
-                                        <p className="text-sm text-neutral-text">{patient?.gender || 'N/A'}</p>
+                                        <p className="text-sm text-neutral-text">{formatGender(patient?.gender) || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-neutral-text/60 mb-1">Tuổi</p>
