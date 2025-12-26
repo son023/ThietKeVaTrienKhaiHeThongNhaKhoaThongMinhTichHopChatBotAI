@@ -30,7 +30,7 @@ huggingface-hub==0.36.0
 regex==2025.11.3
 
 # ===== PyTorch (CPU ONLY) =====
-torch==2.9.1+cpu
+torch>=2.5.1
 
 # ===== ML / Math =====
 numpy==2.4.0
