@@ -27,8 +27,7 @@ import java.util.UUID;
 public class PaymentEventHandler {
     private final PaymentRepository paymentRepository;
     private final EventBus eventBus;
-    private final CommandGateway commandGateway;
-    private final InventoryClient inventoryClient;
+
 
 
     @EventHandler
@@ -81,28 +80,28 @@ public class PaymentEventHandler {
 
     }
 
-    @EventHandler
-    public void on(InvoiceCancelledEvent event) {
-        log.info("Hóa đơn {} đã chuyển sang CANCELLED. Thực hiện đồng bộ trạng thái các service khác...", event.getInvoiceId());
-        DispenseOrderResponse dispenseOrderResponse =  inventoryClient.getByPrescriptionId(event.getPrescriptionId());
-        UUID dispenseOrderId = dispenseOrderResponse.getId();
-
-        //Cập nhật Inventory: Chuyển DispenseOrder sang CANCELLED và trả lại số lượng
-        commandGateway.send(new ReturnMedicineReservationCommand(
-                dispenseOrderId,
-                event.getPrescriptionId()
-
-        ));
-
-        //Cập nhật Insurance: Chuyển Claim sang CANCELLED
-        if (event.getInsuranceClaimId() != null) {
-            commandGateway.send(new CancelInsuranceClaimCommand(
-                    event.getInsuranceClaimId(),
-                    event.getPrescriptionId(),
-                    event.getReason()
-            ));
-        }
-    }
+//    @EventHandler
+//    public void on(InvoiceCancelledEvent event) {
+//        log.info("Hóa đơn {} đã chuyển sang CANCELLED. Thực hiện đồng bộ trạng thái các service khác...", event.getInvoiceId());
+//        DispenseOrderResponse dispenseOrderResponse =  inventoryClient.getByPrescriptionId(event.getPrescriptionId());
+//        UUID dispenseOrderId = dispenseOrderResponse.getId();
+//
+//        //Cập nhật Inventory: Chuyển DispenseOrder sang CANCELLED và trả lại số lượng
+//        commandGateway.send(new ReturnMedicineReservationCommand(
+//                dispenseOrderId,
+//                event.getPrescriptionId()
+//
+//        ));
+//
+//        //Cập nhật Insurance: Chuyển Claim sang CANCELLED
+//        if (event.getInsuranceClaimId() != null) {
+//            commandGateway.send(new CancelInsuranceClaimCommand(
+//                    event.getInsuranceClaimId(),
+//                    event.getPrescriptionId(),
+//                    event.getReason()
+//            ));
+//        }
+//    }
 
 
 }

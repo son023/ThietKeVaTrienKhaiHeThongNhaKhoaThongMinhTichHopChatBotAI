@@ -3,6 +3,8 @@ package com.main_project.inventory_service.aggregate;
 import com.do_an.common.command.MarkPrescripAsReleaseCommand;
 import com.do_an.common.command.MarkPrescripAsSoldCommand;
 import com.do_an.common.command.ReserveMedicineCommand;
+import com.do_an.common.command.ReturnMedicineReservationCommand;
+import com.do_an.common.event.MedicineReservationReturnEvent;
 import com.do_an.common.model.MedicineItem;
 import com.main_project.inventory_service.entity.DispenseOrder;
 import com.main_project.inventory_service.entity.InventoryLot;
@@ -13,6 +15,7 @@ import com.main_project.inventory_service.repository.MedicineRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,6 +86,21 @@ public class InventoryCommandHandler {
                 command.getMedicalHistoryId(), command.getItems()));
     }
 
+    @CommandHandler
+    public void handle(ReturnMedicineReservationCommand command) {
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(command.getDispenseOrderId())
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + command.getDispenseOrderId()));
+
+        if ("SOLD".equals(dispenseOrder.getStatus())) {
+            throw new IllegalStateException("Không thể hoàn thuốc cho đơn thuốc đã bán");
+        }
+
+        inventoryAggregateRepository.load(command.getDispenseOrderId().toString())
+                .execute(aggregate -> aggregate.applyReturnReservation(
+                        command.getPrescriptionId(),
+                        command.getDispenseOrderId()
+                ));
+    }
 
     @CommandHandler
     @Transactional
@@ -113,7 +131,7 @@ public class InventoryCommandHandler {
         }
 
         inventoryAggregateRepository.load(command.getDispenseOrderId().toString())
-                .execute(aggregate -> aggregate.applyPrescriptionRelease(
+                .execute(aggregate -> aggregate.applyPrescriptionSold(
                         command.getDispenseOrderId()
                 ));
     }

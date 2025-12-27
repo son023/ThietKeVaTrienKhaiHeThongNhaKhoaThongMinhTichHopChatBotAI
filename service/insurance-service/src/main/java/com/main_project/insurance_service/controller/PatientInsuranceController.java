@@ -79,6 +79,7 @@ public class PatientInsuranceController {
         return ResponseEntity.ok(expiredInsurances);
     }
 
+    //Dùng
     @GetMapping("/patient/{patientId}/active")
     @Operation(summary = "Get active insurance by patient ID", description = "Retrieve active insurance for a specific patient")
     public ResponseEntity<PatientInsuranceDTO> getActiveInsuranceByPatientId(

@@ -1,12 +1,8 @@
 package com.do_an.invoiceservice.aggregate;
 
 
-import com.do_an.common.command.AddMedicineChargesCommand;
-import com.do_an.common.command.ApplyInsuranceDiscountCommand;
+import com.do_an.common.command.*;
 
-import com.do_an.common.command.CancelInvoiceCommand;
-import com.do_an.common.command.MarkInvoiceAsPaidCommand;
-import com.do_an.common.command.CreateInvoiceCommand;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
 import com.do_an.invoiceservice.entity.Invoice;
@@ -60,16 +56,14 @@ public class InvoiceCommandHandler {
             }
 
             invoiceAggregateRepository.load(command.getInvoiceId().toString())
-                    .execute(aggregate -> aggregate.addMedicineCharges(
+                    .execute(aggregate -> aggregate.applyAddMedicineCharges(
                             command.getPrescriptionId(),
-                            command.getInvoiceId(),
                             command.getMedicineItems(),
                             invoiceCheckerRequest
                     ));
         } catch (AggregateNotFoundException e) {
             invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
                     command.getPrescriptionId(),
-                    command.getInvoiceId(),
                     command.getMedicineItems(),
                     invoiceCheckerRequest
             ));
@@ -122,6 +116,7 @@ public class InvoiceCommandHandler {
                 command.getMedicalServices()
         ));
     }
+
     @CommandHandler
     @Transactional(readOnly = true)
     public void handle(CancelInvoiceCommand command) {
@@ -140,7 +135,6 @@ public class InvoiceCommandHandler {
                 ));
 
     }
-
 
     @CommandHandler
     public void handle(MarkInvoiceAsPaidCommand command) {
@@ -164,6 +158,32 @@ public class InvoiceCommandHandler {
                 ));
     }
 
+    @CommandHandler
+    public void handle(RevertInsuranceDiscountCommand command){
+            log.info("Hoàn lại giảm giá bảo hiểm cho hóa đơn: {}", command.getInvoiceId());
+            Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy hoá đơn"));
+
+            invoiceAggregateRepository.load(command.getInvoiceId().toString())
+                .execute(aggregate -> aggregate.applyRevertInsuranceDiscount(
+                        command.getPrescriptionId(),
+                        command.getInvoiceId()
+                ));
+    }
+
+    @CommandHandler
+    public void handle(RemoveMedicineChargesCommand command){
+        log.info("Loại bỏ phí thuốc cho hóa đơn: {}", command.getInvoiceId());
+
+        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hoá đơn"));
+
+        invoiceAggregateRepository.load(command.getInvoiceId().toString())
+                .execute(aggregate -> aggregate.applyRemoveMedicineCharges(
+                        command.getPrescriptionId(),
+                        command.getInvoiceId()
+                ));
+    }
 
 
 }

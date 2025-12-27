@@ -3,16 +3,21 @@ package com.do_an.paymentservice.saga;
 
 
 import com.do_an.common.command.*;
+import com.do_an.common.event.InvoiceCancelledEvent;
 import com.do_an.common.event.PaymentFailedEvent;
 import com.do_an.common.event.PaymentInitiatedEvent;
 import com.do_an.common.event.PaymentProcessedEvent;
+import com.do_an.paymentservice.client.InventoryClient;
+import com.do_an.paymentservice.dto.response.DispenseOrderResponse;
 import com.do_an.paymentservice.entity.PaymentStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
+import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
+import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +33,9 @@ public class PaymentProcessingSaga {
     private transient CommandGateway commandGateway;
 
     @Autowired
+    private transient InventoryClient inventoryClient;
+
+    @Autowired
     private transient DeadlineManager deadlineManager;
 
     private UUID paymentId;
@@ -41,6 +49,7 @@ public class PaymentProcessingSaga {
         this.paymentId = event.getPaymentId();
         this.invoiceId = event.getInvoiceId();
         this.dispenseOrderId = event.getDispenseOrderId();
+        SagaLifecycle.associateWith("invoiceId", String.valueOf(this.invoiceId));
         log.info("Bắt đầu phiên thanh toán: {}", paymentId);
 
         // Timeout 30 phút cho mã QR
@@ -60,7 +69,6 @@ public class PaymentProcessingSaga {
         commandGateway.send(new MarkPrescripAsSoldCommand(this.dispenseOrderId));
     }
 
-    @EndSaga
     @SagaEventHandler(associationProperty = "paymentId")
     public void on(PaymentFailedEvent event) {
         if ("TIMEOUT".equals(event.getStatus())) {
@@ -80,6 +88,30 @@ public class PaymentProcessingSaga {
         //Thông báo Frontend (Notification Service sẽ lắng nghe event này hoặc bạn bắn event notification riêng)
 
 
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "invoiceId")
+    public void on(InvoiceCancelledEvent event) {
+        log.info("Hóa đơn {} đã chuyển sang CANCELLED. Thực hiện đồng bộ trạng thái các service khác...", event.getInvoiceId());
+        DispenseOrderResponse dispenseOrderResponse =  inventoryClient.getByPrescriptionId(event.getPrescriptionId());
+        UUID dispenseOrderId = dispenseOrderResponse.getId();
+
+        //Cập nhật Inventory: Chuyển DispenseOrder sang CANCELLED và trả lại số lượng
+        commandGateway.send(new ReturnMedicineReservationCommand(
+                dispenseOrderId,
+                event.getPrescriptionId()
+
+        ));
+
+        //Cập nhật Insurance: Chuyển Claim sang CANCELLED
+        if (event.getInsuranceClaimId() != null) {
+            commandGateway.send(new CancelInsuranceClaimCommand(
+                    event.getInsuranceClaimId(),
+                    event.getPrescriptionId(),
+                    event.getReason()
+            ));
+        }
     }
 
 

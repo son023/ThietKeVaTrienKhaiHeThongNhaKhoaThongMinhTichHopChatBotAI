@@ -194,7 +194,6 @@ public class InvoiceEventHandler {
     @Transactional
     public void on(MedicineChargesRemovedEvent event) {
         try {
-            log.info("Loại bỏ phí thuốc cho hóa đơn: {}", event.getInvoiceId());
 
             Invoice invoice = invoiceRepository.findById(event.getInvoiceId())
                     .orElseThrow(() -> new RuntimeException("Loại bỏ phí thuốc cho hóa đơn: ..."));
@@ -246,46 +245,46 @@ public class InvoiceEventHandler {
         }
     }
 
-    @EventHandler
-    @Transactional
-    public void on(ServiceChargeAddedEvent event) {
-        try {
-            log.info("=== ServiceChargeAddedEvent RECEIVED ===");
-            log.info("Event details: labTestId={}, appointmentId={}, price={}",
-                    event.getLabTestId(), event.getAppointmentId(), event.getPrice());
-            log.info("add invoice item LABTEST");
-            List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(event.getAppointmentId());
-            if (invoices.isEmpty()) {
-                throw new InvoiceNotFoundException("Không tìm thấy hoá đơn cho appointment: " + event.getAppointmentId());
-            }
-            Invoice invoice = invoices.get(0);
-
-            InvoiceItem item = new InvoiceItem();
-            item.setId(UUID.randomUUID());
-            item.setReferenceId(event.getLabTestId());
-            item.setServiceType("LABTEST");
-            item.setQuantity(1);
-
-            item.setUnitPrice(event.getPrice());
-            item.setInsurancePayAmount(0);
-            item.setPatientPayAmount(event.getPrice());
-            item.setInvoice(invoice);
-            invoice.addItem(item);
-            invoiceItemRepository.save(item);
-
-            int currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
-            int newTotal = currentTotal + event.getPrice();
-            invoice.setTotalAmount(newTotal);
-            invoice.setPatientTotalPay(newTotal);
-            invoiceRepository.save(invoice);
-
-            log.info("Đã thêm phí xét nghiệm {} vào hoá đơn cho appointment {}, tổng tiền {}",
-                    "LABTEST", event.getAppointmentId(), newTotal);
-        } catch (Exception e) {
-            log.error("Không thể thêm phí dịch vụ vào hóa đơn cho appointment {}: {}",
-                    event.getAppointmentId(), e.getMessage(), e);
-        }
-    }
+//    @EventHandler
+//    @Transactional
+//    public void on(ServiceChargeAddedEvent event) {
+//        try {
+//            log.info("=== ServiceChargeAddedEvent RECEIVED ===");
+//            log.info("Event details: labTestId={}, appointmentId={}, price={}",
+//                    event.getLabTestId(), event.getAppointmentId(), event.getPrice());
+//            log.info("add invoice item LABTEST");
+//            List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(event.getAppointmentId());
+//            if (invoices.isEmpty()) {
+//                throw new InvoiceNotFoundException("Không tìm thấy hoá đơn cho appointment: " + event.getAppointmentId());
+//            }
+//            Invoice invoice = invoices.get(0);
+//
+//            InvoiceItem item = new InvoiceItem();
+//            item.setId(UUID.randomUUID());
+//            item.setReferenceId(event.getLabTestId());
+//            item.setServiceType("LABTEST");
+//            item.setQuantity(1);
+//
+//            item.setUnitPrice(event.getPrice());
+//            item.setInsurancePayAmount(0);
+//            item.setPatientPayAmount(event.getPrice());
+//            item.setInvoice(invoice);
+//            invoice.addItem(item);
+//            invoiceItemRepository.save(item);
+//
+//            int currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+//            int newTotal = currentTotal + event.getPrice();
+//            invoice.setTotalAmount(newTotal);
+//            invoice.setPatientTotalPay(newTotal);
+//            invoiceRepository.save(invoice);
+//
+//            log.info("Đã thêm phí xét nghiệm {} vào hoá đơn cho appointment {}, tổng tiền {}",
+//                    "LABTEST", event.getAppointmentId(), newTotal);
+//        } catch (Exception e) {
+//            log.error("Không thể thêm phí dịch vụ vào hóa đơn cho appointment {}: {}",
+//                    event.getAppointmentId(), e.getMessage(), e);
+//        }
+//    }
 
     private CreateInvoiceRequestDTO buildInvoiceRequest(InvoiceCreateEvent command) {
         CreateInvoiceRequestDTO dto = new CreateInvoiceRequestDTO();

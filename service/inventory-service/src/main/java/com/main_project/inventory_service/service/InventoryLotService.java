@@ -29,8 +29,8 @@ public class InventoryLotService implements IInventoryLotService {
 
     private final InventoryLotRepository inventoryLotRepository;
     private final MedicineRepository medicineRepository;
-    private final StockLedgerRepository stockLedgerRepository;
     private final DispenseItemRepository dispenseItemRepository;
+    private final StockLedgerRepository stockLedgerRepository;
     private final PharmacistRepository pharmacistRepository;
 
     @Override

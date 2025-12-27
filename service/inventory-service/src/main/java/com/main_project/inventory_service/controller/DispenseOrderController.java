@@ -35,6 +35,7 @@ public class DispenseOrderController {
         return ResponseEntity.ok(response);
     }
 
+    //Dùng
     @GetMapping("/{id}")
     public ResponseEntity<DispenseOrderResponse> getById(@PathVariable UUID id) {
         DispenseOrderResponse response = dispenseOrderService.getById(id);
@@ -53,6 +54,7 @@ public class DispenseOrderController {
         return ResponseEntity.noContent().build();
     }
 
+    //Dùng
     @PatchMapping("/{id}/sold")
     public ResponseEntity<DispenseOrderResponse> markAsSold(
             @Parameter(description = "ID của đơn thuốc", required = true)
@@ -68,7 +70,7 @@ public class DispenseOrderController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ THÊM: Endpoint lấy đơn theo status
+    //Dùng
     @GetMapping("/by-status")
     public ResponseEntity<List<DispenseOrderResponse>> getByStatus(
             @RequestParam(required = false) String status) {
@@ -77,12 +79,13 @@ public class DispenseOrderController {
             return ResponseEntity.ok(responses);
         } else {
             // Nếu không truyền status, lấy tất cả trừ SOLD và CANCELLED
-            List<String> pendingStatuses = Arrays.asList("PENDING", "RESERVED", "IN_PROGRESS");
+            List<String> pendingStatuses = Arrays.asList("PENDING", "RESERVED", "IN_PROGRESS", "RELEASED");
             List<DispenseOrderResponse> responses = dispenseOrderService.getAllByStatuses(pendingStatuses);
             return ResponseEntity.ok(responses);
         }
     }
 
+    //Dùng
     @GetMapping("/{id}/payment-status")
     public ResponseEntity<Map<String, Object>> getPaymentStatusOfPrescription(@PathVariable UUID id) {
         Map<String, Object> status = dispenseOrderService.getPaymentStatusOfPrescription(id);

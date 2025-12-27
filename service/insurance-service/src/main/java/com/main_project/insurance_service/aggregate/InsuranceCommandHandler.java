@@ -159,13 +159,13 @@ public class InsuranceCommandHandler {
     @CommandHandler
     public void handle(CancelInsuranceClaimCommand command) {
         log.info("Nhận lệnh CancelInsuranceClaimCommand cho ClaimId: {}", command.getInsuranceClaimId());
-            eventBus.publish(GenericEventMessage.asEventMessage(
-                    new InsuranceClaimCancelledEvent(
-                            command.getInsuranceClaimId(),
-                            command.getPrescriptionId(),
-                            command.getReason()
-                    )
-            ));
+
+        insuranceAggregateRepository.load(command.getInsuranceClaimId().toString())
+                .execute(aggregate -> aggregate.applyCancelInsuranceClaim(
+                        command.getInsuranceClaimId(),
+                        command.getPrescriptionId(),
+                        command.getReason()
+                ));
 
 
     }

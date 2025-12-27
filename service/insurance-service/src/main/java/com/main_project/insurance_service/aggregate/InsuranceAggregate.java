@@ -1,6 +1,7 @@
 package com.main_project.insurance_service.aggregate;
 
 
+import com.do_an.common.event.InsuranceClaimCancelledEvent;
 import com.do_an.common.event.InsuranceRejectedEvent;
 import com.do_an.common.event.InsuranceValidatedEvent;
 import com.do_an.common.model.InvoiceItemResponse;
@@ -27,6 +28,15 @@ public class InsuranceAggregate {
                 patientId,
                 coverageAmount,
                 items
+        ));
+
+    }
+
+    public void applyCancelInsuranceClaim(UUID insuranceClaimId, UUID prescriptionId, String reason){
+        AggregateLifecycle.apply(new InsuranceClaimCancelledEvent(
+                insuranceClaimId,
+                prescriptionId,
+                reason
         ));
 
     }

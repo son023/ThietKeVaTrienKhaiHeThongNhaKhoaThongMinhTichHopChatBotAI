@@ -86,6 +86,7 @@ public class InventoryEventHandler {
                     dispenseItem.setId(UUID.randomUUID());
                     dispenseItem.setQuantity(toReserveFromLot);
                     dispenseItem.setPriceAtDispense(medicine.getSalePrice() != null ? medicine.getSalePrice() : 0);
+                    //dispenseItem.setPriceAtDispense(item.getUnitPrice() != null ? item.getUnitPrice() : 0);
                     dispenseItem.setInventoryLot(lot);
                     dispenseItem.setDosage(item.getDosage());
                     dispenseItem.setDuration(item.getDuration());

@@ -19,6 +19,7 @@ public class MedicineController {
 
     private final IMedicineService medicineService;
 
+    //Dùng
     @PostMapping
     public ResponseEntity<MedicineResponse> create(@Valid @RequestBody MedicineRequest request) {
         MedicineResponse response = medicineService.create(request);
@@ -32,12 +33,14 @@ public class MedicineController {
         return ResponseEntity.ok(response);
     }
 
+    //Dùng
     @GetMapping("/{id}")
     public ResponseEntity<MedicineResponse> getById(@PathVariable UUID id) {
         MedicineResponse response = medicineService.getById(id);
         return ResponseEntity.ok(response);
     }
 
+    //Dùng
     @GetMapping
     public ResponseEntity<List<MedicineResponse>> getAll() {
         List<MedicineResponse> responses = medicineService.getAll();

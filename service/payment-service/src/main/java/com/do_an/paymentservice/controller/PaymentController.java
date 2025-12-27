@@ -32,6 +32,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    //Dùng
     @Operation(
             summary = "Khởi tạo thanh toán",
             description = "Tạo một payment mới cho hóa đơn. Tổng tiền sẽ được tính tự động từ InvoiceItem của Invoice. " +
@@ -55,6 +56,8 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
+    //Dùng
     @Operation(
             summary = "Lấy trạng thái thanh toán",
             description = "Lấy trạng thái thanh toán mới nhất của một Invoice. Dùng cho client polling."
@@ -65,12 +68,12 @@ public class PaymentController {
             @ApiResponse(responseCode = "404", description = "Không tìm thấy payment cho Invoice này")
     })
     @GetMapping("/status")
-    public ResponseEntity<PaymentResponseDTO> getPaymentStatus(
+    public ResponseEntity<PaymentResponseDTO> getPaymentStatusOfInvoice(
             @Parameter(description = "ID của Invoice", required = true)
             @RequestParam UUID invoiceId) {
 
         log.info("Kiểm tra trạng thái thanh toán cho Invoice: {}", invoiceId);
-        PaymentResponseDTO response = paymentService.getPaymentStatus(invoiceId);
+        PaymentResponseDTO response = paymentService.getPaymentStatusOfInvoice(invoiceId);
 
         return ResponseEntity.ok(response);
     }
@@ -163,6 +166,8 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+
+    //Dùng
     @Operation(
             summary = "Lấy tất cả payments theo Invoice ID",
             description = "Lấy tất cả payments của một Invoice (có thể có nhiều payment cho một Invoice)"
@@ -181,6 +186,8 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+
+    //Dùng
     @Operation(
         summary = "Xử lý callback từ PayOS redirect",
         description = "Endpoint này được gọi từ frontend sau khi PayOS redirect về. Dùng để cập nhật trạng thái payment cho cả trường hợp CANCELLED."

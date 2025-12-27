@@ -356,7 +356,7 @@ public class PaymentService {
      * CHỨC NĂNG 3: Lấy trạng thái thanh toán (Client polling)
      */
     @Transactional(readOnly = true)
-    public PaymentResponseDTO getPaymentStatus(UUID invoiceId) {
+    public PaymentResponseDTO getPaymentStatusOfInvoice(UUID invoiceId) {
         log.debug("Lấy trạng thái thanh toán cho Invoice: {}", invoiceId);
 
         Payment payment = paymentRepository.findFirstByInvoiceIdOrderByCreateAtDesc(invoiceId)

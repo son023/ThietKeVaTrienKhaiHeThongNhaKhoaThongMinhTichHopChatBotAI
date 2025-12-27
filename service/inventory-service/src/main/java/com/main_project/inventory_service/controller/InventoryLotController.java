@@ -18,6 +18,7 @@ import java.util.UUID;
 public class InventoryLotController {
     private final IInventoryLotService inventoryLotService;
 
+    //Dùng
     @PostMapping
     public ResponseEntity<InventoryLotResponse> create(@Valid @RequestBody InventoryLotRequest request) {
         InventoryLotResponse response = inventoryLotService.create(request);
@@ -31,12 +32,14 @@ public class InventoryLotController {
         return ResponseEntity.ok(response);
     }
 
+    //Dùng
     @GetMapping("/{id}")
     public ResponseEntity<InventoryLotResponse> getById(@PathVariable UUID id) {
         InventoryLotResponse response = inventoryLotService.getById(id);
         return ResponseEntity.ok(response);
     }
 
+    //Dùng
     @GetMapping
     public ResponseEntity<List<InventoryLotResponse>> getAll() {
         List<InventoryLotResponse> responses = inventoryLotService.getAll();
@@ -51,6 +54,7 @@ public class InventoryLotController {
 
     // ==================== MANUAL EXPORT ENDPOINTS ====================
 
+    //Dùng
     @PostMapping("/export")
     public ResponseEntity<ManualExportResponse> exportStock(@Valid @RequestBody ManualExportRequest request) {
         ManualExportResponse response = inventoryLotService.exportStock(request);
@@ -63,12 +67,14 @@ public class InventoryLotController {
         return ResponseEntity.ok(responses);
     }
 
+    //Dùng
     @GetMapping("/all-exports")
     public ResponseEntity<List<ManualExportResponse>> getAllExports() {
         List<ManualExportResponse> responses = inventoryLotService.getAllExports();
         return ResponseEntity.ok(responses);
     }
 
+    //Dùng
     @GetMapping("/{lotId}/stock-ledgers")
     public ResponseEntity<List<StockLedgerResponse>> getStockLedgersByLotId(@PathVariable UUID lotId) {
         List<StockLedgerResponse> stockLedgers = inventoryLotService.getStockLedgersByLotId(lotId);
