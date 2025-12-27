@@ -45,6 +45,14 @@ class NotificationController {
     return this.handleResponse<NotificationDTO[]>(res);
   }
 
+  async getByTemplateId(templateId: string): Promise<NotificationDTO[]> {
+    const encodedTemplateId = encodeURIComponent(templateId);
+    const res = await fetch(createApiUrl(this.baseUrl, `/template?templateId=${encodedTemplateId}`), {
+      headers: getApiHeaders(true),
+    });
+    return this.handleResponse<NotificationDTO[]>(res);
+  }
+
   async getUnreadCount(userId: string): Promise<number> {
     const res = await fetch(createApiUrl(this.baseUrl, `/user/${userId}/unread-count`), {
       headers: getApiHeaders(true),
