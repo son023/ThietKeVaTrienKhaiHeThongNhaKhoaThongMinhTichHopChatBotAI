@@ -428,6 +428,29 @@ class InventoryController {
     return allLedgers.flat();
   }
 
+  // Lấy đơn cấp phát theo medicalHistoryId
+  async getDispenseOrderByMedicalHistoryId(medicalHistoryId: string): Promise<DispenseOrderDTO | null> {
+    try {
+      const url = createApiUrl(`${this.baseUrl}/dispense-orders/medical-history/${medicalHistoryId}`);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getApiHeaders(true),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Không tìm thấy đơn thuốc
+        }
+        throw new Error(`Failed to fetch dispense order: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.warn("Failed to load dispense order:", error);
+      return null;
+    }
+  }
+
 }
 
 export const inventoryController = new InventoryController();
