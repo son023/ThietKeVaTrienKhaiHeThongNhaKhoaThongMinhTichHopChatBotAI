@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Phone,
@@ -9,6 +9,7 @@ import {
   Bell,
   Shield,
   CreditCard,
+  FileText,
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -17,21 +18,32 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { toast } from "sonner";
+import { authController } from "../../controllers/AuthController";
+import { userController, UpdateUserRequestDTO } from "../../controllers/UserController";
+import { patientController } from "../../controllers/PatientController";
+import { insuranceController, PatientInsuranceDTO } from "../../controllers/InsuranceController";
+import { UserDTO } from "../../models";
+import { PatientDTO } from "../../models/Patient";
 
 export function PatientProfile() {
   const [selectedTab, setSelectedTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Mock data
+  // Data from API
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [patient, setPatient] = useState<PatientDTO | null>(null);
+  const [insurance, setInsurance] = useState<PatientInsuranceDTO | null>(null);
+
+  // Form data
   const [profileData, setProfileData] = useState({
-    fullName: "Nguyễn Văn Minh",
-    dateOfBirth: "15/05/1990",
-    gender: "Nam",
-    phone: "+84 912 345 678",
-    email: "nguyenvanminh@email.com",
-    address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
-    emergencyContact: "Nguyễn Thị Lan",
-    emergencyPhone: "0987 654 321",
+    fullName: "",
+    dob: "",
+    gender: "",
+    contactPhone: "",
+    email: "",
+    address: "",
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -43,14 +55,129 @@ export function PatientProfile() {
     emailNotification: true,
   });
 
-  const handleSaveProfile = () => {
-    toast.success("Cập nhật thông tin thành công!");
-    setIsEditing(false);
+  // Load data on mount
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+
+  const loadProfileData = async () => {
+    try {
+      setIsLoading(true);
+      const currentUser = authController.getCurrentUser();
+      if (!currentUser?.id) {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
+
+      // Load user data
+      const userData = await userController.getById(currentUser.id);
+      setUser(userData);
+
+      // Load patient data (patientId = userId)
+      let patientData = null;
+      try {
+        patientData = await patientController.getById(currentUser.id);
+        console.log("patientData", patientData);
+
+        setPatient(patientData);
+      } catch (error) {
+        console.warn("Patient profile not found, will create on save");
+      }
+
+      // Load insurance data
+      let insuranceData = null;
+      try {
+        insuranceData = await insuranceController.getActiveByPatientId(currentUser.id);
+
+        
+        setInsurance(insuranceData);
+      } catch (error) {
+        console.warn("Insurance not found");
+      }
+
+      // Populate form - Sử dụng patientData thay vì patient state
+      setProfileData({
+        fullName: userData.fullName || "",
+        dob: patientData?.dob 
+        ? new Date(patientData.dob).toISOString().split('T')[0]
+        : "",     
+        gender: patientData?.gender || "",
+        contactPhone: userData.phone || "",
+        email: userData.email || "",
+        address: patientData?.address || ""
+      });
+    } catch (error) {
+      console.error("Failed to load profile:", error);
+      toast.error("Không thể tải thông tin cá nhân");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      const currentUser = authController.getCurrentUser();
+      if (!currentUser?.id) {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
+
+      console.log("update", profileData);
+      // Update user
+      const updateUserData: UpdateUserRequestDTO = {
+        fullName: profileData.fullName,
+        phone: profileData.contactPhone,
+        email: profileData.email,
+      };
+      await userController.update(currentUser.id, updateUserData);
+
+      // Update patient profile
+      try {
+        await patientController.upsertProfile(currentUser.id, {
+          dob: profileData.dob,
+          gender: profileData.gender,
+          address: profileData.address,
+          contactPhone: profileData.contactPhone
+        });
+      } catch (error) {
+        console.error("Failed to update patient profile:", error);
+        toast.warning("Cập nhật thông tin bệnh nhân thất bại");
+      }
+
+      toast.success("Cập nhật thông tin thành công!");
+      setIsEditing(false);
+      await loadProfileData(); // Reload data
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      toast.error("Không thể cập nhật thông tin");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangePassword = () => {
     toast.success("Yêu cầu đổi mật khẩu đã được gửi đến email của bạn");
   };
+
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN');
+    } catch {
+      return dateString;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full bg-[var(--page-bg)] py-10 px-5 md:px-20 min-h-screen flex items-center justify-center">
+        <p className="text-[var(--text-regular)]">Đang tải thông tin...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[var(--page-bg)] py-10 px-5 md:px-20 min-h-screen">
@@ -69,22 +196,24 @@ export function PatientProfile() {
         <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="w-24 h-24 bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              {profileData.fullName.charAt(0)}
+              {user?.fullName?.charAt(0) || "U"}
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h2 className="typo-h2 text-[var(--text-strong)] mb-1">
-                {profileData.fullName}
+                {user?.fullName || "Chưa có tên"}
               </h2>
               <p className="text-sm text-[var(--text-regular)] opacity-70 mb-2">
-                {profileData.email}
+                {user?.email || ""}
               </p>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <span className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg font-medium text-xs">
                   Tài khoản đã xác thực
                 </span>
-                <span className="px-3 py-1.5 bg-[var(--accent-ghost)] text-[var(--accent-light)] rounded-lg font-medium text-xs">
-                  Mã BN: BN-2024-0123
-                </span>
+                {patient?.userId && (
+                  <span className="px-3 py-1.5 bg-[var(--accent-ghost)] text-[var(--accent-light)] rounded-lg font-medium text-xs">
+                    Mã BN: {patient.userId.substring(0, 8).toUpperCase()}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -96,9 +225,12 @@ export function PatientProfile() {
           onValueChange={setSelectedTab}
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
             <TabsTrigger value="info" className="font-medium">
               Thông tin
+            </TabsTrigger>
+            <TabsTrigger value="insurance" className="font-medium">
+              Bảo hiểm
             </TabsTrigger>
             <TabsTrigger value="security" className="font-medium">
               Bảo mật
@@ -126,15 +258,19 @@ export function PatientProfile() {
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        setIsEditing(false);
+                        loadProfileData(); // Reset form
+                      }}
                     >
                       Hủy
                     </Button>
                     <Button
                       onClick={handleSaveProfile}
                       className="bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent)]"
+                      disabled={isSaving}
                     >
-                      Lưu thay đổi
+                      {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
                     </Button>
                   </div>
                 )}
@@ -170,11 +306,12 @@ export function PatientProfile() {
                   </Label>
                   <Input
                     id="dateOfBirth"
-                    value={profileData.dateOfBirth}
+                    type="date"
+                    value={profileData.dob}
                     onChange={(e) =>
                       setProfileData({
                         ...profileData,
-                        dateOfBirth: e.target.value,
+                        dob: e.target.value,
                       })
                     }
                     disabled={!isEditing}
@@ -188,14 +325,20 @@ export function PatientProfile() {
                   >
                     Giới tính
                   </Label>
-                  <Input
+                  <select
                     id="gender"
                     value={profileData.gender}
                     onChange={(e) =>
                       setProfileData({ ...profileData, gender: e.target.value })
                     }
                     disabled={!isEditing}
-                  />
+                    className="w-full px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-white"
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value="MALE">Nam</option>
+                    <option value="FEMALE">Nữ</option>
+                    <option value="OTHER">Khác</option>
+                  </select>
                 </div>
 
                 <div>
@@ -207,9 +350,9 @@ export function PatientProfile() {
                   </Label>
                   <Input
                     id="phone"
-                    value={profileData.phone}
+                    value={profileData.contactPhone}
                     onChange={(e) =>
-                      setProfileData({ ...profileData, phone: e.target.value })
+                      setProfileData({ ...profileData, contactPhone: e.target.value })
                     }
                     disabled={!isEditing}
                   />
@@ -253,46 +396,165 @@ export function PatientProfile() {
                   />
                 </div>
 
-                <div>
-                  <Label
-                    htmlFor="emergencyContact"
-                    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2"
-                  >
-                    Người liên hệ khẩn cấp
-                  </Label>
-                  <Input
-                    id="emergencyContact"
-                    value={profileData.emergencyContact}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        emergencyContact: e.target.value,
-                      })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
+                {/*<div>*/}
+                {/*  <Label*/}
+                {/*    htmlFor="emergencyContact"*/}
+                {/*    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2"*/}
+                {/*  >*/}
+                {/*    Người liên hệ khẩn cấp*/}
+                {/*  </Label>*/}
+                {/*  <Input*/}
+                {/*    id="emergencyContact"*/}
+                {/*    value={profileData.emergencyContact}*/}
+                {/*    onChange={(e) =>*/}
+                {/*      setProfileData({*/}
+                {/*        ...profileData,*/}
+                {/*        emergencyContact: e.target.value,*/}
+                {/*      })*/}
+                {/*    }*/}
+                {/*    disabled={!isEditing}*/}
+                {/*  />*/}
+                {/*</div>*/}
 
-                <div>
-                  <Label
-                    htmlFor="emergencyPhone"
-                    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2"
-                  >
-                    SĐT người liên hệ khẩn cấp
-                  </Label>
-                  <Input
-                    id="emergencyPhone"
-                    value={profileData.emergencyPhone}
-                    onChange={(e) =>
-                      setProfileData({
-                        ...profileData,
-                        emergencyPhone: e.target.value,
-                      })
-                    }
-                    disabled={!isEditing}
-                  />
-                </div>
+                {/*<div>*/}
+                {/*  <Label*/}
+                {/*    htmlFor="emergencyPhone"*/}
+                {/*    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2"*/}
+                {/*  >*/}
+                {/*    SĐT người liên hệ khẩn cấp*/}
+                {/*  </Label>*/}
+                {/*  <Input*/}
+                {/*    id="emergencyPhone"*/}
+                {/*    value={profileData.emergencyPhone}*/}
+                {/*    onChange={(e) =>*/}
+                {/*      setProfileData({*/}
+                {/*        ...profileData,*/}
+                {/*        emergencyPhone: e.target.value,*/}
+                {/*      })*/}
+                {/*    }*/}
+                {/*    disabled={!isEditing}*/}
+                {/*  />*/}
+                {/*</div>*/}
+
               </div>
+            </Card>
+          </TabsContent>
+
+          {/* Insurance Tab - READ ONLY */}
+          <TabsContent value="insurance">
+            <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <FileText className="w-6 h-6 text-[var(--accent-light)]" />
+                <h3 className="typo-h4 text-[var(--text-strong)]">
+                  Thông tin bảo hiểm
+                </h3>
+              </div>
+
+              {insurance ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                        Ngày cấp
+                      </Label>
+                      <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                        {formatDate(insurance.issueDate)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                        Ngày hết hạn
+                      </Label>
+                      <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                        {formatDate(insurance.expiryDate)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                        Trạng thái
+                      </Label>
+                      <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${insurance.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : insurance.status === "EXPIRED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                        >
+                          {insurance.status === "ACTIVE"
+                            ? "Đang hoạt động"
+                            : insurance.status === "EXPIRED"
+                              ? "Hết hạn"
+                              : "Tạm ngưng"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {insurance.insurancePolicy && (
+                      <>
+                        <div>
+                          <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                            Số chính sách
+                          </Label>
+                          <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                            {insurance.insurancePolicy.policyNumber || "N/A"}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                            Loại bảo hiểm
+                          </Label>
+                          <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                            {insurance.insurancePolicy.policyType || "N/A"}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                            Số tiền bảo hiểm
+                          </Label>
+                          <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                            {insurance.insurancePolicy.coverageAmount
+                              ? new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(insurance.insurancePolicy.coverageAmount)
+                              : "N/A"}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2">
+                            Mức khấu trừ
+                          </Label>
+                          <div className="px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-[var(--surface-muted)]">
+                            {insurance.insurancePolicy.deductible
+                              ? new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(insurance.insurancePolicy.deductible)
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-[var(--text-regular)] opacity-30 mx-auto mb-4" />
+                  <p className="text-[var(--text-regular)] opacity-70">
+                    Chưa có thông tin bảo hiểm
+                  </p>
+                  <p className="text-sm text-[var(--text-regular)] opacity-50 mt-2">
+                    Vui lòng liên hệ bộ phận bảo hiểm để đăng ký
+                  </p>
+                </div>
+              )}
             </Card>
           </TabsContent>
 
@@ -344,40 +606,6 @@ export function PatientProfile() {
                       <Switch checked={true} />
                     </div>
                   </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 md:p-8 border-red-200 bg-red-50/50 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-6 h-6 text-red-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                  </div>
-                  {/* <div className="flex-1">
-                    <h3 className="typo-h4 text-red-600 mb-1">
-                      Xóa tài khoản
-                    </h3>
-                    <p className="text-sm text-[var(--text-regular)] opacity-70 mb-4">
-                      Sau khi xóa, tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="border-red-500 text-red-600 hover:bg-red-50"
-                    >
-                      Xóa tài khoản
-                    </Button>
-                  </div> */}
                 </div>
               </Card>
             </div>
