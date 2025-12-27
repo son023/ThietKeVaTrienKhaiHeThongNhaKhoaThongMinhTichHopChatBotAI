@@ -74,6 +74,19 @@ class LabTestController {
     });
     return this.handleResponse<LabTestDTO>(res);
   }
+  async getByTechnicianId(technicianId: string): Promise<LabTestDTO[]> {
+    const res = await fetch(createApiUrl(this.baseUrl, "technician", technicianId), {
+      headers: getApiHeaders(true),
+    });
+    return this.handleResponse<LabTestDTO[]>(res);
+  }
+
+  async getByStatus(status: string): Promise<LabTestDTO[]> {
+    const res = await fetch(createApiUrl(this.baseUrl, "status", status), {
+      headers: getApiHeaders(true),
+    });
+    return this.handleResponse<LabTestDTO[]>(res);
+  }
 }
 
 export const labTestController = new LabTestController();
