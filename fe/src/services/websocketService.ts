@@ -50,6 +50,17 @@ export interface PrescriptionDispensedNotification {
   timestamp?: number;
 }
 
+export interface AppointmentCreatedNotification {
+  type: string;
+  appointmentId?: string;
+  patientId?: string;
+  doctorId?: string;
+  appointmentStartTime?: string;
+  appointmentEndTime?: string;
+  message: string;
+  timestamp?: number;
+}
+
 
 
 export const connectWebSocket = (): Client | null => {
@@ -586,6 +597,103 @@ export const subscribeToPrescriptionDispensed = (
       subscription.unsubscribe();
       activeSubscriptions.delete(subscriptionKey);
       console.log(`[WebSocket] Unsubscribed from prescription dispensed notifications for user: ${userId}`);
+    }
+  };
+};
+
+export const subscribeToAppointmentCreated = (
+  userId: string,
+  onNotification: (notification: AppointmentCreatedNotification) => void
+): (() => void) => {
+  console.log(`[WebSocket] Subscribing to appointment created notifications for user: ${userId}`);
+
+  if (!stompClient) {
+    console.log('[WebSocket] No client found, creating new connection...');
+    connectWebSocket();
+  }
+
+  const topic = `/topic/appointment-created`;
+  console.log(`[WebSocket] Topic: ${topic}`);
+
+  const subscriptionKey = `appointment-created-${userId}`;
+  if (activeSubscriptions.has(subscriptionKey)) {
+    console.log(`[WebSocket] Unsubscribing from existing subscription for: ${subscriptionKey}`);
+    const existingSub = activeSubscriptions.get(subscriptionKey);
+    existingSub?.unsubscribe();
+    activeSubscriptions.delete(subscriptionKey);
+  }
+
+  let retryCount = 0;
+  const maxRetries = 50;
+
+  const subscribe = () => {
+    if (stompClient && stompClient.connected) {
+      try {
+        const subscription = stompClient.subscribe(topic, (message: IMessage) => {
+          console.log(`[WebSocket] 📨 Message received on topic ${topic}:`, message.body);
+          try {
+            const rawNotification = JSON.parse(message.body);
+            console.log('[WebSocket] Raw appointment created notification from backend:', rawNotification);
+
+            const notification: AppointmentCreatedNotification = {
+              type: rawNotification.type || 'APPOINTMENT_CREATED',
+              appointmentId: rawNotification.appointmentId || undefined,
+              patientId: rawNotification.patientId || undefined,
+              doctorId: rawNotification.doctorId || undefined,
+              appointmentStartTime: rawNotification.appointmentStartTime || undefined,
+              appointmentEndTime: rawNotification.appointmentEndTime || undefined,
+              message: rawNotification.message || 'Lịch hẹn mới đã được đăng ký',
+              timestamp: rawNotification.timestamp || Date.now(),
+            };
+
+            console.log('[WebSocket] Parsed AppointmentCreatedNotification:', notification);
+            onNotification(notification);
+          } catch (error) {
+            console.error('[WebSocket]  Error parsing appointment created message:', error);
+            console.error('[WebSocket] Raw message body:', message.body);
+          }
+        });
+
+        activeSubscriptions.set(subscriptionKey, subscription);
+        console.log(`[WebSocket]  Successfully subscribed to ${topic}`);
+        console.log(`[WebSocket] Total active subscriptions: ${activeSubscriptions.size}`);
+      } catch (error) {
+        console.error('[WebSocket]  Error subscribing:', error);
+      }
+    } else {
+      retryCount++;
+      if (retryCount < maxRetries) {
+        console.log(`[WebSocket] Waiting for connection... (${retryCount}/${maxRetries})`);
+        setTimeout(subscribe, 100);
+      } else {
+        console.error('[WebSocket]  Failed to subscribe: Connection timeout');
+      }
+    }
+  };
+
+  if (stompClient?.connected) {
+    console.log('[WebSocket] Already connected, subscribing immediately');
+    subscribe();
+  } else {
+    console.log('[WebSocket] Not connected yet, waiting for connection...');
+    const checkConnection = setInterval(() => {
+      if (stompClient?.connected) {
+        clearInterval(checkConnection);
+        console.log('[WebSocket] Connection established, subscribing now');
+        subscribe();
+      } else if (retryCount >= maxRetries) {
+        clearInterval(checkConnection);
+        console.error('[WebSocket]  Connection timeout');
+      }
+    }, 100);
+  }
+
+  return () => {
+    const subscription = activeSubscriptions.get(subscriptionKey);
+    if (subscription) {
+      subscription.unsubscribe();
+      activeSubscriptions.delete(subscriptionKey);
+      console.log(`[WebSocket] Unsubscribed from appointment created notifications for user: ${userId}`);
     }
   };
 };

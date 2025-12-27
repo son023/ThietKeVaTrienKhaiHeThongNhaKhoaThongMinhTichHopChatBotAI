@@ -17,7 +17,7 @@ export function ReceptionistSidebar({ currentPage, onPageChange }: ReceptionistS
   ];
 
     return (
-        <div className="fixed left-0 top-[80px] h-[calc(100vh-80px)] w-[260px] bg-white border-r border-[#e5e7eb] shadow-sm overflow-y-auto">
+        <div className="fixed left-0 top-0 h-screen w-[260px] bg-white border-r border-[#e5e7eb] shadow-sm overflow-y-auto z-30">
             <div className="p-6 border-b border-[#e8e8e8]">
                 <Logo />
             </div>

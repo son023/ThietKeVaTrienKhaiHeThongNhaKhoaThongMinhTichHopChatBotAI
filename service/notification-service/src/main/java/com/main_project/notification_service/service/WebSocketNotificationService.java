@@ -3,10 +3,12 @@ package com.main_project.notification_service.service;
 import com.main_project.notification_service.dto.LabTestCompletedNotificationMessage;
 import com.main_project.notification_service.dto.InvoicePaidNotificationMessage;
 import com.main_project.notification_service.dto.PrescriptionDispensedNotificationMessage;
+import com.main_project.notification_service.dto.AppointmentCreatedNotificationMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Service
@@ -113,6 +115,33 @@ public class WebSocketNotificationService {
         messagingTemplate.convertAndSend(topic, notification);
         
         log.info("Prescription dispensed notification sent to topic {} for dispenseOrder {}", topic, dispenseOrderId);
+    }
+
+    public void sendAppointmentCreatedNotification(
+            UUID appointmentId,
+            UUID patientId,
+            UUID doctorId,
+            ZonedDateTime appointmentStartTime,
+            ZonedDateTime appointmentEndTime,
+            String message) {
+        log.info("Sending appointment created notification for appointment {} patient={} doctor={}", 
+                appointmentId, patientId, doctorId);
+
+        AppointmentCreatedNotificationMessage notification = AppointmentCreatedNotificationMessage.builder()
+                .type("APPOINTMENT_CREATED")
+                .appointmentId(appointmentId != null ? appointmentId.toString() : null)
+                .patientId(patientId != null ? patientId.toString() : null)
+                .doctorId(doctorId != null ? doctorId.toString() : null)
+                .appointmentStartTime(appointmentStartTime != null ? appointmentStartTime.toString() : null)
+                .appointmentEndTime(appointmentEndTime != null ? appointmentEndTime.toString() : null)
+                .message(message != null ? message : "Lịch hẹn mới đã được đăng ký")
+                .timestamp(System.currentTimeMillis())
+                .build();
+
+        String topic = "/topic/appointment-created";
+        messagingTemplate.convertAndSend(topic, notification);
+        
+        log.info("Appointment created notification sent to topic {} for appointment {}", topic, appointmentId);
     }
 
 }

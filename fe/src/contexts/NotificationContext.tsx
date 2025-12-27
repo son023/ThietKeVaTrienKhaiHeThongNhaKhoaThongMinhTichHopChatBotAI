@@ -2,9 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import {
   connectWebSocket,
   subscribeToInvoicePaid,
-  subscribeToPrescriptionDispensed, // ✅ Thêm import
+  subscribeToPrescriptionDispensed,
+  subscribeToAppointmentCreated,
   InvoicePaidNotification,
-  PrescriptionDispensedNotification, // ✅ Thêm import
+  PrescriptionDispensedNotification,
+  AppointmentCreatedNotification,
   isConnected
 } from '../services/websocketService';
 import { notificationController, NotificationDTO } from '../controllers/NotificationController';
@@ -59,6 +61,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     let title = '💰 Hóa đơn đã được thanh toán';
     if (dto.templateId === 'PRESCRIPTION_DISPENSED') {
       title = '✅ Đơn thuốc đã được cấp phát';
+    } else if (dto.templateId === 'APPOINTMENT_CREATED') {
+      title = '📅 Lịch hẹn mới';
     }
 
     return {
@@ -85,7 +89,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     try {
       setLoading(true);
       const dtos = await notificationController.getByUserId(userId);
-      const mappedNotifications = dtos.map(mapDTOToNotification);
+      const appointmentNotifications = await notificationController.getByTemplateId('APPOINTMENT_CREATED');
+
+      const allNotifications = [...appointmentNotifications, ...dtos];
+      allNotifications.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return timeB - timeA;
+      });
+      const mappedNotifications = allNotifications.map(mapDTOToNotification);
       setNotifications(mappedNotifications);
       console.log(`[NotificationContext] Loaded ${mappedNotifications.length} notifications from backend`);
     } catch (error) {
@@ -98,8 +110,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Load notifications khi component mount hoặc userId thay đổi
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    if (userId) {
+      loadNotifications();
+    }
+  }, [userId, loadNotifications]);
 
 
   // ✅ Subscribe WebSocket khi component mount hoặc userId thay đổi
@@ -184,12 +198,43 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
     );
 
+    const unsubscribeAppointmentCreated = subscribeToAppointmentCreated(
+      userId,
+      (notification: AppointmentCreatedNotification) => {
+        console.log('[NotificationContext] 📅 Appointment created notification received:', notification);
+
+        const tempNotification: Notification = {
+          id: `ws-appointment-${Date.now()}-${Math.random()}`,
+          type: 'APPOINTMENT_CREATED',
+          title: '📅 Lịch hẹn mới',
+          message: notification.message || 'Lịch hẹn mới đã được đăng ký',
+          timestamp: notification.timestamp || Date.now(),
+          read: false,
+          appointmentId: notification.appointmentId,
+        };
+
+        setNotifications(prev => [tempNotification, ...prev]);
+
+        toast.success(
+          <div>
+            <p className="font-semibold">📅 Lịch hẹn mới</p>
+            <p className="text-sm">{notification.message}</p>
+          </div>,
+          {
+            duration: 5000,
+            icon: <CheckCircle className="w-5 h-5 text-blue-500" />,
+          }
+        );
+      }
+    );
+
     // Sync lại DB sau 1–2s
     setTimeout(loadNotifications, 1500);
 
     return () => {
       unsubscribeInvoicePaid();
-      unsubscribePrescriptionDispensed(); // ✅ Cleanup
+      unsubscribePrescriptionDispensed();
+      unsubscribeAppointmentCreated();
     };
   }, [userId, loadNotifications]);
 
