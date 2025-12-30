@@ -1,7 +1,9 @@
 package com.main_project.inventory_service.iservice;
 
+import com.main_project.inventory_service.dto.DispenseItemCreationRequest;
 import com.main_project.inventory_service.dto.DispenseItemRequest;
 import com.main_project.inventory_service.dto.DispenseItemResponse;
+import com.main_project.inventory_service.dto.DispenseItemRollbackResult;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +16,10 @@ public interface IDispenseItemService {
     void delete(UUID id);
 
     List<DispenseItemResponse> getAllByDispenseOrderId(UUID dispenseOrderId);
+    
+    // New methods for refactoring
+    DispenseItemResponse createDispenseItemFromReservation(DispenseItemCreationRequest request);
+    DispenseItemRollbackResult rollbackDispenseItem(UUID dispenseItemId);
 }
 
 

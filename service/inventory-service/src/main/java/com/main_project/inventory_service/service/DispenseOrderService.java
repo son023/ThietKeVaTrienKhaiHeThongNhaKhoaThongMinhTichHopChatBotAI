@@ -255,6 +255,82 @@ public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) 
         return mapToResponse(order);
     }
 
+    // ==================== NEW METHODS FOR REFACTORING ====================
+
+    @Override
+    @Transactional
+    public DispenseOrderResponse createDispenseOrderFromReservation(DispenseOrderCreationRequest request) {
+        DispenseOrder dispenseOrder = new DispenseOrder();
+        dispenseOrder.setId(request.getDispenseOrderId());
+        dispenseOrder.setPrescription(request.getPrescriptionId());
+        dispenseOrder.setMedicalHistoryId(request.getMedicalHistoryId());
+        dispenseOrder.setDoctorId(request.getDoctorId());
+        dispenseOrder.setStatus("RESERVED");
+
+        if (request.getPharmacistId() != null) {
+            Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
+                    .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
+            dispenseOrder.setPharmacist(pharmacist);
+        }
+
+        DispenseOrder saved = dispenseOrderRepository.save(dispenseOrder);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public DispenseOrderResponse updateStatus(UUID id, String status) {
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("DispenseOrder not found with id: " + id));
+        
+        dispenseOrder.setStatus(status);
+        DispenseOrder updated = dispenseOrderRepository.save(dispenseOrder);
+        return mapToResponse(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DispenseOrderResponse> getAllByPrescriptionId(UUID prescriptionId) {
+        return dispenseOrderRepository.findAllByPrescription(prescriptionId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void cancelAllByPrescriptionId(UUID prescriptionId) {
+        List<DispenseOrder> orders = dispenseOrderRepository.findAllByPrescription(prescriptionId);
+        orders.forEach(order -> order.setStatus("CANCELLED"));
+        dispenseOrderRepository.saveAll(orders);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canReturnReservation(UUID dispenseOrderId) {
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(dispenseOrderId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + dispenseOrderId));
+        
+        return !"SOLD".equals(dispenseOrder.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canReleasePrescription(UUID dispenseOrderId) {
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(dispenseOrderId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + dispenseOrderId));
+        
+        return !"CANCELLED".equals(dispenseOrder.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canMarkAsSold(UUID dispenseOrderId) {
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(dispenseOrderId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy đơn thuốc: " + dispenseOrderId));
+        
+        return !"CANCELLED".equals(dispenseOrder.getStatus());
+    }
 
 }
 

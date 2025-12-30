@@ -18,6 +18,16 @@ public interface IInventoryLotService {
     List<ManualExportResponse> getAllExports(); // Get ALL exports (manual + auto)
     List<ManualExportResponse> getAllManualExports();
     List<StockLedgerResponse> getStockLedgersByLotId(UUID lotId);
+    
+    // New methods for refactoring
+    List<InventoryLotResponse> getAvailableLotsForMedicine(UUID medicineId);
+    int getTotalAvailableQuantity(UUID medicineId);
+    void allocateQuantityFromLots(InventoryAllocationRequest request);
+    void restoreQuantityToLot(InventoryRestoreRequest request);
+    StockLedgerResponse createStockLedgerEntry(StockLedgerEntryRequest request);
+    
+    // Method to allocate quantity for dispense - returns allocation details
+    List<LotAllocationResult> allocateQuantityForDispense(MedicineAllocationRequest request);
 }
 
 

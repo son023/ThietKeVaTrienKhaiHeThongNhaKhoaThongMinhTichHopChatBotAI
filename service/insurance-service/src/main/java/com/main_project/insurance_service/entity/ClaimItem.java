@@ -15,7 +15,7 @@ import java.util.UUID;
 public class ClaimItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "quantity")

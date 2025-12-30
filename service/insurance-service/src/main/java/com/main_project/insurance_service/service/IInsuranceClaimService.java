@@ -1,5 +1,7 @@
 package com.main_project.insurance_service.service;
 import com.do_an.common.model.InvoiceCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
+import com.main_project.insurance_service.dto.ClaimItemRequestDTO;
 import com.main_project.insurance_service.dto.InsuranceClaimDTO;
 import com.main_project.insurance_service.dto.InsuranceClaimRequestDTO;
 import com.main_project.insurance_service.dto.InvoiceDTO;
@@ -7,6 +9,7 @@ import com.main_project.insurance_service.dto.InvoiceDTO;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface IInsuranceClaimService {
@@ -40,6 +43,12 @@ public interface IInsuranceClaimService {
     InsuranceClaimDTO rejectClaim(UUID id, String reason);
     
     void deleteClaim(UUID id);
+    
+    Set<InvoiceItemResponse> processInvoiceItemsForValidation(InvoiceCheckerRequest request, UUID patientId);
+    
+    InsuranceClaimDTO createClaimFromValidationEvent(UUID claimId, UUID patientId, Set<InvoiceItemResponse> items);
+    
+    ClaimItemRequestDTO createClaimItemRequestFromInvoiceItem(InvoiceItemResponse item, UUID claimId);
 }
 
 

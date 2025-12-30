@@ -72,6 +72,12 @@ public class MedicineService implements IMedicineService {
         medicineRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID medicineId) {
+        return medicineRepository.existsById(medicineId);
+    }
+
     private MedicineResponse mapToResponse(Medicine medicine) {
         return new MedicineResponse(
                 medicine.getId(),

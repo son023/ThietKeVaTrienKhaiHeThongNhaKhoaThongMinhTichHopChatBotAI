@@ -5,6 +5,7 @@ import com.main_project.insurance_service.exceptions.AppException;
 import com.main_project.insurance_service.exceptions.enums.ErrorCode;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
 import com.main_project.insurance_service.entity.InsuranceClaim;
 import com.main_project.insurance_service.entity.PatientInsurance;
 import com.main_project.insurance_service.repository.InsuranceClaimRepository;
@@ -180,7 +181,7 @@ public class InsuranceClaimService implements IInsuranceClaimService {
         return invoiceDTO;
     }
 
-    private ProcessedInvoiceItem processInvoiceItem(InvoiceItemCheckerRequest itemRequest, Float bhytPayRatio) {
+    ProcessedInvoiceItem processInvoiceItem(InvoiceItemCheckerRequest itemRequest, Float bhytPayRatio) {
         InvoiceItemDTO itemDTO = new InvoiceItemDTO();
         itemDTO.setId(itemRequest.getId());
         itemDTO.setReferenceId(itemRequest.getReferenceId());
@@ -211,19 +212,6 @@ public class InsuranceClaimService implements IInsuranceClaimService {
         itemDTO.setPatientPayAmount(patientPayAmount);
 
         return new ProcessedInvoiceItem(itemDTO, bhytCatalogueId);
-    }
-
-    private static class ProcessedInvoiceItem {
-        private final InvoiceItemDTO invoiceItem;
-        private final UUID bhytCatalogueId;
-
-        public ProcessedInvoiceItem(InvoiceItemDTO invoiceItem, UUID bhytCatalogueId) {
-            this.invoiceItem = invoiceItem;
-            this.bhytCatalogueId = bhytCatalogueId;
-        }
-
-        public InvoiceItemDTO getInvoiceItem() { return invoiceItem; }
-        public UUID getBhytCatalogueId() { return bhytCatalogueId; }
     }
 
     private ClaimItemRequestDTO createClaimItemRequestFromProcessedItem(ProcessedInvoiceItem processedItem, UUID claimId) {
@@ -301,6 +289,95 @@ public class InsuranceClaimService implements IInsuranceClaimService {
             throw new RuntimeException("Không tìm thấy yêu cầu bảo hiểm với ID: " + id);
         }
         insuranceClaimRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<InvoiceItemResponse> processInvoiceItemsForValidation(InvoiceCheckerRequest request, UUID patientId) {
+        PatientInsurance patientInsurance = patientInsuranceRepository.findByPatientId(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm của bệnh nhân: " + patientId));
+
+        if (patientInsurance.getInsurancePolicy() == null) {
+            throw new RuntimeException("Không tìm thấy chính sách bảo hiểm nào");
+        }
+
+        Float bhytPayRatio = patientInsurance.getInsurancePolicy().getCoverageAmount() / 100.0f;
+        Set<InvoiceItemResponse> itemResponses = new HashSet<>();
+
+        for (InvoiceItemCheckerRequest itemRequest : request.getItems()) {
+            ProcessedInvoiceItem processedItem = processInvoiceItem(itemRequest, bhytPayRatio);
+            InvoiceItemDTO dto = processedItem.getInvoiceItem();
+
+            UUID claimItemId = (dto.getInsurancePayAmount() > 0) ? UUID.randomUUID() : null;
+            InvoiceItemResponse response = InvoiceItemResponse.builder()
+                    .id(dto.getId())
+                    .referenceId(dto.getReferenceId())
+                    .serviceType(dto.getServiceType())
+                    .quantity(dto.getQuantity())
+                    .description(dto.getDescription())
+                    .unitPrice(dto.getUnitPrice())
+                    .insurancePayAmount(dto.getInsurancePayAmount())
+                    .patientPayAmount(dto.getPatientPayAmount())
+                    .claimItemId(claimItemId)
+                    .bhytCatalogueId(processedItem.getBhytCatalogueId())
+                    .build();
+
+            itemResponses.add(response);
+        }
+
+        return itemResponses;
+    }
+
+    @Override
+    @Transactional
+    public InsuranceClaimDTO createClaimFromValidationEvent(UUID claimId, UUID patientId, Set<InvoiceItemResponse> items) {
+        PatientInsurance patientInsurance = patientInsuranceRepository.findByPatientId(patientId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bảo hiểm của bệnh nhân: " + patientId));
+
+        int totalInsurancePay = 0;
+        int totalPatientPay = 0;
+        int totalClaimAmount = 0;
+
+        for (InvoiceItemResponse item : items) {
+            totalInsurancePay += item.getInsurancePayAmount();
+            totalPatientPay += item.getPatientPayAmount();
+            totalClaimAmount += (item.getInsurancePayAmount() + item.getPatientPayAmount());
+        }
+
+        InsuranceClaim insuranceClaim = new InsuranceClaim();
+        insuranceClaim.setId(claimId);
+        insuranceClaim.setPatientInsurance(patientInsurance);
+        insuranceClaim.setStatus("PENDING");
+        insuranceClaim.setTotalClaimAmount(totalClaimAmount);
+        insuranceClaim.setTotalInsurancePay(totalInsurancePay);
+        insuranceClaim.setPatientPayAmount(totalPatientPay);
+        insuranceClaim.setClaimDate(LocalDateTime.now());
+
+        InsuranceClaim savedClaim = insuranceClaimRepository.save(insuranceClaim);
+        return mapper.toInsuranceClaimDTO(savedClaim);
+    }
+
+    @Override
+    public ClaimItemRequestDTO createClaimItemRequestFromInvoiceItem(InvoiceItemResponse item, UUID claimId) {
+        ClaimItemRequestDTO request = new ClaimItemRequestDTO();
+
+        if (item.getClaimItemId() != null) {
+            request.setId(item.getClaimItemId());
+        }
+        request.setInsuranceClaimId(claimId);
+        request.setQuantity(item.getQuantity());
+        request.setUnitPrice(item.getUnitPrice());
+        request.setTotalAmount(item.getQuantity() * item.getUnitPrice());
+        request.setInsurancePayAmount(item.getInsurancePayAmount());
+        request.setPatientPayAmount(item.getPatientPayAmount());
+
+        Float ratio = item.getQuantity() * item.getUnitPrice() > 0 
+                ? (float) item.getInsurancePayAmount() / (item.getQuantity() * item.getUnitPrice()) 
+                : 0f;
+        request.setInsurancePayRatio(ratio);
+        request.setBhytCatalogueId(item.getBhytCatalogueId());
+
+        return request;
     }
 }
 

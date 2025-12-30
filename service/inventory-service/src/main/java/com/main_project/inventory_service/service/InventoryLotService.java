@@ -12,12 +12,16 @@ import com.main_project.inventory_service.repository.InventoryLotRepository;
 import com.main_project.inventory_service.repository.MedicineRepository;
 import com.main_project.inventory_service.repository.StockLedgerRepository;
 import com.main_project.inventory_service.repository.DispenseItemRepository;
+import com.main_project.inventory_service.repository.DispenseOrderRepository;
 import com.main_project.inventory_service.repository.PharmacistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,13 +36,14 @@ public class InventoryLotService implements IInventoryLotService {
     private final DispenseItemRepository dispenseItemRepository;
     private final StockLedgerRepository stockLedgerRepository;
     private final PharmacistRepository pharmacistRepository;
+    private final DispenseOrderRepository dispenseOrderRepository;
 
     @Override
     @Transactional
     public InventoryLotResponse create(InventoryLotRequest request) {
         Medicine medicine = medicineRepository.findById(request.getMedicineId())
                 .orElseThrow(() -> new RuntimeException("Medicine not found with id: " + request.getMedicineId()));
-        
+
         Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
                 .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
 
@@ -51,18 +56,18 @@ public class InventoryLotService implements IInventoryLotService {
 
 
         InventoryLot saved = inventoryLotRepository.save(inventoryLot);
-        
+
         // Ghi stock ledger - Nhập kho thủ công
         if (request.getQuantityOnHand() != null && request.getQuantityOnHand() > 0) {
-            createStockLedgerEntry(
-                saved, 
-                pharmacist,
-                "IN", 
-                request.getQuantityOnHand(), 
-                "MANUAL_IMPORT", 
-                saved.getId()
+            createStockLedgerEntryInternal(
+                    saved,
+                    pharmacist,
+                    "IN",
+                    request.getQuantityOnHand(),
+                    "MANUAL_IMPORT",
+                    saved.getId()
             );
-            log.info("✅ [IMPORT] Created stock ledger: lotNo={}, quantity={}, pharmacist={}", 
+            log.info("✅ [IMPORT] Created stock ledger: lotNo={}, quantity={}, pharmacist={}",
                     saved.getLotNo(), request.getQuantityOnHand(), pharmacist.getUserId());
         }
 
@@ -77,7 +82,7 @@ public class InventoryLotService implements IInventoryLotService {
 
         Medicine medicine = medicineRepository.findById(request.getMedicineId())
                 .orElseThrow(() -> new RuntimeException("Medicine not found with id: " + request.getMedicineId()));
-        
+
         Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
                 .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
 
@@ -93,19 +98,19 @@ public class InventoryLotService implements IInventoryLotService {
         inventoryLot.setMedicine(medicine);
 
         InventoryLot updated = inventoryLotRepository.save(inventoryLot);
-        
+
         // Ghi stock ledger - Điều chỉnh số lượng
         if (quantityChange != 0) {
             String referenceType = quantityChange > 0 ? "MANUAL_ADJUST_IN" : "MANUAL_ADJUST_OUT";
-            createStockLedgerEntry(
-                updated, 
-                pharmacist,
-                "ADJUST", 
-                Math.abs(quantityChange), 
-                referenceType, 
-                updated.getId()
+            createStockLedgerEntryInternal(
+                    updated,
+                    pharmacist,
+                    "ADJUST",
+                    Math.abs(quantityChange),
+                    referenceType,
+                    updated.getId()
             );
-            log.info("✅ [ADJUST] Stock ledger created: lotNo={}, change={}, pharmacist={}", 
+            log.info("✅ [ADJUST] Stock ledger created: lotNo={}, change={}, pharmacist={}",
                     updated.getLotNo(), quantityChange, pharmacist.getUserId());
         }
 
@@ -154,9 +159,9 @@ public class InventoryLotService implements IInventoryLotService {
         Integer currentQuantity = inventoryLot.getQuantityOnHand() != null ? inventoryLot.getQuantityOnHand() : 0;
         if (currentQuantity < request.getQuantity()) {
             throw new RuntimeException(String.format(
-                "Không đủ tồn kho. Hiện có: %d, Yêu cầu: %d", 
-                currentQuantity, 
-                request.getQuantity()
+                    "Không đủ tồn kho. Hiện có: %d, Yêu cầu: %d",
+                    currentQuantity,
+                    request.getQuantity()
             ));
         }
 
@@ -166,16 +171,16 @@ public class InventoryLotService implements IInventoryLotService {
 
         // 5. Create stock ledger entry
         String referenceType = getReferenceTypeFromReason(request.getReason());
-        StockLedger stockLedger = createStockLedgerEntry(
-            inventoryLot, 
-            pharmacist,
-            "OUT", 
-            request.getQuantity(), 
-            referenceType, 
-            inventoryLot.getId()
+        StockLedger stockLedger = createStockLedgerEntryInternal(
+                inventoryLot,
+                pharmacist,
+                "OUT",
+                request.getQuantity(),
+                referenceType,
+                inventoryLot.getId()
         );
 
-        log.info("✅ [EXPORT] Manual export completed: lotNo={}, quantity={}, reason={}, pharmacist={}", 
+        log.info("✅ [EXPORT] Manual export completed: lotNo={}, quantity={}, reason={}, pharmacist={}",
                 inventoryLot.getLotNo(), request.getQuantity(), request.getReason(), pharmacist.getUserId());
 
         // 6. Return response
@@ -201,8 +206,8 @@ public class InventoryLotService implements IInventoryLotService {
         // Get all OUT type stock ledgers that are manual exports
         List<StockLedger> manualExports = stockLedgerRepository.findAll().stream()
                 .filter(sl -> "OUT".equals(sl.getType()))
-                .filter(sl -> sl.getReferenceType() != null && 
-                            sl.getReferenceType().startsWith("MANUAL_EXPORT_"))
+                .filter(sl -> sl.getReferenceType() != null &&
+                        sl.getReferenceType().startsWith("MANUAL_EXPORT_"))
                 .collect(Collectors.toList());
 
         return manualExports.stream()
@@ -224,7 +229,7 @@ public class InventoryLotService implements IInventoryLotService {
                 .map(this::mapStockLedgerToExportResponse)
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * Kiểm tra xem StockLedger có nên hiển thị trong lịch sử xuất kho không
      * - Xuất kho thủ công (MANUAL_EXPORT_*): luôn hiển thị
@@ -232,11 +237,11 @@ public class InventoryLotService implements IInventoryLotService {
      */
     private boolean shouldIncludeInExportHistory(StockLedger stockLedger) {
         // Nếu là xuất kho thủ công, luôn hiển thị
-        if (stockLedger.getReferenceType() != null && 
-            stockLedger.getReferenceType().startsWith("MANUAL_EXPORT_")) {
+        if (stockLedger.getReferenceType() != null &&
+                stockLedger.getReferenceType().startsWith("MANUAL_EXPORT_")) {
             return true;
         }
-        
+
         // Nếu là xuất kho tự động (AUTO_DISPENSE)
         if ("AUTO_DISPENSE".equals(stockLedger.getReferenceType())) {
             UUID dispenseItemId = stockLedger.getReferenceId();
@@ -250,13 +255,13 @@ public class InventoryLotService implements IInventoryLotService {
                             })
                             .orElse(false);
                 } catch (Exception e) {
-                    log.warn("Failed to check DispenseOrder status for StockLedger {}: {}", 
+                    log.warn("Failed to check DispenseOrder status for StockLedger {}: {}",
                             stockLedger.getId(), e.getMessage());
                     return false;
                 }
             }
         }
-        
+
         // Các loại khác (nếu có), mặc định hiển thị
         return true;
     }
@@ -270,8 +275,133 @@ public class InventoryLotService implements IInventoryLotService {
                 .toList();
     }
 
-    // ==================== PRIVATE HELPER METHODS ====================
+    // ==================== NEW METHODS FOR REFACTORING ====================
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<InventoryLotResponse> getAvailableLotsForMedicine(UUID medicineId) {
+        return inventoryLotRepository.findAll().stream()
+                .filter(lot -> lot.getMedicine() != null &&
+                        lot.getMedicine().getId().equals(medicineId) &&
+                        lot.getQuantityOnHand() != null &&
+                        lot.getQuantityOnHand() > 0 &&
+                        (lot.getExpireDate() == null || !lot.getExpireDate().isBefore(LocalDate.now())))
+                .sorted(Comparator.comparing(
+                        InventoryLot::getExpireDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getTotalAvailableQuantity(UUID medicineId) {
+        return inventoryLotRepository.findAll().stream()
+                .filter(lot -> lot.getMedicine() != null &&
+                        lot.getMedicine().getId().equals(medicineId) &&
+                        lot.getQuantityOnHand() != null &&
+                        lot.getQuantityOnHand() > 0 &&
+                        (lot.getExpireDate() == null || !lot.getExpireDate().isBefore(LocalDate.now())))
+                .mapToInt(lot -> lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0)
+                .sum();
+    }
+
+    @Override
+    @Transactional
+    public void allocateQuantityFromLots(InventoryAllocationRequest request) {
+        List<InventoryLot> availableLots = inventoryLotRepository.findAll().stream()
+                .filter(lot -> lot.getMedicine() != null &&
+                        lot.getMedicine().getId().equals(request.getMedicineId()) &&
+                        lot.getQuantityOnHand() != null &&
+                        lot.getQuantityOnHand() > 0)
+                .sorted(java.util.Comparator.comparing(InventoryLot::getExpireDate,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+
+        int remainingToAllocate = request.getQuantity();
+
+        for (InventoryLot lot : availableLots) {
+            if (remainingToAllocate <= 0) break;
+
+            int availableInLot = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
+            int toAllocateFromLot = Math.min(remainingToAllocate, availableInLot);
+
+            lot.setQuantityOnHand(availableInLot - toAllocateFromLot);
+            inventoryLotRepository.save(lot);
+
+            remainingToAllocate -= toAllocateFromLot;
+        }
+
+        if (remainingToAllocate != 0) {
+            throw new IllegalStateException("Lỗi phân bổ kho. Vẫn còn thiếu: " + remainingToAllocate);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void restoreQuantityToLot(InventoryRestoreRequest request) {
+        InventoryLot lot = inventoryLotRepository.findById(request.getInventoryLotId())
+                .orElseThrow(() -> new RuntimeException("InventoryLot not found with id: " + request.getInventoryLotId()));
+
+        int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
+        lot.setQuantityOnHand(currentQuantity + request.getQuantity());
+        inventoryLotRepository.save(lot);
+    }
+
+    @Override
+    @Transactional
+    public List<LotAllocationResult> allocateQuantityForDispense(MedicineAllocationRequest request) {
+        Medicine medicine = medicineRepository.findById(request.getMedicineId())
+                .orElseThrow(() -> new RuntimeException("Medicine not found: " + request.getMedicineId()));
+
+        List<InventoryLot> availableLots = inventoryLotRepository.findAll().stream()
+                .filter(lot -> lot.getMedicine() != null &&
+                        lot.getMedicine().getId().equals(request.getMedicineId()) &&
+                        lot.getQuantityOnHand() != null &&
+                        lot.getQuantityOnHand() > 0 &&
+                        (lot.getExpireDate() == null || !lot.getExpireDate().isBefore(LocalDate.now())))
+                .sorted(Comparator.comparing(
+                        InventoryLot::getExpireDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .collect(Collectors.toList());
+
+        int remainingToAllocate = request.getQuantity();
+        List<LotAllocationResult> allocationResults = new ArrayList<>();
+
+        for (InventoryLot lot : availableLots) {
+            if (remainingToAllocate <= 0) break;
+
+            int availableInLot = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
+            int toAllocateFromLot = Math.min(remainingToAllocate, availableInLot);
+
+            // Update lot quantity
+            lot.setQuantityOnHand(availableInLot - toAllocateFromLot);
+            inventoryLotRepository.save(lot);
+
+            // Tạo allocation result
+            Integer priceAtDispense = request.getPriceAtDispense() != null ? 
+                    request.getPriceAtDispense() : 
+                    (medicine.getSalePrice() != null ? medicine.getSalePrice() : 0);
+
+            allocationResults.add(LotAllocationResult.builder()
+                    .inventoryLotId(lot.getId())
+                    .quantity(toAllocateFromLot)
+                    .priceAtDispense(priceAtDispense)
+                    .build());
+
+            remainingToAllocate -= toAllocateFromLot;
+        }
+
+        if (remainingToAllocate != 0) {
+            throw new IllegalStateException("Lỗi phân bổ kho. Vẫn còn thiếu: " + remainingToAllocate);
+        }
+
+        return allocationResults;
+    }
+
+    // ==================== PRIVATE HELPER METHODS ====================
 
 
     private StockLedgerResponse mapToResponse(StockLedger stockLedger) {
@@ -291,24 +421,51 @@ public class InventoryLotService implements IInventoryLotService {
     }
 
     /**
-     * Tạo stock ledger entry
+     * Tạo stock ledger entry - Public method using DTO
      */
-    private StockLedger createStockLedgerEntry(
-            InventoryLot inventoryLot, 
+    @Override
+    @Transactional
+    public StockLedgerResponse createStockLedgerEntry(StockLedgerEntryRequest request) {
+        InventoryLot inventoryLot = inventoryLotRepository.findById(request.getInventoryLotId())
+                .orElseThrow(() -> new RuntimeException("InventoryLot not found with id: " + request.getInventoryLotId()));
+
+
+        StockLedger stockLedger = new StockLedger();
+        stockLedger.setType(request.getType());
+        stockLedger.setQuantity(request.getQuantity());
+        stockLedger.setReferenceType(request.getReferenceType());
+        stockLedger.setReferenceId(request.getReferenceId());
+        stockLedger.setInventoryLot(inventoryLot);
+        if (request.getPharmacistId() != null) {
+            Pharmacist pharmacist = pharmacistRepository.findById(request.getPharmacistId())
+                    .orElseThrow(() -> new RuntimeException("Pharmacist not found with id: " + request.getPharmacistId()));
+            stockLedger.setPharmacist(pharmacist);
+        }
+
+
+        StockLedger saved = stockLedgerRepository.save(stockLedger);
+        return mapToResponse(saved);
+    }
+
+    /**
+     * Tạo stock ledger entry - Private helper method (for backward compatibility)
+     */
+    private StockLedger createStockLedgerEntryInternal(
+            InventoryLot inventoryLot,
             Pharmacist pharmacist,
-            String type, 
-            Integer quantity, 
-            String referenceType, 
+            String type,
+            Integer quantity,
+            String referenceType,
             UUID referenceId) {
-        
+
         StockLedger stockLedger = new StockLedger();
         stockLedger.setType(type);
         stockLedger.setQuantity(quantity);
         stockLedger.setReferenceType(referenceType);
         stockLedger.setReferenceId(referenceId);
         stockLedger.setInventoryLot(inventoryLot);
-        stockLedger.setPharmacist(pharmacist); // ✅ Set dược sĩ thực hiện giao dịch
-        
+        stockLedger.setPharmacist(pharmacist);
+
         return stockLedgerRepository.save(stockLedger);
     }
 
@@ -317,7 +474,7 @@ public class InventoryLotService implements IInventoryLotService {
      */
     private String getReferenceTypeFromReason(String reason) {
         if (reason == null) return "MANUAL_EXPORT_OTHER";
-        
+
         switch (reason) {
             case "Hết hạn sử dụng":
                 return "MANUAL_EXPORT_EXPIRED";
@@ -337,13 +494,13 @@ public class InventoryLotService implements IInventoryLotService {
      */
     private String parseReasonFromReferenceType(String referenceType) {
         if (referenceType == null) return "Khác";
-        
+
         if (referenceType.contains("EXPIRED")) return "Hết hạn sử dụng";
         if (referenceType.contains("DAMAGED")) return "Hư hỏng";
         if (referenceType.contains("TRANSFER")) return "Chuyển kho";
         if (referenceType.contains("LOST")) return "Mất mát";
         if (referenceType.contains("DISPENSE")) return "Cấp phát tự động (Saga)";
-        
+
         return "Khác";
     }
 
@@ -353,22 +510,22 @@ public class InventoryLotService implements IInventoryLotService {
      */
     private InventoryLotResponse mapToResponse(InventoryLot inventoryLot) {
         Medicine medicine = inventoryLot.getMedicine();
-        
+
         // ✅ Lấy pharmacistId từ StockLedger đầu tiên (IN type) - người nhập kho
         UUID pharmacistId = null;
         List<StockLedger> importLedgers = stockLedgerRepository.findAll().stream()
-                .filter(sl -> sl.getInventoryLot() != null && 
-                             sl.getInventoryLot().getId().equals(inventoryLot.getId()) &&
-                             "IN".equals(sl.getType()) &&
-                             ("MANUAL_IMPORT".equals(sl.getReferenceType()) || 
-                              "MANUAL_ADJUST_IN".equals(sl.getReferenceType())))
+                .filter(sl -> sl.getInventoryLot() != null &&
+                        sl.getInventoryLot().getId().equals(inventoryLot.getId()) &&
+                        "IN".equals(sl.getType()) &&
+                        ("MANUAL_IMPORT".equals(sl.getReferenceType()) ||
+                                "MANUAL_ADJUST_IN".equals(sl.getReferenceType())))
                 .sorted((a, b) -> a.getCreateAt().compareTo(b.getCreateAt())) // Lấy entry đầu tiên (nhập kho đầu tiên)
                 .collect(Collectors.toList());
-        
+
         if (!importLedgers.isEmpty() && importLedgers.get(0).getPharmacist() != null) {
             pharmacistId = importLedgers.get(0).getPharmacist().getUserId();
         }
-        
+
         return new InventoryLotResponse(
                 inventoryLot.getId(),
                 inventoryLot.getLotNo(),
@@ -386,22 +543,22 @@ public class InventoryLotService implements IInventoryLotService {
      */
     private ManualExportResponse mapStockLedgerToExportResponse(StockLedger stockLedger) {
         InventoryLot lot = stockLedger.getInventoryLot();
-        
+
         // Use arrays to work around "effectively final" requirement in lambda
         final String[] pharmacistName = {null};
         final UUID[] prescriptionId = {null};
         final UUID[] dispenseOrderId = {null};
         String exportType = "MANUAL";
-        
+
         // ✅ Lấy thông tin dược sĩ từ StockLedger (cho cả manual và auto)
         if (stockLedger.getPharmacist() != null) {
             pharmacistName[0] = stockLedger.getPharmacist().getUserId().toString();
         }
-        
+
         // Nếu là xuất kho tự động (AUTO_DISPENSE)
         if ("AUTO_DISPENSE".equals(stockLedger.getReferenceType())) {
             exportType = "AUTO";
-            
+
             // referenceId là DispenseItem.id
             UUID dispenseItemId = stockLedger.getReferenceId();
             if (dispenseItemId != null) {
@@ -420,12 +577,12 @@ public class InventoryLotService implements IInventoryLotService {
                         }
                     });
                 } catch (Exception e) {
-                    log.warn("Failed to fetch DispenseItem for StockLedger {}: {}", 
+                    log.warn("Failed to fetch DispenseItem for StockLedger {}: {}",
                             stockLedger.getId(), e.getMessage());
                 }
             }
         }
-        
+
         return new ManualExportResponse(
                 stockLedger.getId(),
                 lot != null ? lot.getId() : null,

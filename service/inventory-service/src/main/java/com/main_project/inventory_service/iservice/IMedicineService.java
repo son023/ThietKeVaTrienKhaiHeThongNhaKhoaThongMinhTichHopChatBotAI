@@ -12,6 +12,9 @@ public interface IMedicineService {
     MedicineResponse getById(UUID id);
     List<MedicineResponse> getAll();
     void delete(UUID id);
+    
+    // New methods for refactoring
+    boolean existsById(UUID medicineId);
 }
 
 

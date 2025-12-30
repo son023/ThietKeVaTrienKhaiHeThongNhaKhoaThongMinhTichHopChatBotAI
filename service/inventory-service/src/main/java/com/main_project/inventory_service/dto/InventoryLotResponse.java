@@ -1,5 +1,7 @@
 package com.main_project.inventory_service.dto;
 
+import com.main_project.inventory_service.entity.Medicine;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,8 @@ public class InventoryLotResponse {
     private String medicineName;
     private UUID pharmacistId; // ID dược sĩ nhập kho
 }
+
+
 
 
 
