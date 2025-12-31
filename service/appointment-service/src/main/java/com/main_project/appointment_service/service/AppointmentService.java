@@ -12,11 +12,13 @@ import com.main_project.appointment_service.feignclient.UserServiceClient;
 import com.main_project.appointment_service.repository.AppointmentRepository;
 import com.main_project.appointment_service.repository.MedicalServiceRepository;
 import com.main_project.appointment_service.util.EntityDTOMapper;
+import com.do_an.common.event.AppointmentCreatedEvent;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.axonframework.eventhandling.EventBus;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static com.main_project.appointment_service.exceptions.enums.ErrorCode.APPINTMENT_IS_NOT_CHECKIN_YET;
 import static com.main_project.appointment_service.exceptions.enums.ErrorCode.APPOINTMENT_NOT_EXISTED;
+import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class AppointmentService implements IAppointmentService {
     private final SlotService slotService;
 
     private final EntityDTOMapper mapper;
+    private final EventBus eventBus;
 
     @Override
     public List<AppointmentDTO> getAllAppointments() {
@@ -183,7 +187,29 @@ public class AppointmentService implements IAppointmentService {
             // hoặc xóa luôn key:
             slotService.unlockSlot(requestDTO.getDoctorId(), start);
 
-            return mapper.toAppointmentDTO(appointment);
+            AppointmentDTO appointmentDTO = mapper.toAppointmentDTO(appointment);
+            try {
+                String message = String.format(
+                    "Lịch hẹn mới đã được đăng ký. Mã lịch hẹn: %s",
+                    appointment.getId().toString().substring(0, 8)
+                );
+                
+                AppointmentCreatedEvent event = new AppointmentCreatedEvent(
+                    appointment.getId(),
+                    appointment.getPatientId(),
+                    appointment.getDoctorId(),
+                    appointment.getAppointmentStartTime(),
+                    appointment.getAppointmentEndTime(),
+                    message
+                );
+                
+                eventBus.publish(asEventMessage(event));
+                log.info(" Published AppointmentCreatedEvent for appointment {}", appointment.getId());
+            } catch (Exception e) {
+                log.error(" Failed to publish AppointmentCreatedEvent: {}", e.getMessage(), e);
+            }
+
+            return appointmentDTO;
 
         } catch (RuntimeException ex) {
 

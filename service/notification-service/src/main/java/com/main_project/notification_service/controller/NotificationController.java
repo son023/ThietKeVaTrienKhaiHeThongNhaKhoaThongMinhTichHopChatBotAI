@@ -79,6 +79,17 @@ public class NotificationController {
         return ResponseEntity.ok(count);
     }
 
+    @GetMapping("/template")
+    public ResponseEntity<List<NotificationDTO>> getNotificationsByTemplateId(@RequestParam String templateId) {
+        log.info("Getting notifications for templateId: {}", templateId);
+        List<Notification> notifications = notificationRepository.findByTemplateIdOrderByCreatedAtDesc(templateId);
+        log.info("Found {} notifications for templateId: {}", notifications.size(), templateId);
+        List<NotificationDTO> dtos = notifications.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @PutMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
         notificationRepository.findById(id).ifPresent(notification -> {

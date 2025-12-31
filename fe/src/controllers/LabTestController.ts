@@ -24,10 +24,12 @@ class LabTestController {
     return this.handleResponse<LabTestDTO[]>(res);
   }
 
-  async accept(id: string): Promise<LabTestDTO> {
+  async accept(id: string, labTechnicianId?: string): Promise<LabTestDTO> {
+    const body = labTechnicianId ? JSON.stringify({ labTechnicianId }) : undefined;
     const res = await fetch(createApiUrl(this.baseUrl, id, "accept"), {
       method: "POST",
       headers: getApiHeaders(true),
+      body: body,
     });
     return this.handleResponse<LabTestDTO>(res);
   }
@@ -71,6 +73,19 @@ class LabTestController {
       body: JSON.stringify(payload),
     });
     return this.handleResponse<LabTestDTO>(res);
+  }
+  async getByTechnicianId(technicianId: string): Promise<LabTestDTO[]> {
+    const res = await fetch(createApiUrl(this.baseUrl, "technician", technicianId), {
+      headers: getApiHeaders(true),
+    });
+    return this.handleResponse<LabTestDTO[]>(res);
+  }
+
+  async getByStatus(status: string): Promise<LabTestDTO[]> {
+    const res = await fetch(createApiUrl(this.baseUrl, "status", status), {
+      headers: getApiHeaders(true),
+    });
+    return this.handleResponse<LabTestDTO[]>(res);
   }
 }
 

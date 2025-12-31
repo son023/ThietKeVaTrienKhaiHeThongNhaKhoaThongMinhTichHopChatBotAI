@@ -27,6 +27,8 @@ import { BookAppointmentDialog } from './components/patient/BookAppointmentDialo
 import { patientController } from './controllers/PatientController';
 import { userController } from './controllers/UserController';
 import { PatientWithUser } from './models/Patient';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { authController } from './controllers';
 
 interface ReceptionistAppProps {
   onLogout: () => void;
@@ -53,6 +55,12 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<PatientWithUser | null>(null);
   const [appointmentRefreshToken, setAppointmentRefreshToken] = useState(0);
+  const [receptionistId, setReceptionistId] = useState<string>();
+
+  useEffect(() => {
+    const user = authController.getCurrentUser();
+    if (user) setReceptionistId(user.id);
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -240,15 +248,16 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-      <ReceptionistHeader
-        onLogout={onLogout}
-        onGoHome={onGoHome}
-        onNewAppointment={handleNewAppointment}
-        onNewPatient={handleNewPatient}
-        onSearch={handleSearch}
-      />
-      <ReceptionistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
+    <NotificationProvider userId={receptionistId}>
+      <div className="min-h-screen bg-[#f8f9fa]">
+        <ReceptionistHeader
+          onLogout={onLogout}
+          onGoHome={onGoHome}
+          onNewAppointment={handleNewAppointment}
+          onNewPatient={handleNewPatient}
+          onSearch={handleSearch}
+        />
+        <ReceptionistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
       <div className="ml-[260px] mt-[80px]">
         <Routes>
           <Route
@@ -420,6 +429,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
           patientEmail={selectedPatient?.user?.email}
         />
       </div>
-    </div>
+      </div>
+    </NotificationProvider>
   );
 }

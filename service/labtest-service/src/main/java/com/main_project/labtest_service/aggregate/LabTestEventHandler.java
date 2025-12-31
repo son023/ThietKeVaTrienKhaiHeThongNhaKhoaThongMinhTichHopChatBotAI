@@ -65,6 +65,9 @@ public class LabTestEventHandler {
         labTestRepository.findById(e.getLabTestId())
                 .ifPresent(lab -> {
                     lab.setStatus("COMPLETE");
+                    if (lab.getResultDate() == null) {
+                        lab.setResultDate(ZonedDateTime.now());
+                    }
                     lab.setUpdatedAt(ZonedDateTime.now());
                     labTestRepository.save(lab);
                 });

@@ -1,3 +1,5 @@
+import { MedicalAttachmentDTO } from './MedicalAttachment';
+
 export interface LabTestTypeDTO {
   id: string;
   name: string;
@@ -29,4 +31,5 @@ export interface LabTestDTO extends LabTestRequestDTO {
   doctorName?: string;
   patientName?: string;
   labTechnicianName?: string;
+  medicalAttachments?: MedicalAttachmentDTO[];
 }

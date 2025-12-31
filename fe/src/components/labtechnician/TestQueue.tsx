@@ -36,7 +36,10 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
             try {
                 setLoading(true);
                 const data = await labTestController.getAll();
-                setTests(data);
+                const filteredData = data.filter(
+                    (test) => test.status !== 'COMPLETE'
+                );
+                setTests(filteredData);
             } catch (err) {
                 toast.error(err instanceof Error ? err.message : 'Không tải được danh sách lab test');
             } finally {
@@ -54,15 +57,26 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
 
     const refreshTest = async (id: string, updated?: LabTestDTO, fallbackStatus?: string) => {
         if (updated) {
+            if (updated.status === 'COMPLETE') {
+                setTests((prev) => prev.filter((t) => t.id !== id));
+                return;
+            }
             setTests((prev) => prev.map((t) => (t.id === id ? updated : t)));
             return;
         }
         if (fallbackStatus) {
+            if (fallbackStatus === 'COMPLETE') {
+                setTests((prev) => prev.filter((t) => t.id !== id));
+                return;
+            }
             applyLocalStatus(id, fallbackStatus);
         }
         try {
             const data = await labTestController.getAll();
-            setTests(data);
+            const filteredData = data.filter(
+                (test) => test.status !== 'COMPLETE'
+            );
+            setTests(filteredData);
         } catch {
             // ignore refresh error
         }
@@ -90,7 +104,11 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
     const handleAccept = async (id: string) => {
         try {
             setProcessingId(id);
-            const res = await labTestController.accept(id);
+            const { authController } = await import('../../controllers/AuthController');
+            const currentUser = authController.getCurrentUser();
+            const labTechnicianId = currentUser?.id;
+            
+            const res = await labTestController.accept(id, labTechnicianId);
     
             console.log("SERVER RETURN:", res);
     
@@ -155,9 +173,13 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
 
     const filteredTests = useMemo(() => {
         return tests.filter((test) => {
-                const keyText =
-                    `${test.labTestType?.name || ''} ${test.appointmentId || ''} ${test.doctorName || test.doctorId || ''} ${test.patientName || ''} ${test.labTechnicianName || ''}`.toLowerCase();
-                const matchesSearch = keyText.includes(searchQuery.toLowerCase());
+            if (test.status === 'COMPLETE') {
+                return false;
+            }
+
+            const keyText =
+                `${test.labTestType?.name || ''} ${test.appointmentId || ''} ${test.doctorName || test.doctorId || ''} ${test.patientName || ''} ${test.labTechnicianName || ''}`.toLowerCase();
+            const matchesSearch = keyText.includes(searchQuery.toLowerCase());
 
             if (!matchesSearch) return false;
 
@@ -165,7 +187,6 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
             if (selectedFilter === 'all') return true;
             if (selectedFilter === 'pending') return st === 'REQUEST';
             if (selectedFilter === 'in-progress') return st === 'IN_PROGRESS';
-            if (selectedFilter === 'completed') return st === 'COMPLETE';
             return true;
         });
     }, [tests, searchQuery, selectedFilter]);
