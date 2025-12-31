@@ -1,16 +1,12 @@
 package com.do_an.invoiceservice.aggregate;
 
 
-import com.do_an.common.command.AddMedicineChargesCommand;
-import com.do_an.common.command.ApplyInsuranceDiscountCommand;
+import com.do_an.common.command.*;
 
-import com.do_an.common.command.CancelInvoiceCommand;
-import com.do_an.common.command.MarkInvoiceAsPaidCommand;
-import com.do_an.common.command.CreateInvoiceCommand;
 import com.do_an.common.model.InvoiceCheckerRequest;
 import com.do_an.common.model.InvoiceItemCheckerRequest;
-import com.do_an.invoiceservice.entity.Invoice;
-import com.do_an.invoiceservice.repository.InvoiceRepository;
+import com.do_an.invoiceservice.exception.InvoiceNotFoundException;
+import com.do_an.invoiceservice.iservice.IInvoiceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
@@ -19,7 +15,6 @@ import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,8 +23,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class InvoiceCommandHandler {
-    private final InvoiceRepository invoiceRepository;
-
+    
+    private final IInvoiceService invoiceService;
     private final Repository<InvoiceAggregate> invoiceAggregateRepository;
     @CommandHandler
     @Transactional(readOnly = true)
@@ -51,25 +46,21 @@ public class InvoiceCommandHandler {
         invoiceCheckerRequest.setId(command.getInvoiceId());
         invoiceCheckerRequest.setItems(itemCheckers);
 
-        Optional<Invoice> existingInvoice = invoiceRepository.findById(command.getInvoiceId());
-        try{
-            Invoice invoice = existingInvoice.get();
+        // Sử dụng service để validate
+        if (!invoiceService.canAddMedicineCharges(command.getInvoiceId())) {
+            throw new IllegalStateException("Hoá đơn ở trạng thái khác PENDING, Không thể thêm thuốc !");
+        }
 
-            if (!"PENDING".equals(invoice.getStatus())) {
-                throw new IllegalStateException("Không thể thêm thuốc vào hóa đơn đang ở trạng thái: " + invoice.getStatus());
-            }
-
+        try {
             invoiceAggregateRepository.load(command.getInvoiceId().toString())
-                    .execute(aggregate -> aggregate.addMedicineCharges(
+                    .execute(aggregate -> aggregate.applyAddMedicineCharges(
                             command.getPrescriptionId(),
-                            command.getInvoiceId(),
                             command.getMedicineItems(),
                             invoiceCheckerRequest
                     ));
         } catch (AggregateNotFoundException e) {
             invoiceAggregateRepository.newInstance(() -> new InvoiceAggregate(
                     command.getPrescriptionId(),
-                    command.getInvoiceId(),
                     command.getMedicineItems(),
                     invoiceCheckerRequest
             ));
@@ -81,11 +72,9 @@ public class InvoiceCommandHandler {
     public void handle(ApplyInsuranceDiscountCommand command) {
         log.info("Xử lý ApplyInsuranceDiscountCommand cho InvoiceId: {}", command.getInvoiceId());
 
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new IllegalStateException("Hóa đơn không tồn tại: " + command.getInvoiceId()));
-
-        if (!"PENDING".equals(invoice.getStatus())) {
-            throw new IllegalStateException("Không thể áp dụng bảo hiểm cho hóa đơn ở trạng thái: " + invoice.getStatus());
+        // Sử dụng service để validate
+        if (!invoiceService.canApplyInsuranceDiscount(command.getInvoiceId())) {
+            throw new IllegalStateException("Hoá đơn ở trạng thái khác PENDING, Không thể áp dụng bảo hiểm !");
         }
 
         if (command.getDiscountAmount() < 0) {
@@ -122,15 +111,13 @@ public class InvoiceCommandHandler {
                 command.getMedicalServices()
         ));
     }
+
     @CommandHandler
     @Transactional(readOnly = true)
     public void handle(CancelInvoiceCommand command) {
-        // Validate: Chỉ hủy được nếu chưa PAID
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new IllegalStateException("Hóa đơn không tồn tại: " + command.getInvoiceId()));
-
-        if ("PAID".equals(invoice.getStatus())) {
-            throw new IllegalStateException("Không thể hủy hóa đơn đã thanh toán!");
+        // Sử dụng service để validate
+        if (!invoiceService.canCancel(command.getInvoiceId())) {
+            throw new IllegalStateException("Hoá đơn đã thành toán, không thể hủy hóa đơn !");
         }
 
         invoiceAggregateRepository.load(command.getInvoiceId().toString())
@@ -138,25 +125,23 @@ public class InvoiceCommandHandler {
                         command.getInvoiceId(),
                         command.getReason()
                 ));
-
     }
-
 
     @CommandHandler
     public void handle(MarkInvoiceAsPaidCommand command) {
-        Invoice invoice = invoiceRepository.findById(command.getInvoiceId())
-                .orElseThrow(() -> new IllegalStateException("Hóa đơn không tồn tại: " + command.getInvoiceId()));
-        // Validate: Không thể thanh toán hóa đơn đã hủy hoặc đã thanh toán
-        if ("PAID".equals(invoice.getStatus())) {
-            // Có thể log warning và return (Idempotent) thay vì throw lỗi
-            return;
+        // Sử dụng service để validate
+        if (!invoiceService.canMarkAsPaid(command.getInvoiceId())) {
+            // Check if already paid (idempotent)
+            try {
+                var invoice = invoiceService.getInvoiceById(command.getInvoiceId());
+                if ("PAID".equals(invoice.getStatus())) {
+                    return; // Already paid, idempotent
+                }
+            } catch (InvoiceNotFoundException e) {
+                throw new RuntimeException("Invoice không tồn tại", e);
+            }
+            throw new IllegalStateException("Không thể thanh toán hóa đơn này");
         }
-
-        if ("CANCELLED".equals(invoice.getStatus())) {
-            throw new IllegalStateException("Không thể thanh toán hóa đơn đã bị hủy.");
-        }
-
-
 
         invoiceAggregateRepository.load(command.getInvoiceId().toString())
                 .execute(aggregate -> aggregate.applyInvoicePaid(
@@ -164,6 +149,31 @@ public class InvoiceCommandHandler {
                 ));
     }
 
+    @CommandHandler
+    public void handle(RevertInsuranceDiscountCommand command) {
+        log.info("Hoàn lại giảm giá bảo hiểm cho hóa đơn: {}", command.getInvoiceId());
+        
+        // Sử dụng service để validate invoice exists
+        invoiceService.getInvoiceById(command.getInvoiceId());
 
+        invoiceAggregateRepository.load(command.getInvoiceId().toString())
+                .execute(aggregate -> aggregate.applyRevertInsuranceDiscount(
+                        command.getPrescriptionId(),
+                        command.getInvoiceId()
+                ));
+    }
 
+    @CommandHandler
+    public void handle(RemoveMedicineChargesCommand command) {
+        log.info("Loại bỏ phí thuốc cho hóa đơn: {}", command.getInvoiceId());
+
+        // Sử dụng service để validate invoice exists
+        invoiceService.getInvoiceById(command.getInvoiceId());
+
+        invoiceAggregateRepository.load(command.getInvoiceId().toString())
+                .execute(aggregate -> aggregate.applyRemoveMedicineCharges(
+                        command.getPrescriptionId(),
+                        command.getInvoiceId()
+                ));
+    }
 }

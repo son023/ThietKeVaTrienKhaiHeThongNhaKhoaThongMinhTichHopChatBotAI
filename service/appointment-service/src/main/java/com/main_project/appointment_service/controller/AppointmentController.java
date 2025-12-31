@@ -44,6 +44,8 @@ public class AppointmentController {
     private final CommandGateway commandGateway;
     private final QueryGateway queryGateway;
 
+
+    //Dùng
     @PostMapping("/{id}/check-in")
     @Operation(summary = "Patient checks in for the appointment, creating the initial aggregate")
     public ResponseEntity<Void> checkInAppointment(@PathVariable UUID id) {
@@ -64,6 +66,8 @@ public class AppointmentController {
         return ResponseEntity.accepted().build();
     }
 
+
+    //Dùng
     @PostMapping("/{id}/start")
     @Operation(summary = "Doctor starts the consultation for a checked-in appointment")
     public ResponseEntity<Void> startConsultation(@PathVariable UUID id) {
@@ -93,6 +97,8 @@ public class AppointmentController {
 
     }
 
+
+    //Dùng
     @PostMapping("/slots/hold")
     @Operation(summary = "Giữ slot trong 10 phút trước khi tạo lịch hẹn")
     public ResponseEntity<?> holdSlot(@RequestBody HoldSlotRequestDTO request) {
@@ -131,12 +137,15 @@ public class AppointmentController {
         return ResponseEntity.ok().build();
     }
 
+
+    //Dùng
     @GetMapping
     @Operation(summary = "Lấy tất cả lịch hẹn")
     public ResponseEntity<List<AppointmentDTO>> getAllAppointments() {
         return ResponseEntity.ok(appointmentService.getAllAppointments());
     }
 
+    //Dùng
     @GetMapping("/{id}")
     @Operation(summary = "Lấy lịch hẹn theo ID")
     public ResponseEntity<AppointmentDTO> getAppointmentById(@PathVariable UUID id) {
@@ -144,6 +153,8 @@ public class AppointmentController {
         return dto.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+
+    //Dùng
     @GetMapping("/doctor/{doctorId}")
     @Operation(summary = "Lấy lịch hẹn theo bác sĩ")
     public ResponseEntity<List<AppointmentDTO>> getAppointmentsByDoctorId(@PathVariable UUID doctorId) {
@@ -170,6 +181,8 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getAppointmentsBetween(start, end));
     }
 
+
+    //Dùng
     @GetMapping("/date")
     @Operation(summary = "Lấy lịch hẹn theo ngày (dd/mm/yyyy)", description = "Trả về danh sách ca làm việc trong ngày được chỉ định")
     @Parameter(name = "date", description = "Ngày cần lấy ca làm việc", required = true)
@@ -194,12 +207,15 @@ public class AppointmentController {
         return ResponseEntity.ok(appointments);
     }
 
+
+    //Dùng
     @PostMapping
     @Operation(summary = "Tạo lịch hẹn mới")
     public ResponseEntity<AppointmentDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO requestDTO) {
         AppointmentDTO created = appointmentService.createAppointment(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
 
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật lịch hẹn")
@@ -210,6 +226,7 @@ public class AppointmentController {
         return ResponseEntity.ok(updated);
     }
 
+    //Dùng
     @PatchMapping("/{id}/status")
     @Operation(summary = "Cập nhật trạng thái lịch hẹn")
     public ResponseEntity<AppointmentDTO> updateStatus(

@@ -46,12 +46,10 @@ public class InventoryAggregate {
         ));
     }
 
-    @CommandHandler
-    public void handle(ReturnMedicineReservationCommand command) {
-        // Emit success event
+    public void applyReturnReservation(UUID prescriptionId, UUID dispenseOrderId){
         AggregateLifecycle.apply(new MedicineReservationReturnEvent(
-                command.getPrescriptionId(),
-                command.getDispenseOrderId()
+                prescriptionId,
+                dispenseOrderId
         ));
     }
 

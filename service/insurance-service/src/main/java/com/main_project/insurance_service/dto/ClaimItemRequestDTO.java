@@ -10,6 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClaimItemRequestDTO {
+    private UUID id;
     private Integer quantity;
     private Integer unitPrice;
     private Integer totalAmount;

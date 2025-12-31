@@ -32,4 +32,6 @@ public interface IPatientInsuranceService {
     void deletePatientInsurance(UUID id);
     
     boolean existsByPatientId(UUID patientId);
+    
+    boolean isValidInsurance(UUID patientId);
 }

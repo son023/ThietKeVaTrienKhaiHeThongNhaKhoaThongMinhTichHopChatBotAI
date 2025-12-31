@@ -2,6 +2,8 @@ package com.main_project.inventory_service.service;
 
 import com.main_project.inventory_service.dto.DispenseItemRequest;
 import com.main_project.inventory_service.dto.DispenseItemResponse;
+import com.main_project.inventory_service.dto.DispenseItemCreationRequest;
+import com.main_project.inventory_service.dto.DispenseItemRollbackResult;
 import com.main_project.inventory_service.entity.DispenseItem;
 import com.main_project.inventory_service.entity.DispenseOrder;
 import com.main_project.inventory_service.entity.InventoryLot;
@@ -104,6 +106,65 @@ public class DispenseItemService implements IDispenseItemService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    // ==================== NEW METHODS FOR REFACTORING ====================
+
+    @Override
+    @Transactional
+    public DispenseItemResponse createDispenseItemFromReservation(DispenseItemCreationRequest request) {
+        InventoryLot inventoryLot = inventoryLotRepository.findById(request.getInventoryLotId())
+                .orElseThrow(() -> new RuntimeException("InventoryLot not found with id: " + request.getInventoryLotId()));
+
+        DispenseOrder dispenseOrder = dispenseOrderRepository.findById(request.getDispenseOrderId())
+                .orElseThrow(() -> new RuntimeException("DispenseOrder not found with id: " + request.getDispenseOrderId()));
+
+        DispenseItem dispenseItem = new DispenseItem();
+        if (request.getDispenseItemId() != null) {
+            dispenseItem.setId(request.getDispenseItemId());
+        }
+        dispenseItem.setQuantity(request.getQuantity());
+        dispenseItem.setPriceAtDispense(request.getPriceAtDispense() != null ? request.getPriceAtDispense() : 0);
+        dispenseItem.setDosage(request.getDosage());
+        dispenseItem.setFrequency(request.getFrequency());
+        dispenseItem.setDuration(request.getDuration());
+        dispenseItem.setUsageInstructions(request.getUsageInstructions());
+        dispenseItem.setInventoryLot(inventoryLot);
+        dispenseItem.setDispenseOrder(dispenseOrder);
+
+        DispenseItem saved = dispenseItemRepository.save(dispenseItem);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public DispenseItemRollbackResult rollbackDispenseItem(UUID dispenseItemId) {
+        DispenseItem dispenseItem = dispenseItemRepository.findById(dispenseItemId)
+                .orElseThrow(() -> new RuntimeException("DispenseItem not found with id: " + dispenseItemId));
+
+        if (dispenseItem.getInventoryLot() == null) {
+            return null; // Không có gì để rollback
+        }
+
+        InventoryLot lot = dispenseItem.getInventoryLot();
+        Integer quantityToRestore = dispenseItem.getQuantity();
+
+        // Lấy pharmacistId nếu có
+        UUID pharmacistId = null;
+        if (dispenseItem.getDispenseOrder() != null && 
+            dispenseItem.getDispenseOrder().getPharmacist() != null) {
+            pharmacistId = dispenseItem.getDispenseOrder().getPharmacist().getUserId();
+        }
+
+        // Xóa DispenseItem
+        dispenseItemRepository.delete(dispenseItem);
+
+        // Trả về thông tin cần restore
+        return DispenseItemRollbackResult.builder()
+                .inventoryLotId(lot.getId())
+                .quantity(quantityToRestore)
+                .pharmacistId(pharmacistId)
+                .build();
     }
 
     private DispenseItemResponse mapToResponse(DispenseItem dispenseItem) {

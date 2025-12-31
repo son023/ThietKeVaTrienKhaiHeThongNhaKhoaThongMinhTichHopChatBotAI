@@ -80,6 +80,7 @@ public class InvoiceController {
     }
 
 
+    //Dùng
     @Operation(
             summary = "Lấy hóa đơn theo ID",
             description = "Lấy thông tin chi tiết của một hóa đơn bao gồm các InvoiceItem"
@@ -97,6 +98,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoice);
     }
 
+    //Dùng
     @Operation(
             summary = "Lấy danh sách hóa đơn",
             description = "Lấy danh sách hóa đơn với filter theo trạng thái (optional)"
@@ -112,6 +114,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoices);
     }
 
+    //Dùng
     @Operation(
             summary = "Lấy danh sách hóa đơn theo Patient ID",
             description = "Lấy tất cả hóa đơn của một bệnh nhân cụ thể"
@@ -170,6 +173,7 @@ public class InvoiceController {
         return ResponseEntity.ok(cancelledInvoice);
     }
 
+    //Dùng
     @PostMapping("/{id}/cancel")
     public CompletableFuture<String> cancelInvoice(@PathVariable UUID id, @RequestParam String reason) {
         return commandGateway.send(new CancelInvoiceCommand(id, reason));

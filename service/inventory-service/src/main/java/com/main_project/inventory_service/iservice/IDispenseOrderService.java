@@ -1,5 +1,6 @@
 package com.main_project.inventory_service.iservice;
 
+import com.main_project.inventory_service.dto.DispenseOrderCreationRequest;
 import com.main_project.inventory_service.dto.DispenseOrderRequest;
 import com.main_project.inventory_service.dto.DispenseOrderResponse;
 
@@ -26,6 +27,15 @@ public interface IDispenseOrderService {
     DispenseOrderResponse getByMedicalHistoryId(UUID id);
 
     Map<String, Object> getPrescriptionStatusByMedicalHistoryId(UUID medicalHistoryId);
+    
+    // New methods for refactoring
+    DispenseOrderResponse createDispenseOrderFromReservation(DispenseOrderCreationRequest request);
+    DispenseOrderResponse updateStatus(UUID id, String status);
+    List<DispenseOrderResponse> getAllByPrescriptionId(UUID prescriptionId);
+    void cancelAllByPrescriptionId(UUID prescriptionId);
+    boolean canReturnReservation(UUID dispenseOrderId);
+    boolean canReleasePrescription(UUID dispenseOrderId);
+    boolean canMarkAsSold(UUID dispenseOrderId);
 }
 
 

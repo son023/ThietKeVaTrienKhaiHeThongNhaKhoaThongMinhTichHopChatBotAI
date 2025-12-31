@@ -190,6 +190,24 @@ class InvoiceController {
 
         return res.text(); // Returns string from CompletableFuture<String>
     }
+
+    /**
+     * Lấy danh sách invoices theo appointmentId
+     */
+    async getInvoicesByAppointmentId(appointmentId: string): Promise<InvoiceDTO[]> {
+        const url = createApiUrl(`${this.baseUrl}/appointment/${appointmentId}`);
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: getApiHeaders(true),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || 'Lỗi lấy danh sách hóa đơn');
+        }
+
+        return res.json();
+    }
 }
 
 export const invoiceController = new InvoiceController();

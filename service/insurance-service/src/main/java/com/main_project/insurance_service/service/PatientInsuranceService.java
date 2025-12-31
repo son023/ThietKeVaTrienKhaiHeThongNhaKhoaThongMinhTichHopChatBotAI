@@ -138,6 +138,21 @@ public class PatientInsuranceService implements IPatientInsuranceService {
     public boolean existsByPatientId(UUID patientId) {
         return patientInsuranceRepository.existsByPatientId(patientId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isValidInsurance(UUID patientId) {
+        Optional<PatientInsuranceDTO> optInsurance = getActiveInsuranceByPatientId(patientId);
+        if (optInsurance.isEmpty()) {
+            return false;
+        }
+        
+        PatientInsuranceDTO patientInsurance = optInsurance.get();
+        LocalDate today = LocalDate.now();
+        return "ACTIVE".equals(patientInsurance.getStatus()) &&
+                patientInsurance.getExpiryDate() != null &&
+                !today.isAfter(patientInsurance.getExpiryDate());
+    }
 }
 
 

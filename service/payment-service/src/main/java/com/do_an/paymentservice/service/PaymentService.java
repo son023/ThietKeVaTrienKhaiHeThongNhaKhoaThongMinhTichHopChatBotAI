@@ -2,6 +2,8 @@ package com.do_an.paymentservice.service;
 
 import com.do_an.common.command.CreatePaymentCommand;
 import com.do_an.common.command.UpdatePaymentStatusCommand;
+import com.do_an.common.event.PaymentFailedEvent;
+import com.do_an.common.event.PaymentProcessedEvent;
 import com.do_an.paymentservice.client.InventoryClient;
 import com.do_an.paymentservice.client.InvoiceClient;
 import com.do_an.paymentservice.client.PatientClient;
@@ -12,11 +14,14 @@ import com.do_an.paymentservice.entity.Payment;
 import com.do_an.paymentservice.entity.PaymentMethod;
 import com.do_an.paymentservice.entity.PaymentStatus;
 import com.do_an.paymentservice.exception.PaymentNotFoundException;
+import com.do_an.paymentservice.iservice.IPaymentService;
 import com.do_an.paymentservice.mapper.PaymentMapper;
 import com.do_an.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PaymentService {
+public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PayOS payOS;
@@ -42,6 +47,7 @@ public class PaymentService {
     private final InvoiceClient invoiceClient;
     private final PatientClient patientClient;
     private final CommandGateway commandGateway;
+    private final EventBus eventBus;
 
     @Value("${payos.return-url}")
     private String returnUrl;
@@ -147,7 +153,7 @@ public class PaymentService {
                 .invoiceId(request.getInvoiceId())
                 .totalAmount(request.getTotalAmount())
                 .paymentMethod(PaymentMethod.CASH)
-                .status(PaymentStatus.SUCCESSFUL)
+                .status(PaymentStatus.PENDING)
                 .paidAt(LocalDateTime.now())
                 .description("Thanh toán tiền mặt")
                 .build();
@@ -356,7 +362,7 @@ public class PaymentService {
      * CHỨC NĂNG 3: Lấy trạng thái thanh toán (Client polling)
      */
     @Transactional(readOnly = true)
-    public PaymentResponseDTO getPaymentStatus(UUID invoiceId) {
+    public PaymentResponseDTO getPaymentStatusOfInvoice(UUID invoiceId) {
         log.debug("Lấy trạng thái thanh toán cho Invoice: {}", invoiceId);
 
         Payment payment = paymentRepository.findFirstByInvoiceIdOrderByCreateAtDesc(invoiceId)
@@ -585,5 +591,35 @@ public class PaymentService {
         
         return paymentMapper.toResponseDto(payment);
     }
+
+    // ========== Methods for handlers ==========
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canUpdatePaymentStatus(UUID paymentId) {
+        PaymentResponseDTO payment = getPaymentById(paymentId);
+        // Không thể cập nhật nếu payment đã thành công
+        return payment.getStatus() != PaymentStatus.SUCCESSFUL;
+    }
+
+    @Override
+    @Transactional
+    public void updatePaymentStatusFromEvent(UUID paymentId, PaymentStatus status, String reason) {
+        log.info("Cập nhật Payment {} từ event - Status: {}", paymentId, status);
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException("Không tìm thấy Payment ID: " + paymentId));
+
+        payment.setStatus(status);
+        if (status == PaymentStatus.SUCCESSFUL) {
+            payment.setPaidAt(LocalDateTime.now());
+        }
+        payment.setDescription(reason);
+        paymentRepository.save(payment);
+
+        log.info("Đã cập nhật DB: Payment {} với status {}", paymentId, status);
+    }
+
 }
 

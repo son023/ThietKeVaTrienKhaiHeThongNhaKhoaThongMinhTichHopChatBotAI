@@ -252,6 +252,9 @@ public class EntityDTOMapper {
         if (requestDTO == null) return null;
 
         ClaimItem entity = new ClaimItem();
+        if (requestDTO.getId() != null) {
+            entity.setId(requestDTO.getId());
+        }
         entity.setQuantity(requestDTO.getQuantity());
         entity.setUnitPrice(requestDTO.getUnitPrice());
         entity.setTotalAmount(requestDTO.getTotalAmount());

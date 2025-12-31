@@ -12,10 +12,10 @@ import {
 } from "../ui/table";
 import {
   patientController,
-  PatientWithUser,
 } from "../../controllers/PatientController";
 import { appointmentController } from "../../controllers/AppointmentController";
 import { authController } from "../../controllers";
+import {PatientWithUser} from "../../models";
 
 interface MyPatientsProps {
   onNavigateToPatient: (id: string) => void;
@@ -97,9 +97,9 @@ export function MyPatients({ onNavigateToPatient, onNavigateToAppointments }: My
   const formatGender = (gender?: string) => {
     if (!gender) return "-";
     const g = gender.toLowerCase();
-    if (g === "nam") return "Nam";
-    if (g === "nữ") return "Nu";
-    return "Khac";
+    if (g === "male") return "Nam";
+    if (g === "female") return "Nữ";
+    return "Khác";
   };
 
   return (

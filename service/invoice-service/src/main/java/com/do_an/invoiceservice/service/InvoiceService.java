@@ -1,5 +1,8 @@
 package com.do_an.invoiceservice.service;
 
+import com.do_an.common.model.InvoiceItemCheckerRequest;
+import com.do_an.common.model.InvoiceItemResponse;
+import com.do_an.common.model.MedicineItem;
 import com.do_an.invoiceservice.client.AppointmentClient;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceItemRequestDTO;
 import com.do_an.invoiceservice.dto.request.CreateInvoiceRequestDTO;
@@ -8,6 +11,7 @@ import com.do_an.invoiceservice.dto.response.InvoiceResponseDTO;
 import com.do_an.invoiceservice.entity.Invoice;
 import com.do_an.invoiceservice.entity.InvoiceItem;
 import com.do_an.invoiceservice.exception.InvoiceNotFoundException;
+import com.do_an.invoiceservice.iservice.IInvoiceService;
 import com.do_an.invoiceservice.mapper.InvoiceItemMapper;
 import com.do_an.invoiceservice.mapper.InvoiceMapper;
 import com.do_an.invoiceservice.repository.InvoiceItemRepository;
@@ -19,8 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,7 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InvoiceService {
+public class InvoiceService implements IInvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final InvoiceItemRepository invoiceItemRepository;
@@ -57,6 +63,8 @@ public class InvoiceService {
             totalAmount += (item.getQuantity() * item.getUnitPrice());
         }
         invoice.setTotalAmount(totalAmount);
+        invoice.setPatientTotalPay(totalAmount);
+        invoice.setInsuranceTotalPay(0);
         Invoice savedInvoice = invoiceRepository.save(invoice);
         savedInvoice.getItems().size(); // ép load các item
         return invoiceMapper.toResponseDto(savedInvoice);
@@ -251,9 +259,181 @@ public class InvoiceService {
         }
     }
 
+    @Override
     public List<InvoiceResponseDTO> getInvoicesByAppointmentId(UUID appointmentId){
         List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(appointmentId);
         return invoiceMapper.toResponseDtoList(invoices);
-
     }
+
+    // ==================== NEW METHODS FOR REFACTORING ====================
+
+    @Override
+    @Transactional
+    public InvoiceResponseDTO addMedicineCharges(UUID invoiceId, Set<InvoiceItemCheckerRequest> items, 
+                                                List<MedicineItem> medicineItems) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn: " + invoiceId));
+
+        int addedAmount = 0;
+
+        for (InvoiceItemCheckerRequest medicineItem : items) {
+            InvoiceItem invoiceItem = new InvoiceItem();
+            invoiceItem.setId(medicineItem.getId());
+            invoiceItem.setServiceType("MEDICINE");
+            invoiceItem.setReferenceId(medicineItem.getReferenceId());
+            invoiceItem.setQuantity(medicineItem.getQuantity());
+            invoiceItem.setDescription(medicineItem.getDescription());
+            invoiceItem.setUnitPrice(medicineItem.getUnitPrice());
+            invoiceItem.setInsurancePayAmount(0);
+            invoiceItem.setPatientPayAmount(medicineItem.getQuantity() * medicineItem.getUnitPrice());
+
+            // Match description from medicineItems
+            for (MedicineItem it : medicineItems) {
+                if (medicineItem.getId().equals(it.getId()) ||
+                        it.getMedicineId().equals(medicineItem.getReferenceId())) {
+                    invoiceItem.setDescription(it.getName());
+                    break;
+                }
+            }
+
+            invoice.addItem(invoiceItem);
+            invoiceItemRepository.save(invoiceItem);
+            addedAmount += (medicineItem.getQuantity() * medicineItem.getUnitPrice());
+        }
+
+        int currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+        int currentPatientPay = invoice.getPatientTotalPay() != null ? invoice.getPatientTotalPay() : 0;
+
+        invoice.setPatientTotalPay(currentPatientPay + addedAmount);
+        invoice.setTotalAmount(currentTotal + addedAmount);
+
+        Invoice saved = invoiceRepository.save(invoice);
+        saved.getItems().size(); // Load items
+        return invoiceMapper.toResponseDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponseDTO applyInsuranceDiscount(UUID invoiceId, UUID insuranceClaimId, 
+                                                    Integer discountAmount, Set<InvoiceItemResponse> items) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn: " + invoiceId));
+
+        Integer currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+        Integer discount = discountAmount != null ? discountAmount : 0;
+        Integer finalAmount = Math.max(0, currentTotal - discount);
+
+        invoice.setInsuranceTotalPay(discount);
+        invoice.setPatientTotalPay(finalAmount);
+        invoice.setInsuranceClaimId(insuranceClaimId);
+
+        invoiceRepository.save(invoice);
+
+        // Update invoice items
+        List<InvoiceItem> existingItems = invoiceItemRepository.findByInvoiceId(invoiceId);
+        Map<UUID, InvoiceItem> existingMap = existingItems.stream()
+                .collect(Collectors.toMap(InvoiceItem::getId, item -> item));
+        List<InvoiceItem> itemsToUpdate = new ArrayList<>();
+
+        for (InvoiceItemResponse it : items) {
+            if (existingMap.containsKey(it.getId())) {
+                InvoiceItem entity = existingMap.get(it.getId());
+                invoiceItemMapper.updateFromResponse(it, entity);
+                itemsToUpdate.add(entity);
+            }
+        }
+
+        invoiceItemRepository.saveAll(itemsToUpdate);
+
+        Invoice saved = invoiceRepository.findById(invoiceId).get();
+        saved.getItems().size();
+        return invoiceMapper.toResponseDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponseDTO revertInsuranceDiscount(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        invoice.setInsuranceTotalPay(0);
+        invoice.setPatientTotalPay(invoice.getTotalAmount());
+        invoice.setInsuranceClaimId(null);
+
+        Invoice saved = invoiceRepository.save(invoice);
+        saved.getItems().size();
+        return invoiceMapper.toResponseDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponseDTO removeMedicineCharges(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hoá đơn"));
+
+
+        // Delete all medicine items
+        invoiceItemRepository.deleteByInvoice_IdAndServiceType(invoiceId, "MEDICINE");
+
+        // Recalculate totals
+        List<InvoiceItem> remainingItems = invoiceItemRepository.findByInvoiceId(invoiceId);
+        int newTotal = remainingItems.stream()
+                .mapToInt(item -> item.getQuantity() * item.getUnitPrice())
+                .sum();
+
+        invoice.setTotalAmount(Math.max(0, newTotal));
+        invoice.setPatientTotalPay(Math.max(0, newTotal));
+
+
+        Invoice saved = invoiceRepository.save(invoice);
+        saved.getItems().size();
+        return invoiceMapper.toResponseDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceResponseDTO updateStatus(UUID invoiceId, String status) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new InvoiceNotFoundException("Không tìm thấy hóa đơn: " + invoiceId));
+
+        invoice.setStatus(status);
+        if ("PAID".equals(status)) {
+            invoice.setPaidAt(LocalDateTime.now());
+        }
+
+        Invoice saved = invoiceRepository.save(invoice);
+        saved.getItems().size();
+        return invoiceMapper.toResponseDto(saved);
+    }
+
+    // Validation methods
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canAddMedicineCharges(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        return invoice != null && "PENDING".equals(invoice.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canApplyInsuranceDiscount(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        return invoice != null && "PENDING".equals(invoice.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canCancel(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        return invoice != null && !"PAID".equals(invoice.getStatus());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canMarkAsPaid(UUID invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+        return invoice != null && !"PAID".equals(invoice.getStatus()) && !"CANCELLED".equals(invoice.getStatus());
+    }
+
+
 }

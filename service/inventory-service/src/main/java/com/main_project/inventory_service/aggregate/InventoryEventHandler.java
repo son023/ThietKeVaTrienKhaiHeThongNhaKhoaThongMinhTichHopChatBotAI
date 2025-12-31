@@ -2,8 +2,10 @@ package com.main_project.inventory_service.aggregate;
 
 import com.do_an.common.event.*;
 import com.do_an.common.model.MedicineItem;
-import com.main_project.inventory_service.entity.*;
-import com.main_project.inventory_service.repository.*;
+import com.main_project.inventory_service.dto.*;
+import com.main_project.inventory_service.iservice.IDispenseOrderService;
+import com.main_project.inventory_service.iservice.IDispenseItemService;
+import com.main_project.inventory_service.iservice.IInventoryLotService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +14,8 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import com.main_project.inventory_service.entity.Pharmacist;
-import com.main_project.inventory_service.repository.PharmacistRepository;
 
 import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage;
 
@@ -27,93 +24,76 @@ import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage
 @Slf4j
 public class InventoryEventHandler {
 
-    private final MedicineRepository medicineRepository;
-
-    private final InventoryLotRepository inventoryLotRepository;
-
-    private final StockLedgerRepository stockLedgerRepository;
-
-    private final DispenseItemRepository dispenseItemRepository;
-
-    private final DispenseOrderRepository dispenseOrderRepository;
-
-    private final PharmacistRepository pharmacistRepository;
-
+    private final IDispenseOrderService dispenseOrderService;
+    private final IDispenseItemService dispenseItemService;
+    private final IInventoryLotService inventoryLotService;
     private final EventBus eventBus;
 
     @EventHandler
     @Transactional
     public void on(MedicineReservedEvent event) {
         try {
-            DispenseOrder dispenseOrder = new DispenseOrder();
-            dispenseOrder.setId(event.getDispenseOrderId());
-            dispenseOrder.setPrescription(event.getPrescriptionId());
-            dispenseOrder.setMedicalHistoryId(event.getMedicalHistoryId());
-            dispenseOrder.setDoctorId(event.getDoctorId());
-            dispenseOrder.setStatus("RESERVED");
+            // Sử dụng service để tạo dispense order
+            DispenseOrderCreationRequest orderRequest = DispenseOrderCreationRequest.builder()
+                    .dispenseOrderId(event.getDispenseOrderId())
+                    .prescriptionId(event.getPrescriptionId())
+                    .doctorId(event.getDoctorId())
+                    .medicalHistoryId(event.getMedicalHistoryId())
+                    .build();
 
-            // ✅ Lấy pharmacist từ DispenseOrder nếu có
-            Pharmacist pharmacist = null;
-            if (dispenseOrder.getPharmacist() != null) {
-                pharmacist = dispenseOrder.getPharmacist();
-            }
+            dispenseOrderService.createDispenseOrderFromReservation(orderRequest);
 
-            dispenseOrderRepository.save(dispenseOrder);
+            // Lấy dispense order để lấy pharmacistId nếu có
+            DispenseOrderResponse dispenseOrderResponse = dispenseOrderService.getById(event.getDispenseOrderId());
+            UUID pharmacistId = dispenseOrderResponse.getPharmacistId();
 
+            // Sử dụng service để phân bổ và tạo dispense items
             for (MedicineItem item : event.getItems()) {
-                UUID medicineId = item.getMedicineId();
+                MedicineAllocationRequest allocationRequest = MedicineAllocationRequest.builder()
+                        .medicineId(item.getMedicineId())
+                        .dispenseOrderId(event.getDispenseOrderId())
+                        .quantity(item.getQuantity())
+                        .priceAtDispense(item.getUnitPrice())
+                        .dosage(item.getDosage())
+                        .duration(item.getDuration())
+                        .frequency(item.getFrequency())
+                        .usageInstructions(item.getInstruction())
+                        .pharmacistId(pharmacistId)
+                        .build();
 
-                Medicine medicine = medicineRepository.findById(medicineId)
-                        .orElseThrow(() -> new RuntimeException("Medicine not found: " + item.getMedicineId()));
+                // 1. Allocate quantity từ lots
+                List<LotAllocationResult> allocationResults = 
+                        inventoryLotService.allocateQuantityForDispense(allocationRequest);
 
-                List<InventoryLot> availableLots = inventoryLotRepository.findAll().stream()
-                        .filter(lot -> lot.getMedicine() != null &&
-                                lot.getMedicine().getId().equals(medicineId) &&
-                                lot.getQuantityOnHand() != null &&
-                                lot.getQuantityOnHand() > 0)
-                        .sorted(Comparator.comparing(InventoryLot::getExpireDate, Comparator.nullsLast(Comparator.naturalOrder())))
-                        .collect(Collectors.toList());
+                // 2. Tạo DispenseItem cho mỗi allocation
+                for (LotAllocationResult allocationResult : allocationResults) {
+                    DispenseItemCreationRequest dispenseItemRequest = DispenseItemCreationRequest.builder()
+                            .dispenseItemId(UUID.randomUUID())
+                            .dispenseOrderId(event.getDispenseOrderId())
+                            .inventoryLotId(allocationResult.getInventoryLotId())
+                            .medicineId(item.getMedicineId())
+                            .quantity(allocationResult.getQuantity())
+                            .priceAtDispense(allocationResult.getPriceAtDispense())
+                            .dosage(item.getDosage())
+                            .duration(item.getDuration())
+                            .frequency(item.getFrequency())
+                            .usageInstructions(item.getInstruction())
+                            .build();
 
-                int remainingToReserve = item.getQuantity();
+                    DispenseItemResponse dispenseItemResponse = 
+                            dispenseItemService.createDispenseItemFromReservation(dispenseItemRequest);
 
-                for (InventoryLot lot : availableLots) {
-                    if (remainingToReserve <= 0) break;
+                    // 3. Tạo stock ledger entry
+                    StockLedgerEntryRequest ledgerRequest = StockLedgerEntryRequest.builder()
+                            .inventoryLotId(allocationResult.getInventoryLotId())
+                            .pharmacistId(pharmacistId)
+                            .type("OUT")
+                            .quantity(allocationResult.getQuantity())
+                            .referenceType("AUTO_DISPENSE")
+                            .referenceId(dispenseItemResponse.getId())
+                            .build();
 
-                    int availableInLot = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
-                    int toReserveFromLot = Math.min(remainingToReserve, availableInLot);
-
-                    DispenseItem dispenseItem = new DispenseItem();
-                    dispenseItem.setId(UUID.randomUUID());
-                    dispenseItem.setQuantity(toReserveFromLot);
-                    dispenseItem.setPriceAtDispense(medicine.getSalePrice() != null ? medicine.getSalePrice() : 0);
-                    dispenseItem.setInventoryLot(lot);
-                    dispenseItem.setDosage(item.getDosage());
-                    dispenseItem.setDuration(item.getDuration());
-                    dispenseItem.setFrequency(item.getFrequency());
-                    dispenseItem.setUsageInstructions(item.getInstruction());
-                    dispenseItem.setDispenseOrder(dispenseOrder);
-
-                    dispenseItem = dispenseItemRepository.save(dispenseItem);
-
-                    lot.setQuantityOnHand(availableInLot - toReserveFromLot);
-                    inventoryLotRepository.save(lot);
-
-                    // Ghi stock ledger - Xuất kho tự động từ saga
-                    StockLedger ledgerEntry = new StockLedger();
-                    ledgerEntry.setType("OUT");
-                    ledgerEntry.setQuantity(toReserveFromLot);
-                    ledgerEntry.setReferenceId(dispenseItem.getId());
-                    ledgerEntry.setReferenceType("AUTO_DISPENSE");
-                    ledgerEntry.setInventoryLot(lot);
-                    // ✅ Set pharmacist nếu có
-                    if (pharmacist != null) {
-                        ledgerEntry.setPharmacist(pharmacist);
-                    }
-                    stockLedgerRepository.save(ledgerEntry);
-                    log.debug("✅ [AUTO-EXPORT] Stock ledger: lotNo={}, qty={}, pharmacist={}",
-                            lot.getLotNo(), toReserveFromLot, pharmacist != null ? pharmacist.getUserId() : "N/A");
-
-                    remainingToReserve -= toReserveFromLot;
+                    inventoryLotService.createStockLedgerEntry(ledgerRequest);
                 }
             }
 
@@ -126,27 +106,50 @@ public class InventoryEventHandler {
             ));
             throw new RuntimeException("Hoàn tác giao dịch kho", e);
         }
-
     }
 
     @EventHandler
     @Transactional
-    public void on(MedicineReservationReturnEvent event){
+    public void on(MedicineReservationReturnEvent event) {
         try {
-            List<DispenseOrder> dispenseOrders =
-                    dispenseOrderRepository.findAllByPrescription(event.getPrescriptionId());
+            // Sử dụng service để hủy orders
+            dispenseOrderService.cancelAllByPrescriptionId(event.getPrescriptionId());
 
-            // Đánh dấu hủy đơn xuất
-            dispenseOrders.forEach(order -> order.setStatus("CANCELLED"));
-            dispenseOrderRepository.saveAll(dispenseOrders);
+            // Sử dụng service để rollback items
+            List<DispenseOrderResponse> orders = dispenseOrderService.getAllByPrescriptionId(event.getPrescriptionId());
 
-            // Hoàn trả lại số lượng vào lô
-            for (DispenseOrder order : dispenseOrders) {
-                List<DispenseItem> dispenseItems = dispenseItemRepository.findByDispenseOrderId(order.getId());
-                for (DispenseItem dispenseItem : dispenseItems) {
-                    rollbackDispenseItem(dispenseItem);
+            for (DispenseOrderResponse order : orders) {
+                List<DispenseItemResponse> items = dispenseItemService.getAllByDispenseOrderId(order.getId());
+                
+                for (DispenseItemResponse item : items) {
+                    // 1. Rollback DispenseItem và lấy thông tin cần restore
+                    DispenseItemRollbackResult rollbackResult = 
+                            dispenseItemService.rollbackDispenseItem(item.getId());
+
+                    if (rollbackResult != null) {
+                        // 2. Restore quantity to lot
+                        InventoryRestoreRequest restoreRequest = InventoryRestoreRequest.builder()
+                                .inventoryLotId(rollbackResult.getInventoryLotId())
+                                .quantity(rollbackResult.getQuantity())
+                                .build();
+
+                        inventoryLotService.restoreQuantityToLot(restoreRequest);
+
+                        // 3. Tạo stock ledger entry
+                        StockLedgerEntryRequest ledgerRequest = StockLedgerEntryRequest.builder()
+                                .inventoryLotId(rollbackResult.getInventoryLotId())
+                                .pharmacistId(rollbackResult.getPharmacistId())
+                                .type("IN")
+                                .quantity(rollbackResult.getQuantity())
+                                .referenceType("AUTO_ROLLBACK")
+                                .referenceId(item.getId())
+                                .build();
+
+                        inventoryLotService.createStockLedgerEntry(ledgerRequest);
+                    }
                 }
             }
+
             log.info("Đã rollback kho thành công cho Return");
 
         } catch (Exception e) {
@@ -154,52 +157,15 @@ public class InventoryEventHandler {
         }
     }
 
-    private void rollbackDispenseItem(DispenseItem dispenseItem) {
-        if (dispenseItem == null || dispenseItem.getInventoryLot() == null) {
-            return;
-        }
-
-        InventoryLot lot = dispenseItem.getInventoryLot();
-        Integer quantityToRestore = dispenseItem.getQuantity();
-
-        int currentQuantity = lot.getQuantityOnHand() != null ? lot.getQuantityOnHand() : 0;
-        lot.setQuantityOnHand(currentQuantity + quantityToRestore);
-        inventoryLotRepository.save(lot);
-
-        // ✅ Lấy pharmacist từ DispenseOrder nếu có
-        Pharmacist pharmacist = null;
-        if (dispenseItem.getDispenseOrder() != null &&
-                dispenseItem.getDispenseOrder().getPharmacist() != null) {
-            pharmacist = dispenseItem.getDispenseOrder().getPharmacist();
-        }
-
-        // Ghi stock ledger - Hoàn trả kho do rollback
-        StockLedger reverseLedgerEntry = new StockLedger();
-        reverseLedgerEntry.setId(UUID.randomUUID());
-        reverseLedgerEntry.setType("IN");
-        reverseLedgerEntry.setQuantity(quantityToRestore);
-        reverseLedgerEntry.setReferenceId(dispenseItem.getId());
-        reverseLedgerEntry.setReferenceType("AUTO_ROLLBACK");
-        reverseLedgerEntry.setInventoryLot(lot);
-        // ✅ Set pharmacist nếu có
-        if (pharmacist != null) {
-            reverseLedgerEntry.setPharmacist(pharmacist);
-        }
-        stockLedgerRepository.save(reverseLedgerEntry);
-        log.debug("✅ [AUTO-ROLLBACK] Stock ledger: lotNo={}, qty={}, pharmacist={}",
-                lot.getLotNo(), quantityToRestore, pharmacist != null ? pharmacist.getUserId() : "N/A");
-    }
-
     @EventHandler
     @Transactional
-    public void on(MedicineReservationReleaseEvent event){
+    public void on(MedicineReservationReleaseEvent event) {
         try {
-            log.info("Nhận sự kiện MedicineReservationReleaseEvent. Cập nhật trạng thái RELEASED cho DispenseOrder: {}", event.getDispenseOrderId());
+            log.info("Nhận sự kiện MedicineReservationReleaseEvent. Cập nhật trạng thái RELEASED cho DispenseOrder: {}",
+                    event.getDispenseOrderId());
 
-            DispenseOrder dispenseOrder = dispenseOrderRepository.findById(event.getDispenseOrderId()).get();
-
-            dispenseOrder.setStatus("RELEASED");;
-            dispenseOrderRepository.save(dispenseOrder);
+            // Sử dụng service để cập nhật status
+            dispenseOrderService.updateStatus(event.getDispenseOrderId(), "RELEASED");
 
             log.info("Đã cập nhật DispenseOrder {} thành công (RELEASED).", event.getDispenseOrderId());
 
@@ -207,19 +173,17 @@ public class InventoryEventHandler {
             log.error("Lỗi khi xử lý MedicineReservationReleaseEvent cho DispenseOrder {}: {}",
                     event.getDispenseOrderId(), e.getMessage(), e);
         }
-
     }
 
     @EventHandler
     @Transactional
-    public void on(MedicineReservationSoldEvent event){
+    public void on(MedicineReservationSoldEvent event) {
         try {
-            log.info("Nhận sự kiện MedicineReservationSoldEvent. Cập nhật trạng thái SOLD cho DispenseOrder: {}", event.getDispenseOrderId());
+            log.info("Nhận sự kiện MedicineReservationSoldEvent. Cập nhật trạng thái SOLD cho DispenseOrder: {}",
+                    event.getDispenseOrderId());
 
-            DispenseOrder dispenseOrder = dispenseOrderRepository.findById(event.getDispenseOrderId()).get();
-
-            dispenseOrder.setStatus("SOLD");;
-            dispenseOrderRepository.save(dispenseOrder);
+            // Sử dụng service để cập nhật status
+            dispenseOrderService.updateStatus(event.getDispenseOrderId(), "SOLD");
 
             log.info("Đã cập nhật DispenseOrder {} thành công (SOLD).", event.getDispenseOrderId());
 
@@ -227,6 +191,5 @@ public class InventoryEventHandler {
             log.error("Lỗi khi xử lý MedicineReservationSoldEvent cho DispenseOrder {}: {}",
                     event.getDispenseOrderId(), e.getMessage(), e);
         }
-
     }
 }

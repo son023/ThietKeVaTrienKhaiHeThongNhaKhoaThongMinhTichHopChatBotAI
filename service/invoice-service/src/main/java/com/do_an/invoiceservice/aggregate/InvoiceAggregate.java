@@ -51,23 +51,23 @@ public class InvoiceAggregate {
         ));
     }
 
-    public InvoiceAggregate(UUID prescriptionId, UUID invoiceId,
+    public InvoiceAggregate(UUID prescriptionId,
                             List<MedicineItem> medicineItems,
                             InvoiceCheckerRequest invoiceCheckerRequest) {
         AggregateLifecycle.apply(new MedicineChargesAddedEvent(
                 prescriptionId,
-                invoiceId,
+                invoiceCheckerRequest.getId(),
                 medicineItems,
                 invoiceCheckerRequest
         ));
     }
 
-    public void addMedicineCharges(UUID prescriptionId, UUID invoiceId,
+    public void applyAddMedicineCharges(UUID prescriptionId,
                                    List<MedicineItem> medicineItems,
                                    InvoiceCheckerRequest invoiceCheckerRequest) {
         AggregateLifecycle.apply(new MedicineChargesAddedEvent(
                 prescriptionId,
-                invoiceId,
+                invoiceCheckerRequest.getId(),
                 medicineItems,
                 invoiceCheckerRequest
         ));
@@ -108,21 +108,35 @@ public class InvoiceAggregate {
     }
 
 
-   @CommandHandler
-   public void handle(RevertInsuranceDiscountCommand command) {
-       AggregateLifecycle.apply(new InsuranceDiscountRevertedEvent(
-               command.getPrescriptionId(),
-               command.getInvoiceId()
-       ));
-   }
+    public void applyRevertInsuranceDiscount(UUID prescriptionId, UUID invoiceId){
+        AggregateLifecycle.apply(new InsuranceDiscountRevertedEvent(
+                prescriptionId,
+                invoiceId
+        ));
+    }
 
-   @CommandHandler
-   public void handle(RemoveMedicineChargesCommand command) {
-       AggregateLifecycle.apply(new MedicineChargesRemovedEvent(
-               command.getPrescriptionId(),
-               command.getInvoiceId()
-       ));
-   }
+//   @CommandHandler
+//   public void handle(RevertInsuranceDiscountCommand command) {
+//       AggregateLifecycle.apply(new InsuranceDiscountRevertedEvent(
+//               command.getPrescriptionId(),
+//               command.getInvoiceId()
+//       ));
+//   }
+
+    public void applyRemoveMedicineCharges(UUID prescriptionId, UUID invoiceId){
+        AggregateLifecycle.apply(new MedicineChargesRemovedEvent(
+                prescriptionId,
+                invoiceId
+        ));
+    }
+
+//   @CommandHandler
+//   public void handle(RemoveMedicineChargesCommand command) {
+//       AggregateLifecycle.apply(new MedicineChargesRemovedEvent(
+//               command.getPrescriptionId(),
+//               command.getInvoiceId()
+//       ));
+//   }
 
    @EventSourcingHandler
    public void on(MedicineChargesAddedEvent event) {

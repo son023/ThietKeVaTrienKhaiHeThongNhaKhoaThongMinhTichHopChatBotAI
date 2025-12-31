@@ -3,14 +3,10 @@ package com.do_an.paymentservice.aggregate;
 
 
 
-import com.do_an.common.command.CreatePaymentCommand;
-import com.do_an.common.command.UpdatePaymentStatusCommand;
 import com.do_an.common.event.PaymentFailedEvent;
 import com.do_an.common.event.PaymentInitiatedEvent;
-import com.do_an.common.event.PaymentProcessedEvent;
 import com.do_an.common.event.PaymentStatusUpdatedEvent;
 import com.do_an.paymentservice.entity.PaymentStatus;
-import com.do_an.paymentservice.repository.PaymentRepository;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
@@ -34,33 +30,23 @@ public class PaymentAggregate {
     private PaymentStatus status;
 
 
-    @Autowired
-    private transient PaymentRepository paymentRepository;
 
-    @CommandHandler
-    public PaymentAggregate(CreatePaymentCommand command) {
+    public PaymentAggregate(UUID paymentId, UUID invoiceId, UUID dispenseOrderId) {
         AggregateLifecycle.apply(new PaymentInitiatedEvent(
-                command.getPaymentId(),
-                command.getInvoiceId(),
-                command.getDispenseOrderId()
+                paymentId,
+                invoiceId,
+                dispenseOrderId
         ));
     }
 
     //CẬP NHẬT TRẠNG THÁI (SUCCESS/FAILED)
-    @CommandHandler
-    public void handle(UpdatePaymentStatusCommand command) {
-        // Validate trạng thái
-        if (this.status == PaymentStatus.SUCCESSFUL) {
-            log.warn("Payment {} đã thành công, không thể cập nhật sang trạng thái khác.", paymentId);
-            return;
-        }
-
-        // Phát sự kiện cập nhật trạng thái
+    public void applyUpdatePaymentStatus(UUID paymentId, String status, String reason) {
             AggregateLifecycle.apply(new PaymentStatusUpdatedEvent(
-                    command.getPaymentId(),
+                    paymentId,
                     this.invoiceId,
-                    command.getStatus(),
-                    command.getReason()
+                    status,
+                    reason
+
             ));
     }
 
@@ -77,16 +63,6 @@ public class PaymentAggregate {
     public void on(PaymentStatusUpdatedEvent event) {
         this.status = PaymentStatus.valueOf(event.getStatus());
 
-    }
-
-    @EventSourcingHandler
-    public void on(PaymentProcessedEvent event) {
-        this.status = PaymentStatus.SUCCESSFUL;
-    }
-
-    @EventSourcingHandler
-    public void on(PaymentFailedEvent event) {
-        this.status = PaymentStatus.valueOf(event.getStatus()) ;
     }
 
 

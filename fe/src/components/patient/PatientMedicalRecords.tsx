@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Phone,
@@ -13,108 +13,361 @@ import {
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { Progress } from "../ui/progress";
+import { toast } from "sonner";
+import { authController } from "../../controllers/AuthController";
+import { userController, UpdateUserRequestDTO } from "../../controllers/UserController";
+import { patientController } from "../../controllers/PatientController";
+import { medicalHistoryController, MedicalHistoryDTO } from "../../controllers/MedicalHistoryController";
+import { appointmentController, AppointmentDTO } from "../../controllers/AppointmentController";
+import { invoiceController, InvoiceDTO } from "../../controllers/InvoiceController";
+import { inventoryController, DispenseOrderDTO, DispenseItemDTO } from "../../controllers/InventoryController";
+import { UserDTO } from "../../models";
+import { PatientDTO } from "../../models/Patient";
+
+// Interface cho prescription item
+interface PrescriptionItem {
+  medicineName: string;
+  quantity: number;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  usageInstructions: string;
+}
+
+// Interface cho dữ liệu hiển thị
+interface MedicalHistoryRecord {
+  id: string;
+  date: string;
+  service: string;
+  doctor: string;
+  diagnosis: string[];
+  treatment: string[];
+  prescription: PrescriptionItem[] | null;
+  nextVisit: string | null;
+  cost: number;
+}
 
 export function PatientMedicalRecords() {
   const [selectedTab, setSelectedTab] = useState("personal");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPersonal, setIsLoadingPersonal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [medicalHistoryRecords, setMedicalHistoryRecords] = useState<MedicalHistoryRecord[]>([]);
 
-  // Mock data - Personal Information
-  const personalInfo = {
-    fullName: "Nguyễn Văn Minh",
-    dateOfBirth: "15/05/1990",
-    gender: "Nam",
-    phone: "+84 912 345 678",
-    email: "nguyenvanminh@email.com",
-    address: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
-    emergencyContact: "Nguyễn Thị Lan - 0987 654 321",
-    bloodType: "O+",
-    allergies: "Không có",
-    insuranceNumber: "BH-123456789",
+  // Data from API
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [patient, setPatient] = useState<PatientDTO | null>(null);
+
+  // Form data for editing
+  const [profileData, setProfileData] = useState({
+    fullName: "",
+    dob: "",
+    gender: "",
+    contactPhone: "",
+    email: "",
+    address: "",
+  });
+
+  // Load personal info on mount
+  useEffect(() => {
+    loadPersonalInfo();
+  }, []);
+
+  // Load medical history when tab changes
+  useEffect(() => {
+    if (selectedTab === "history") {
+      loadMedicalHistoryData();
+    }
+  }, [selectedTab]);
+
+  const loadPersonalInfo = async () => {
+    try {
+      setIsLoadingPersonal(true);
+      const currentUser = authController.getCurrentUser();
+      if (!currentUser?.id) {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
+
+      // Load user data
+      const userData = await userController.getById(currentUser.id);
+      setUser(userData);
+
+      // Load patient data
+      let patientData = null;
+      try {
+        patientData = await patientController.getById(currentUser.id);
+        setPatient(patientData);
+      } catch (error) {
+        console.warn("Patient profile not found");
+      }
+
+      // Populate form data
+      setProfileData({
+        fullName: userData.fullName || "",
+        dob: patientData?.dob
+          ? new Date(patientData.dob).toISOString().split('T')[0]
+          : "",
+        gender: patientData?.gender || "",
+        contactPhone: userData.phone || patientData?.contactPhone || "",
+        email: userData.email || "",
+        address: patientData?.address || "",
+      });
+    } catch (error) {
+      console.error("Failed to load personal info:", error);
+      toast.error("Không thể tải thông tin cá nhân");
+    } finally {
+      setIsLoadingPersonal(false);
+    }
   };
 
-  // Mock data - Treatment Plans
-  const treatmentPlans = [
-    {
-      id: 1,
-      name: "Gói Niềng răng Invisalign",
-      startDate: "01/08/2024",
-      estimatedEndDate: "01/08/2025",
-      progress: 25,
-      currentStep: 2,
-      totalSteps: 8,
-      doctor: "BS. Trần Thị B",
-      status: "active",
-      nextVisit: "20/11/2024",
-      description: "Chỉnh nha bằng khay trong suốt Invisalign",
-      totalCost: 65000000,
-      paidAmount: 20000000,
-      remainingAmount: 45000000,
-    },
-    {
-      id: 2,
-      name: "Điều trị tủy răng số 6",
-      startDate: "15/09/2024",
-      estimatedEndDate: "15/10/2024",
-      progress: 100,
-      currentStep: 3,
-      totalSteps: 3,
-      doctor: "BS. Nguyễn Văn A",
-      status: "completed",
-      nextVisit: null,
-      description: "Điều trị tủy răng và bọc sứ",
-      totalCost: 8500000,
-      paidAmount: 8500000,
-      remainingAmount: 0,
-    },
-  ];
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      const currentUser = authController.getCurrentUser();
+      if (!currentUser?.id) {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
 
-  // Mock data - Medical History
-  const medicalHistory = [
-    {
-      id: 1,
-      date: "01/11/2024",
-      service: "Khám tổng quát",
-      doctor: "BS. Nguyễn Văn A",
-      diagnosis: "Viêm nướu nhẹ, cần vệ sinh răng miệng tốt hơn",
-      treatment: "Hướng dẫn vệ sinh răng miệng đúng cách",
-      prescription: "Nước súc miệng kháng khuẩn",
-      nextVisit: "15/11/2024",
-      cost: 200000,
-    },
-    {
-      id: 2,
-      date: "15/10/2024",
-      service: "Tẩy trắng răng",
-      doctor: "BS. Phạm Thị D",
-      diagnosis: "Răng bị ố vàng do thói quen ăn uống",
-      treatment: "Tẩy trắng răng bằng công nghệ Laser",
-      prescription: "Kem đánh răng chuyên dụng",
-      nextVisit: null,
-      cost: 3500000,
-    },
-    {
-      id: 3,
-      date: "01/10/2024",
-      service: "Cạo vôi răng",
-      doctor: "BS. Lê Văn C",
-      diagnosis: "Vôi răng nhiều ở hàm dưới",
-      treatment: "Lấy cao răng và đánh bóng răng",
-      prescription: null,
-      nextVisit: "01/04/2025",
-      cost: 500000,
-    },
-    {
-      id: 4,
-      date: "15/09/2024",
-      service: "Khám định kỳ",
-      doctor: "BS. Nguyễn Văn A",
-      diagnosis: "Răng số 6 bị sâu sâu, cần điều trị tủy",
-      treatment: "Chụp X-quang, lập kế hoạch điều trị",
-      prescription: null,
-      nextVisit: "20/09/2024",
-      cost: 300000,
-    },
-  ];
+      // Update user
+      const updateUserData: UpdateUserRequestDTO = {
+        fullName: profileData.fullName,
+        phone: profileData.contactPhone,
+        email: profileData.email,
+      };
+      await userController.update(currentUser.id, updateUserData);
+
+      // Update patient profile
+      try {
+        await patientController.upsertProfile(currentUser.id, {
+          dob: profileData.dob,
+          gender: profileData.gender,
+          address: profileData.address,
+          contactPhone: profileData.contactPhone,
+        });
+      } catch (error) {
+        console.error("Failed to update patient profile:", error);
+        toast.warning("Cập nhật thông tin bệnh nhân thất bại");
+      }
+
+      toast.success("Cập nhật thông tin thành công!");
+      setIsEditing(false);
+      await loadPersonalInfo(); // Reload data
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      toast.error("Không thể cập nhật thông tin");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadMedicalHistoryData = async () => {
+    try {
+      setIsLoading(true);
+      const currentUser = authController.getCurrentUser();
+      if (!currentUser?.id) {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
+
+      // 1. Lấy medical histories theo patientId
+      const medicalHistories = await medicalHistoryController.getByPatientId(currentUser.id);
+
+      // 2. Với mỗi medical history, lấy thông tin appointment, invoice, doctor
+      const recordsPromises = medicalHistories.map(async (mh: MedicalHistoryDTO) => {
+        if (!mh.appointmentId) {
+          return null;
+        }
+
+        try {
+          // Lấy appointment
+          const appointment = await appointmentController.getById(mh.appointmentId);
+
+          // Lấy invoice theo appointmentId
+          let invoice: InvoiceDTO | null = null;
+          try {
+            const invoices = await invoiceController.getInvoicesByAppointmentId(mh.appointmentId);
+            invoice = invoices.length > 0 ? invoices[0] : null;
+          } catch (error) {
+            console.warn("Failed to load invoice for appointment:", mh.appointmentId);
+          }
+
+          // Lấy doctor name
+          let doctorName = "Bác sĩ";
+          try {
+            const doctor = await userController.getById(appointment.doctorId);
+            doctorName = doctor.fullName || `BS. ${appointment.doctorId.substring(0, 8)}`;
+          } catch (error) {
+            console.warn("Failed to load doctor name:", appointment.doctorId);
+          }
+
+          // Lấy service name từ medicalServices
+          const serviceName = appointment.medicalServices && appointment.medicalServices.length > 0
+            ? appointment.medicalServices.map(s => s.serviceName).join(", ")
+            : "Khám tổng quát";
+
+          // Format date
+          const date = appointment.appointmentStartTime
+            ? new Date(appointment.appointmentStartTime).toLocaleDateString('vi-VN')
+            : mh.createdAt
+              ? new Date(mh.createdAt).toLocaleDateString('vi-VN')
+              : "N/A";
+
+          // Format diagnosis - chỉ lấy symptoms từ medicalHistory
+          const diagnosis: string[] = [];
+          if (mh.symptoms) {
+            // Nếu symptoms có nhiều dòng (phân cách bởi \n), split thành array
+            const symptomsArray = mh.symptoms.split('\n').filter(s => s.trim());
+            if (symptomsArray.length > 0) {
+              diagnosis.push(...symptomsArray);
+            } else {
+              diagnosis.push(mh.symptoms);
+            }
+          }
+          if (diagnosis.length === 0) {
+            diagnosis.push("Không có chẩn đoán");
+          }
+
+          // Format treatment - mỗi item trên 1 dòng
+          const treatment: string[] = [];
+          if (mh.conditions && mh.conditions.length > 0) {
+            mh.conditions.forEach(c => {
+              if (c.treatment) {
+                treatment.push(c.treatment);
+              }
+            });
+          }
+          if (treatment.length === 0) {
+            treatment.push("Không có");
+          }
+
+          // Lấy đơn thuốc từ inventory-service
+          let prescription: PrescriptionItem[] | null = null;
+          try {
+            const dispenseOrder = await inventoryController.getDispenseOrderByMedicalHistoryId(mh.id);
+            if (dispenseOrder) {
+              // Lấy danh sách thuốc trong đơn
+              const dispenseItems = await inventoryController.getDispenseItemsByOrderId(dispenseOrder.id);
+
+              // Lấy thông tin thuốc cho mỗi item
+              prescription = await Promise.all(
+                dispenseItems.map(async (item: DispenseItemDTO) => {
+                  // Lấy inventory lot để lấy medicineId
+                  let medicineName = "Thuốc";
+                  try {
+                    const lot = await inventoryController.getInventoryLotById(item.inventoryLotId);
+                    const medicine = await inventoryController.getMedicineById(lot.medicineId);
+                    medicineName = medicine.name || "Thuốc";
+                  } catch (error) {
+                    console.warn("Failed to load medicine name for item:", item.id);
+                  }
+
+                  return {
+                    medicineName,
+                    quantity: item.quantity,
+                    dosage: item.dosage || "N/A",
+                    frequency: item.frequency || "N/A",
+                    duration: item.duration || "N/A",
+                    usageInstructions: item.usageInstructions || "N/A",
+                  } as PrescriptionItem;
+                })
+              );
+            }
+          } catch (error) {
+            console.warn("Failed to load prescription for medical history:", mh.id, error);
+          }
+
+          // Next visit - có thể lấy từ appointment hoặc để null
+          const nextVisit = null; // TODO: Lấy từ appointment nếu có
+
+          // Cost từ invoice
+          const cost = invoice?.totalAmount || 0;
+
+          return {
+            id: mh.id,
+            date,
+            service: serviceName,
+            doctor: doctorName,
+            diagnosis,
+            treatment,
+            prescription,
+            nextVisit,
+            cost,
+          } as MedicalHistoryRecord;
+        } catch (error) {
+          console.error("Error loading medical history record:", mh.id, error);
+          return null;
+        }
+      });
+
+      const records = (await Promise.all(recordsPromises)).filter(
+        (r): r is MedicalHistoryRecord => r !== null
+      );
+
+      // Sắp xếp theo date giảm dần (mới nhất trước)
+      records.sort((a, b) => {
+        try {
+          const dateA = new Date(a.date.split('/').reverse().join('-'));
+          const dateB = new Date(b.date.split('/').reverse().join('-'));
+          return dateB.getTime() - dateA.getTime();
+        } catch {
+          return 0;
+        }
+      });
+
+      setMedicalHistoryRecords(records);
+    } catch (error) {
+      console.error("Failed to load medical history:", error);
+      toast.error("Không thể tải lịch sử khám");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString('vi-VN');
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Format gender helper
+  const formatGender = (gender: string | null | undefined): string => {
+    if (!gender) return "N/A";
+    switch (gender.toUpperCase()) {
+      case "MALE":
+        return "Nam";
+      case "FEMALE":
+        return "Nữ";
+      case "OTHER":
+        return "Khác";
+      default:
+        return gender;
+    }
+  };
+
+  // Format blood type helper
+  const formatBloodType = (bloodType: string | null | undefined): string => {
+    if (!bloodType) return "N/A";
+    // Convert A_POSITIVE to A+ format
+    return bloodType.replace("_POSITIVE", "+").replace("_NEGATIVE", "-").replace("_", "");
+  };
+
+  // Format allergies helper
+  const formatAllergies = (patientAllergies: any[] | null | undefined): string => {
+    if (!patientAllergies || patientAllergies.length === 0) {
+      return "Không có";
+    }
+    return patientAllergies.map(pa => pa.allergyName || "Dị ứng").join(", ");
+  };
 
   return (
     <div className="w-full bg-[var(--page-bg)] py-10 px-5 md:px-20 min-h-screen">
@@ -139,9 +392,6 @@ export function PatientMedicalRecords() {
             <TabsTrigger value="personal" className="font-medium">
               Thông tin cá nhân
             </TabsTrigger>
-            {/* <TabsTrigger value="treatment" className="font-medium">
-              Kế hoạch điều trị
-            </TabsTrigger> */}
             <TabsTrigger value="history" className="font-medium">
               Lịch sử khám
             </TabsTrigger>
@@ -149,325 +399,387 @@ export function PatientMedicalRecords() {
 
           {/* Personal Information Tab */}
           <TabsContent value="personal">
-            <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
-              <div className="flex items-start justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl flex items-center justify-center text-white text-3xl font-bold">
-                    {personalInfo.fullName.charAt(0)}
-                  </div>
-                  <div>
-                    <h2 className="typo-h2 text-[var(--text-strong)] mb-1">
-                      {personalInfo.fullName}
-                    </h2>
-                    <p className="text-sm text-[var(--text-regular)] opacity-70">
-                      Mã bệnh nhân: BN-2024-0123
-                    </p>
-                  </div>
+            {isLoadingPersonal ? (
+              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-[var(--text-regular)]">Đang tải thông tin...</p>
                 </div>
-                <Button className="bg-white border-2 border-[var(--accent-light)] text-[var(--accent-light)] hover:bg-[var(--accent-ghost)]">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Chỉnh sửa
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-5">
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Ngày sinh
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.dateOfBirth}
-                      </span>
+              </Card>
+            ) : (
+              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl flex items-center justify-center text-white text-3xl font-bold">
+                      {user?.fullName?.charAt(0) || "U"}
+                    </div>
+                    <div>
+                      <h2 className="typo-h2 text-[var(--text-strong)] mb-1">
+                        {user?.fullName || "Chưa có tên"}
+                      </h2>
+                      <p className="text-sm text-[var(--text-regular)] opacity-70">
+                        {patient?.userId ? `Mã bệnh nhân: ${patient.userId.substring(0, 8).toUpperCase()}` : "Chưa có mã bệnh nhân"}
+                      </p>
                     </div>
                   </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Giới tính
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <User className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.gender}
-                      </span>
+                  {!isEditing ? (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-white border-2 border-[var(--accent-light)] text-[var(--accent-light)] hover:bg-[var(--accent-ghost)]"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Chỉnh sửa
+                    </Button>
+                  ) : (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditing(false);
+                          loadPersonalInfo(); // Reset form
+                        }}
+                      >
+                        Hủy
+                      </Button>
+                      <Button
+                        onClick={handleSaveProfile}
+                        className="bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent)]"
+                        disabled={isSaving}
+                      >
+                        {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                      </Button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Số điện thoại
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.phone}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Email
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.email}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Địa chỉ
-                    </label>
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4.5 h-4.5 text-[var(--accent-light)] flex-shrink-0 mt-0.5" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.address}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Liên hệ khẩn cấp
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-4.5 h-4.5 text-red-500" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.emergencyContact}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Nhóm máu
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <Activity className="w-4.5 h-4.5 text-red-500" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.bloodType}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                      Dị ứng
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                      <span className="font-medium text-[var(--text-strong)] text-sm">
-                        {personalInfo.allergies}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-[var(--border-soft)]">
-                <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                  Số bảo hiểm y tế
-                </label>
-                <div className="flex items-center gap-3">
-                  <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                  <span className="font-medium text-[var(--text-strong)] text-sm">
-                    {personalInfo.insuranceNumber}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* Treatment Plans Tab */}
-          <TabsContent value="treatment" className="space-y-5">
-            {treatmentPlans.map((plan) => (
-              <Card
-                key={plan.id}
-                className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] hover:shadow-lg transition-all"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="typo-h3 text-[var(--text-strong)]">
-                        {plan.name}
-                      </h3>
-                      {plan.status === "active" ? (
-                        <span className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg font-medium text-xs">
-                          Đang điều trị
-                        </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-5">
+                    <div>
+                      <Label
+                        htmlFor="fullName"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Họ và tên
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          id="fullName"
+                          value={profileData.fullName}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              fullName: e.target.value,
+                            })
+                          }
+                        />
                       ) : (
-                        <span className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg font-medium text-xs">
-                          Đã hoàn thành
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <User className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {user?.fullName || "N/A"}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-[var(--text-regular)] opacity-70 mb-1">
-                      {plan.description}
-                    </p>
-                    <p className="font-medium text-[var(--accent-light)] text-sm">
-                      Bác sĩ điều trị: {plan.doctor}
-                    </p>
-                  </div>
-                  <span className="text-3xl font-bold text-[var(--accent-light)]">
-                    {plan.progress}%
-                  </span>
-                </div>
 
-                {/* Progress Bar */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-medium text-[var(--text-regular)] opacity-70 text-sm">
-                      Tiến độ điều trị
-                    </span>
-                    <span className="font-semibold text-[var(--text-strong)] text-sm">
-                      Bước {plan.currentStep}/{plan.totalSteps}
-                    </span>
-                  </div>
-                  <Progress value={plan.progress} className="h-2.5" />
-                </div>
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                    <p className="text-xs text-[var(--text-regular)] opacity-70 mb-1">
-                      Ngày bắt đầu
-                    </p>
-                    <p className="font-semibold text-[var(--text-strong)] text-sm">
-                      {plan.startDate}
-                    </p>
-                  </div>
-                  <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                    <p className="text-xs text-[var(--text-regular)] opacity-70 mb-1">
-                      Dự kiến kết thúc
-                    </p>
-                    <p className="font-semibold text-[var(--text-strong)] text-sm">
-                      {plan.estimatedEndDate}
-                    </p>
-                  </div>
-                  <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                    <p className="text-xs text-[var(--text-regular)] opacity-70 mb-1">
-                      Tổng chi phí
-                    </p>
-                    <p className="font-semibold text-[var(--text-strong)] text-sm">
-                      {plan.totalCost.toLocaleString("vi-VN")}đ
-                    </p>
-                  </div>
-                  <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                    <p className="text-xs text-[var(--text-regular)] opacity-70 mb-1">
-                      Còn lại
-                    </p>
-                    <p className="font-semibold text-orange-600 text-sm">
-                      {plan.remainingAmount.toLocaleString("vi-VN")}đ
-                    </p>
-                  </div>
-                </div>
-
-                {plan.nextVisit && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-orange-600 text-xs mb-0.5">
-                        Lần khám tiếp theo
-                      </p>
-                      <p className="font-semibold text-[var(--text-strong)] text-sm">
-                        {plan.nextVisit}
-                      </p>
+                      <Label
+                        htmlFor="dateOfBirth"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Ngày sinh
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={profileData.dob}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              dob: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {patient?.dob ? formatDate(patient.dob) : "N/A"}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-orange-500" />
+
+                    <div>
+                      <Label
+                        htmlFor="gender"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Giới tính
+                      </Label>
+                      {isEditing ? (
+                        <select
+                          id="gender"
+                          value={profileData.gender}
+                          onChange={(e) =>
+                            setProfileData({ ...profileData, gender: e.target.value })
+                          }
+                          className="w-full px-3 py-2 border border-[var(--border-soft)] rounded-lg bg-white"
+                        >
+                          <option value="">Chọn giới tính</option>
+                          <option value="MALE">Nam</option>
+                          <option value="FEMALE">Nữ</option>
+                          <option value="OTHER">Khác</option>
+                        </select>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <User className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {formatGender(patient?.gender)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="phone"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Số điện thoại
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          id="phone"
+                          value={profileData.contactPhone}
+                          onChange={(e) =>
+                            setProfileData({ ...profileData, contactPhone: e.target.value })
+                          }
+                        />
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Phone className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {user?.phone || patient?.contactPhone || "N/A"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="email"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Email
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          id="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) =>
+                            setProfileData({ ...profileData, email: e.target.value })
+                          }
+                        />
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {user?.email || "N/A"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+
+                  <div className="space-y-5">
+                    <div>
+                      <Label
+                        htmlFor="address"
+                        className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
+                      >
+                        Địa chỉ
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          id="address"
+                          value={profileData.address}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              address: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="flex items-start gap-3">
+                          <MapPin className="w-4.5 h-4.5 text-[var(--accent-light)] flex-shrink-0 mt-0.5" />
+                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                            {patient?.address || "N/A"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                        Số bảo hiểm y tế
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                          {patient?.insuranceNumber || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                        Nhóm máu
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <Activity className="w-4.5 h-4.5 text-red-500" />
+                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                          {formatBloodType(patient?.bloodType)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                        Dị ứng
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                          {formatAllergies(patient?.patientAllergies)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
               </Card>
-            ))}
+            )}
           </TabsContent>
 
           {/* Medical History Tab */}
           <TabsContent value="history" className="space-y-5">
-            {medicalHistory.map((record) => (
-              <Card
-                key={record.id}
-                className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] hover:shadow-lg transition-all"
-              >
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Date */}
-                  <div className="lg:w-32 flex-shrink-0">
-                    <div className="bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl p-4 text-white text-center">
-                      <p className="text-3xl font-bold">
-                        {record.date.split("/")[0]}
-                      </p>
-                      <p className="font-medium text-sm opacity-90 mt-1">
-                        {record.date.split("/")[1]}/{record.date.split("/")[2]}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
-                        {record.service}
-                      </h3>
-                      <p className="font-medium text-[var(--text-regular)] opacity-70 text-sm">
-                        Bác sĩ: {record.doctor}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                        <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
-                          Chẩn đoán:
-                        </p>
-                        <p className="text-sm text-[var(--text-regular)]">
-                          {record.diagnosis}
-                        </p>
-                      </div>
-
-                      <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                        <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
-                          Điều trị:
-                        </p>
-                        <p className="text-sm text-[var(--text-regular)]">
-                          {record.treatment}
-                        </p>
-                      </div>
-                    </div>
-
-                    {record.prescription && (
-                      <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                        <p className="font-medium text-orange-600 text-xs mb-1">
-                          Đơn thuốc:
-                        </p>
-                        <p className="text-sm text-[var(--text-regular)]">
-                          {record.prescription}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-3 border-t border-[var(--border-soft)]">
-                      <div>
-                        {record.nextVisit && (
-                          <p className="text-sm text-[var(--text-regular)] opacity-70">
-                            Tái khám:{" "}
-                            <span className="font-semibold text-[var(--accent-light)]">
-                              {record.nextVisit}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                      <p className="font-semibold text-[var(--text-strong)] text-base">
-                        {record.cost.toLocaleString("vi-VN")}đ
-                      </p>
-                    </div>
-                  </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-[var(--text-regular)]">Đang tải lịch sử khám...</p>
+              </div>
+            ) : medicalHistoryRecords.length === 0 ? (
+              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-[var(--text-regular)] opacity-30 mx-auto mb-4" />
+                  <p className="text-[var(--text-regular)] opacity-70">
+                    Chưa có lịch sử khám
+                  </p>
                 </div>
               </Card>
-            ))}
+            ) : (
+              medicalHistoryRecords.map((record) => (
+                <Card
+                  key={record.id}
+                  className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] hover:shadow-lg transition-all"
+                >
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Date */}
+                    <div className="lg:w-32 flex-shrink-0">
+                      <div className="bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl p-4 text-white text-center">
+                        <p className="text-3xl font-bold">
+                          {record.date.split("/")[0]}
+                        </p>
+                        <p className="font-medium text-sm opacity-90 mt-1">
+                          {record.date.split("/")[1]}/{record.date.split("/")[2]}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
+                          {record.service}
+                        </h3>
+                        <p className="font-medium text-[var(--text-regular)] opacity-70 text-sm">
+                          Bác sĩ: {record.doctor}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-[var(--surface-muted)] rounded-xl p-4">
+                          <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
+                            Chẩn đoán:
+                          </p>
+                          <div className="text-sm text-[var(--text-regular)] space-y-1">
+                            {record.diagnosis.map((item, index) => (
+                              <div key={index}>{item}</div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-[var(--surface-muted)] rounded-xl p-4">
+                          <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
+                            Điều trị:
+                          </p>
+                          <div className="text-sm text-[var(--text-regular)] space-y-1">
+                            {record.treatment.map((item, index) => (
+                              <div key={index}>{item}</div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {record.prescription && record.prescription.length > 0 && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                          <p className="font-medium text-orange-600 text-xs mb-2">
+                            Đơn thuốc:
+                          </p>
+                          <div className="space-y-3">
+                            {record.prescription.map((item, index) => (
+                              <div key={index} className="border-b border-orange-200 pb-2 last:border-b-0 last:pb-0">
+                                <p className="font-semibold text-sm text-[var(--text-strong)] mb-1">
+                                  {item.medicineName}
+                                </p>
+                                <div className="text-xs text-[var(--text-regular)] space-y-0.5">
+                                  <p>Số lượng: {item.quantity}</p>
+                                  <p>Liều dùng: {item.dosage}</p>
+                                  <p>Tần suất: {item.frequency}</p>
+                                  <p>Thời gian: {item.duration}</p>
+                                  {item.usageInstructions && item.usageInstructions !== "N/A" && (
+                                    <p>Hướng dẫn: {item.usageInstructions}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-3 border-t border-[var(--border-soft)]">
+                        <div>
+                          {record.nextVisit && (
+                            <p className="text-sm text-[var(--text-regular)] opacity-70">
+                              Tái khám:{" "}
+                              <span className="font-semibold text-[var(--accent-light)]">
+                                {record.nextVisit}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        <p className="font-semibold text-[var(--text-strong)] text-base">
+                          {record.cost.toLocaleString("vi-VN")}đ
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </div>
