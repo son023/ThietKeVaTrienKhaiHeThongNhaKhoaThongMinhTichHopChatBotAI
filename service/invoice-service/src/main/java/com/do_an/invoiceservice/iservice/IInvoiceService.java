@@ -29,6 +29,7 @@ public interface IInvoiceService {
     InvoiceResponseDTO revertInsuranceDiscount(UUID invoiceId);
     InvoiceResponseDTO removeMedicineCharges(UUID invoiceId);
     InvoiceResponseDTO updateStatus(UUID invoiceId, String status);
+    InvoiceResponseDTO addLabTestCharge(com.do_an.invoiceservice.dto.request.AddLabTestChargeRequestDTO request);
     
     // Validation methods
     boolean canAddMedicineCharges(UUID invoiceId);

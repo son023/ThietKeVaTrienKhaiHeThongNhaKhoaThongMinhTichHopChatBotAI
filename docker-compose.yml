@@ -235,6 +235,7 @@ services:
       FEIGN_DOCTOR_SERVICE_URL: http://doctor-service:8090/doctor-service/doctors
       FEIGN_PATIENT_SERVICE_URL: http://patient-service:8089/patient-service/patients
       FEIGN_APPOINTMENT_SERVICE_URL: http://appointment-service:8082/appointment-service/appointments
+      FEIGN_INVOICE_SERVICE_URL: http://invoice-service:8091/invoice-service/invoices
     ports:
       - "8088:8088"
 
