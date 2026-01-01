@@ -331,11 +331,11 @@ export function PatientPayment() {
             <h1 className="typo-h1 text-[var(--text-strong)]">
               Thanh toán & Hóa đơn
             </h1>
-            {currentPatientId && (
+            {/* {currentPatientId && (
               <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg font-medium text-xs">
                 ID: {currentPatientId.substring(0, 8).toUpperCase()}
               </span>
-            )}
+            )} */}
           </div>
           <p className="text-base text-[var(--text-regular)] opacity-70">
             Quản lý các hóa đơn và thanh toán của bạn
