@@ -284,16 +284,26 @@ export function BookAppointmentDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-[900px] sm:max-w-none sm:max-w-[700px] min-h-[70vh] max-h-[90vh] overflow-y-auto bg-white border-border">
+            <DialogContent
+                className="max-w-[900px] sm:max-w-none sm:max-w-[700px] min-h-[70vh] max-h-[90vh] overflow-y-auto bg-white border-border"
+                onInteractOutside={(e) => {
+                    // Ngăn đóng dialog khi click ra ngoài
+                    e.preventDefault();
+                }}
+                onEscapeKeyDown={(e) => {
+                    //Ngăn đóng bằng phím ESC
+                    e.preventDefault();
+                }}
+            >
                 <DialogHeader>
                     <DialogTitle className="text-foreground">Đặt lịch hẹn khám</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
                         Bước {currentStep}/4: {
-                        currentStep === 1 ? 'Chọn dịch vụ' :
-                            currentStep === 2 ? 'Chọn bác sĩ' :
-                                currentStep === 3 ? 'Chọn thời gian' :
-                                    'Xác nhận thông tin'
-                    }
+                            currentStep === 1 ? 'Chọn dịch vụ' :
+                                currentStep === 2 ? 'Chọn bác sĩ' :
+                                    currentStep === 3 ? 'Chọn thời gian' :
+                                        'Xác nhận thông tin'
+                        }
                     </DialogDescription>
                 </DialogHeader>
 
@@ -321,37 +331,37 @@ export function BookAppointmentDialog({
                             {!loadingData && services.map((service) => {
                                 const isSelected = formData.services.includes(service.id);
                                 return (
-                                <button
-                                    key={service.id}
-                                    onClick={() => handleSelectService(service.id)}
-                                    className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${
-                                        isSelected
-                                            ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
-                                            : 'border-border bg-card hover:shadow-sm'
-                                    }`}
-                                    aria-pressed={isSelected}
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <h4 className="text-foreground mb-1">{service.serviceName}</h4>
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-4 h-4" />
-                                                    {service.serviceTime ? `${service.serviceTime} phút` : 'N/A'}
-                                                </span>
-                                                <span className="text-primary">
-                                                    {service.price ? `${service.price.toLocaleString('vi-VN')} đ` : 'Liên hệ'}
-                                                </span>
+                                    <button
+                                        key={service.id}
+                                        onClick={() => handleSelectService(service.id)}
+                                        className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${isSelected
+                                                ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
+                                                : 'border-border bg-card hover:shadow-sm'
+                                            }`}
+                                        aria-pressed={isSelected}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <h4 className="text-foreground mb-1">{service.serviceName}</h4>
+                                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock className="w-4 h-4" />
+                                                        {service.serviceTime ? `${service.serviceTime} phút` : 'N/A'}
+                                                    </span>
+                                                    <span className="text-primary">
+                                                        {service.price ? `${service.price.toLocaleString('vi-VN')} đ` : 'Liên hệ'}
+                                                    </span>
+                                                </div>
                                             </div>
+                                            {isSelected && (
+                                                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                                                </div>
+                                            )}
                                         </div>
-                                        {isSelected && (
-                                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                                <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </button>
-                            )})}
+                                    </button>
+                                )
+                            })}
                         </div>
                     </div>
                 )}
@@ -369,11 +379,10 @@ export function BookAppointmentDialog({
                                 <button
                                     key={doctor.userId}
                                     onClick={() => handleSelectDoctor(doctor.userId)}
-                                    className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${
-                                        formData.doctor === doctor.userId
+                                    className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${formData.doctor === doctor.userId
                                             ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
                                             : 'border-border bg-card hover:shadow-sm'
-                                    }`}
+                                        }`}
                                     aria-pressed={formData.doctor === doctor.userId}
                                 >
                                     <div className="flex items-center justify-between">
@@ -432,11 +441,10 @@ export function BookAppointmentDialog({
                                                 key={time}
                                                 onClick={() => handleSelectTime(time)}
                                                 disabled={holdingSlot}
-                                                className={`p-2 rounded-lg border text-sm transition-all ${
-                                                    formData.time === time
+                                                className={`p-2 rounded-lg border text-sm transition-all ${formData.time === time
                                                         ? 'border-primary bg-primary text-primary-foreground shadow ring-2 ring-primary/50'
                                                         : 'border-border bg-card text-foreground hover:border-primary hover:shadow-sm'
-                                                }`}
+                                                    }`}
                                                 aria-pressed={formData.time === time}
                                             >
                                                 {time}

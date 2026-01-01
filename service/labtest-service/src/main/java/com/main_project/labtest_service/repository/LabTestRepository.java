@@ -16,6 +16,8 @@ public interface LabTestRepository extends JpaRepository<LabTest, UUID> {
         List<LabTest> findByStatus(String status);
         List<LabTest> findByResultDateBetween(ZonedDateTime start, ZonedDateTime end);
         List<LabTest> findByLabTestType_Id(UUID labTestTypeId);
+        List<LabTest> findByAppointmentId(UUID appointmentId);
+        List<LabTest> findByMedicalHistoryId(UUID medicalHistoryId);
 
         @Query("SELECT l FROM LabTest l WHERE l.abnormalFlag = 'Abnormal' AND l.resultDate BETWEEN :from AND :to")
         List<LabTest> findAbnormalResultsWithinRange(ZonedDateTime from, ZonedDateTime to);

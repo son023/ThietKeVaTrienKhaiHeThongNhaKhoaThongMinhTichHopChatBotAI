@@ -228,4 +228,16 @@ public class LabTestService implements ILabTest{
         return labTestRepository.findByStatus(status)
                 .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
     }
+
+    @Override
+    public List<LabTestDTO> getLabTestsByAppointmentId(UUID appointmentId) {
+        return labTestRepository.findByAppointmentId(appointmentId)
+                .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LabTestDTO> getLabTestsByMedicalHistoryId(UUID medicalHistoryId) {
+        return labTestRepository.findByMedicalHistoryId(medicalHistoryId)
+                .stream().map(mapper::toLabTestDTO).collect(Collectors.toList());
+    }
 }
