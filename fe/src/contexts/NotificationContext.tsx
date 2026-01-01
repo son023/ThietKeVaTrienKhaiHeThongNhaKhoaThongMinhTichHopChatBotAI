@@ -4,12 +4,16 @@ import {
   subscribeToInvoicePaid,
   subscribeToPrescriptionDispensed,
   subscribeToAppointmentCreated,
+  subscribeToLabTestRequested,
   InvoicePaidNotification,
   PrescriptionDispensedNotification,
   AppointmentCreatedNotification,
+  LabTestRequestedNotification,
   isConnected
 } from '../services/websocketService';
 import { notificationController, NotificationDTO } from '../controllers/NotificationController';
+import { authController } from '../controllers/AuthController';
+import { UserRole } from '../models/User';
 import { toast } from 'sonner';
 import { CheckCircle } from 'lucide-react';
 
@@ -63,6 +67,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       title = '✅ Đơn thuốc đã được cấp phát';
     } else if (dto.templateId === 'APPOINTMENT_CREATED') {
       title = '📅 Lịch hẹn mới';
+    } else if (dto.templateId === 'LAB_TEST_REQUESTED') {
+      title = '🧪 Yêu cầu xét nghiệm mới';
     }
 
     return {
@@ -79,8 +85,30 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   }, []);
 
 
-  // Load notifications từ backend
-  const loadNotifications = useCallback(async () => {
+  // Load notifications từ cho user
+  const loadUserNotifications = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const dtos = await notificationController.getByUserId(userId);
+      const mappedNotifications = dtos.map(mapDTOToNotification);
+      setNotifications(mappedNotifications);
+      console.log(`[NotificationContext] Loaded ${mappedNotifications.length} user notifications from backend`);
+    } catch (error) {
+      console.error('[NotificationContext] Failed to load user notifications:', error);
+      toast.error('Không thể tải lịch sử thông báo');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, mapDTOToNotification]);
+
+
+  // Load notifications của user + appointment template (chỉ cho lễ tân)
+  const loadReceptionistNotifications = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       return;
@@ -99,14 +127,61 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       });
       const mappedNotifications = allNotifications.map(mapDTOToNotification);
       setNotifications(mappedNotifications);
-      console.log(`[NotificationContext] Loaded ${mappedNotifications.length} notifications from backend`);
+      console.log(`[NotificationContext] Loaded ${mappedNotifications.length} receptionist notifications from backend`);
     } catch (error) {
-      console.error('[NotificationContext] Failed to load notifications:', error);
+      console.error('[NotificationContext] Failed to load receptionist notifications:', error);
       toast.error('Không thể tải lịch sử thông báo');
     } finally {
       setLoading(false);
     }
   }, [userId, mapDTOToNotification]);
+
+  // Load notifications của user + lab test requested template (chỉ cho lab technician)
+  const loadLabTechnicianNotifications = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const dtos = await notificationController.getByUserId(userId);
+      const labTestRequestedNotifications = await notificationController.getByTemplateId('LAB_TEST_REQUESTED');
+
+      const allNotifications = [...labTestRequestedNotifications, ...dtos];
+      allNotifications.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return timeB - timeA;
+      });
+      const mappedNotifications = allNotifications.map(mapDTOToNotification);
+      setNotifications(mappedNotifications);
+      console.log(`[NotificationContext] Loaded ${mappedNotifications.length} lab technician notifications from backend`);
+    } catch (error) {
+      console.error('[NotificationContext] Failed to load lab technician notifications:', error);
+      toast.error('Không thể tải lịch sử thông báo');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, mapDTOToNotification]);
+
+  // Load notifications từ backend
+  const loadNotifications = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    const userRole = authController.getPrimaryRole();
+
+    if (userRole === UserRole.RECEPTIONIST) {
+      await loadReceptionistNotifications();
+    } else if (userRole === UserRole.LAB_TECHNICIAN) {
+      await loadLabTechnicianNotifications();
+    } else {
+      await loadUserNotifications();
+    }
+  }, [userId, loadUserNotifications, loadReceptionistNotifications, loadLabTechnicianNotifications]);
 
   // Load notifications khi component mount hoặc userId thay đổi
   useEffect(() => {
@@ -228,6 +303,36 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
     );
 
+    const unsubscribeLabTestRequested = subscribeToLabTestRequested(
+      userId,
+      (notification: LabTestRequestedNotification) => {
+        console.log('[NotificationContext] 🧪 Lab test requested notification received:', notification);
+
+        const tempNotification: Notification = {
+          id: `ws-labtest-${Date.now()}-${Math.random()}`,
+          type: 'LAB_TEST_REQUESTED',
+          title: '🧪 Yêu cầu xét nghiệm mới',
+          message: notification.message || 'Yêu cầu xét nghiệm mới đã được tạo',
+          timestamp: notification.timestamp || Date.now(),
+          read: false,
+          appointmentId: notification.appointmentId,
+        };
+
+        setNotifications(prev => [tempNotification, ...prev]);
+
+        toast.success(
+          <div>
+            <p className="font-semibold">🧪 Yêu cầu xét nghiệm mới</p>
+            <p className="text-sm">{notification.message}</p>
+          </div>,
+          {
+            duration: 5000,
+            icon: <CheckCircle className="w-5 h-5 text-purple-500" />,
+          }
+        );
+      }
+    );
+
     // Sync lại DB sau 1–2s
     setTimeout(loadNotifications, 1500);
 
@@ -235,6 +340,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       unsubscribeInvoicePaid();
       unsubscribePrescriptionDispensed();
       unsubscribeAppointmentCreated();
+      unsubscribeLabTestRequested();
     };
   }, [userId, loadNotifications]);
 

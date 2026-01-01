@@ -11,14 +11,18 @@ import com.main_project.labtest_service.repository.LabTechnicianRepository;
 import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
+import com.do_an.common.event.LabTestRequestedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.axonframework.eventhandling.EventBus;
 
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.axonframework.eventhandling.GenericEventMessage.asEventMessage;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class LabTestService implements ILabTest{
     private final LabTestTypeRepository labTestTypeRepository;
     private final EntityDTOMapper mapper;
     private final InvoiceServiceClient invoiceServiceClient;
+    private final EventBus eventBus;
 
     @Override
     public LabTestDTO createLabTest(LabTestRequestDTO requestDTO) {
@@ -97,6 +102,30 @@ public class LabTestService implements ILabTest{
         }
         
         labTestRepository.save(entity);
+
+        try {
+            String message = String.format(
+                "Yêu cầu xét nghiệm mới đã được tạo. Mã xét nghiệm: %s",
+                labTestId.toString().substring(0, 8)
+            );
+            
+            LabTestRequestedEvent event = new LabTestRequestedEvent(
+                labTestId,
+                dto.getAppointmentId(),
+                dto.getMedicalHistoryId(),
+                dto.getDoctorId(),
+                dto.getLabTestTypeId(),
+                dto.getPrice(),
+                dto.getInstructions(),
+                message
+            );
+            
+            eventBus.publish(asEventMessage(event));
+            log.info("Published LabTestRequestedEvent for labTest {}", labTestId);
+        } catch (Exception e) {
+            log.error("Failed to publish LabTestRequestedEvent: {}", e.getMessage(), e);
+        }
+        
         return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(labTestId).orElseThrow());
     }
 
