@@ -8,6 +8,8 @@ import { TestResults } from "./components/labtechnician/TestResults";
 import { Equipment } from "./components/labtechnician/Equipment";
 import { LabReports } from "./components/labtechnician/LabReports";
 import { LabAccountSettings } from "./components/labtechnician/LabAccountSettings";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { authController } from "./controllers/AuthController";
 
 interface LabTechnicianAppProps {
   onLogout: () => void;
@@ -22,6 +24,12 @@ export default function LabTechnicianApp({
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [labTechnicianId, setLabTechnicianId] = useState<string>();
+
+  useEffect(() => {
+    const user = authController.getCurrentUser();
+    if (user) setLabTechnicianId(user.id);
+  }, []);
 
   useEffect(() => {
     if (location.pathname.startsWith("/lab/test-queue")) {
@@ -67,13 +75,14 @@ export default function LabTechnicianApp({
   };
 
   return (
-    <div className="flex h-screen bg-neutral-background">
-      <LabTechnicianSidebar
-        currentPage={currentPage}
-        onNavigate={handleSidebarNavigate}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
+    <NotificationProvider userId={labTechnicianId}>
+      <div className="flex h-screen bg-neutral-background">
+        <LabTechnicianSidebar
+          currentPage={currentPage}
+          onNavigate={handleSidebarNavigate}
+        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
         <main className="flex-1 overflow-y-auto bg-neutral-background">
           <Routes>
             <Route
@@ -112,5 +121,6 @@ export default function LabTechnicianApp({
         </main>
       </div>
     </div>
+    </NotificationProvider>
   );
 }
