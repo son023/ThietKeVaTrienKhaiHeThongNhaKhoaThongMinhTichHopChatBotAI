@@ -1,33 +1,34 @@
 package com.main_project.labtest_service.service;
 
-import com.main_project.labtest_service.aggregate.AcceptLabTestCommand;
-import com.main_project.labtest_service.aggregate.CompleteLabTestCommand;
-import com.main_project.labtest_service.aggregate.RequestLabTestCommand;
-import com.main_project.labtest_service.aggregate.StartLabTestCommand;
 import com.main_project.labtest_service.dto.LabTestDTO;
 import com.main_project.labtest_service.dto.LabTestRequestDTO;
 import com.main_project.labtest_service.entity.LabTechnician;
 import com.main_project.labtest_service.entity.LabTest;
 import com.main_project.labtest_service.entity.LabTestType;
+import com.main_project.labtest_service.feignclient.InvoiceServiceClient;
+import com.main_project.labtest_service.feignclient.dto.AddLabTestChargeRequestDTO;
 import com.main_project.labtest_service.repository.LabTechnicianRepository;
 import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
 import lombok.RequiredArgsConstructor;
-import org.axonframework.commandhandling.gateway.CommandGateway;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LabTestService implements ILabTest{
     private final LabTestRepository labTestRepository;
     private final LabTechnicianRepository labTechnicianRepository;
     private final LabTestTypeRepository labTestTypeRepository;
     private final EntityDTOMapper mapper;
-    private final CommandGateway commandGateway;
+    private final InvoiceServiceClient invoiceServiceClient;
 
     @Override
     public LabTestDTO createLabTest(LabTestRequestDTO requestDTO) {
@@ -76,67 +77,77 @@ public class LabTestService implements ILabTest{
 
 
     @Override
+    @Transactional
     public LabTestDTO requestLabTest(LabTestRequestDTO dto) {
         UUID labTestId = UUID.randomUUID();
-        RequestLabTestCommand cmd = new RequestLabTestCommand(
-                labTestId,
-                dto.getAppointmentId(),
-                dto.getMedicalHistoryId(),
-                dto.getDoctorId(),
-                dto.getLabTechnicianId(),
-                dto.getLabTestTypeId(),
-                dto.getPrice(),
-                dto.getInstructions()
-        );
-        commandGateway.send(cmd);
-        LabTestDTO res = new LabTestDTO();
-        res.setId(labTestId);
-        res.setAppointmentId(dto.getAppointmentId());
-        res.setMedicalHistoryId(dto.getMedicalHistoryId());
-        res.setDoctorId(dto.getDoctorId());
-        res.setPrice(dto.getPrice());
-        res.setInstructions(dto.getInstructions());
-        res.setStatus("REQUEST");
-        return res;
+        
+        LabTest entity = new LabTest();
+        entity.setId(labTestId);
+        entity.setAppointmentId(dto.getAppointmentId());
+        entity.setMedicalHistoryId(dto.getMedicalHistoryId());
+        entity.setDoctorId(dto.getDoctorId());
+        entity.setPrice(dto.getPrice());
+        entity.setInstructions(dto.getInstructions());
+        entity.setStatus("REQUEST");
+        
+        if (dto.getLabTestTypeId() != null) {
+            LabTestType type = labTestTypeRepository.findById(dto.getLabTestTypeId())
+                    .orElseThrow(() -> new RuntimeException("LabTestType not found"));
+            entity.setLabTestType(type);
+        }
+        
+        labTestRepository.save(entity);
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(labTestId).orElseThrow());
     }
 
     @Override
+    @Transactional
     public LabTestDTO acceptLabTest(UUID id, UUID labTechnicianId) {
+        LabTest existing = labTestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("LabTest not found"));
+
+        if (!"REQUEST".equals(existing.getStatus())) {
+            throw new IllegalStateException("Chỉ ACCEPT được từ REQUEST, current=" + existing.getStatus());
+        }
+        
         if (labTechnicianId != null) {
-            LabTest existing = labTestRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("LabTest not found"));
             LabTechnician technician = labTechnicianRepository.findById(labTechnicianId)
                     .orElseThrow(() -> new RuntimeException("LabTechnician not found"));
             existing.setLabTechnician(technician);
-            existing.setUpdatedAt(java.time.ZonedDateTime.now());
-            labTestRepository.save(existing);
         }
-        commandGateway.sendAndWait(new AcceptLabTestCommand(id));
-        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
-    }
-
-    @Override
-    public LabTestDTO startLabTest(UUID id) {
-        commandGateway.sendAndWait(new StartLabTestCommand(id));
-        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
-    }
-
-    @Override
-    public LabTestDTO completeLabTest(UUID id) {
-        LabTest existing = labTestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("LabTest not found"));
-        existing.setResultDate(java.time.ZonedDateTime.now());
-        existing.setUpdatedAt(java.time.ZonedDateTime.now());
+        
+        existing.setStatus("ACCEPTED");
+        existing.setUpdatedAt(ZonedDateTime.now());
         labTestRepository.save(existing);
         
-        LabTestDTO labTestDTO = mapper.toLabTestDTO(existing);
-        commandGateway.sendAndWait(new CompleteLabTestCommand(id, labTestDTO.getAppointmentId(), labTestDTO.getPrice()));
         return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }
 
+    @Override
+    @Transactional
+    public LabTestDTO startLabTest(UUID id) {
+        LabTest existing = labTestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("LabTest not found"));
+
+        if (!"ACCEPTED".equals(existing.getStatus())) {
+            throw new IllegalStateException("Chỉ IN_PROGRESS được từ ACCEPTED, current=" + existing.getStatus());
+        }
+        
+        existing.setStatus("IN_PROGRESS");
+        existing.setUpdatedAt(ZonedDateTime.now());
+        labTestRepository.save(existing);
+        
+        return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
+    }
+
+    @Transactional
     public LabTestDTO completeLabTest(UUID id, LabTestRequestDTO dto) {
         LabTest existing = labTestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("LabTest not found"));
+        
+        if (!"IN_PROGRESS".equals(existing.getStatus())) {
+            throw new IllegalStateException("Chỉ COMPLETE được từ IN_PROGRESS, current=" + existing.getStatus());
+        }
         
         // Update result fields if provided
         if (dto != null) {
@@ -146,13 +157,39 @@ public class LabTestService implements ILabTest{
             if (dto.getStructureJson() != null) existing.setStructureJson(dto.getStructureJson());
             if (dto.getInstructions() != null) existing.setInstructions(dto.getInstructions());
             if (dto.getResultDate() != null) existing.setResultDate(dto.getResultDate());
-            existing.setUpdatedAt(java.time.ZonedDateTime.now());
-            labTestRepository.save(existing);
         }
         
-        LabTestDTO labTestDTO = mapper.toLabTestDTO(existing);
-        commandGateway.sendAndWait(new CompleteLabTestCommand(id, labTestDTO.getAppointmentId(), labTestDTO.getPrice()));
+        existing.setStatus("COMPLETE");
+        if (existing.getResultDate() == null) {
+            existing.setResultDate(ZonedDateTime.now());
+        }
+        existing.setUpdatedAt(ZonedDateTime.now());
+        labTestRepository.save(existing);
+
+        publishLabTestCompletedEvents(existing);
+        
         return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
+    }
+    
+    private void publishLabTestCompletedEvents(LabTest labTest) {
+        log.info("Adding lab test charge to invoice for completed lab test: {}", labTest.getId());
+        
+        try {
+            AddLabTestChargeRequestDTO request = new AddLabTestChargeRequestDTO(
+                    labTest.getId(),
+                    labTest.getAppointmentId(),
+                    labTest.getPrice(),
+                    "Phí xét nghiệm"
+            );
+            
+            invoiceServiceClient.addLabTestCharge(request);
+            log.info("Lab test charge added to invoice for labTestId: {}, appointmentId: {}, price: {}", 
+                    labTest.getId(), labTest.getAppointmentId(), labTest.getPrice());
+        } catch (Exception e) {
+            log.error("Failed to add lab test charge to invoice for labTestId: {}, appointmentId: {}: {}", 
+                    labTest.getId(), labTest.getAppointmentId(), e.getMessage(), e);
+            throw new RuntimeException("Add lab test charge failed", e);
+        }
     }
     @Override
     public void deleteLabTest(UUID id) {

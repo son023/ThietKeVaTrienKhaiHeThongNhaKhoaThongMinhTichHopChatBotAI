@@ -185,6 +185,24 @@ public class InvoiceController {
         List<InvoiceResponseDTO> invoices = invoiceService.getInvoicesByAppointmentId(appointmentId);
         return ResponseEntity.ok(invoices);
     }
+
+    @Operation(
+            summary = "Thêm phí xét nghiệm vào hóa đơn",
+            description = "Thêm phí xét nghiệm (LABTEST) vào hóa đơn của appointment. Tự động tìm hóa đơn theo appointmentId."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thêm phí thành công",
+                    content = @Content(schema = @Schema(implementation = InvoiceResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hóa đơn cho appointment"),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ")
+    })
+    @PostMapping("/labtest-charge")
+    public ResponseEntity<InvoiceResponseDTO> addLabTestCharge(
+            @Parameter(description = "Thông tin phí xét nghiệm cần thêm", required = true)
+            @Valid @RequestBody com.do_an.invoiceservice.dto.request.AddLabTestChargeRequestDTO request) {
+        InvoiceResponseDTO updatedInvoice = invoiceService.addLabTestCharge(request);
+        return ResponseEntity.ok(updatedInvoice);
+    }
     
 
 }

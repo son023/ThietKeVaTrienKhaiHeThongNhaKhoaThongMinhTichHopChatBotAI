@@ -60,22 +60,16 @@ public class LabTestController {
 
     @PostMapping("/{id}/accept")
     public ResponseEntity<LabTestDTO> acceptLabTest(@PathVariable UUID id, @RequestBody(required = false) LabTestRequestDTO dto) {
-        LabTestDTO labTestDTO = labTestService.acceptLabTest(id, dto != null ? dto.getLabTechnicianId() : null);
-        labTestDTO.setStatus("ACCEPTED");
-        return ResponseEntity.ok(labTestDTO);
+        return ResponseEntity.ok(labTestService.acceptLabTest(id, dto != null ? dto.getLabTechnicianId() : null));
     }
 
     @PostMapping("/{id}/start")
     public ResponseEntity<LabTestDTO> startLabTest(@PathVariable UUID id) {
-        LabTestDTO labTestDTO = labTestService.startLabTest(id);
-        labTestDTO.setStatus("IN_PROGRESS");
-        return ResponseEntity.ok(labTestDTO);
+        return ResponseEntity.ok(labTestService.startLabTest(id));
     }
 
     @PostMapping("/{id}/complete")
     public ResponseEntity<LabTestDTO> completeLabTest(@PathVariable UUID id, @RequestBody(required = false) LabTestRequestDTO dto) {
-        LabTestDTO labTestDTO = labTestService.completeLabTest(id, dto);
-        labTestDTO.setStatus("COMPLETE");
-        return ResponseEntity.ok(labTestDTO);
+        return ResponseEntity.ok(labTestService.completeLabTest(id, dto));
     }
 }

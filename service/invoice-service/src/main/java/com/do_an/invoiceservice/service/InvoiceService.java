@@ -435,5 +435,52 @@ public class InvoiceService implements IInvoiceService {
         return invoice != null && !"PAID".equals(invoice.getStatus()) && !"CANCELLED".equals(invoice.getStatus());
     }
 
+    @Override
+    @Transactional
+    public InvoiceResponseDTO addLabTestCharge(com.do_an.invoiceservice.dto.request.AddLabTestChargeRequestDTO request) {
+        log.info("=== Adding Lab Test Charge ===");
+        log.info("Request details: labTestId={}, appointmentId={}, price={}",
+                request.getLabTestId(), request.getAppointmentId(), request.getPrice());
+
+        List<Invoice> invoices = invoiceRepository.findAllByAppointmentId(request.getAppointmentId());
+        if (invoices.isEmpty()) {
+            throw new InvoiceNotFoundException("Không tìm thấy hoá đơn cho appointment: " + request.getAppointmentId());
+        }
+
+        Invoice invoice = invoices.stream()
+                .filter(inv -> "PENDING".equals(inv.getStatus()))
+                .findFirst()
+                .orElse(invoices.get(0));
+
+        InvoiceItem item = new InvoiceItem();
+        item.setId(UUID.randomUUID());
+        item.setReferenceId(request.getLabTestId());
+        item.setServiceType("LABTEST");
+        item.setQuantity(1);
+        item.setUnitPrice(request.getPrice());
+        item.setInsurancePayAmount(0);
+        item.setPatientPayAmount(request.getPrice());
+        item.setDescription(request.getDescription() != null ? request.getDescription() : "Phí xét nghiệm");
+        item.setInvoice(invoice);
+        
+        invoice.addItem(item);
+        invoiceItemRepository.save(item);
+
+        int currentTotal = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : 0;
+        int currentPatientPay = invoice.getPatientTotalPay() != null ? invoice.getPatientTotalPay() : 0;
+        int newTotal = currentTotal + request.getPrice();
+        int newPatientPay = currentPatientPay + request.getPrice();
+        
+        invoice.setTotalAmount(newTotal);
+        invoice.setPatientTotalPay(newPatientPay);
+        invoiceRepository.save(invoice);
+        
+        log.info("Đã thêm phí xét nghiệm LABTEST vào hoá đơn cho appointment {}, tổng tiền {}",
+                request.getAppointmentId(), newTotal);
+        
+        invoice.getItems().size();
+        return invoiceMapper.toResponseDto(invoice);
+    }
+
 
 }
