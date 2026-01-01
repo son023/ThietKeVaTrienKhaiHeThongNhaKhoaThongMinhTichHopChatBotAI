@@ -58,6 +58,16 @@ public class LabTestController {
         return ResponseEntity.ok(labTestService.getLabTestsByStatus(status));
     }
 
+    @GetMapping("/appointment/{appointmentId}")
+    public ResponseEntity<List<LabTestDTO>> getByAppointmentId(@PathVariable UUID appointmentId) {
+        return ResponseEntity.ok(labTestService.getLabTestsByAppointmentId(appointmentId));
+    }
+
+    @GetMapping("/medical-history/{medicalHistoryId}")
+    public ResponseEntity<List<LabTestDTO>> getByMedicalHistoryId(@PathVariable UUID medicalHistoryId) {
+        return ResponseEntity.ok(labTestService.getLabTestsByMedicalHistoryId(medicalHistoryId));
+    }
+
     @PostMapping("/{id}/accept")
     public ResponseEntity<LabTestDTO> acceptLabTest(@PathVariable UUID id, @RequestBody(required = false) LabTestRequestDTO dto) {
         LabTestDTO labTestDTO = labTestService.acceptLabTest(id, dto != null ? dto.getLabTechnicianId() : null);

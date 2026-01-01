@@ -9,6 +9,9 @@ import {
   FileText,
   Edit,
   ChevronRight,
+  Eye,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -24,6 +27,11 @@ import { medicalHistoryController, MedicalHistoryDTO } from "../../controllers/M
 import { appointmentController, AppointmentDTO } from "../../controllers/AppointmentController";
 import { invoiceController, InvoiceDTO } from "../../controllers/InvoiceController";
 import { inventoryController, DispenseOrderDTO, DispenseItemDTO } from "../../controllers/InventoryController";
+import { labTestController } from "../../controllers/LabTestController";
+import { LabTestDTO } from "../../models/LabTest";
+import { medicalAttachmentController } from "../../controllers/MedicalAttachmentController";
+import { MedicalAttachmentDTO } from "../../models";
+import { LabTestDetailDialog } from "../doctor/LabTestDetailDialog";
 import { UserDTO } from "../../models";
 import { PatientDTO } from "../../models/Patient";
 
@@ -46,6 +54,7 @@ interface MedicalHistoryRecord {
   diagnosis: string[];
   treatment: string[];
   prescription: PrescriptionItem[] | null;
+  labTests: LabTestDTO[] | null;
   nextVisit: string | null;
   cost: number;
 }
@@ -61,6 +70,17 @@ export function PatientMedicalRecords() {
   // Data from API
   const [user, setUser] = useState<UserDTO | null>(null);
   const [patient, setPatient] = useState<PatientDTO | null>(null);
+
+  // Lab test detail dialog state
+  const [selectedLabTest, setSelectedLabTest] = useState<LabTestDTO | null>(null);
+  const [isLabTestDialogOpen, setIsLabTestDialogOpen] = useState(false);
+  const [labTestAttachments, setLabTestAttachments] = useState<MedicalAttachmentDTO[]>([]);
+
+  // State để quản lý collapse/expand cho mỗi record
+  const [expandedSections, setExpandedSections] = useState<Record<string, {
+    prescription: boolean;
+    labTests: boolean;
+  }>>({});
 
   // Form data for editing
   const [profileData, setProfileData] = useState({
@@ -282,6 +302,30 @@ export function PatientMedicalRecords() {
             console.warn("Failed to load prescription for medical history:", mh.id, error);
           }
 
+          // Lấy kết quả xét nghiệm
+          let labTests: LabTestDTO[] | null = null;
+          try {
+            // Thử lấy theo medicalHistoryId trước
+            labTests = await labTestController.getByMedicalHistoryId(mh.id);
+
+            // Nếu không có, thử lấy theo appointmentId
+            if (!labTests || labTests.length === 0) {
+              try {
+                labTests = await labTestController.getByAppointmentId(mh.appointmentId);
+              } catch (error) {
+                console.warn("Failed to load lab tests by appointmentId:", mh.appointmentId);
+              }
+            }
+
+            // Nếu vẫn không có, set null
+            if (labTests && labTests.length === 0) {
+              labTests = null;
+            }
+          } catch (error) {
+            console.warn("Failed to load lab tests for medical history:", mh.id, error);
+            labTests = null;
+          }
+
           // Next visit - có thể lấy từ appointment hoặc để null
           const nextVisit = null; // TODO: Lấy từ appointment nếu có
 
@@ -296,6 +340,7 @@ export function PatientMedicalRecords() {
             diagnosis,
             treatment,
             prescription,
+            labTests,
             nextVisit,
             cost,
           } as MedicalHistoryRecord;
@@ -327,6 +372,66 @@ export function PatientMedicalRecords() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Get result summary for lab test (giống TestResults.tsx)
+  const getResultSummary = (test: LabTestDTO): string => {
+    if (test.structureJson) {
+      try {
+        const parsed = JSON.parse(test.structureJson);
+        if (typeof parsed === 'string') return parsed;
+        if (typeof parsed === 'object' && parsed !== null) {
+          // Try to extract a summary from the structure
+          if (parsed.result || parsed.summary || parsed.conclusion) {
+            return parsed.result || parsed.summary || parsed.conclusion;
+          }
+          return JSON.stringify(parsed).substring(0, 100) + '...';
+        }
+      } catch {
+        return test.structureJson.substring(0, 100) + '...';
+      }
+    }
+    if (test.abnormalFlag) {
+      return `Đánh giá: ${test.abnormalFlag}`;
+    }
+    return 'Kết quả đã hoàn thành';
+  };
+
+  // Handle view lab test detail
+  const handleViewLabTest = async (labTest: LabTestDTO) => {
+    setSelectedLabTest(labTest);
+    setIsLabTestDialogOpen(true);
+
+    // Load attachments nếu cần
+    try {
+      const attachments = await medicalAttachmentController.getAll();
+      setLabTestAttachments(attachments);
+    } catch (error) {
+      console.warn("Failed to load attachments:", error);
+      setLabTestAttachments([]);
+    }
+  };
+
+  // Toggle function cho prescription
+  const togglePrescription = (recordId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [recordId]: {
+        ...prev[recordId],
+        prescription: prev[recordId]?.prescription !== false ? false : true, // Default mở
+      }
+    }));
+  };
+
+  // Toggle function cho lab tests
+  const toggleLabTests = (recordId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [recordId]: {
+        ...prev[recordId],
+        labTests: prev[recordId]?.labTests !== false ? false : true, // Default mở
+      }
+    }));
   };
 
   // Format date helper
@@ -734,29 +839,181 @@ export function PatientMedicalRecords() {
                         </div>
                       </div>
 
+                      {/* Đơn thuốc - CHỈ hiển thị nếu có dữ liệu */}
                       {record.prescription && record.prescription.length > 0 && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                          <p className="font-medium text-orange-600 text-xs mb-2">
-                            Đơn thuốc:
-                          </p>
-                          <div className="space-y-3">
-                            {record.prescription.map((item, index) => (
-                              <div key={index} className="border-b border-orange-200 pb-2 last:border-b-0 last:pb-0">
-                                <p className="font-semibold text-sm text-[var(--text-strong)] mb-1">
-                                  {item.medicineName}
-                                </p>
-                                <div className="text-xs text-[var(--text-regular)] space-y-0.5">
-                                  <p>Số lượng: {item.quantity}</p>
-                                  <p>Liều dùng: {item.dosage}</p>
-                                  <p>Tần suất: {item.frequency}</p>
-                                  <p>Thời gian: {item.duration}</p>
-                                  {item.usageInstructions && item.usageInstructions !== "N/A" && (
-                                    <p>Hướng dẫn: {item.usageInstructions}</p>
-                                  )}
-                                </div>
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 shadow-sm">
+                          <button
+                            onClick={() => togglePrescription(record.id)}
+                            className="flex items-center justify-between w-full mb-3 p-2 rounded-lg hover:bg-orange-100 transition-colors duration-200 group"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="p-1.5 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                                <FileText className="w-4 h-4 text-orange-600" />
                               </div>
-                            ))}
-                          </div>
+                              <p className="font-semibold text-orange-700 text-sm">
+                                Đơn thuốc
+                              </p>
+                              <span className="text-xs font-medium text-orange-700 bg-orange-200 px-2 py-0.5 rounded-full">
+                                {record.prescription.length}
+                              </span>
+                            </div>
+                            <div className="p-1 rounded-md group-hover:bg-orange-200 transition-colors">
+                              {expandedSections[record.id]?.prescription !== false ? (
+                                <ChevronUp className="w-4 h-4 text-orange-600" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-orange-600" />
+                              )}
+                            </div>
+                          </button>
+
+                          {expandedSections[record.id]?.prescription !== false && (
+                            <div className="space-y-2.5 mt-2">
+                              {record.prescription.map((item, index) => (
+                                <div key={index} className="bg-white rounded-lg p-3.5 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+                                  <div className="flex items-start gap-3">
+                                    <div className="p-1.5 bg-orange-50 rounded-md mt-0.5">
+                                      <FileText className="w-3.5 h-3.5 text-orange-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm text-[var(--text-strong)] mb-2.5">
+                                        {item.medicineName}
+                                      </p>
+                                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-[var(--text-regular)]">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-medium text-orange-600">Số lượng:</span>
+                                          <span>{item.quantity}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-medium text-orange-600">Liều dùng:</span>
+                                          <span>{item.dosage}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-medium text-orange-600">Tần suất:</span>
+                                          <span>{item.frequency}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="font-medium text-orange-600">Thời gian:</span>
+                                          <span>{item.duration}</span>
+                                        </div>
+                                      </div>
+                                      {item.usageInstructions && item.usageInstructions !== "N/A" && (
+                                        <div className="mt-2.5 pt-2.5 border-t border-orange-100">
+                                          <p className="text-xs text-[var(--text-regular)]">
+                                            <span className="font-medium text-orange-600">Hướng dẫn:</span>{" "}
+                                            <span className="text-[var(--text-regular)]">{item.usageInstructions}</span>
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Kết quả xét nghiệm - CHỈ hiển thị nếu có dữ liệu */}
+                      {record.labTests && record.labTests.length > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+                          <button
+                            onClick={() => toggleLabTests(record.id)}
+                            className="flex items-center justify-between w-full mb-3 p-2 rounded-lg hover:bg-blue-100 transition-colors duration-200 group"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="p-1.5 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                                <Activity className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <p className="font-semibold text-blue-700 text-sm">
+                                Kết quả xét nghiệm
+                              </p>
+                              <span className="text-xs font-medium text-blue-700 bg-blue-200 px-2 py-0.5 rounded-full">
+                                {record.labTests.length}
+                              </span>
+                            </div>
+                            <div className="p-1 rounded-md group-hover:bg-blue-200 transition-colors">
+                              {expandedSections[record.id]?.labTests !== false ? (
+                                <ChevronUp className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-blue-600" />
+                              )}
+                            </div>
+                          </button>
+
+                          {expandedSections[record.id]?.labTests !== false && (
+                            <div className="space-y-2.5 mt-2">
+                              {record.labTests.map((labTest, index) => {
+                                const resultSummary = getResultSummary(labTest);
+                                const completedDate = labTest.resultDate
+                                  ? new Date(labTest.resultDate).toLocaleDateString('vi-VN')
+                                  : labTest.updatedAt
+                                    ? new Date(labTest.updatedAt).toLocaleDateString('vi-VN')
+                                    : 'N/A';
+
+                                return (
+                                  <div key={labTest.id || index} className="bg-white rounded-lg p-3.5 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-start gap-3">
+                                      <div className="p-1.5 bg-blue-50 rounded-md mt-0.5">
+                                        <Activity className="w-3.5 h-3.5 text-blue-600" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                                          <p className="font-semibold text-sm text-[var(--text-strong)]">
+                                            {labTest.labTestType?.name || "Xét nghiệm"}
+                                          </p>
+                                          {labTest.status && (
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${labTest.status === 'COMPLETE' || labTest.status === 'COMPLETED'
+                                                ? 'bg-green-100 text-green-700'
+                                                : labTest.status === 'IN_PROGRESS' || labTest.status === 'PROCESSING'
+                                                  ? 'bg-yellow-100 text-yellow-700'
+                                                  : 'bg-gray-100 text-gray-700'
+                                              }`}>
+                                              {labTest.status === 'COMPLETE' || labTest.status === 'COMPLETED' ? 'Hoàn thành' :
+                                                labTest.status === 'IN_PROGRESS' || labTest.status === 'PROCESSING' ? 'Đang xử lý' :
+                                                  labTest.status === 'PENDING' ? 'Chờ xử lý' :
+                                                    labTest.status}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Tóm tắt kết quả */}
+                                        <div className="p-2.5 bg-blue-50 rounded-lg mb-2.5 border border-blue-100">
+                                          <p className="font-normal text-[var(--text-regular)] text-xs leading-relaxed">
+                                            <span className="font-semibold text-blue-700">Kết quả:</span>{" "}
+                                            <span className="text-[var(--text-regular)]">{resultSummary}</span>
+                                          </p>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 text-xs text-[var(--text-regular)] opacity-75 flex-wrap">
+                                          <div className="flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                                            <span>{completedDate}</span>
+                                          </div>
+                                          {labTest.abnormalFlag === 'ABNORMAL' && (
+                                            <span className="text-red-600 font-semibold flex items-center gap-1">
+                                              <span>⚠️</span>
+                                              <span>Bất thường</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Nút Xem chi tiết */}
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleViewLabTest(labTest)}
+                                        className="border-blue-600 text-blue-600 hover:bg-blue-50 hover:border-blue-700 flex-shrink-0 shadow-sm"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 mr-1.5" />
+                                        Xem
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -783,6 +1040,14 @@ export function PatientMedicalRecords() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Lab Test Detail Dialog */}
+      <LabTestDetailDialog
+        labTest={selectedLabTest}
+        medicalAttachments={labTestAttachments}
+        open={isLabTestDialogOpen}
+        onOpenChange={setIsLabTestDialogOpen}
+      />
     </div>
   );
 }

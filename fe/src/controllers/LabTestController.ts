@@ -87,6 +87,36 @@ class LabTestController {
     });
     return this.handleResponse<LabTestDTO[]>(res);
   }
+
+  async getByAppointmentId(appointmentId: string): Promise<LabTestDTO[]> {
+    try {
+      const res = await fetch(createApiUrl(this.baseUrl, "appointment", appointmentId), {
+        headers: getApiHeaders(true),
+      });
+      if (res.status === 404) {
+        return [];
+      }
+      return this.handleResponse<LabTestDTO[]>(res);
+    } catch (error) {
+      console.warn("Failed to get lab tests by appointmentId:", error);
+      return [];
+    }
+  }
+
+  async getByMedicalHistoryId(medicalHistoryId: string): Promise<LabTestDTO[]> {
+    try {
+      const res = await fetch(createApiUrl(this.baseUrl, "medical-history", medicalHistoryId), {
+        headers: getApiHeaders(true),
+      });
+      if (res.status === 404) {
+        return [];
+      }
+      return this.handleResponse<LabTestDTO[]>(res);
+    } catch (error) {
+      console.warn("Failed to get lab tests by medicalHistoryId:", error);
+      return [];
+    }
+  }
 }
 
 export const labTestController = new LabTestController();
