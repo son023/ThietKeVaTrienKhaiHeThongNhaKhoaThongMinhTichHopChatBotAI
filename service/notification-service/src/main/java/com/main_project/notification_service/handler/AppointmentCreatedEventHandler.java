@@ -25,9 +25,10 @@ public class AppointmentCreatedEventHandler {
                 event.getAppointmentId(), event.getPatientId(), event.getDoctorId());
 
         try {
-            UUID randomUserId = UUID.randomUUID();
+            //UUID randomUserId = UUID.randomUUID();
             Notification notification = Notification.builder()
-                    .userId(randomUserId)
+                    //.userId(randomUserId)
+                    .userId(event.getPatientId())
                     .channel("websocket")
                     .templateId("APPOINTMENT_CREATED")
                     .message(event.getMessage())
@@ -35,7 +36,7 @@ public class AppointmentCreatedEventHandler {
                     .retryCount(0)
                     .build();
             notificationRepository.save(notification);
-            log.info(" Saved single notification to DB with random userId: {}", randomUserId);
+            log.info(" Saved single notification to DB with userId: {}", event.getPatientId());
 
             webSocketNotificationService.sendAppointmentCreatedNotification(
                     event.getAppointmentId(),
