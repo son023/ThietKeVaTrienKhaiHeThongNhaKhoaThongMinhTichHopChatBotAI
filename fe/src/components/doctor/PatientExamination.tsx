@@ -560,6 +560,7 @@ export function PatientExamination({
         const merged = {
           ...prev,
           doctorName: doctorDTO.user?.fullName ?? "Chưa có thông tin bác sĩ",
+          medicalServices: appointmentDTO.medicalServices || [],
         };
 
 
@@ -1280,57 +1281,90 @@ export function PatientExamination({
                     <Info label="Ngày khám" value={formatDateTime(selectedVisit?.createdAt)} />
                     <Info label="Bác sĩ" value={selectedVisit.doctorName} />
                     <Info label="Triệu chứng" value={selectedVisit.symptoms || "Không có"} />
-                    {selectedVisit.conditions && selectedVisit.conditions.length > 0 && (
-                      <div>
-                        <p className="text-xs text-[#666666] mb-1">Tình trạng ({selectedVisit.conditions.length}):</p>
-                        {selectedVisit.conditions.map((cond: any, idx: number) => (
-                          <div key={idx} className="text-sm text-[#333333] mb-1 pl-2 border-l-2 border-[#3FB5FF]">
-                            {cond.toothNumber && `Răng ${cond.toothNumber}: `}
-                            {cond.name} {cond.status && `(${cond.status})`}
-                            {cond.treatment && ` - ${cond.treatment}`}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Clinical Notes */}
                   <Card className="rounded-[15px] border-[#e8e8e8]">
                     <CardHeader>
-                      <CardTitle className="text-neutral-text">Ghi chú lâm sàng</CardTitle>
+                      <CardTitle className="text-neutral-text">Chuẩn đoán</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <NoteBlock value={selectedVisit.clinicalNotes} />
+                      {selectedVisit.conditions && selectedVisit.conditions.length > 0 ? (
+                        <div className="space-y-3">
+                          {selectedVisit.conditions.map((cond: any, idx: number) => (
+                            <div key={idx} className="p-3 bg-neutral-muted rounded-lg border-l-4 border-primary">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  {cond.toothNumber && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Răng {cond.toothNumber}
+                                    </Badge>
+                                  )}
+                                  <p className="text-sm font-semibold text-[#01304e]">{cond.name || "Không có tên"}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  {cond.status && (
+                                    <div>
+                                      <span className="text-[#666666] font-medium">Trạng thái:</span>
+                                      <span className="ml-1 text-[#333333]">{cond.status}</span>
+                                    </div>
+                                  )}
+                                  {cond.surface && (
+                                    <div>
+                                      <span className="text-[#666666] font-medium">Bề mặt:</span>
+                                      <span className="ml-1 text-[#333333]">{cond.surface}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {cond.treatment && (
+                                  <div className="text-xs">
+                                    <span className="text-[#666666] font-medium">Cách điều trị:</span>
+                                    <p className="mt-1 text-[#333333]">{cond.treatment}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-neutral-text/60">Không có ghi chú lâm sàng</p>
+                      )}
                     </CardContent>
                   </Card>
 
-                  {/* Dental Chart Notes */}
-                  <Card className="rounded-[15px] border-[#e8e8e8]">
-                    <CardHeader>
-                      <CardTitle className="text-neutral-text">Ghi chú sơ đồ răng</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <NoteBlock value={selectedVisit.dentalChartNotes} />
-                    </CardContent>
-                  </Card>
-
-                  {/* Services */}
+                  {/* Services - now integrated with backend medical services */}
                   <Card className="rounded-[15px] border-[#e8e8e8]">
                     <CardHeader>
                       <CardTitle className="text-neutral-text">Dịch vụ đã thực hiện</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {Array.isArray(selectedVisit.services) && selectedVisit.services.length > 0 ? (
+                      {selectedVisit.medicalServices && selectedVisit.medicalServices.length > 0 ? (
                           <div className="space-y-2">
-                            {selectedVisit.services.map((service: string, index: number) => (
+                            {selectedVisit.medicalServices.map((service: any, index: number) => (
                                 <div
-                                    key={index}
-                                    className="flex items-center gap-2 p-2 bg-[#d8f0ff]/30 rounded-lg"
+                                    key={service.id || index}
+                                    className="flex items-start justify-between gap-3 p-3 bg-[#d8f0ff]/30 rounded-lg"
                                 >
-                                  <div className="w-2 h-2 bg-primary rounded-full" />
-                                  <span className="text-sm text-neutral-text">
-                      {service}
-                    </span>
+                                  <div className="flex items-start gap-2 flex-1">
+                                    <div className="w-2 h-2 bg-primary rounded-full mt-1.5" />
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-neutral-text">
+                                        {service.serviceName}
+                                      </p>
+                                     
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    {service.price && (
+                                      <p className="text-sm font-semibold text-primary">
+                                        {service.price.toLocaleString('vi-VN')} đ
+                                      </p>
+                                    )}
+                                    {service.serviceTime && (
+                                      <p className="text-xs text-neutral-text/60">
+                                        {service.serviceTime} phút
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                             ))}
                           </div>
@@ -1350,13 +1384,6 @@ export function PatientExamination({
                         className="rounded-lg border-[#e8e8e8]"
                     >
                       Đóng
-                    </Button>
-                    <Button
-                        className="bg-primary hover:bg-primary/90 rounded-lg"
-                        onClick={() => handlePrintRecord(selectedVisit)}
-                    >
-                      <Printer className="w-4 h-4 mr-2" />
-                      In hồ sơ
                     </Button>
                   </div>
 
