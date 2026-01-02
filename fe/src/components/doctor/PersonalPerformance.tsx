@@ -1,4 +1,5 @@
-import { TrendingUp, Users, Calendar, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { TrendingUp, Users, Calendar, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { 
@@ -14,39 +15,162 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import { authController } from '../../controllers/AuthController';
+
+interface Stats {
+  thisWeek: number;
+  thisMonth: number;
+  totalPatients: number;
+}
+
+interface ServiceData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface WeeklyData {
+  day: string;
+  count: number;
+}
+
+const SERVICE_COLORS = [
+  '#3FB5FF', '#05619A', '#82ca9d', '#ffc658', 
+  '#ff7c7c', '#a78bfa', '#f59e0b', '#10b981',
+  '#6366f1', '#ec4899', '#14b8a6', '#f97316'
+];
 
 export function PersonalPerformance() {
-  const stats = {
-    thisWeek: 12,
-    thisMonth: 48,
-    avgRating: 4.8,
-    totalPatients: 156,
+  const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<Stats>({
+    thisWeek: 0,
+    thisMonth: 0,
+    totalPatients: 0,
+  });
+  const [serviceData, setServiceData] = useState<ServiceData[]>([]);
+  const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
+
+  const currentUser = authController.getCurrentUser();
+  const doctorId = currentUser?.id;
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!doctorId) {
+        setError('Không tìm thấy thông tin bác sĩ');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await appointmentController.getByDoctorId(doctorId);
+        setAppointments(data);
+
+        calculateStats(data);
+      } catch (err) {
+        console.error('Failed to load appointments:', err);
+        setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [doctorId]);
+
+  const calculateStats = (data: AppointmentDTO[]) => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const completedAppointments = data.filter(apt => 
+      apt.status === 'COMPLETED' || apt.status === 'IN_PROGRESS' || apt.status === 'PROGRESSING'
+    );
+
+    const thisWeekCount = completedAppointments.filter(apt => {
+      const aptDate = new Date(apt.appointmentStartTime);
+      return aptDate >= startOfWeek;
+    }).length;
+
+    const thisMonthCount = completedAppointments.filter(apt => {
+      const aptDate = new Date(apt.appointmentStartTime);
+      return aptDate >= startOfMonth;
+    }).length;
+
+    const uniquePatients = new Set(completedAppointments.map(apt => apt.patientId));
+    const totalPatientsCount = uniquePatients.size;
+
+    setStats({
+      thisWeek: thisWeekCount,
+      thisMonth: thisMonthCount,
+      totalPatients: totalPatientsCount,
+    });
+
+    const serviceMap = new Map<string, number>();
+    completedAppointments.forEach(apt => {
+      if (apt.medicalServices && apt.medicalServices.length > 0) {
+        apt.medicalServices.forEach(service => {
+          const count = serviceMap.get(service.serviceName) || 0;
+          serviceMap.set(service.serviceName, count + 1);
+        });
+      }
+    });
+
+    const services: ServiceData[] = Array.from(serviceMap.entries())
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: SERVICE_COLORS[index % SERVICE_COLORS.length]
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Lấy top 10 dịch vụ
+
+    setServiceData(services);
+
+    const weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    const dailyCounts = new Map<number, number>();
+
+    completedAppointments.forEach(apt => {
+      const aptDate = new Date(apt.appointmentStartTime);
+      const dayOfWeek = aptDate.getDay();
+      const count = dailyCounts.get(dayOfWeek) || 0;
+      dailyCounts.set(dayOfWeek, count + 1);
+    });
+
+    const weekly: WeeklyData[] = [1, 2, 3, 4, 5, 6, 0].map(dayIndex => ({
+      day: weekDays[dayIndex],
+      count: dailyCounts.get(dayIndex) || 0
+    }));
+
+    setWeeklyData(weekly);
   };
 
-  const serviceData = [
-    { name: 'Khám tổng quát', value: 30, color: '#3FB5FF' },
-    { name: 'Trám răng', value: 25, color: '#05619A' },
-    { name: 'Điều trị tủy', value: 15, color: '#82ca9d' },
-    { name: 'Cạo vôi', value: 12, color: '#ffc658' },
-    { name: 'Niềng răng', value: 10, color: '#ff7c7c' },
-    { name: 'Phục hình', value: 8, color: '#a78bfa' },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  const weeklyData = [
-    { day: 'T2', count: 8 },
-    { day: 'T3', count: 12 },
-    { day: 'T4', count: 10 },
-    { day: 'T5', count: 15 },
-    { day: 'T6', count: 14 },
-    { day: 'T7', count: 6 },
-    { day: 'CN', count: 3 },
-  ];
-
-  const topReviews = [
-    { id: '1', patient: 'Nguyễn Văn An', rating: 5, comment: 'Bác sĩ rất tận tâm và chu đáo. Quy trình điều trị chuyên nghiệp.', date: '24/10/2025' },
-    { id: '2', patient: 'Trần Thị Bình', rating: 5, comment: 'Khám rất kỹ lưỡng, giải thích rõ ràng. Rất hài lòng!', date: '22/10/2025' },
-    { id: '3', patient: 'Lê Văn Cường', rating: 5, comment: 'Thái độ thân thiện, tay nghề cao. Sẽ giới thiệu bạn bè đến.', date: '20/10/2025' },
-  ];
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-neutral-background min-h-screen">
@@ -56,7 +180,7 @@ export function PersonalPerformance() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -98,37 +222,12 @@ export function PersonalPerformance() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-text/60 mb-2">Đánh giá TB</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-neutral-text">{stats.avgRating}</p>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= stats.avgRating ? 'text-yellow-500 fill-yellow-500' : 'text-neutral-border'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-yellow-50">
-                <Star className="w-7 h-7 text-yellow-500 fill-yellow-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Tabs defaultValue="services" className="space-y-6">
         <TabsList className="bg-neutral-muted border border-neutral-border/30 p-1 rounded-xl">
           <TabsTrigger value="services" className="rounded-lg data-[state=active]:bg-neutral-surface data-[state=active]:shadow-sm">Phân loại dịch vụ</TabsTrigger>
           <TabsTrigger value="weekly" className="rounded-lg data-[state=active]:bg-neutral-surface data-[state=active]:shadow-sm">Theo tuần</TabsTrigger>
-          <TabsTrigger value="reviews" className="rounded-lg data-[state=active]:bg-neutral-surface data-[state=active]:shadow-sm">Đánh giá</TabsTrigger>
         </TabsList>
 
         <TabsContent value="services">
@@ -137,28 +236,34 @@ export function PersonalPerformance() {
               <CardTitle className="typo-h4">Tỉ lệ các loại dịch vụ đã thực hiện</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={serviceData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {serviceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              {serviceData.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-neutral-text/60">
+                  Chưa có dữ liệu dịch vụ
+                </div>
+              ) : (
+                <div className="h-[400px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={serviceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={120}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {serviceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -174,42 +279,11 @@ export function PersonalPerformance() {
                   <BarChart data={weeklyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="day" />
-                    <YAxis />
+                    <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Bar dataKey="count" fill="#3FB5FF" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reviews">
-          <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="typo-h4">Bệnh nhân có phản hồi tốt</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topReviews.map((review) => (
-                  <div key={review.id} className="p-5 bg-neutral-muted rounded-xl border border-neutral-border/30 hover:border-primary/30 hover:shadow-sm transition-all">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-semibold text-neutral-text">{review.patient}</p>
-                        <div className="flex items-center gap-1 mt-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-neutral-border'}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-sm text-neutral-text/60 font-medium">{review.date}</span>
-                    </div>
-                    <p className="text-sm text-neutral-text/80 italic leading-relaxed">"{review.comment}"</p>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>
