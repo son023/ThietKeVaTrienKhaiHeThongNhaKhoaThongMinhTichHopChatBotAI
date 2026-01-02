@@ -5,7 +5,6 @@ import { LabTechnicianHeader } from "./components/LabTechnicianHeader";
 import { LabTechnicianDashboard } from "./components/labtechnician/LabTechnicianDashboard";
 import { TestQueue } from "./components/labtechnician/TestQueue";
 import { TestResults } from "./components/labtechnician/TestResults";
-import { Equipment } from "./components/labtechnician/Equipment";
 import { LabReports } from "./components/labtechnician/LabReports";
 import { LabAccountSettings } from "./components/labtechnician/LabAccountSettings";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -36,8 +35,6 @@ export default function LabTechnicianApp({
       setCurrentPage("test-queue");
     } else if (location.pathname.startsWith("/lab/test-results")) {
       setCurrentPage("test-results");
-    } else if (location.pathname.startsWith("/lab/equipment")) {
-      setCurrentPage("equipment");
     } else if (location.pathname.startsWith("/lab/reports")) {
       setCurrentPage("reports");
     } else if (location.pathname.startsWith("/lab/settings")) {
@@ -58,9 +55,6 @@ export default function LabTechnicianApp({
         break;
       case "test-results":
         navigate("/lab/test-results");
-        break;
-      case "equipment":
-        navigate("/lab/equipment");
         break;
       case "reports":
         navigate("/lab/reports");
@@ -112,7 +106,6 @@ export default function LabTechnicianApp({
               element={<TestQueue selectedTestId={selectedTestId} />}
             />
             <Route path="/lab/test-results" element={<TestResults />} />
-            <Route path="/lab/equipment" element={<Equipment />} />
             <Route path="/lab/reports" element={<LabReports />} />
             <Route path="/lab/settings" element={<LabAccountSettings />} />
 

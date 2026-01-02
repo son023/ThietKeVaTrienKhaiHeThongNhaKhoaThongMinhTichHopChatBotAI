@@ -191,7 +191,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     }
 
     const hasAllInfo = selectedAppointmentId && selectedPatientId && selectedMedicalHistoryId;
-    
+
     if (hasAllInfo) {
       return (
         <CreatePrescriptionEnhanced

@@ -202,15 +202,15 @@ export function PatientExamination({
   const internalNoteRef = useRef(internalNote);
   const symptomsRef = useRef(symptoms);
   const conditionsRef = useRef(conditions);
-  
+
   useEffect(() => {
     internalNoteRef.current = internalNote;
   }, [internalNote]);
-  
+
   useEffect(() => {
     symptomsRef.current = symptoms;
   }, [symptoms]);
-  
+
   useEffect(() => {
     conditionsRef.current = conditions;
   }, [conditions]);
@@ -246,16 +246,16 @@ export function PatientExamination({
     connectWebSocket();
     const navigateCallback = onNavigateToAppointments;
     const unsubscribe = subscribeToAppointmentRollback(
-      appointmentId,
-      (notification) => {
-        toast.error(
-          notification.message ||
-            "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
-        );
-        if (navigateCallback) {
-          navigateCallback();
+        appointmentId,
+        (notification) => {
+          toast.error(
+              notification.message ||
+              "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
+          );
+          if (navigateCallback) {
+            navigateCallback();
+          }
         }
-      }
     );
     unsubscribeRef.current = unsubscribe;
 
@@ -298,7 +298,7 @@ export function PatientExamination({
             // Load appointment để kiểm tra status
             const appointment = await appointmentController.getById(appointmentId);
             const appointmentStatus = appointment.status?.toUpperCase();
-            
+
             // Nếu appointment đã hoàn thành (COMPLETED/COMPLETE), load từ server
             if (appointmentStatus === "COMPLETED" || appointmentStatus === "COMPLETE") {
               try {
@@ -354,7 +354,7 @@ export function PatientExamination({
   // Auto-save khi thay đổi internalNote, symptoms, hoặc conditions
   useEffect(() => {
     if (!appointmentId || loading) return;
-    
+
     // Chỉ auto-save nếu có thay đổi thực sự
     if (internalNote || symptoms || conditions.length > 0) {
       debouncedSaveDraft();
@@ -380,7 +380,7 @@ export function PatientExamination({
   const filteredAttachments = useMemo(() => {
     if (!appointmentId) return attachments;
     return attachments.filter(
-      (att) => !att.labTestId || att.labTestId === appointmentId
+        (att) => !att.labTestId || att.labTestId === appointmentId
     );
   }, [attachments]);
 
@@ -465,7 +465,7 @@ export function PatientExamination({
       setInternalNote("");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Không thể lưu thông tin khám"
+          err instanceof Error ? err.message : "Không thể lưu thông tin khám"
       );
     } finally {
       setSaving(false);
@@ -579,7 +579,7 @@ export function PatientExamination({
         // In hồ sơ từ lịch sử khám
         const appointmentId = visitData.appointmentId;
         let doctorName = visitData.doctorName || "Chưa có thông tin bác sĩ";
-        
+
         if (appointmentId && !visitData.doctorName) {
           try {
             const appointmentDTO = await appointmentController.getById(appointmentId);
@@ -590,7 +590,7 @@ export function PatientExamination({
           }
         }
 
-        const visitLabTests = appointmentId 
+        const visitLabTests = appointmentId
           ? labTests.filter((lt) => lt.appointmentId === appointmentId)
           : [];
 
@@ -819,16 +819,16 @@ export function PatientExamination({
                         </span>
                           </div>
                           <p className="text-sm text-[#01304e] line-clamp-1">
-                            {item.symptoms || (item.conditions && item.conditions.length > 0 
-                              ? item.conditions.map(c => c.name).filter(Boolean).join(", ") 
-                              : "Chưa có thông tin")}
+                            {item.symptoms || (item.conditions && item.conditions.length > 0
+                                ? item.conditions.map(c => c.name).filter(Boolean).join(", ")
+                                : "Chưa có thông tin")}
                           </p>
                           <p className="text-xs text-[#333333]/60 line-clamp-2">
                             {item.conditions && item.conditions.length > 0
-                              ? `${item.conditions.length} tình trạng: ${item.conditions.map(c => 
-                                  c.toothNumber ? `Răng ${c.toothNumber}` : c.name
+                                ? `${item.conditions.length} tình trạng: ${item.conditions.map(c =>
+                                    c.toothNumber ? `Răng ${c.toothNumber}` : c.name
                                 ).filter(Boolean).join(", ")}`
-                              : "Không có ghi chú"}
+                                : "Không có ghi chú"}
                           </p>
                         </CardContent>
                       </Card>
@@ -898,56 +898,56 @@ export function PatientExamination({
                             Thêm chuẩn đoán
                           </Button>
                         </div>
-                        
+
                         {conditions.length === 0 ? (
-                          <div className="border border-dashed border-[#e8e8e8] rounded-[10px] p-6 text-center">
-                            <p className="text-sm text-[#666666]">Chưa có chuẩn đoán lâm sàng nào</p>
-                            <p className="text-xs text-[#999999] mt-1">Nhấn "Thêm chuẩn đoán" để thêm mới</p>
-                          </div>
+                            <div className="border border-dashed border-[#e8e8e8] rounded-[10px] p-6 text-center">
+                              <p className="text-sm text-[#666666]">Chưa có chuẩn đoán lâm sàng nào</p>
+                              <p className="text-xs text-[#999999] mt-1">Nhấn "Thêm chuẩn đoán" để thêm mới</p>
+                            </div>
                         ) : (
-                          <div className="space-y-2">
-                            {conditions.map((condition, index) => (
-                              <div
-                                key={index}
-                                className="border border-[#e8e8e8] rounded-[10px] p-3 bg-[#f5fbff] flex items-start justify-between"
-                              >
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {condition.toothNumber && (
-                                      <Badge variant="outline" className="text-xs">
-                                        Răng {condition.toothNumber}
-                                      </Badge>
-                                    )}
-                                    {condition.status && (
-                                      <Badge variant="outline" className="text-xs">
-                                        {condition.status}
-                                      </Badge>
-                                    )}
+                            <div className="space-y-2">
+                              {conditions.map((condition, index) => (
+                                  <div
+                                      key={index}
+                                      className="border border-[#e8e8e8] rounded-[10px] p-3 bg-[#f5fbff] flex items-start justify-between"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        {condition.toothNumber && (
+                                            <Badge variant="outline" className="text-xs">
+                                              Răng {condition.toothNumber}
+                                            </Badge>
+                                        )}
+                                        {condition.status && (
+                                            <Badge variant="outline" className="text-xs">
+                                              {condition.status}
+                                            </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-sm font-medium text-[#01304e]">{condition.name}</p>
+                                      {condition.treatment && (
+                                          <p className="text-xs text-[#666666] mt-1">Điều trị: {condition.treatment}</p>
+                                      )}
+                                      {condition.surface && (
+                                          <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
+                                      )}
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemoveCondition(index)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </Button>
                                   </div>
-                                  <p className="text-sm font-medium text-[#01304e]">{condition.name}</p>
-                                  {condition.treatment && (
-                                    <p className="text-xs text-[#666666] mt-1">Điều trị: {condition.treatment}</p>
-                                  )}
-                                  {condition.surface && (
-                                    <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
-                                  )}
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveCondition(index)}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
+                              ))}
+                            </div>
                         )}
                       </div>
 
-                     
+
                     </div>
 
                   </TabsContent>
@@ -1168,28 +1168,28 @@ export function PatientExamination({
                   Tên tình trạng <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  value={newCondition.name}
-                  onChange={(e) => setNewCondition({ ...newCondition, name: e.target.value })}
-                  placeholder="VD: Sâu răng, Viêm nướu..."
-                  className="rounded-[10px]"
+                    value={newCondition.name}
+                    onChange={(e) => setNewCondition({ ...newCondition, name: e.target.value })}
+                    placeholder="VD: Sâu răng, Viêm nướu..."
+                    className="rounded-[10px]"
                 />
               </div>
-              
+
               <div>
                 <Label className="text-[#01304e] mb-1 block">
                   Răng số
                 </Label>
                 <Input
-                  type="number"
-                  min={11}
-                  max={48}
-                  value={newCondition.toothNumber || ""}
-                  onChange={(e) => setNewCondition({ 
-                    ...newCondition, 
-                    toothNumber: e.target.value ? Number(e.target.value) : undefined 
-                  })}
-                  placeholder="VD: 16, 25..."
-                  className="rounded-[10px]"
+                    type="number"
+                    min={11}
+                    max={48}
+                    value={newCondition.toothNumber || ""}
+                    onChange={(e) => setNewCondition({
+                      ...newCondition,
+                      toothNumber: e.target.value ? Number(e.target.value) : undefined
+                    })}
+                    placeholder="VD: 16, 25..."
+                    className="rounded-[10px]"
                 />
               </div>
 
@@ -1198,8 +1198,8 @@ export function PatientExamination({
                   Trạng thái
                 </Label>
                 <Select
-                  value={newCondition.status || "ACTIVE"}
-                  onValueChange={(value) => setNewCondition({ ...newCondition, status: value })}
+                    value={newCondition.status || "ACTIVE"}
+                    onValueChange={(value) => setNewCondition({ ...newCondition, status: value })}
                 >
                   <SelectTrigger className="rounded-[10px] bg-white">
                     <SelectValue />
@@ -1217,10 +1217,10 @@ export function PatientExamination({
                   Cách điều trị
                 </Label>
                 <Input
-                  value={newCondition.treatment || ""}
-                  onChange={(e) => setNewCondition({ ...newCondition, treatment: e.target.value })}
-                  placeholder="VD: Trám răng composite..."
-                  className="rounded-[10px]"
+                    value={newCondition.treatment || ""}
+                    onChange={(e) => setNewCondition({ ...newCondition, treatment: e.target.value })}
+                    placeholder="VD: Trám răng composite..."
+                    className="rounded-[10px]"
                 />
               </div>
 
@@ -1229,27 +1229,27 @@ export function PatientExamination({
                   Bề mặt răng
                 </Label>
                 <Input
-                  value={newCondition.surface || ""}
-                  onChange={(e) => setNewCondition({ ...newCondition, surface: e.target.value })}
-                  placeholder="VD: Mặt nhai, Mặt trong..."
-                  className="rounded-[10px]"
+                    value={newCondition.surface || ""}
+                    onChange={(e) => setNewCondition({ ...newCondition, surface: e.target.value })}
+                    placeholder="VD: Mặt nhai, Mặt trong..."
+                    className="rounded-[10px]"
                 />
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsAddConditionDialogOpen(false);
-                    setNewCondition({ name: "", status: "ACTIVE" });
-                  }}
-                  className="rounded-[10px]"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddConditionDialogOpen(false);
+                      setNewCondition({ name: "", status: "ACTIVE" });
+                    }}
+                    className="rounded-[10px]"
                 >
                   Hủy
                 </Button>
                 <Button
-                  onClick={handleAddCondition}
-                  className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
+                    onClick={handleAddCondition}
+                    className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
                 >
                   Thêm
                 </Button>
@@ -1350,7 +1350,7 @@ export function PatientExamination({
                                       <p className="text-sm font-medium text-neutral-text">
                                         {service.serviceName}
                                       </p>
-                                     
+
                                     </div>
                                   </div>
                                   <div className="text-right">

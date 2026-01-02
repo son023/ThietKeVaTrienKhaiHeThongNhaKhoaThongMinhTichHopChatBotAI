@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
   User,
   Phone,
   MapPin,
-  Edit,
   X,
   RotateCcw,
-  ChevronRight,
   CheckCircle,
   AlertCircle,
+  Loader2,
+  AlertTriangle,
+  CalendarX,
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -23,110 +24,192 @@ import {
   DialogFooter,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { toast } from "sonner";
+import { authController } from "../../controllers/AuthController";
+import { appointmentController, AppointmentDTO } from "../../controllers/AppointmentController";
+import { userController } from "../../controllers/UserController";
+import { UserDTO } from "../../models";
+
+interface AppointmentDisplay {
+  id: string;
+  service: string;
+  doctor: string;
+  doctorPhone: string;
+  date: string;
+  time: string;
+  duration: string;
+  location: string;
+  status: string;
+  notes: string;
+  appointmentStartTime: string;
+  appointmentEndTime: string;
+}
 
 export function PatientAppointments() {
   const [selectedTab, setSelectedTab] = useState("upcoming");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDisplay | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  // Mock data - Upcoming appointments
-  const upcomingAppointments = [
-    {
-      id: 1,
-      service: "Khám tổng quát",
-      doctor: "BS. Nguyễn Văn A",
-      doctorPhone: "0912345678",
-      date: "15/11/2024",
-      time: "09:00",
-      duration: "45 phút",
-      location: "Phòng 101, Tầng 2",
-      status: "confirmed",
-      notes: "Nhớ mang theo sổ khám bệnh",
-    },
-    {
-      id: 2,
-      service: "Tái khám niềng răng",
-      doctor: "BS. Trần Thị B",
-      doctorPhone: "0987654321",
-      date: "20/11/2024",
-      time: "14:30",
-      duration: "30 phút",
-      location: "Phòng 203, Tầng 2",
-      status: "confirmed",
-      notes: "",
-    },
-    {
-      id: 3,
-      service: "Lấy cao răng",
-      doctor: "BS. Lê Văn C",
-      doctorPhone: "0923456789",
-      date: "25/11/2024",
-      time: "10:00",
-      duration: "60 phút",
-      location: "Phòng 105, Tầng 1",
-      status: "pending",
-      notes: "Chờ xác nhận từ phòng khám",
-    },
-  ];
+  // Backend data
+  const [upcomingAppointments, setUpcomingAppointments] = useState<AppointmentDisplay[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<AppointmentDisplay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPatientId, setCurrentPatientId] = useState<string | null>(null);
 
-  // Mock data - Past appointments
-  const pastAppointments = [
-    {
-      id: 4,
-      service: "Khám tổng quát",
-      doctor: "BS. Nguyễn Văn A",
-      date: "01/11/2024",
-      time: "09:30",
-      status: "completed",
-      diagnosis: "Viêm nướu nhẹ",
-      nextVisit: "15/11/2024",
-    },
-    {
-      id: 5,
-      service: "Tẩy trắng răng",
-      doctor: "BS. Phạm Thị D",
-      date: "15/10/2024",
-      time: "14:00",
-      status: "completed",
-      diagnosis: "Hoàn thành tẩy trắng răng",
-      nextVisit: null,
-    },
-    {
-      id: 6,
-      service: "Cạo vôi răng",
-      doctor: "BS. Lê Văn C",
-      date: "01/10/2024",
-      time: "10:30",
-      status: "completed",
-      diagnosis: "Vôi răng nhiều, đã làm sạch",
-      nextVisit: "01/04/2025",
-    },
-    {
-      id: 7,
-      service: "Khám định kỳ",
-      doctor: "BS. Nguyễn Văn A",
-      date: "15/09/2024",
-      time: "09:00",
-      status: "cancelled",
-      diagnosis: null,
-      nextVisit: null,
-    },
-  ];
+  // Get current patient ID on mount
+  useEffect(() => {
+    const user = authController.getCurrentUser();
+    if (user) {
+      setCurrentPatientId(user.id);
+    } else {
+      toast.error("Vui lòng đăng nhập để xem lịch hẹn");
+      setIsLoading(false);
+    }
+  }, []);
 
-  const handleCancelAppointment = (appointment: any) => {
+  // Load appointments when patientId is available
+  useEffect(() => {
+    if (currentPatientId) {
+      loadAppointments();
+    }
+  }, [currentPatientId]);
+
+  const loadAppointments = async () => {
+    if (!currentPatientId) return;
+
+    try {
+      setIsLoading(true);
+      const appointments = await appointmentController.getByPatientId(currentPatientId);
+
+      // Get unique doctor IDs and service IDs
+      const doctorIds = [...new Set(appointments.map(a => a.doctorId).filter(Boolean))];
+      const doctors = await userController.getByIds(doctorIds);
+
+      // Get current date/time
+      const now = new Date();
+
+      // Process appointments
+      const upcoming: AppointmentDisplay[] = [];
+      const past: AppointmentDisplay[] = [];
+
+      for (const appointment of appointments) {
+        const appointmentStart = new Date(appointment.appointmentStartTime);
+        const appointmentEnd = new Date(appointment.appointmentEndTime);
+
+        // Calculate duration in minutes
+        const durationMs = appointmentEnd.getTime() - appointmentStart.getTime();
+        const durationMinutes = Math.round(durationMs / (1000 * 60));
+        const duration = durationMinutes >= 60
+          ? `${Math.floor(durationMinutes / 60)} giờ ${durationMinutes % 60} phút`
+          : `${durationMinutes} phút`;
+
+        // Get doctor info
+        const doctor = doctors[appointment.doctorId];
+        const doctorName = doctor
+          ? `BS. ${doctor.fullName || "Chưa có tên"}`
+          : "Chưa có thông tin";
+        const doctorPhone = doctor?.phone || "N/A";
+
+        // Get service names
+        const serviceNames = appointment.medicalServices
+          ?.map(s => s.serviceName)
+          .filter(Boolean)
+          .join(", ") || "Khám tổng quát";
+
+        // Format date and time
+        const date = appointmentStart.toLocaleDateString('vi-VN');
+        const time = appointmentStart.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Map status
+        const statusMap: Record<string, string> = {
+          'PENDING': 'pending',
+          'CONFIRMED': 'confirmed',
+          'CHECKED': 'confirmed',
+          'IN_PROGRESS': 'confirmed',
+          'PROGRESSING': 'confirmed',
+          'COMPLETED': 'completed',
+          'CANCELLED': 'cancelled',
+          'FAILED': 'cancelled',
+        };
+        const displayStatus = statusMap[appointment.status] || appointment.status.toLowerCase();
+
+        const appointmentDisplay: AppointmentDisplay = {
+          id: appointment.id,
+          service: serviceNames,
+          doctor: doctorName,
+          doctorPhone: doctorPhone,
+          date: date,
+          time: time,
+          duration: duration,
+          location: "Phòng khám", // Default location, có thể lấy từ appointment nếu có
+          status: displayStatus,
+          notes: "", // Có thể thêm notes nếu có trong AppointmentDTO
+          appointmentStartTime: appointment.appointmentStartTime,
+          appointmentEndTime: appointment.appointmentEndTime,
+        };
+
+        // Separate upcoming and past appointments
+        if (displayStatus === 'completed' || displayStatus === 'cancelled' || appointmentStart < now) {
+          past.push(appointmentDisplay);
+        } else if (displayStatus === 'pending' || displayStatus === 'confirmed') {
+          upcoming.push(appointmentDisplay);
+        }
+      }
+
+      // Sort upcoming by date (ascending)
+      upcoming.sort((a, b) =>
+        new Date(a.appointmentStartTime).getTime() - new Date(b.appointmentStartTime).getTime()
+      );
+
+      // Sort past by date (descending)
+      past.sort((a, b) =>
+        new Date(b.appointmentStartTime).getTime() - new Date(a.appointmentStartTime).getTime()
+      );
+
+      setUpcomingAppointments(upcoming);
+      setPastAppointments(past);
+    } catch (error) {
+      console.error("Failed to load appointments:", error);
+      toast.error("Không thể tải danh sách lịch hẹn");
+      setUpcomingAppointments([]);
+      setPastAppointments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelAppointment = (appointment: AppointmentDisplay) => {
     setSelectedAppointment(appointment);
     setShowCancelDialog(true);
   };
 
-  const handleRescheduleAppointment = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setShowRescheduleDialog(true);
+  const handleConfirmCancel = async () => {
+    if (!selectedAppointment) return;
+
+    try {
+      setIsCancelling(true);
+      await appointmentController.updateStatus(selectedAppointment.id, "CANCELLED");
+      toast.success("Đã hủy lịch hẹn thành công");
+      setShowCancelDialog(false);
+      setSelectedAppointment(null);
+      // Reload appointments
+      await loadAppointments();
+    } catch (error: any) {
+      console.error("Failed to cancel appointment:", error);
+      toast.error(error?.message || "Không thể hủy lịch hẹn. Vui lòng thử lại");
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
-  const handleBookAgain = (appointment: any) => {
+  const handleBookAgain = (appointment: AppointmentDisplay) => {
     // Navigate to booking page with pre-filled service and doctor
     console.log("Book again:", appointment);
+    toast.info("Chức năng đặt lại lịch hẹn sẽ được cập nhật sớm");
   };
 
   const getStatusBadge = (status: string) => {
@@ -192,7 +275,14 @@ export function PatientAppointments() {
 
           {/* Upcoming Appointments Tab */}
           <TabsContent value="upcoming" className="space-y-5">
-            {upcomingAppointments.length === 0 ? (
+            {isLoading ? (
+              <Card className="p-10 text-center border-[var(--border-soft)] bg-[var(--surface-bg)]">
+                <Loader2 className="w-8 h-8 text-[var(--accent-light)] animate-spin mx-auto mb-4" />
+                <p className="text-sm text-[var(--text-regular)] opacity-70">
+                  Đang tải lịch hẹn...
+                </p>
+              </Card>
+            ) : upcomingAppointments.length === 0 ? (
               <Card className="p-10 text-center border-[var(--border-soft)] bg-[var(--surface-bg)]">
                 <Calendar className="w-16 h-16 text-[var(--text-regular)] opacity-20 mx-auto mb-4" />
                 <h3 className="typo-h4 text-[var(--text-strong)] mb-2">
@@ -237,13 +327,15 @@ export function PatientAppointments() {
                               <p className="font-semibold text-[var(--text-strong)] text-sm">
                                 {appointment.doctor}
                               </p>
-                              <a
-                                href={`tel:${appointment.doctorPhone}`}
-                                className="text-[var(--accent-light)] text-xs hover:underline flex items-center gap-1 mt-1"
-                              >
-                                <Phone className="w-3 h-3" />
-                                {appointment.doctorPhone}
-                              </a>
+                              {appointment.doctorPhone && appointment.doctorPhone !== "N/A" && (
+                                <a
+                                  href={`tel:${appointment.doctorPhone}`}
+                                  className="text-[var(--accent-light)] text-xs hover:underline flex items-center gap-1 mt-1"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  {appointment.doctorPhone}
+                                </a>
+                              )}
                             </div>
                           </div>
 
@@ -294,15 +386,6 @@ export function PatientAppointments() {
                       {/* Right side - Actions */}
                       <div className="flex lg:flex-col gap-3 lg:w-40">
                         <button
-                          onClick={() =>
-                            handleRescheduleAppointment(appointment)
-                          }
-                          className="flex-1 lg:flex-none bg-[var(--surface-bg)] border-2 border-[var(--accent-light)] text-[var(--accent-light)] px-4 py-3 rounded-xl font-semibold text-sm hover:bg-[var(--accent-ghost)] transition-all flex items-center justify-center gap-2"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Đổi lịch
-                        </button>
-                        <button
                           onClick={() => handleCancelAppointment(appointment)}
                           className="flex-1 lg:flex-none bg-[var(--surface-bg)] border-2 border-red-500 text-red-500 px-4 py-3 rounded-xl font-semibold text-sm hover:bg-red-50 transition-all flex items-center justify-center gap-2"
                         >
@@ -319,7 +402,14 @@ export function PatientAppointments() {
 
           {/* Past Appointments Tab */}
           <TabsContent value="history" className="space-y-5">
-            {pastAppointments.length === 0 ? (
+            {isLoading ? (
+              <Card className="p-10 text-center border-[var(--border-soft)] bg-[var(--surface-bg)]">
+                <Loader2 className="w-8 h-8 text-[var(--accent-light)] animate-spin mx-auto mb-4" />
+                <p className="text-sm text-[var(--text-regular)] opacity-70">
+                  Đang tải lịch sử...
+                </p>
+              </Card>
+            ) : pastAppointments.length === 0 ? (
               <Card className="p-10 text-center border-[var(--border-soft)] bg-[var(--surface-bg)]">
                 <Clock className="w-16 h-16 text-[var(--text-regular)] opacity-20 mx-auto mb-4" />
                 <h3 className="typo-h4 text-[var(--text-strong)] mb-2">
@@ -362,39 +452,9 @@ export function PatientAppointments() {
                             {appointment.doctor}
                           </span>
                         </div>
-
-                        {appointment.diagnosis && (
-                          <div className="bg-[var(--accent-ghost)] border border-[var(--border-soft)] rounded-xl p-4">
-                            <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
-                              Kết quả khám:
-                            </p>
-                            <p className="text-sm text-[var(--text-regular)]">
-                              {appointment.diagnosis}
-                            </p>
-                            {appointment.nextVisit && (
-                              <p className="text-xs text-[var(--text-regular)] opacity-70 mt-2">
-                                Tái khám:{" "}
-                                <span className="font-semibold text-[var(--accent-light)]">
-                                  {appointment.nextVisit}
-                                </span>
-                              </p>
-                            )}
-                          </div>
-                        )}
                       </div>
 
-                      {/* Right side - Actions */}
-                      {appointment.status === "completed" && (
-                        <div className="flex lg:flex-col gap-3 lg:w-40">
-                          <button
-                            onClick={() => handleBookAgain(appointment)}
-                            className="flex-1 lg:flex-none bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent)] text-white px-4 py-3 rounded-xl font-semibold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                            Đặt lại
-                          </button>
-                        </div>
-                      )}
+
                     </div>
                   </Card>
                 ))}
@@ -403,83 +463,143 @@ export function PatientAppointments() {
           </TabsContent>
         </Tabs>
 
-        {/* Cancel Dialog */}
+        {/* Cancel Dialog - Cải thiện giao diện */}
         <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="font-semibold text-[var(--text-strong)]">
-                Xác nhận hủy lịch hẹn
-              </DialogTitle>
-              <DialogDescription>
-                Bạn có chắc chắn muốn hủy lịch hẹn này không?
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+            {/* Header với gradient background */}
+            <div className="bg-gradient-to-br from-red-50 via-red-50/80 to-orange-50 px-6 py-5 border-b border-red-100">
+              <div className="flex items-start gap-4">
+                {/* Icon cảnh báo với animation */}
+                <div className="flex-shrink-0 w-14 h-14 bg-red-100 rounded-full flex items-center justify-center animate-pulse">
+                  <AlertTriangle className="w-7 h-7 text-red-600" strokeWidth={2.5} />
+                </div>
+                <div className="flex-1">
+                  <DialogTitle className="text-xl font-bold text-[var(--text-strong)] mb-1.5">
+                    Xác nhận hủy lịch hẹn
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-[var(--text-regular)] opacity-80 leading-relaxed">
+                    Hành động này không thể hoàn tác. Bạn có chắc chắn muốn hủy lịch hẹn này không?
+                  </DialogDescription>
+                </div>
+              </div>
+            </div>
+
+            {/* Thông tin appointment với card đẹp hơn */}
             {selectedAppointment && (
-              <div className="bg-[var(--accent-ghost)] rounded-xl p-4 space-y-2">
-                <p className="font-semibold text-[var(--text-strong)] text-sm">
-                  {selectedAppointment.service}
-                </p>
-                <p className="text-sm text-[var(--text-regular)] opacity-70">
-                  {selectedAppointment.date} • {selectedAppointment.time}
-                </p>
-                <p className="text-sm text-[var(--text-regular)] opacity-70">
-                  Bác sĩ: {selectedAppointment.doctor}
-                </p>
+              <div className="px-6 py-5 bg-[var(--surface-bg)]">
+                <div className="bg-gradient-to-br from-[var(--accent-ghost)] to-white border-2 border-[var(--border-soft)] rounded-xl p-5 shadow-sm">
+                  {/* Service name với icon */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 bg-[var(--accent-light)]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CalendarX className="w-5 h-5 text-[var(--accent-light)]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-[var(--text-regular)] opacity-70 mb-1">
+                        Dịch vụ
+                      </p>
+                      <p className="font-bold text-base text-[var(--text-strong)] leading-tight">
+                        {selectedAppointment.service}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-[var(--border-soft)] my-4" />
+
+                  {/* Thông tin chi tiết */}
+                  <div className="space-y-3">
+                    {/* Date & Time */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-[var(--text-regular)] opacity-70 mb-0.5">
+                          Ngày & Giờ
+                        </p>
+                        <p className="font-semibold text-sm text-[var(--text-strong)]">
+                          {selectedAppointment.date}
+                        </p>
+                        <p className="text-sm text-[var(--text-regular)] opacity-80">
+                          {selectedAppointment.time} • {selectedAppointment.duration}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Doctor */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-[var(--text-regular)] opacity-70 mb-0.5">
+                          Bác sĩ
+                        </p>
+                        <p className="font-semibold text-sm text-[var(--text-strong)]">
+                          {selectedAppointment.doctor}
+                        </p>
+                        {selectedAppointment.doctorPhone && selectedAppointment.doctorPhone !== "N/A" && (
+                          <a
+                            href={`tel:${selectedAppointment.doctorPhone}`}
+                            className="text-xs text-[var(--accent-light)] hover:underline flex items-center gap-1 mt-1"
+                          >
+                            <Phone className="w-3 h-3" />
+                            {selectedAppointment.doctorPhone}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-[var(--text-regular)] opacity-70 mb-0.5">
+                          Địa điểm
+                        </p>
+                        <p className="font-semibold text-sm text-[var(--text-strong)]">
+                          {selectedAppointment.location}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
-            <DialogFooter className="flex gap-3">
+
+            {/* Footer với buttons */}
+            <DialogFooter className="px-6 py-4 bg-[var(--surface-bg)] border-t border-[var(--border-soft)] flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => setShowCancelDialog(false)}
-                className="flex-1 font-medium"
-              >
-                Đóng
-              </Button>
-              <Button
                 onClick={() => {
-                  // Handle cancel logic
                   setShowCancelDialog(false);
+                  setSelectedAppointment(null);
                 }}
-                className="flex-1 bg-red-500 hover:bg-red-600 font-semibold"
+                className="flex-1 font-medium border-2 hover:bg-[var(--accent-ghost)] transition-all"
+                disabled={isCancelling}
               >
-                Xác nhận hủy
+                <X className="w-4 h-4 mr-2" />
+                Hủy bỏ
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Reschedule Dialog */}
-        <Dialog
-          open={showRescheduleDialog}
-          onOpenChange={setShowRescheduleDialog}
-        >
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="font-semibold text-[var(--text-strong)]">
-                Đổi lịch hẹn
-              </DialogTitle>
-              <DialogDescription>
-                Chức năng đổi lịch sẽ được cập nhật sớm. Vui lòng liên hệ với
-                phòng khám để đổi lịch hẹn.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-              <p className="font-medium text-orange-600 text-sm mb-2">
-                Liên hệ:
-              </p>
-              <a
-                href="tel:+84583891780"
-                className="font-semibold text-[var(--accent-light)] text-base hover:underline"
-              >
-                +84 583891780
-              </a>
-            </div>
-            <DialogFooter>
               <Button
-                onClick={() => setShowRescheduleDialog(false)}
-                className="w-full bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent)] font-semibold"
+                onClick={handleConfirmCancel}
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+                disabled={isCancelling}
               >
-                Đóng
+                {isCancelling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 mr-2" />
+                    Xác nhận hủy
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
