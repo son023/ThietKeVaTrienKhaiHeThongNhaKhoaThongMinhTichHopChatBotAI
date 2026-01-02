@@ -31,6 +31,7 @@ import {labTestTypeController} from "../../controllers/LabTestTypeController";
 import {Badge} from "../ui/badge";
 import {LabTestDetailDialog} from "./LabTestDetailDialog";
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "../ui/dialog";
+import {ExaminationPrintDialog} from "./ExaminationPrintDialog";
 
 interface PatientExaminationProps {
   patientId: string | null;
@@ -91,7 +92,24 @@ export function PatientExamination({
   const [saving, setSaving] = useState(false);
   const [requestingLab, setRequestingLab] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savingDraft, setSavingDraft] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [printData, setPrintData] = useState<{
+    patient: PatientWithUser | null;
+    appointmentId: string | null;
+    symptoms: string;
+    conditions: Array<{
+      toothNumber?: number;
+      name: string;
+      status?: string;
+      treatment?: string;
+      surface?: string;
+    }>;
+    labTests: LabTestDTO[];
+    doctorName?: string;
+    visitDate?: string;
+  } | null>(null);
 
   const Info = ({ label, value }: { label: string; value?: string }) => (
       <div>
@@ -115,6 +133,110 @@ export function PatientExamination({
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  // LocalStorage utility functions
+  const getDraftStorageKey = () => {
+    if (!appointmentId) return null;
+    return `examination_draft_${appointmentId}`;
+  };
+
+  const saveDraftToLocalStorage = () => {
+    const key = getDraftStorageKey();
+    if (!key) return;
+
+    const draftData = {
+      internalNote,
+      symptoms,
+      conditions,
+      savedAt: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem(key, JSON.stringify(draftData));
+      setLastSavedTime(new Date());
+    } catch (err) {
+      console.warn("Lỗi khi lưu nháp vào localStorage:", err);
+    }
+  };
+
+  const loadDraftFromLocalStorage = () => {
+    const key = getDraftStorageKey();
+    if (!key) return;
+
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const draftData = JSON.parse(saved);
+        if (draftData.internalNote !== undefined) {
+          setInternalNote(draftData.internalNote || "");
+        }
+        if (draftData.symptoms !== undefined) {
+          setSymptoms(draftData.symptoms || "");
+        }
+        if (draftData.conditions !== undefined && Array.isArray(draftData.conditions)) {
+          setConditions(draftData.conditions);
+        }
+        if (draftData.savedAt) {
+          setLastSavedTime(new Date(draftData.savedAt));
+        }
+      }
+    } catch (err) {
+      console.warn("Lỗi khi đọc nháp từ localStorage:", err);
+    }
+  };
+
+  const clearDraftFromLocalStorage = () => {
+    const key = getDraftStorageKey();
+    if (!key) return;
+
+    try {
+      localStorage.removeItem(key);
+      setLastSavedTime(null);
+    } catch (err) {
+      console.warn("Lỗi khi xóa nháp từ localStorage:", err);
+    }
+  };
+
+  // Auto-save với debounce - sử dụng useRef để lưu giá trị mới nhất
+  const internalNoteRef = useRef(internalNote);
+  const symptomsRef = useRef(symptoms);
+  const conditionsRef = useRef(conditions);
+  
+  useEffect(() => {
+    internalNoteRef.current = internalNote;
+  }, [internalNote]);
+  
+  useEffect(() => {
+    symptomsRef.current = symptoms;
+  }, [symptoms]);
+  
+  useEffect(() => {
+    conditionsRef.current = conditions;
+  }, [conditions]);
+
+  const debouncedSaveDraft = () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      const key = getDraftStorageKey();
+      if (!key) return;
+
+      const draftData = {
+        internalNote: internalNoteRef.current,
+        symptoms: symptomsRef.current,
+        conditions: conditionsRef.current,
+        savedAt: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem(key, JSON.stringify(draftData));
+        setLastSavedTime(new Date());
+      } catch (err) {
+        console.warn("Lỗi khi lưu nháp vào localStorage:", err);
+      }
+    }, 1000); // Lưu sau 1 giây không nhập
   };
 
 
@@ -169,6 +291,54 @@ export function PatientExamination({
         setLabTestTypes(labTypesRes);
         setAttachments(attachmentRes);
         setLabTests(labTestsRes);
+
+        // Load medical history theo appointmentId nếu có
+        if (appointmentId) {
+          try {
+            // Load appointment để kiểm tra status
+            const appointment = await appointmentController.getById(appointmentId);
+            const appointmentStatus = appointment.status?.toUpperCase();
+            
+            // Nếu appointment đã hoàn thành (COMPLETED/COMPLETE), load từ server
+            if (appointmentStatus === "COMPLETED" || appointmentStatus === "COMPLETE") {
+              try {
+                const appointmentHistory = await medicalHistoryController.getByAppointmentId(appointmentId);
+                if (appointmentHistory && appointmentHistory.length > 0) {
+                  const currentHistory = appointmentHistory[0];
+                  // Load dữ liệu từ server
+                  if (currentHistory.symptoms !== undefined) {
+                    setSymptoms(currentHistory.symptoms || "");
+                  }
+                  if (currentHistory.conditions !== undefined && Array.isArray(currentHistory.conditions)) {
+                    // Map ConditionDTO sang format của state
+                    const mappedConditions = currentHistory.conditions
+                      .filter(c => c.name) // Chỉ lấy những condition có name
+                      .map(c => ({
+                        toothNumber: c.toothNumber,
+                        name: c.name || "",
+                        status: c.status,
+                        treatment: c.treatment,
+                        surface: c.surface,
+                      }));
+                    setConditions(mappedConditions);
+                  }
+                }
+              } catch (err) {
+                console.warn("Lỗi khi load medical history từ server:", err);
+              }
+            } else {
+              // Nếu appointment đang IN_PROGRESS, load từ localStorage (nháp)
+              loadDraftFromLocalStorage();
+            }
+          } catch (err) {
+            console.warn("Lỗi khi load appointment:", err);
+            // Nếu lỗi, load từ localStorage
+            loadDraftFromLocalStorage();
+          }
+        } else {
+          // Nếu không có appointmentId, load từ localStorage
+          loadDraftFromLocalStorage();
+        }
       } catch (err) {
         setError(
             err instanceof Error ? err.message : "Không tải được dữ liệu khám"
@@ -179,7 +349,33 @@ export function PatientExamination({
     };
 
     loadData();
-  }, [patientId]);
+  }, [patientId, appointmentId]);
+
+  // Auto-save khi thay đổi internalNote, symptoms, hoặc conditions
+  useEffect(() => {
+    if (!appointmentId || loading) return;
+    
+    // Chỉ auto-save nếu có thay đổi thực sự
+    if (internalNote || symptoms || conditions.length > 0) {
+      debouncedSaveDraft();
+    }
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internalNote, symptoms, conditions, appointmentId, loading]);
+
+  // Cleanup khi unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const filteredAttachments = useMemo(() => {
     if (!appointmentId) return attachments;
@@ -262,6 +458,8 @@ export function PatientExamination({
 
       toast.success("Đã lưu và hoàn tất khám");
 
+      // Xóa draft từ localStorage sau khi hoàn tất
+      clearDraftFromLocalStorage();
       setSymptoms("");
       setConditions([]);
       setInternalNote("");
@@ -274,31 +472,6 @@ export function PatientExamination({
     }
   };
 
-  const handleSaveDraft = async () => {
-    if (!patientId) {
-      toast.error("Thiếu mã bệnh nhân");
-      return;
-    }
-    if (!appointmentId) {
-      toast.error("Không tìm thấy lịch hẹn đang khám");
-      return;
-    }
-
-    setSavingDraft(true);
-    try {
-      await upsertMedicalHistoryByAppointment();
-
-      toast.success("Đã lưu nháp khám ");
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Không thể lưu nháp thông tin khám"
-      );
-    } finally {
-      setSavingDraft(false);
-    }
-  };
 
   const handleSendLabRequest = async () => {
     if (!patientId || !appointmentId) {
@@ -397,6 +570,73 @@ export function PatientExamination({
     }
   };
 
+  const handlePrintRecord = async (visitData?: any) => {
+    try {
+      let dataToPrint: typeof printData = null;
+
+      if (visitData) {
+        // In hồ sơ từ lịch sử khám
+        const appointmentId = visitData.appointmentId;
+        let doctorName = visitData.doctorName || "Chưa có thông tin bác sĩ";
+        
+        if (appointmentId && !visitData.doctorName) {
+          try {
+            const appointmentDTO = await appointmentController.getById(appointmentId);
+            const doctorDTO = await doctorController.getWithUserById(appointmentDTO.doctorId);
+            doctorName = doctorDTO.user?.fullName ?? "Chưa có thông tin bác sĩ";
+          } catch (err) {
+            console.warn("Lỗi load doctor:", err);
+          }
+        }
+
+        const visitLabTests = appointmentId 
+          ? labTests.filter((lt) => lt.appointmentId === appointmentId)
+          : [];
+
+        dataToPrint = {
+          patient,
+          appointmentId: visitData.appointmentId || null,
+          symptoms: visitData.symptoms || "",
+          conditions: visitData.conditions || [],
+          labTests: visitLabTests,
+          doctorName,
+          visitDate: visitData.createdAt || new Date().toISOString(),
+        };
+      } else {
+        // In hồ sơ hiện tại đang khám
+        const currentUser = authController.getCurrentUser();
+        let doctorName = currentUser?.fullName || "Chưa có thông tin bác sĩ";
+
+        if (appointmentId) {
+          try {
+            const appointmentDTO = await appointmentController.getById(appointmentId);
+            const doctorDTO = await doctorController.getWithUserById(appointmentDTO.doctorId);
+            doctorName = doctorDTO.user?.fullName ?? currentUser?.fullName ?? "Chưa có thông tin bác sĩ";
+          } catch (err) {
+            console.warn("Lỗi load doctor:", err);
+          }
+        }
+
+        dataToPrint = {
+          patient,
+          appointmentId,
+          symptoms,
+          conditions,
+          labTests: labTestsForAppointment,
+          doctorName,
+          visitDate: new Date().toISOString(),
+        };
+      }
+
+      setPrintData(dataToPrint);
+      setIsPrintDialogOpen(true);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Không thể tải dữ liệu để in"
+      );
+    }
+  };
+
 
 
 
@@ -446,6 +686,7 @@ export function PatientExamination({
                   variant="outline"
                   size="sm"
                   className="rounded-lg border-[#e8e8e8]"
+                  onClick={() => handlePrintRecord()}
               >
                 <Printer className="w-4 h-4 mr-2" />
                 In hồ sơ
@@ -615,15 +856,28 @@ export function PatientExamination({
                     <div className="space-y-4">
                       {/* Triệu chứng */}
                       <div>
-                        <Label className="text-[#01304e] mb-2 block">
-                          Triệu chứng
-                        </Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-[#01304e] block">
+                            Triệu chứng
+                          </Label>
+                          {lastSavedTime && (
+                            <span className="text-xs text-neutral-text/50">
+                              Đã lưu: {lastSavedTime.toLocaleTimeString("vi-VN", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })}
+                            </span>
+                          )}
+                        </div>
                         <Textarea
                             value={symptoms}
                             onChange={(e) => setSymptoms(e.target.value)}
                             placeholder="Nhập triệu chứng của bệnh nhân..."
                             className="rounded-[10px] h-[100px]"
                         />
+                        <p className="text-xs text-neutral-text/50 mt-1">
+                          Tự động lưu nháp sau 1 giây không nhập
+                        </p>
                       </div>
 
                       {/* Chuẩn đoán lâm sàng */}
@@ -823,9 +1077,19 @@ export function PatientExamination({
             <div className="lg:sticky top-4 space-y-4">
               <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="typo-h4 flex items-center gap-2">
-                    Ghi chú nội bộ
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="typo-h4 flex items-center gap-2">
+                      Ghi chú nội bộ
+                    </CardTitle>
+                    {lastSavedTime && (
+                      <span className="text-xs text-neutral-text/50">
+                        Đã lưu: {lastSavedTime.toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4">
                   <Textarea
@@ -834,6 +1098,9 @@ export function PatientExamination({
                       placeholder="Ghi chú cho phụ tá..."
                       className="min-h-[100px] text-sm"
                   />
+                  <p className="text-xs text-neutral-text/50 mt-2">
+                    Tự động lưu nháp sau 1 giây không nhập
+                  </p>
                 </CardContent>
               </Card>
 
@@ -864,18 +1131,9 @@ export function PatientExamination({
                     </Button>
                   )}
                   <Button
-                      variant="outline"
-                      className="w-full rounded-lg border-[#e8e8e8]"
-                      onClick={handleSaveDraft}
-                      disabled={saving || savingDraft}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {savingDraft ? "Đang lưu nháp..." : "Lưu nháp"}
-                  </Button>
-                  <Button
                       className="w-full bg-primary hover:bg-primary/90 rounded-lg"
                       onClick={handleSaveComplete}
-                      disabled={saving || savingDraft}
+                      disabled={saving}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
@@ -1095,8 +1353,9 @@ export function PatientExamination({
                     </Button>
                     <Button
                         className="bg-primary hover:bg-primary/90 rounded-lg"
-                        onClick={() => console.log("In hồ sơ khám")}
+                        onClick={() => handlePrintRecord(selectedVisit)}
                     >
+                      <Printer className="w-4 h-4 mr-2" />
                       In hồ sơ
                     </Button>
                   </div>
@@ -1105,6 +1364,12 @@ export function PatientExamination({
             )}
           </DialogContent>
         </Dialog>
+
+        <ExaminationPrintDialog
+          open={isPrintDialogOpen}
+          onOpenChange={setIsPrintDialogOpen}
+          printData={printData}
+        />
 
       </div>
   );
