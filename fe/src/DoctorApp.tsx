@@ -133,19 +133,19 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       setSelectedPatientId(patientId);
     }
     return (
-      <PatientExamination
-        patientId={patientId}
-        appointmentId={selectedAppointmentId}
-        onBack={() => navigate('/doctor/patients')}
-        onNavigateToAppointments={() => navigate('/doctor/appointments')}
-        onNavigateToTreatmentPlan={(planId) => {
-          setSelectedTreatmentPlanId(planId);
-          navigate(`/doctor/treatment-plans/${planId}`);
-        }}
-        onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
-          goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
-        }
-      />
+        <PatientExamination
+            patientId={patientId}
+            appointmentId={selectedAppointmentId}
+            onBack={() => navigate('/doctor/patients')}
+            onNavigateToAppointments={() => navigate('/doctor/appointments')}
+            onNavigateToTreatmentPlan={(planId) => {
+              setSelectedTreatmentPlanId(planId);
+              navigate(`/doctor/treatment-plans/${planId}`);
+            }}
+            onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
+                goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
+            }
+        />
     );
   }
 
@@ -159,98 +159,98 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       setSelectedTreatmentPlanId(planId);
     }
     return (
-      <TreatmentPlanDetail
-        planId={planId}
-        onBack={() => navigate('/doctor/treatment-plans')}
-      />
+        <TreatmentPlanDetail
+            planId={planId}
+            onBack={() => navigate('/doctor/treatment-plans')}
+        />
     );
   }
 
 
   return (
-    <div className="flex h-screen">
-      <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DoctorHeader
-          onLogout={onLogout}
-          onGoHome={onGoHome}
-          doctor={doctor || undefined}
-          isLoading={isLoadingDoctor}
-        />
-        <main className="flex-1 overflow-y-auto">
-          <Routes>
-            <Route
-              path="/doctor"
-              element={
-                <Dashboard
-                  doctorId={doctorId}
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/appointments"
-              element={
-                <MyAppointments
-                  doctorId={doctorId}
-                  onNavigateToPatient={(patientId, appointmentId) => {
-                    setSelectedPatientId(patientId);
-                    setSelectedAppointmentId(appointmentId || null);
-                    navigate(`/doctor/patients/${patientId}/examination`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/patients"
-              element={
-                <MyPatients
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
-                  }}
-                  onNavigateToAppointments={() => navigate('/doctor/appointments')}
-                />
-              }
-            />
-            <Route
-              path="/doctor/patients/:patientId/examination"
-              element={<PatientExaminationRoute />}
-            />
-            <Route
-              path="/doctor/create-prescription"
-              element={
-                <PrescriptionManagement
-                  onBack={() => navigate('/doctor')}
-                />
-              }
-            />
-            <Route
-              path="/doctor/treatment-plans"
-              element={
-                <TreatmentPlans
-                  onNavigateToPlan={(id) => {
-                    setSelectedTreatmentPlanId(id);
-                    navigate(`/doctor/treatment-plans/${id}`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/treatment-plans/:planId"
-              element={<TreatmentPlanDetailRoute />}
-            />
-            <Route path="/doctor/performance" element={<PersonalPerformance />} />
-            <Route path="/doctor/account" element={<AccountSettings />} />
+      <div className="flex h-screen">
+        <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <DoctorHeader
+              onLogout={onLogout}
+              onGoHome={onGoHome}
+              doctor={doctor || undefined}
+              isLoading={isLoadingDoctor}
+          />
+          <main className="flex-1 overflow-y-auto">
+            <Routes>
+              <Route
+                  path="/doctor"
+                  element={
+                    <Dashboard
+                        doctorId={doctorId}
+                        onNavigateToPatient={(id) => {
+                          setSelectedPatientId(id);
+                          navigate(`/doctor/patients/${id}/examination`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/appointments"
+                  element={
+                    <MyAppointments
+                        doctorId={doctorId}
+                        onNavigateToPatient={(patientId, appointmentId) => {
+                          setSelectedPatientId(patientId);
+                          setSelectedAppointmentId(appointmentId || null);
+                          navigate(`/doctor/patients/${patientId}/examination`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/patients"
+                  element={
+                    <MyPatients
+                        onNavigateToPatient={(id) => {
+                          setSelectedPatientId(id);
+                          navigate(`/doctor/patients/${id}/examination`);
+                        }}
+                        onNavigateToAppointments={() => navigate('/doctor/appointments')}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/patients/:patientId/examination"
+                  element={<PatientExaminationRoute />}
+              />
+              <Route
+                  path="/doctor/create-prescription"
+                  element={
+                    <PrescriptionManagement
+                        onBack={() => navigate('/doctor')}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/treatment-plans"
+                  element={
+                    <TreatmentPlans
+                        onNavigateToPlan={(id) => {
+                          setSelectedTreatmentPlanId(id);
+                          navigate(`/doctor/treatment-plans/${id}`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/treatment-plans/:planId"
+                  element={<TreatmentPlanDetailRoute />}
+              />
+              <Route path="/doctor/performance" element={<PersonalPerformance />} />
+              <Route path="/doctor/account" element={<AccountSettings />} />
 
-            {/* fallback trong DoctorApp */}
-            <Route path="*" element={<Navigate to="/doctor" replace />} />
-          </Routes>
-        </main>
+              {/* fallback trong DoctorApp */}
+              <Route path="*" element={<Navigate to="/doctor" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
   );
 }
