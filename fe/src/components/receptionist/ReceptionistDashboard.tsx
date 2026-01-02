@@ -26,6 +26,18 @@ interface Appointment {
   service?: string;
 }
 
+type DisplayPatient = {
+  id: string;
+  code: string;
+  name: string;
+  phone: string;
+  email: string;
+  birthDate: string;
+  address: string;
+  notes: string;
+  lastVisit: string;
+};
+
 interface ReceptionistDashboardProps {
   onCreateInvoice?: (appointmentId: string) => void;
   refreshToken?: number;
@@ -152,34 +164,6 @@ export function ReceptionistDashboard({
 
   return (
     <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
-      {/* Notifications */}
-      <div className="space-y-3">
-        <Card className="p-4 border-primary-light bg-neutral-muted hover:shadow-md transition-all duration-200">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-primary-strong mt-0.5 animate-pulse" />
-            <div>
-              <p className="text-sm text-neutral-text">
-                <strong className="font-semibold">
-                  Bệnh nhân Nguyễn Văn A
-                </strong>{" "}
-                đã đặt lịch online lúc 08:45
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4 border-accent-orange bg-accent-orange/10 hover:shadow-md transition-all duration-200">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-accent-orange mt-0.5 animate-pulse" />
-            <div>
-              <p className="text-sm text-neutral-text">
-                <strong className="font-semibold">Bệnh nhân Lê Văn C</strong>{" "}
-                trễ hẹn 10 phút (10:00 AM)
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-neutral-text tracking-tight">

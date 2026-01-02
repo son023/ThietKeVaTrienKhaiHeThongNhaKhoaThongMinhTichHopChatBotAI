@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, User, CheckCircle, AlertCircle, FileCheck, Calendar, X, FileText, Image as ImageIcon, Phone } from 'lucide-react';
+import { Clock, User, AlertCircle, FileCheck, Calendar, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { toast } from 'sonner';
 import {
   appointmentController,
   AppointmentDTO,
 } from '../../controllers/AppointmentController';
-import {
-  patientController,
-  PatientWithUser,
-} from '../../controllers/PatientController';
+import { patientController } from '../../controllers/PatientController';
+import { PatientWithUser } from '../../models';
 
 interface DashboardProps {
   onNavigateToPatient: (id: string) => void;
@@ -25,8 +20,6 @@ type AppointmentWithPatient = AppointmentDTO & {
 };
 
 export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
   const [patientMap, setPatientMap] = useState<Record<string, PatientWithUser>>(
     {}
@@ -160,126 +153,41 @@ export function Dashboard({ onNavigateToPatient, doctorId }: DashboardProps) {
       );
   }, [appointments, patientMap]);
 
-
-  const pendingRecords = [
-    { id: '1', patientName: 'Nguyễn Văn An', type: 'Chưa hoàn tất ghi chú', date: '25/10/2025' },
-    { id: '2', patientName: 'Hoàng Thị E', type: 'Chưa hoàn tất ghi chú', date: '24/10/2025' },
-  ];
-
-  const quickTasks = [
-    { 
-      id: '1', 
-      title: 'Ký duyệt kết quả X-quang', 
-      count: 3, 
-      urgent: true,
-      type: 'xray',
-      items: [
-        { patientId: 'BN001', patientName: 'Nguyễn Văn An', date: '28/10/2025', description: 'X-quang toàn cảnh hàm' },
-        { patientId: 'BN005', patientName: 'Trần Văn Nam', date: '28/10/2025', description: 'X-quang răng số 6' },
-        { patientId: 'BN012', patientName: 'Lê Thị Hoa', date: '27/10/2025', description: 'X-quang cắn cánh' },
-      ]
-    },
-    { 
-      id: '2', 
-      title: 'Xác nhận kế hoạch điều trị', 
-      count: 2, 
-      urgent: false,
-      type: 'treatment',
-      items: [
-        { patientId: 'BN002', patientName: 'Trần Thị Bình', date: '28/10/2025', description: 'Kế hoạch niềng răng' },
-        { patientId: 'BN008', patientName: 'Phạm Văn Dũng', date: '27/10/2025', description: 'Kế hoạch cấy ghép Implant' },
-      ]
-    },
-    { 
-      id: '3', 
-      title: 'Cập nhật sơ đồ răng', 
-      count: 1, 
-      urgent: false,
-      type: 'dental-chart',
-      items: [
-        { patientId: 'BN004', patientName: 'Phạm Thị Dung', date: '28/10/2025', description: 'Cập nhật sau điều trị' },
-      ]
-    },
-  ];
-const handleOpenTaskDialog = (task: any) => {
-    setSelectedTask(task);
-    setShowTaskDialog(true);
-  };
-
-  const handleCloseTaskDialog = () => {
-    setShowTaskDialog(false);
-    setSelectedTask(null);
-  };
-
-  const handleApproveItem = (itemIndex: number) => {
-    if (!selectedTask) return;
-    
-    toast.success(`Đã duyệt: ${selectedTask.items[itemIndex].patientName}`);
-    
-    // Update task count
-    const updatedItems = [...selectedTask.items];
-    updatedItems.splice(itemIndex, 1);
-    
-    if (updatedItems.length === 0) {
-      handleCloseTaskDialog();
-      toast.success('Đã hoàn thành tất cả công việc!');
-    } else {
-      setSelectedTask({
-        ...selectedTask,
-        items: updatedItems,
-        count: updatedItems.length,
-      });
-    }
-  };
-
-  const handleRejectItem = (itemIndex: number) => {
-    if (!selectedTask) return;
-    
-    toast.error(`Đã từ chối: ${selectedTask.items[itemIndex].patientName}`);
-    
-    // Update task count
-    const updatedItems = [...selectedTask.items];
-    updatedItems.splice(itemIndex, 1);
-    
-    if (updatedItems.length === 0) {
-      handleCloseTaskDialog();
-    } else {
-      setSelectedTask({
-        ...selectedTask,
-        items: updatedItems,
-        count: updatedItems.length,
-      });
-    }
-  };
-
-  const handleViewPatient = (patientId: string) => {
-    handleCloseTaskDialog();
-    onNavigateToPatient(patientId);
-  };
-
-  const getTaskIcon = (type: string) => {
-    switch (type) {
-      case 'xray':
-        return <ImageIcon className="w-5 h-5 text-[#3FB5FF]" />;
-      case 'treatment':
-        return <FileText className="w-5 h-5 text-[#3FB5FF]" />;
-      case 'dental-chart':
-        return <CheckCircle className="w-5 h-5 text-[#3FB5FF]" />;
-      default:
-        return <FileCheck className="w-5 h-5 text-[#3FB5FF]" />;
-    }
-  };
+  const pendingRecords: AppointmentWithPatient[] = useMemo(() => {
+    return appointments
+      .filter((apt) => {
+        const status = apt.status?.toLowerCase();
+        return status === 'in_progress' || status === 'IN_PROGRESS';
+      })
+      .map((apt) => {
+        const patient = apt.patientId ? patientMap[apt.patientId] : undefined;
+        const start = new Date(apt.appointmentStartTime);
+        const dateLabel = isNaN(start.getTime())
+          ? 'N/A'
+          : start.toLocaleDateString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            });
+        return { ...apt, patient, timeLabel: dateLabel };
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.appointmentStartTime).getTime() -
+          new Date(a.appointmentStartTime).getTime()
+      );
+  }, [appointments, patientMap]);
 
   return (
-    <div className="p-6 space-y-6 bg-[var(--page-bg)]">
+    <div className="p-6 space-y-6 bg-[var(--page-bg)] min-h-screen flex flex-col">
       <div className="mb-8">
         <h1 className="typo-h2 mb-2">Bảng điều khiển</h1>
         <p className="text-neutral-text/60">Tổng quan công việc trong ngày của bạn</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
         {/* Main: Today's Appointments */}
-        <Card className="lg:col-span-2 rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
+        <Card className="lg:col-span-2 rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 typo-h4">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -288,7 +196,7 @@ const handleOpenTaskDialog = (task: any) => {
               Lịch hẹn hôm nay
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {loadingAppointments ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
@@ -351,201 +259,69 @@ const handleOpenTaskDialog = (task: any) => {
           </CardContent>
         </Card>
 
-        {/* Quick Tasks */}
-        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
+        {/* Pending Records */}
+        <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 typo-h4">
               <div className="p-2 rounded-lg bg-primary/10">
-                <CheckCircle className="w-5 h-5 text-primary" />
+                <FileCheck className="w-5 h-5 text-primary" />
               </div>
-              Việc cần làm nhanh
+              Hồ sơ chờ xử lý
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {quickTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`p-4 rounded-xl border transition-all ${
-                    task.urgent
-                      ? 'border-accent-orange/30 bg-accent-orange/5 hover:bg-accent-orange/10'
-                      : 'border-neutral-border/30 bg-neutral-surface hover:border-primary/30 hover:shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <p className="font-semibold text-neutral-text">{task.title}</p>
-                      <p className="text-sm text-neutral-text/60 mt-1">{task.count} mục</p>
-                    </div>
-                    {task.urgent && (
-                      <AlertCircle className="w-5 h-5 text-accent-orange flex-shrink-0" />
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    className="w-full bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all"
-                    onClick={() => handleOpenTaskDialog(task)}
-                  >
-                    Xử lý
-                  </Button>
+          <CardContent className="flex-1">
+            {loadingAppointments ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-neutral-text/60">Đang tải hồ sơ...</p>
+              </div>
+            ) : pendingRecords.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-neutral-muted flex items-center justify-center mb-4">
+                  <FileCheck className="w-8 h-8 text-neutral-text/40" />
                 </div>
-              ))}
-            </div>
+                <p className="text-neutral-text/60">Không có hồ sơ chờ xử lý</p>
+              </div>
+            ) : (
+              <div className="space-y-3 h-full">
+                {pendingRecords.map((appointment) => {
+                  const patientName =
+                    appointment.patient?.user?.fullName || 'Bệnh nhân';
+                  const dateLabel = appointment.timeLabel;
+
+                  return (
+                    <div
+                      key={appointment.id}
+                      className="group p-4 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
+                      onClick={() =>
+                        appointment.patientId &&
+                        onNavigateToPatient(appointment.patientId)
+                      }
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
+                          <User className="w-5 h-5 text-neutral-text/60 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-neutral-text group-hover:text-primary transition-colors">
+                            {patientName}
+                          </p>
+                          <p className="text-sm text-neutral-text/60 mt-0.5">
+                            Chưa hoàn tất khám
+                          </p>
+                        </div>
+                        <span className="text-sm font-medium text-neutral-text/60">
+                          {dateLabel}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Pending Records */}
-      <Card className="rounded-2xl border border-neutral-border/20 bg-neutral-surface shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 typo-h4">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <FileCheck className="w-5 h-5 text-primary" />
-            </div>
-            Hồ sơ chờ xử lý
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pendingRecords.map((record) => (
-              <div
-                key={record.id}
-                className="group p-4 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
-                onClick={() => onNavigateToPatient(record.id)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
-                    <User className="w-5 h-5 text-neutral-text/60 group-hover:text-primary transition-colors" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-neutral-text group-hover:text-primary transition-colors">{record.patientName}</p>
-                    <p className="text-sm text-neutral-text/60 mt-0.5">{record.type}</p>
-                  </div>
-                  <span className="text-sm font-medium text-neutral-text/60">{record.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Task Dialog */}
-      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border-neutral-border/20">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 typo-h3">
-              {selectedTask && getTaskIcon(selectedTask.type)}
-              {selectedTask?.title}
-            </DialogTitle>
-            <DialogDescription className="text-neutral-text/60 mt-2">
-              Có {selectedTask?.count} mục cần xử lý
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 mt-4">
-            {selectedTask?.items.map((item: any, index: number) => (
-              <div
-                key={index}
-                className="p-5 bg-neutral-surface border border-neutral-border/30 rounded-xl hover:border-primary/50 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-1.5 rounded-lg bg-neutral-muted">
-                        <User className="w-4 h-4 text-neutral-text/60" />
-                      </div>
-                      <p className="font-semibold text-neutral-text">
-                        {item.patientName}
-                      </p>
-                      <span className="text-sm text-neutral-text/60">({item.patientId})</span>
-                    </div>
-                    <p className="text-sm text-neutral-text mb-2 ml-9">
-                      {item.description}
-                    </p>
-                    <p className="text-xs text-neutral-text/60 ml-9">
-                      Ngày: {item.date}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 min-w-[120px] border-primary/50 text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
-                    onClick={() => handleViewPatient(item.patientId)}
-                  >
-                    Xem chi tiết
-                  </Button>
-
-                  {selectedTask.type === 'xray' && (
-                    <>
-                      <Button
-                        size="sm"
-                        className="flex-1 min-w-[120px] bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm hover:shadow transition-all"
-                        onClick={() => handleApproveItem(index)}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Duyệt
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all"
-                        onClick={() => handleRejectItem(index)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
-
-                  {selectedTask.type === 'treatment' && (
-                    <>
-                      <Button
-                        size="sm"
-                        className="flex-1 min-w-[120px] bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm hover:shadow transition-all"
-                        onClick={() => handleApproveItem(index)}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Xác nhận
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 min-w-[140px] border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-white rounded-lg transition-all"
-                        onClick={() => handleRejectItem(index)}
-                      >
-                        Yêu cầu chỉnh sửa
-                      </Button>
-                    </>
-                  )}
-
-                  {selectedTask.type === 'dental-chart' && (
-                    <Button
-                      size="sm"
-                      className="flex-1 min-w-[140px] bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all"
-                      onClick={() => handleApproveItem(index)}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Cập nhật xong
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <DialogFooter className="mt-6">
-            <Button
-              variant="outline"
-              onClick={handleCloseTaskDialog}
-              className="rounded-lg border-neutral-border/50 hover:bg-neutral-muted transition-all"
-            >
-              Đóng
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -15,6 +15,8 @@ import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecord
 import { PatientPayment } from "./components/patient/PatientPayment";
 import { PatientProfile } from "./components/patient/PatientProfile";
 import PatientChatbot from "./components/patient/PatientChatbot";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { authController } from "./controllers/AuthController";
 
 interface PatientAppProps {
   onLogout: () => void;
@@ -78,45 +80,50 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
     openBtn?.click();
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-[#fcfeff]">
-      {/* Fixed DoctorHeader */}
-      <NewPatientHeader
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onOpenChatbot={handleOpenChatbotFromHeader}
-        onLogout={onLogout}
-      />
+  const currentUser = authController.getCurrentUser();
+  const userId = currentUser?.id;
 
-      {/* ✅ Self-contained Floating Chat Widget */}
-      <PatientChatbot onNavigate={handleNavigate} />
-      {/* Main Content */}
-      <main className="flex-1 w-full mt-24">
-        <Routes>
-          <Route
-            path="/patient"
-            element={<PatientHome onNavigate={handleNavigate} />}
-          />
-          <Route
-            path="/patient/dashboard"
-            element={<PatientDashboard onNavigate={handleNavigate} />}
-          />
-          <Route
-            path="/patient/appointments"
-            element={<PatientAppointments />}
-          />
-          <Route path="/patient/payment" element={<PatientPayment />} />
-          <Route
-            path="/patient/medical-records"
-            element={<PatientMedicalRecords />}
-          />
-          <Route path="/patient/profile" element={<PatientProfile />} />
-          {/* fallback trong PatientApp */}
-          <Route path="*" element={<Navigate to="/patient" replace />} />
-        </Routes>
-      </main>
-      {/* Footer */}
-      <PatientFooter />
-    </div>
+  return (
+    <NotificationProvider userId={userId}>
+      <div className="flex flex-col min-h-screen bg-[#fcfeff]">
+        {/* Fixed DoctorHeader */}
+        <NewPatientHeader
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          onOpenChatbot={handleOpenChatbotFromHeader}
+          onLogout={onLogout}
+        />
+
+        {/* ✅ Self-contained Floating Chat Widget */}
+        <PatientChatbot onNavigate={handleNavigate} />
+        {/* Main Content */}
+        <main className="flex-1 w-full mt-24">
+          <Routes>
+            <Route
+              path="/patient"
+              element={<PatientHome onNavigate={handleNavigate} />}
+            />
+            <Route
+              path="/patient/dashboard"
+              element={<PatientDashboard onNavigate={handleNavigate} />}
+            />
+            <Route
+              path="/patient/appointments"
+              element={<PatientAppointments />}
+            />
+            <Route path="/patient/payment" element={<PatientPayment />} />
+            <Route
+              path="/patient/medical-records"
+              element={<PatientMedicalRecords />}
+            />
+            <Route path="/patient/profile" element={<PatientProfile />} />
+            {/* fallback trong PatientApp */}
+            <Route path="*" element={<Navigate to="/patient" replace />} />
+          </Routes>
+        </main>
+        {/* Footer */}
+        <PatientFooter />
+      </div>
+    </NotificationProvider>
   );
 }

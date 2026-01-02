@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Search, Phone, Mail, Calendar, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Search, Phone, Mail, Calendar, User, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -10,9 +10,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import { appointmentController } from '../../controllers/AppointmentController';
-import { patientController, PatientWithUser } from '../../controllers/PatientController';
+} from "../ui/table";
+import { appointmentController } from "../../controllers/AppointmentController";
+import {
+  patientController,
+  PatientWithUser,
+} from "../../controllers/PatientController";
 
 interface ReceptionistPatientsProps {
   onPatientSelect: (patientId: string) => void;
@@ -30,10 +33,14 @@ type DisplayPatient = {
   lastVisit: string;
 };
 
-export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export function ReceptionistPatients({
+  onPatientSelect,
+}: ReceptionistPatientsProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<PatientWithUser[]>([]);
-  const [patientAppointments, setPatientAppointments] = useState<Record<string, string>>({});
+  const [patientAppointments, setPatientAppointments] = useState<
+    Record<string, string>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +64,8 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
         };
 
         const todayAppointments = appointments.filter(
-          (apt) => apt.appointmentStartTime && isSameDay(apt.appointmentStartTime)
+          (apt) =>
+            apt.appointmentStartTime && isSameDay(apt.appointmentStartTime)
         );
 
         const patientIds = Array.from(
@@ -157,19 +165,29 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
 
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Tổng số bệnh nhân hôm nay</p>
-          <p className="text-3xl font-bold text-neutral-text">{patients.length}</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
+            Tổng số bệnh nhân hôm nay
+          </p>
+          <p className="text-3xl font-bold text-neutral-text">
+            {patients.length}
+          </p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Bệnh nhân mới (tháng này)</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
+            Bệnh nhân mới (tháng này)
+          </p>
           <p className="text-3xl font-bold text-green-600">-</p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Cả lịch hẹn hôm nay</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
+            Cả lịch hẹn hôm nay
+          </p>
           <p className="text-3xl font-bold text-primary">{patients.length}</p>
         </Card>
         <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">Cần liên hệ lại</p>
+          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
+            Cần liên hệ lại
+          </p>
           <p className="text-3xl font-bold text-accent-orange">-</p>
         </Card>
       </div>
@@ -178,14 +196,30 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
         <Table>
           <TableHeader>
             <TableRow className="bg-neutral-muted/30 hover:bg-neutral-muted/40">
-              <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Ngày sinh</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Giờ hẹn hôm nay</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
-              <TableHead className="font-semibold text-neutral-heading">Thao tác</TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Mã BN
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Họ tên
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Số điện thoại
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Email
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Ngày sinh
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Giờ hẹn hôm nay
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Ghi chú
+              </TableHead>
+              <TableHead className="font-semibold text-neutral-heading">
+                Thao tác
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -194,7 +228,9 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    <p className="text-neutral-text/70 font-medium">Đang tải danh sách bệnh nhân hôm nay...</p>
+                    <p className="text-neutral-text/70 font-medium">
+                      Đang tải danh sách bệnh nhân hôm nay...
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -211,41 +247,53 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                     <div className="w-16 h-16 bg-neutral-muted rounded-full flex items-center justify-center">
                       <User className="w-8 h-8 text-neutral-text/40" />
                     </div>
-                    <p className="text-neutral-text/60 font-medium">Không tìm thấy bệnh nhân nào có lịch hôm nay</p>
+                    <p className="text-neutral-text/60 font-medium">
+                      Không tìm thấy bệnh nhân nào có lịch hôm nay
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredPatients.map((patient) => (
-                <TableRow key={patient.id} className="cursor-pointer hover:bg-neutral-muted/30 transition-colors border-b border-neutral-border">
-                  <TableCell className="font-mono text-xs text-neutral-text/70">{patient.code}</TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() => onPatientSelect(patient.id)}
-                      className="text-primary hover:text-primary-strong hover:underline text-left font-medium transition-colors"
-                    >
+                <TableRow
+                  key={patient.id}
+                  className="cursor-pointer hover:bg-neutral-muted/30 transition-colors border-b border-neutral-border"
+                >
+                  <TableCell className="font-mono text-xs text-neutral-text/70">
+                    {patient.code}
+                  </TableCell>
+                  <TableCell className="text-xs text-neutral-text/70 max-w-[200px] truncate">
+                    <span className="text-sm text-neutral-text">
                       {patient.name}
-                    </button>
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
-                      <span className="text-sm text-neutral-text">{patient.phone || '-'}</span>
+                      <span className="text-sm text-neutral-text">
+                        {patient.phone || "-"}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                      <span className="text-sm text-neutral-text">{patient.email || '-'}</span>
+                      <span className="text-sm text-neutral-text">
+                        {patient.email || "-"}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-neutral-subtle" />
-                      <span className="text-sm text-neutral-text">{patient.birthDate}</span>
+                      <span className="text-sm text-neutral-text">
+                        {patient.birthDate}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-neutral-text">{patient.lastVisit}</TableCell>
+                  <TableCell className="text-sm text-neutral-text">
+                    {patient.lastVisit}
+                  </TableCell>
                   <TableCell>
                     {patient.notes && (
                       <div
@@ -257,7 +305,12 @@ export function ReceptionistPatients({ onPatientSelect }: ReceptionistPatientsPr
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all" onClick={() => onPatientSelect(patient.id)}>
+                    <Button
+                      size="sm"
+                      className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200"
+                      onClick={() => onPatientSelect(patient.id)}
+                    >
+                      <Eye className="w-4 h-4" />
                       Xem
                     </Button>
                   </TableCell>

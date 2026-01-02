@@ -3,6 +3,8 @@ import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 're
 import { authController, doctorController } from './controllers';
 import type { DoctorWithUser } from './controllers/DoctorController';
 import { PrescriptionManagement } from './components/doctor/PrescriptionManagement';
+import { CreatePrescriptionEnhanced } from './components/doctor/CreatePrescription';
+import { ViewPrescription } from './components/doctor/ViewPrescription';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -34,6 +36,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   // thêm bên cạnh các state khác
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
   const [selectedMedicalHistoryId, setSelectedMedicalHistoryId] = useState<string | null>(null);
+  const [selectedDispenseOrderId, setSelectedDispenseOrderId] = useState<string | null>(null);
 
 
 
@@ -109,6 +112,10 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         navigate('/doctor/patients');
         break;
       case 'create-prescription':
+        setSelectedAppointmentId(null);
+        setSelectedMedicalHistoryId(null);
+        setSelectedPatientId(null);
+        setSelectedDispenseOrderId(null);
         navigate('/doctor/create-prescription');
         break;
       case 'performance':
@@ -162,6 +169,61 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       <TreatmentPlanDetail
         planId={planId}
         onBack={() => navigate('/doctor/treatment-plans')}
+      />
+    );
+  }
+
+  function CreatePrescriptionRoute() {
+    if (selectedDispenseOrderId) {
+      return (
+        <ViewPrescription
+          dispenseOrderId={selectedDispenseOrderId}
+          onBack={() => {
+            setSelectedDispenseOrderId(null);
+            if (selectedPatientId) {
+              navigate(`/doctor/patients/${selectedPatientId}/examination`);
+            } else {
+              navigate('/doctor/create-prescription');
+            }
+          }}
+        />
+      );
+    }
+
+    const hasAllInfo = selectedAppointmentId && selectedPatientId && selectedMedicalHistoryId;
+
+    if (hasAllInfo) {
+      return (
+        <CreatePrescriptionEnhanced
+          appointmentId={selectedAppointmentId}
+          medicalHistoryId={selectedMedicalHistoryId}
+          patientId={selectedPatientId}
+          onCreated={(prescriptionId) => {
+            setSelectedAppointmentId(null);
+            setSelectedMedicalHistoryId(null);
+            setSelectedPatientId(null);
+            navigate('/doctor');
+          }}
+          onViewPrescription={(dispenseOrderId) => {
+            setSelectedDispenseOrderId(dispenseOrderId);
+          }}
+          onBack={() => {
+            setSelectedMedicalHistoryId(null);
+            if (selectedPatientId) {
+              navigate(`/doctor/patients/${selectedPatientId}/examination`);
+            } else {
+              setSelectedAppointmentId(null);
+              setSelectedPatientId(null);
+              navigate('/doctor');
+            }
+          }}
+        />
+      );
+    }
+
+    return (
+      <PrescriptionManagement
+        onBack={() => navigate('/doctor')}
       />
     );
   }
@@ -222,11 +284,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
             />
             <Route
               path="/doctor/create-prescription"
-              element={
-                <PrescriptionManagement
-                  onBack={() => navigate('/doctor')}
-                />
-              }
+              element={<CreatePrescriptionRoute />}
             />
             <Route
               path="/doctor/treatment-plans"

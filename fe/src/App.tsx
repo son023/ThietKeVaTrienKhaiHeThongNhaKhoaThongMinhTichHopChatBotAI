@@ -585,7 +585,7 @@ export default function App() {
   return (
     <>
       <PublicApp onLogin={handleLogin} />
-      {/* <PharmacistApp onLogout={handleLogout} onGoHome={handleGoHome} /> */}
+      {/* <AdminApp onLogout={handleLogout} onGoHome={handleGoHome} /> */}
       <Toaster position="top-center" />
     </>
   );
