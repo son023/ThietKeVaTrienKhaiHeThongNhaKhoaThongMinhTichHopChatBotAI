@@ -66,7 +66,9 @@ export interface StockLedgerDTO {
   quantity: number;
   referenceType: string;
   referenceId: string;
-  createAt: string;
+  inventoryLotId?: string;
+  pharmacistId?: string;
+  createAt?: string | null;
 }
 
 export interface ManualExportRequest {
@@ -94,6 +96,13 @@ export interface ManualExportResponse {
 }
 
 export interface CreateMedicineRequest {
+  name: string;
+  unit?: string;
+  description?: string;
+  salePrice?: number;
+}
+
+export interface UpdateMedicineRequest {
   name: string;
   unit?: string;
   description?: string;
@@ -150,8 +159,9 @@ class InventoryController {
       const stock = stockMap[medicine.id] || { total: 0, expiringLots: 0 };
       const stockQuantity = stock.total;
 
-      // Ngưỡng cảnh báo mặc định: 20 đơn vị
-      const threshold = 20;
+      // Lấy ngưỡng cảnh báo từ localStorage, mặc định là 20
+      const savedThreshold = localStorage.getItem(`medicine_threshold_${medicine.id}`);
+      const threshold = savedThreshold ? parseInt(savedThreshold, 10) : 20;
 
       let stockStatus: 'available' | 'low' | 'out' = 'out';
       if (stockQuantity > threshold) {
@@ -413,6 +423,23 @@ class InventoryController {
     return response.json();
   }
 
+  // Cập nhật thông tin thuốc
+  async updateMedicine(id: string, request: UpdateMedicineRequest): Promise<MedicineDTO> {
+    const url = createApiUrl(`${this.baseUrl}/medicines/${id}`);
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: getApiHeaders(true),
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update medicine: ${response.statusText} - ${errorText}`);
+    }
+
+    return response.json();
+  }
+
   // Lấy inventory lots theo medicine ID
   async getInventoryLotsByMedicineId(medicineId: string): Promise<InventoryLotDTO[]> {
     const allLots = await this.getAllInventoryLots();
@@ -449,6 +476,51 @@ class InventoryController {
       console.warn("Failed to load dispense order:", error);
       return null;
     }
+  }
+
+  // Lấy tất cả stock ledgers
+  async getAllStockLedgers(): Promise<StockLedgerDTO[]> {
+    const url = createApiUrl(`${this.baseUrl}/stock-ledgers`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getApiHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch stock ledgers: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Lấy tất cả đơn cấp phát (không filter theo status)
+  async getAllDispenseOrders(): Promise<DispenseOrderDTO[]> {
+    const url = createApiUrl(`${this.baseUrl}/dispense-orders`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getApiHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch dispense orders: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Lấy tất cả dispense items
+  async getAllDispenseItems(): Promise<DispenseItemDTO[]> {
+    const url = createApiUrl(`${this.baseUrl}/dispense-items`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getApiHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch dispense items: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
 }

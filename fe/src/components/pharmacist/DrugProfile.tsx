@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Edit, AlertTriangle, RefreshCw, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, AlertTriangle, RefreshCw, X, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   inventoryController,
@@ -39,6 +39,14 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
   const [totalStock, setTotalStock] = useState(0);
   const [showAddLotDialog, setShowAddLotDialog] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [stockThreshold, setStockThreshold] = useState(20);
+  const [medicineSettings, setMedicineSettings] = useState({
+    name: '',
+    description: '',
+    unit: '',
+    salePrice: 0,
+  });
   const [formData, setFormData] = useState<CreateInventoryLotRequest>({
     lotNo: '',
     expireDate: '',
@@ -48,12 +56,30 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
     pharmacistId: '',
   });
 
+  // Load ngưỡng cảnh báo từ localStorage khi component mount
+  useEffect(() => {
+    if (drugId) {
+      const savedThreshold = localStorage.getItem(`medicine_threshold_${drugId}`);
+      if (savedThreshold) {
+        setStockThreshold(parseInt(savedThreshold, 10));
+      }
+    }
+  }, [drugId]);
+
   const loadData = async () => {
     setLoading(true);
     try {
       // 1. Lấy thông tin thuốc
       const medicine = await inventoryController.getMedicineById(drugId);
       setDrug(medicine);
+
+      // Cập nhật settings từ thông tin thuốc
+      setMedicineSettings({
+        name: medicine.name || '',
+        description: medicine.description || '',
+        unit: medicine.unit || '',
+        salePrice: medicine.salePrice || 0,
+      });
 
       // 2. Lấy tất cả inventory lots và filter theo medicineId
       const allLots = await inventoryController.getAllInventoryLots();
@@ -195,7 +221,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
           }
 
           return {
-            date: new Date(ledger.createAt).toLocaleString('vi-VN'),
+            date: new Date(ledger.createAt || '').toLocaleString('vi-VN') ,
             action,
             quantity: ledger.type === 'IN' ? ledger.quantity : -ledger.quantity,
             person: `DS. ${pharmacistName}`,
@@ -273,6 +299,54 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
       medicineId: drugId,
       pharmacistId: '',
     });
+  };
+
+  // Hàm lưu thay đổi
+  const handleSaveSettings = async () => {
+    if (!drug) return;
+
+    // Validation
+    if (stockThreshold < 0) {
+      toast.error('Ngưỡng cảnh báo phải lớn hơn hoặc bằng 0');
+      return;
+    }
+
+    if (!medicineSettings.name.trim()) {
+      toast.error('Tên thuốc không được để trống');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // 1. Lưu ngưỡng cảnh báo vào localStorage
+      localStorage.setItem(`medicine_threshold_${drugId}`, stockThreshold.toString());
+
+      // 2. Cập nhật thông tin thuốc lên backend (nếu có thay đổi)
+      const hasChanges =
+        medicineSettings.name !== drug.name ||
+        medicineSettings.description !== (drug.description || '') ||
+        medicineSettings.unit !== (drug.unit || '') ||
+        medicineSettings.salePrice !== (drug.salePrice || 0);
+
+      if (hasChanges) {
+        await inventoryController.updateMedicine(drugId, {
+          name: medicineSettings.name,
+          description: medicineSettings.description || undefined,
+          unit: medicineSettings.unit || undefined,
+          salePrice: medicineSettings.salePrice || undefined,
+        });
+
+        // Reload data để cập nhật UI
+        await loadData();
+      }
+
+      toast.success('Đã lưu cài đặt thành công');
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      toast.error(error.message || 'Không thể lưu cài đặt');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -583,6 +657,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
         {activeTab === 'settings' && (
           <div className="p-6">
             <div className="max-w-2xl space-y-6">
+              {/* Ngưỡng cảnh báo tồn kho */}
               <div>
                 <label className="block text-sm font-semibold text-neutral-heading mb-2">
                   Ngưỡng cảnh báo tồn kho
@@ -590,11 +665,13 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
-                    defaultValue={20}
+                    value={stockThreshold}
+                    onChange={(e) => setStockThreshold(parseInt(e.target.value) || 0)}
+                    min="0"
                     className="flex-1 h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   />
                   <span className="text-sm text-neutral-gray-500">
-                    {drug.unit || 'đơn vị'}
+                    {drug?.unit || 'đơn vị'}
                   </span>
                 </div>
                 <p className="text-xs text-neutral-gray-500 mt-2">
@@ -602,14 +679,103 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 pt-4">
+              {/* Thông tin thuốc có thể chỉnh sửa */}
+              <div className="border-t border-neutral-gray-200 pt-6 space-y-4">
+                <h3 className="text-sm font-semibold text-neutral-heading mb-4">
+                  Thông tin thuốc
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
+                    Tên thuốc <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={medicineSettings.name}
+                    onChange={(e) => setMedicineSettings({ ...medicineSettings, name: e.target.value })}
+                    className="w-full h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-heading mb-2">
+                    Mô tả / Công dụng
+                  </label>
+                  <textarea
+                    value={medicineSettings.description}
+                    onChange={(e) => setMedicineSettings({ ...medicineSettings, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                    placeholder="Nhập mô tả hoặc công dụng của thuốc..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-heading mb-2">
+                      Đơn vị
+                    </label>
+                    <input
+                      type="text"
+                      value={medicineSettings.unit}
+                      onChange={(e) => setMedicineSettings({ ...medicineSettings, unit: e.target.value })}
+                      placeholder="Ví dụ: Viên, Hộp, Chai..."
+                      className="w-full h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-heading mb-2">
+                      Giá bán (VNĐ)
+                    </label>
+                    <input
+                      type="number"
+                      value={medicineSettings.salePrice}
+                      onChange={(e) => setMedicineSettings({ ...medicineSettings, salePrice: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      placeholder="0"
+                      className="w-full h-12 px-4 rounded-xl border border-neutral-gray-200 text-sm text-neutral-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-4 border-t border-neutral-gray-200">
                 <button
-                  onClick={() => toast.success('Đã lưu cài đặt thành công')}
-                  className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 shadow-sm hover:shadow"
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-strong transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow"
                 >
-                  Lưu thay đổi
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Lưu thay đổi
+                    </>
+                  )}
                 </button>
-                <button className="px-6 py-3 bg-neutral-surface border border-neutral-gray-200 text-neutral-gray-600 rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200">
+                <button
+                  onClick={() => {
+                    // Reset về giá trị ban đầu
+                    if (drug) {
+                      setMedicineSettings({
+                        name: drug.name || '',
+                        description: drug.description || '',
+                        unit: drug.unit || '',
+                        salePrice: drug.salePrice || 0,
+                      });
+                      const savedThreshold = localStorage.getItem(`medicine_threshold_${drugId}`);
+                      setStockThreshold(savedThreshold ? parseInt(savedThreshold, 10) : 20);
+                    }
+                  }}
+                  disabled={saving}
+                  className="px-6 py-3 bg-neutral-surface border border-neutral-gray-200 text-neutral-gray-600 rounded-lg text-sm font-semibold hover:bg-neutral-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Hủy
                 </button>
               </div>
