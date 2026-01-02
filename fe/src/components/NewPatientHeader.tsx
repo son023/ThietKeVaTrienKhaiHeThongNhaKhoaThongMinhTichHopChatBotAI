@@ -6,14 +6,15 @@ import {
   CreditCard,
   FileText,
   Clock,
-  Check,
   X,
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Logo } from "./ui/logo";
 import { Button } from "./ui/button";
+import { useNotifications } from "../contexts/NotificationContext";
+import { appointmentController, authController } from "../controllers";
 
 interface NewPatientHeaderProps {
   currentPage: string;
@@ -29,6 +30,10 @@ interface Notification {
   message: string;
   time: string;
   read: boolean;
+  timestamp?: number;
+  appointmentId?: string; // Thêm field này để có thể tính toán lại thời gian
+  appointmentStartTime?: string; // Thêm field này để lưu thời gian appointment
+  userId?: string; // Thêm field này để filter
 }
 
 export function NewPatientHeader({
@@ -39,40 +44,22 @@ export function NewPatientHeader({
 }: NewPatientHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      type: "appointment",
-      title: "Lịch hẹn sắp tới",
-      message: "Bạn có lịch hẹn khám răng vào ngày 05/11/2025 lúc 14:00",
-      time: "2 giờ trước",
-      read: false,
-    },
-    {
-      id: "2",
-      type: "payment",
-      title: "Hoá đơn chưa thanh toán",
-      message: "Bạn có 1 hoá đơn chưa thanh toán. Tổng: 2.500.000đ",
-      time: "5 giờ trước",
-      read: false,
-    },
-    {
-      id: "3",
-      type: "medical",
-      title: "Kết quả xét nghiệm",
-      message: "Kết quả xét nghiệm X-quang đã có. Vui lòng xem chi tiết",
-      time: "1 ngày trước",
-      read: true,
-    },
-    {
-      id: "4",
-      type: "reminder",
-      title: "Nhắc nhở tái khám",
-      message: "Đã đến thời gian tái khám định kỳ. Vui lòng đặt lịch",
-      time: "2 ngày trước",
-      read: true,
-    },
-  ]);
+
+  // Sử dụng NotificationContext
+  const {
+    notifications: contextNotifications,
+    unreadCount: contextUnreadCount,
+    markAsRead: markAsReadContext,
+    markAllAsRead: markAllAsReadContext,
+  } = useNotifications();
+
+  // State cho appointment reminders
+  const [appointmentReminders, setAppointmentReminders] = useState<Notification[]>([]);
+  const [isLoadingReminders, setIsLoadingReminders] = useState(false);
+
+  // Lấy current user để filter notifications
+  const currentUser = authController.getCurrentUser();
+  const currentUserId = currentUser?.id;
 
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
@@ -127,23 +114,252 @@ export function NewPatientHeader({
     onNavigate("/");
   };
 
+  // Helper functions cho localStorage
+  const getStoredReminders = (): Notification[] => {
+    try {
+      const stored = localStorage.getItem('appointment_reminders');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Failed to parse stored reminders:", error);
+    }
+    return [];
+  };
+
+  const saveStoredReminders = (reminders: Notification[]) => {
+    try {
+      localStorage.setItem('appointment_reminders', JSON.stringify(reminders));
+    } catch (error) {
+      console.error("Failed to save reminders:", error);
+    }
+  };
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    const isFuture = diffMs > 0;
+    const absDiffMs = Math.abs(diffMs);
+    const diffHours = Math.floor(absDiffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (isFuture) {
+      // Thời gian trong tương lai (reminders)
+      if (diffHours > 24) {
+        const diffDays = Math.floor(diffHours / 24);
+        return `Sau ${diffDays} ngày `;
+      } else if (diffHours > 0) {
+        return `Sau ${diffHours} giờ`;
+      } else if (diffMinutes > 0) {
+        return `Sau ${diffMinutes} phút`;
+      } else {
+        return "Sắp tới";
+      }
+    } else {
+      // Thời gian trong quá khứ (notifications từ context)
+      if (diffHours > 24) {
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} ngày trước`;
+      } else if (diffHours > 0) {
+        return `${diffHours} giờ trước`;
+      } else if (diffMinutes > 0) {
+        return `${diffMinutes} phút trước`;
+      } else {
+        return "Vừa xong";
+      }
+    }
+  };
+
+  // Load appointment reminders từ upcoming appointments
+  useEffect(() => {
+    const loadAppointmentReminders = async () => {
+      try {
+        setIsLoadingReminders(true);
+        const user = authController.getCurrentUser();
+        if (!user?.id) return;
+
+        // Lấy appointments từ backend
+        const appointments = await appointmentController.getByPatientId(user.id);
+        const now = new Date();
+
+        // Lấy reminders hiện có từ localStorage
+        const storedReminders = getStoredReminders();
+
+        // Tạo map để cập nhật reminders hiện có
+        const remindersMap = new Map<string, Notification>();
+
+        // Khôi phục reminders cũ và cập nhật thời gian
+        storedReminders.forEach(reminder => {
+          if (reminder.appointmentId) {
+            const appointment = appointments.find(a => a.id === reminder.appointmentId);
+            if (appointment) {
+              const appointmentStart = new Date(appointment.appointmentStartTime);
+              // Chỉ giữ reminders cho appointments chưa diễn ra
+              if (appointmentStart > now &&
+                (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED')) {
+                remindersMap.set(reminder.id, {
+                  ...reminder,
+                  time: formatTimeAgo(appointmentStart), // Cập nhật lại thời gian
+                  appointmentStartTime: appointment.appointmentStartTime,
+                });
+              }
+            }
+          } else {
+            // Giữ lại reminders không có appointmentId (nếu có)
+            remindersMap.set(reminder.id, reminder);
+          }
+        });
+
+        // Tạo reminders mới cho appointments sắp tới
+        for (const appointment of appointments) {
+          const appointmentStart = new Date(appointment.appointmentStartTime);
+          const timeDiff = appointmentStart.getTime() - now.getTime();
+          const hoursUntilAppointment = timeDiff / (1000 * 60 * 60);
+
+          // Chỉ tạo reminder cho appointments chưa diễn ra và có status PENDING hoặc CONFIRMED
+          if (
+            appointmentStart > now &&
+            (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
+            hoursUntilAppointment > 0 &&
+            hoursUntilAppointment <= 48
+          ) {
+            const serviceName = appointment.medicalServices?.[0]?.serviceName || 'Khám bệnh';
+
+            // Tạo reminder 24 giờ trước (trong khoảng 23.5 - 24 giờ)
+            if (hoursUntilAppointment <= 24 && hoursUntilAppointment > 23.5) {
+              const reminderId = `reminder-24h-${appointment.id}`;
+              if (!remindersMap.has(reminderId)) {
+                remindersMap.set(reminderId, {
+                  id: reminderId,
+                  type: "reminder",
+                  title: "Nhắc nhở lịch hẹn (24h)",
+                  message: `Bạn có lịch hẹn "${serviceName}" vào ${appointmentStart.toLocaleDateString('vi-VN')} lúc ${appointmentStart.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
+                  time: formatTimeAgo(appointmentStart),
+                  read: false,
+                  timestamp: Date.now(),
+                  appointmentId: appointment.id,
+                  appointmentStartTime: appointment.appointmentStartTime,
+                });
+              }
+            }
+
+            // Tạo reminder 1 giờ trước (trong khoảng 0 - 1 giờ, bao gồm cả 30 phút)
+            if (hoursUntilAppointment <= 1 && hoursUntilAppointment > 0) {
+              const reminderId = `reminder-1h-${appointment.id}`;
+              if (!remindersMap.has(reminderId)) {
+                remindersMap.set(reminderId, {
+                  id: reminderId,
+                  type: "reminder",
+                  title: "Nhắc nhở lịch hẹn (1h)",
+                  message: `Lịch hẹn "${serviceName}" của bạn sẽ bắt đầu trong 1 giờ tới. Vui lòng chuẩn bị đến phòng khám.`,
+                  time: formatTimeAgo(appointmentStart),
+                  read: false,
+                  timestamp: Date.now(),
+                  appointmentId: appointment.id,
+                  appointmentStartTime: appointment.appointmentStartTime,
+                });
+              }
+            }
+          }
+        }
+
+        // Chuyển map thành array và lọc reminders hợp lệ
+        const validReminders = Array.from(remindersMap.values()).filter(reminder => {
+          // Giữ lại reminders chưa đọc hoặc mới tạo trong 7 ngày
+          const reminderAge = Date.now() - (reminder.timestamp || 0);
+          return !reminder.read || reminderAge < 7 * 24 * 60 * 60 * 1000;
+        });
+
+        saveStoredReminders(validReminders);
+        setAppointmentReminders(validReminders);
+      } catch (error) {
+        console.error("Failed to load appointment reminders:", error);
+      } finally {
+        setIsLoadingReminders(false);
+      }
+    };
+
+    // Load reminders khi component mount
+    loadAppointmentReminders();
+
+    // Load reminders mỗi 5 phút để cập nhật thời gian
+    const interval = setInterval(loadAppointmentReminders, 1 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Kết hợp notifications từ context và appointment reminders
+  const allNotifications = useMemo(() => {
+    // Lấy notifications từ context, chỉ lấy những cái có userId trùng với current user
+    const contextAppointmentNotifs = contextNotifications
+      .filter(n => {
+        // Chỉ lấy notifications về lịch hẹn
+        const isAppointmentRelated = n.type === 'APPOINTMENT_CREATED' || n.appointmentId;
+        // Chỉ lấy notifications có userId trùng với current user
+        return isAppointmentRelated && n.userId === currentUserId;
+      })
+      .map(n => ({
+        id: n.id,
+        type: "appointment" as const,
+        title: n.title,
+        message: n.message,
+        time: formatTimeAgo(new Date(n.timestamp)),
+        read: n.read,
+        timestamp: n.timestamp,
+        userId: n.userId,
+      }));
+
+    // Kết hợp với reminders từ localStorage
+    const combined = [...contextAppointmentNotifs, ...appointmentReminders];
+
+    // Sắp xếp theo thời gian (mới nhất trước)
+    return combined.sort((a, b) => {
+      const timeA = a.timestamp || 0;
+      const timeB = b.timestamp || 0;
+      return timeB - timeA;
+    });
+  }, [contextNotifications, appointmentReminders, currentUserId]);
+
+  const unreadCount = allNotifications.filter((n) => !n.read).length;
+
   const markAsRead = (id: string) => {
-    setNotifications(
-      notifications.map((notif) =>
+    // Đánh dấu trong context nếu là notification từ context
+    const contextNotif = contextNotifications.find(n => n.id === id);
+    if (contextNotif) {
+      markAsReadContext(id);
+    } else {
+      // Đánh dấu trong localStorage
+      const updated = appointmentReminders.map((notif) =>
         notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
+      );
+      setAppointmentReminders(updated);
+      saveStoredReminders(updated);
+    }
   };
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map((notif) => ({ ...notif, read: true })));
+    // Đánh dấu tất cả trong context
+    markAllAsReadContext();
+
+    // Đánh dấu tất cả reminders
+    const updated = appointmentReminders.map((notif) => ({ ...notif, read: true }));
+    setAppointmentReminders(updated);
+    saveStoredReminders(updated);
   };
 
   const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter((notif) => notif.id !== id));
+    // Xóa từ context nếu là notification từ context
+    const contextNotif = contextNotifications.find(n => n.id === id);
+    if (contextNotif) {
+      // Context có thể không có delete function, chỉ đánh dấu đã đọc
+      markAsReadContext(id);
+    } else {
+      // Xóa từ localStorage
+      const updated = appointmentReminders.filter((notif) => notif.id !== id);
+      setAppointmentReminders(updated);
+      saveStoredReminders(updated);
+    }
   };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -180,11 +396,10 @@ export function NewPatientHeader({
               key={item.id}
               variant="ghost"
               onClick={() => handleMenuClick(item.id)}
-              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${
-                activeMenu === item.id
-                  ? "text-primary hover:text-primary hover:bg-accent"
-                  : ""
-              }`}
+              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${activeMenu === item.id
+                ? "text-primary hover:text-primary hover:bg-accent"
+                : ""
+                }`}
             >
               {item.label}
             </Button>
@@ -245,7 +460,7 @@ export function NewPatientHeader({
                 </div>
                 {/* Notifications List */}
                 <div className="max-h-[480px] overflow-y-auto">
-                  {notifications.length === 0 ? (
+                  {allNotifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-[60px] px-[20px]">
                       <Bell className="w-[48px] h-[48px] text-neutral-tint mb-[16px]" />
                       <p className="font-['Fz_Poppins:Medium',sans-serif] text-neutral-text text-[15px]">
@@ -253,12 +468,11 @@ export function NewPatientHeader({
                       </p>
                     </div>
                   ) : (
-                    notifications.map((notif) => (
+                    allNotifications.map((notif) => (
                       <div
                         key={notif.id}
-                        className={`px-[20px] py-[16px] border-b border-neutral-border hover:bg-neutral-muted/50 transition-colors cursor-pointer group ${
-                          !notif.read ? "bg-primary/5" : ""
-                        }`}
+                        className={`px-[20px] py-[16px] border-b border-neutral-border hover:bg-neutral-muted/50 transition-colors cursor-pointer group ${!notif.read ? "bg-primary/5" : ""
+                          }`}
                         onClick={() => markAsRead(notif.id)}
                       >
                         <div className="flex items-start gap-[12px]">
@@ -307,9 +521,8 @@ export function NewPatientHeader({
               aria-label="Menu người dùng"
             >
               <ChevronDown
-                className={`w-[20px] h-[20px] text-neutral-heading transition-transform duration-200 ${
-                  showUserMenu ? "rotate-180" : ""
-                }`}
+                className={`w-[20px] h-[20px] text-neutral-heading transition-transform duration-200 ${showUserMenu ? "rotate-180" : ""
+                  }`}
               />
             </button>
             {/* User Dropdown Menu */}

@@ -23,6 +23,7 @@ export interface Notification {
   invoiceId?: string;
   dispenseOrderId?: string;
   appointmentId?: string;
+  userId?: string; // Thêm field này để filter theo user
 }
 
 interface NotificationContextType {
@@ -75,6 +76,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       invoiceId: dto.invoiceId,
       dispenseOrderId: dto.dispenseOrderId,
       appointmentId: dto.appointmentId,
+      userId: dto.userId, // Thêm mapping userId
     };
   }, []);
 
@@ -88,16 +90,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
     try {
       setLoading(true);
-      const dtos = await notificationController.getByUserId(userId);
+      // Lấy tất cả notifications có templateId === 'APPOINTMENT_CREATED'
       const appointmentNotifications = await notificationController.getByTemplateId('APPOINTMENT_CREATED');
 
-      const allNotifications = [...appointmentNotifications, ...dtos];
-      allNotifications.sort((a, b) => {
+      // Lấy notifications của user hiện tại
+      const userNotifications = await notificationController.getByUserId(userId);
+
+      // Kết hợp và loại bỏ trùng lặp
+      const allDtos = [...appointmentNotifications, ...userNotifications];
+      const uniqueDtos = allDtos.filter((dto, index, self) =>
+        index === self.findIndex((n) => n.id === dto.id)
+      );
+
+      uniqueDtos.sort((a, b) => {
         const timeA = new Date(a.createdAt).getTime();
         const timeB = new Date(b.createdAt).getTime();
         return timeB - timeA;
       });
-      const mappedNotifications = allNotifications.map(mapDTOToNotification);
+
+      const mappedNotifications = uniqueDtos.map(mapDTOToNotification);
       setNotifications(mappedNotifications);
       console.log(`[NotificationContext] Loaded ${mappedNotifications.length} notifications from backend`);
     } catch (error) {
@@ -144,6 +155,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         invoiceId: notification.invoiceId,
         dispenseOrderId: notification.dispenseOrderId,
         appointmentId: notification.appointmentId,
+        userId: userId, // Thêm userId
       };
 
       setNotifications(prev => [tempNotification, ...prev]);
@@ -177,6 +189,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           read: false,
           dispenseOrderId: notification.dispenseOrderId,
           appointmentId: notification.appointmentId,
+          userId: userId, // Thêm userId
         };
 
         setNotifications(prev => [tempNotification, ...prev]);
@@ -211,6 +224,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           timestamp: notification.timestamp || Date.now(),
           read: false,
           appointmentId: notification.appointmentId,
+          userId: userId, // Thêm userId
         };
 
         setNotifications(prev => [tempNotification, ...prev]);
