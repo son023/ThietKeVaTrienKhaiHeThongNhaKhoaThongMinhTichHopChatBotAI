@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Microscope,
   FileText,
-  Wrench,
   BarChart3,
   Settings,
 } from "lucide-react";
@@ -21,7 +20,6 @@ export function LabTechnicianSidebar({
     { id: "dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
     { id: "test-queue", label: "Hàng đợi xét nghiệm", icon: Microscope },
     { id: "test-results", label: "Kết quả xét nghiệm", icon: FileText },
-    { id: "equipment", label: "Thiết bị", icon: Wrench },
     { id: "reports", label: "Báo cáo", icon: BarChart3 },
     { id: "settings", label: "Cài đặt", icon: Settings },
   ];

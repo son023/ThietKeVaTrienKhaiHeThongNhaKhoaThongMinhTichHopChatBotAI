@@ -307,9 +307,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
     }
   };
 
-  const handleSendForReview = () => {
-    toast.info('Đã gửi yêu cầu xem xét lại cho Bác sĩ');
-  };
+
 
   // Hiển thị loading
   if (loading) {
@@ -454,8 +452,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === tab.id
-                      ? 'border-primary text-primary bg-neutral-muted'
-                      : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
+                    ? 'border-primary text-primary bg-neutral-muted'
+                    : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
                     }`}
                 >
                   {tab.label}
@@ -562,41 +560,25 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
           <div className="bg-neutral-surface rounded-xl border border-neutral-gray-200 shadow-sm p-6 space-y-3 hover:shadow-md transition-all duration-200">
             <h3 className="text-lg font-bold text-neutral-heading mb-4">Hành động</h3>
-<button
-  onClick={handleDispense}
-  disabled={!isInvoicePaid || isCheckingPayment || dispenseOrder?.status === 'SOLD'}
-  className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 shadow-sm ${
-    isInvoicePaid && !isCheckingPayment && dispenseOrder?.status !== 'SOLD'
-      ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
-      : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
-  }`}
->
-  <CheckCircle className="w-5 h-5" />
-  {isCheckingPayment
-    ? 'Đang kiểm tra thanh toán...'
-    : dispenseOrder?.status === 'SOLD'
-      ? 'Đã cấp phát'
-      : isInvoicePaid
-        ? 'Hoàn tất & Cấp phát'
-        : 'Chờ thanh toán hóa đơn'}
-</button>
-
-
             <button
-              onClick={handleSendForReview}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 text-white rounded-lg text-sm font-bold hover:bg-amber-600 transition-all duration-200 shadow-sm hover:shadow"
+              onClick={handleDispense}
+              disabled={!isInvoicePaid || isCheckingPayment || dispenseOrder?.status === 'SOLD'}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 shadow-sm ${isInvoicePaid && !isCheckingPayment && dispenseOrder?.status !== 'SOLD'
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
+                  : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
+                }`}
             >
-              <Flag className="w-5 h-5" />
-              Gửi BS xem xét lại
+              <CheckCircle className="w-5 h-5" />
+              {isCheckingPayment
+                ? 'Đang kiểm tra thanh toán...'
+                : dispenseOrder?.status === 'SOLD'
+                  ? 'Đã cấp phát'
+                  : isInvoicePaid
+                    ? 'Hoàn tất & Cấp phát'
+                    : 'Chờ thanh toán hóa đơn'}
             </button>
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-neutral-surface border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary/5 transition-all duration-200 shadow-sm">
-              <Printer className="w-5 h-5" />
-              In nhãn thuốc
-            </button>
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-neutral-surface border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary/5 transition-all duration-200 shadow-sm">
-              <Save className="w-5 h-5" />
-              Lưu nháp
-            </button>
+
+
           </div>
         </div>
       </div>

@@ -511,29 +511,29 @@ export function PatientMedicalRecords() {
                 </div>
               </Card>
             ) : (
-              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
-                <div className="flex items-start justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl flex items-center justify-center text-white text-3xl font-bold">
+            <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+              <div className="flex items-start justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl flex items-center justify-center text-white text-3xl font-bold">
                       {user?.fullName?.charAt(0) || "U"}
-                    </div>
-                    <div>
-                      <h2 className="typo-h2 text-[var(--text-strong)] mb-1">
-                        {user?.fullName || "Chưa có tên"}
-                      </h2>
-                      <p className="text-sm text-[var(--text-regular)] opacity-70">
-                        {patient?.userId ? `Mã bệnh nhân: ${patient.userId.substring(0, 8).toUpperCase()}` : "Chưa có mã bệnh nhân"}
-                      </p>
-                    </div>
                   </div>
+                  <div>
+                    <h2 className="typo-h2 text-[var(--text-strong)] mb-1">
+                        {user?.fullName || "Chưa có tên"}
+                    </h2>
+                    <p className="text-sm text-[var(--text-regular)] opacity-70">
+                        {patient?.userId ? `Mã bệnh nhân: ${patient.userId.substring(0, 8).toUpperCase()}` : "Chưa có mã bệnh nhân"}
+                    </p>
+                  </div>
+                </div>
                   {!isEditing ? (
                     <Button
                       onClick={() => setIsEditing(true)}
                       className="bg-white border-2 border-[var(--accent-light)] text-[var(--accent-light)] hover:bg-[var(--accent-ghost)]"
                     >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Chỉnh sửa
-                    </Button>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Chỉnh sửa
+                </Button>
                   ) : (
                     <div className="flex gap-3">
                       <Button
@@ -554,11 +554,11 @@ export function PatientMedicalRecords() {
                       </Button>
                     </div>
                   )}
-                </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-5">
-                    <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-5">
+                  <div>
                       <Label
                         htmlFor="fullName"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
@@ -591,7 +591,7 @@ export function PatientMedicalRecords() {
                         htmlFor="dateOfBirth"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
                       >
-                        Ngày sinh
+                      Ngày sinh
                       </Label>
                       {isEditing ? (
                         <Input
@@ -606,21 +606,21 @@ export function PatientMedicalRecords() {
                           }
                         />
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <Calendar className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                             {patient?.dob ? formatDate(patient.dob) : "N/A"}
-                          </span>
-                        </div>
-                      )}
+                      </span>
                     </div>
+                      )}
+                  </div>
 
-                    <div>
+                  <div>
                       <Label
                         htmlFor="gender"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
                       >
-                        Giới tính
+                      Giới tính
                       </Label>
                       {isEditing ? (
                         <select
@@ -637,21 +637,21 @@ export function PatientMedicalRecords() {
                           <option value="OTHER">Khác</option>
                         </select>
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <User className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                    <div className="flex items-center gap-3">
+                      <User className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                             {formatGender(patient?.gender)}
-                          </span>
-                        </div>
-                      )}
+                      </span>
                     </div>
+                      )}
+                  </div>
 
-                    <div>
+                  <div>
                       <Label
                         htmlFor="phone"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
                       >
-                        Số điện thoại
+                      Số điện thoại
                       </Label>
                       {isEditing ? (
                         <Input
@@ -662,21 +662,21 @@ export function PatientMedicalRecords() {
                           }
                         />
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <Phone className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                             {user?.phone || patient?.contactPhone || "N/A"}
-                          </span>
-                        </div>
-                      )}
+                      </span>
                     </div>
+                      )}
+                  </div>
 
-                    <div>
+                  <div>
                       <Label
                         htmlFor="email"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
                       >
-                        Email
+                      Email
                       </Label>
                       {isEditing ? (
                         <Input
@@ -688,23 +688,23 @@ export function PatientMedicalRecords() {
                           }
                         />
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <Mail className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                             {user?.email || "N/A"}
-                          </span>
-                        </div>
-                      )}
+                      </span>
                     </div>
+                      )}
                   </div>
+                </div>
 
-                  <div className="space-y-5">
-                    <div>
+                <div className="space-y-5">
+                  <div>
                       <Label
                         htmlFor="address"
                         className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block"
                       >
-                        Địa chỉ
+                      Địa chỉ
                       </Label>
                       {isEditing ? (
                         <Input
@@ -718,55 +718,55 @@ export function PatientMedicalRecords() {
                           }
                         />
                       ) : (
-                        <div className="flex items-start gap-3">
-                          <MapPin className="w-4.5 h-4.5 text-[var(--accent-light)] flex-shrink-0 mt-0.5" />
-                          <span className="font-medium text-[var(--text-strong)] text-sm">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-4.5 h-4.5 text-[var(--accent-light)] flex-shrink-0 mt-0.5" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                             {patient?.address || "N/A"}
-                          </span>
-                        </div>
+                      </span>
+                    </div>
                       )}
-                    </div>
+                  </div>
 
-                    <div>
-                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                  <div>
+                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
                         Số bảo hiểm y tế
-                      </label>
-                      <div className="flex items-center gap-3">
+                    </label>
+                    <div className="flex items-center gap-3">
                         <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                           {patient?.insuranceNumber || "N/A"}
-                        </span>
-                      </div>
+                      </span>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                        Nhóm máu
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <Activity className="w-4.5 h-4.5 text-red-500" />
-                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                  <div>
+                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                      Nhóm máu
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-4.5 h-4.5 text-red-500" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                           {formatBloodType(patient?.bloodType)}
-                        </span>
-                      </div>
+                      </span>
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
-                        Dị ứng
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
-                        <span className="font-medium text-[var(--text-strong)] text-sm">
+                  <div>
+                    <label className="font-medium text-[var(--text-regular)] opacity-70 text-xs mb-2 block">
+                      Dị ứng
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4.5 h-4.5 text-[var(--accent-light)]" />
+                      <span className="font-medium text-[var(--text-strong)] text-sm">
                           {formatAllergies(patient?.patientAllergies)}
-                        </span>
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </div>
+              </div>
 
 
-              </Card>
+            </Card>
             )}
           </TabsContent>
 
@@ -787,57 +787,57 @@ export function PatientMedicalRecords() {
               </Card>
             ) : (
               medicalHistoryRecords.map((record) => (
-                <Card
-                  key={record.id}
-                  className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] hover:shadow-lg transition-all"
-                >
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Date */}
-                    <div className="lg:w-32 flex-shrink-0">
-                      <div className="bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl p-4 text-white text-center">
-                        <p className="text-3xl font-bold">
-                          {record.date.split("/")[0]}
-                        </p>
-                        <p className="font-medium text-sm opacity-90 mt-1">
-                          {record.date.split("/")[1]}/{record.date.split("/")[2]}
-                        </p>
-                      </div>
+              <Card
+                key={record.id}
+                className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] hover:shadow-lg transition-all"
+              >
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Date */}
+                  <div className="lg:w-32 flex-shrink-0">
+                    <div className="bg-gradient-to-br from-[var(--accent-light)] to-[var(--accent)] rounded-2xl p-4 text-white text-center">
+                      <p className="text-3xl font-bold">
+                        {record.date.split("/")[0]}
+                      </p>
+                      <p className="font-medium text-sm opacity-90 mt-1">
+                        {record.date.split("/")[1]}/{record.date.split("/")[2]}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
+                        {record.service}
+                      </h3>
+                      <p className="font-medium text-[var(--text-regular)] opacity-70 text-sm">
+                        Bác sĩ: {record.doctor}
+                      </p>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
-                          {record.service}
-                        </h3>
-                        <p className="font-medium text-[var(--text-regular)] opacity-70 text-sm">
-                          Bác sĩ: {record.doctor}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-[var(--surface-muted)] rounded-xl p-4">
+                        <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
+                          Chẩn đoán:
                         </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                          <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
-                            Chẩn đoán:
-                          </p>
                           <div className="text-sm text-[var(--text-regular)] space-y-1">
                             {record.diagnosis.map((item, index) => (
                               <div key={index}>{item}</div>
                             ))}
                           </div>
-                        </div>
+                      </div>
 
-                        <div className="bg-[var(--surface-muted)] rounded-xl p-4">
-                          <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
-                            Điều trị:
-                          </p>
+                      <div className="bg-[var(--surface-muted)] rounded-xl p-4">
+                        <p className="font-medium text-[var(--accent-light)] text-xs mb-2">
+                          Điều trị:
+                        </p>
                           <div className="text-sm text-[var(--text-regular)] space-y-1">
                             {record.treatment.map((item, index) => (
                               <div key={index}>{item}</div>
                             ))}
                           </div>
-                        </div>
                       </div>
+                    </div>
 
                       {/* Đơn thuốc - CHỈ hiển thị nếu có dữ liệu */}
                       {record.prescription && record.prescription.length > 0 && (
@@ -1014,27 +1014,27 @@ export function PatientMedicalRecords() {
                               })}
                             </div>
                           )}
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-3 border-t border-[var(--border-soft)]">
-                        <div>
-                          {record.nextVisit && (
-                            <p className="text-sm text-[var(--text-regular)] opacity-70">
-                              Tái khám:{" "}
-                              <span className="font-semibold text-[var(--accent-light)]">
-                                {record.nextVisit}
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                        <p className="font-semibold text-[var(--text-strong)] text-base">
-                          {record.cost.toLocaleString("vi-VN")}đ
-                        </p>
                       </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t border-[var(--border-soft)]">
+                      <div>
+                        {record.nextVisit && (
+                          <p className="text-sm text-[var(--text-regular)] opacity-70">
+                            Tái khám:{" "}
+                            <span className="font-semibold text-[var(--accent-light)]">
+                              {record.nextVisit}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                      <p className="font-semibold text-[var(--text-strong)] text-base">
+                        {record.cost.toLocaleString("vi-VN")}đ
+                      </p>
                     </div>
                   </div>
-                </Card>
+                </div>
+              </Card>
               ))
             )}
           </TabsContent>
