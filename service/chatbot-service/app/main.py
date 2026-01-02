@@ -27,6 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "service": "chatbot-service"}
+
 app.include_router(chat_controller.router, prefix="/api")
 
 if __name__ == "__main__":

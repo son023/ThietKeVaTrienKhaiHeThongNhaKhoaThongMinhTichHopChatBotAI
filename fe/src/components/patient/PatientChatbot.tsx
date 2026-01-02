@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { authController } from "../../controllers";
 import ReactMarkdown from "react-markdown";
 
-const API_BASE_URL = "http://localhost:8080/chatbot-service/api";
+const API_BASE_URL = "http://localhost:9992/api";
 
 interface Message {
   id: string;
@@ -95,15 +95,13 @@ export default function PatientChatbot({
 
       if (isFirstLoad) {
         if (newMessages.length === 0) {
-          // --- PHẦN BẠN YÊU CẦU: LỜI CHÀO MẶC ĐỊNH ---
           setMessages([
             {
               id: "welcome",
               text: "Xin chào! 👋\nTôi là trợ lý ảo **Dental AI**.\n\nTôi có thể giúp bạn tra cứu:\n- 🏥 Thông tin phòng khám\n- 💊 Triệu chứng & Bệnh lý\n- 📅 Đặt lịch hẹn\n\nBạn cần hỗ trợ gì không?",
               sender: "bot",
               timestamp: new Date(),
-              // Các lựa chọn mặc định
-              quickReplies: ["Giờ làm việc?", "Địa chỉ ở đâu?", "Đặt lịch hẹn"],
+              quickReplies: [],
             },
           ]);
         } else {

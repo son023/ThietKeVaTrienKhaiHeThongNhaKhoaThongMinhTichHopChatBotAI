@@ -12,14 +12,22 @@ ENV_PATH = BASE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 class Settings:
-    # Cấu hình DB
-    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    is_docker = os.path.exists("/.dockerenv")
+
+    if is_docker:
+        default_neo4j_uri = "bolt://neo4j:7687"
+        default_mongo_uri = "mongodb://mongodb:27017"
+    else:
+        default_neo4j_uri = "bolt://localhost:7687"
+        default_mongo_uri = "mongodb://localhost:27017"
+    
+    NEO4J_URI = os.getenv("NEO4J_URI", default_neo4j_uri)
     NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
     NEO4J_PASS = os.getenv("NEO4J_PASSWORD", "password123")
     GEMINI_KEY = os.getenv("GEMINI_API_KEY")
     
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    MONGO_DB_NAME = "dental_chatbot"
+    MONGO_URI = os.getenv("MONGO_URI", default_mongo_uri)
+    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "dental_chatbot")
 
     # Model config
     INTENT_MODEL_PATH = os.getenv("INTENT_MODEL_PATH") 
