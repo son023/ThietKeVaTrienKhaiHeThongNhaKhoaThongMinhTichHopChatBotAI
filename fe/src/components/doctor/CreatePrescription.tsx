@@ -311,7 +311,7 @@ export function CreatePrescriptionEnhanced({
                     )}
                     <div>
                         <h1 className="typo-h3">Kê Đơn Thuốc</h1>
-                        <p className="text-sm text-neutral-text/60 mt-1">Mã lịch hẹn: <span className="font-mono">{appointmentId.slice(-8)}</span></p>
+                        <p className="text-sm text-neutral-text/60 mt-1">Mã lịch hẹn: <span className="font-mono">{appointmentId}</span></p>
                     </div>
                 </div>
                 <div className="flex gap-2">

@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 're
 import { authController, doctorController } from './controllers';
 import type { DoctorWithUser } from './controllers/DoctorController';
 import { PrescriptionManagement } from './components/doctor/PrescriptionManagement';
+import { CreatePrescriptionEnhanced } from './components/doctor/CreatePrescription';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -50,7 +51,14 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     setSelectedMedicalHistoryId(payload.medicalHistoryId || null);
     setSelectedPatientId(payload.patientId || null);
     setCurrentPage('create-prescription');
-    navigate('/doctor/create-prescription');
+    
+    // Truyền params qua URL
+    const params = new URLSearchParams();
+    if (payload.appointmentId) params.set('appointmentId', payload.appointmentId);
+    if (payload.medicalHistoryId) params.set('medicalHistoryId', payload.medicalHistoryId);
+    if (payload.patientId) params.set('patientId', payload.patientId);
+    
+    navigate(`/doctor/create-prescription?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -109,6 +117,10 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         navigate('/doctor/patients');
         break;
       case 'create-prescription':
+        // Clear state khi navigate từ sidebar để đảm bảo hiển thị PrescriptionManagement
+        setSelectedAppointmentId(null);
+        setSelectedMedicalHistoryId(null);
+        setSelectedPatientId(null);
         navigate('/doctor/create-prescription');
         break;
       case 'performance':
@@ -162,6 +174,41 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       <TreatmentPlanDetail
         planId={planId}
         onBack={() => navigate('/doctor/treatment-plans')}
+      />
+    );
+  }
+
+  function CreatePrescriptionRoute() {
+    const searchParams = new URLSearchParams(location.search);
+    
+    // Chỉ lấy params từ URL (không dùng state để đảm bảo tab từ sidebar luôn hiển thị PrescriptionManagement)
+    const appointmentId = searchParams.get('appointmentId');
+    const medicalHistoryId = searchParams.get('medicalHistoryId');
+    const patientId = searchParams.get('patientId');
+
+    // Nếu có đầy đủ thông tin từ URL, render CreatePrescriptionEnhanced
+    if (appointmentId && medicalHistoryId && patientId) {
+      return (
+        <CreatePrescriptionEnhanced
+          appointmentId={appointmentId}
+          medicalHistoryId={medicalHistoryId}
+          patientId={patientId}
+          onCreated={(prescriptionId) => {
+            // Quay lại trang examination
+            navigate(`/doctor/patients/${patientId}/examination`);
+          }}
+          onBack={() => {
+            // Quay lại trang examination
+            navigate(`/doctor/patients/${patientId}/examination`);
+          }}
+        />
+      );
+    }
+
+    // Nếu không có params (ví dụ: click từ sidebar), hiển thị PrescriptionManagement để chọn
+    return (
+      <PrescriptionManagement
+        onBack={() => navigate('/doctor')}
       />
     );
   }
@@ -222,11 +269,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
             />
             <Route
               path="/doctor/create-prescription"
-              element={
-                <PrescriptionManagement
-                  onBack={() => navigate('/doctor')}
-                />
-              }
+              element={<CreatePrescriptionRoute />}
             />
             <Route
               path="/doctor/treatment-plans"
