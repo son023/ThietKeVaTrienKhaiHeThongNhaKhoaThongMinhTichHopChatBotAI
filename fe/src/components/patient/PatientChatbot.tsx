@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { authController } from "../../controllers";
 import ReactMarkdown from "react-markdown";
 
-const API_BASE_URL = "http://localhost:8080/chatbot-service/api";
+const API_BASE_URL = "http://localhost:9992/api";
 
 interface Message {
   id: string;
