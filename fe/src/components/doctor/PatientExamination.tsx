@@ -4,25 +4,23 @@ import {
   AlertTriangle,
   Calendar,
   FileText,
-  Image as ImageIcon,
   Save,
   Printer,
   Phone,
   Mail,
-  Sparkles, ThermometerSun, Stethoscope, Pill, Plus, X
+  ThermometerSun, Stethoscope, Pill, Plus, X
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
-import { DentalChart } from '../DentalChart';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { connectWebSocket, subscribeToAppointmentRollback } from '../../services/websocketService';
 import { toast } from 'sonner';
-import {PatientWithUser, ToothIssue} from "../../models/Patient";
+import {PatientWithUser} from "../../models/Patient";
 import {medicalHistoryController, MedicalHistoryDTO} from "../../controllers/MedicalHistoryController";
 import {LabTestDTO, LabTestTypeDTO} from "../../models/LabTest";
 import {MedicalAttachmentDTO} from "../../models/MedicalAttachment";
@@ -43,39 +41,6 @@ interface PatientExaminationProps {
   onNavigateToCreatePrescription?: (appointmentId?: string, medicalHistoryId?: string) => void;
 }
 
-const dentalDiseaseOptions = [
-  { value: "CAVITY", label: "Sâu răng" },
-  { value: "GINGIVITIS", label: "Viêm nướu" },
-  { value: "PULPITIS", label: "Viêm tủy" },
-  { value: "PERIODONTAL", label: "Bệnh nha chu" },
-  { value: "SENSITIVITY", label: "Ê buốt" },
-  { value: "OTHER", label: "Khác" },
-];
-const noteTemplates = [
-  { id: "general", name: "Khám tổng quát", content: "Khám tổng quát:\n- Triệu chứng chính:\n- Khám lâm sàng:\n- Đánh giá:\n- Kế hoạch điều trị:" },
-  { id: "filling", name: "Trám răng", content: "Chỉ định trám:\n- Răng số:\n- Vật liệu:\n- Đánh giá sau trám:" },
-  { id: "root-canal", name: "Điều trị tủy", content: "Điều trị tủy:\n- Răng số:\n- Chẩn đoán:\n- Tình trạng ống tủy:\n- Kế hoạch:" },
-];
-const conditionToTool = (issue?: ToothIssue) => {
-  const text = `${issue?.description || ""} ${issue?.status || ""}`.toLowerCase();
-  if (text.includes("sâu") || text.includes("cavity")) return "cavity";
-  if (text.includes("trám") || text.includes("filling")) return "filling";
-  if (text.includes("tủy") || text.includes("root")) return "root-canal";
-  if (text.includes("nhổ") || text.includes("extract")) return "extraction";
-  if (text.includes("implant")) return "implant";
-  if (text.includes("sứ") || text.includes("crown")) return "crown";
-  return "issue";
-};
-const mapToothIssuesToChart = (issues?: ToothIssue[]) => {
-  const map: Record<string, string[]> = {};
-  issues?.forEach((issue) => {
-    if (!issue.toothNumber) return;
-    const key = issue.toothNumber.toString();
-    const condition = conditionToTool(issue);
-    map[key] = Array.from(new Set([...(map[key] || []), condition]));
-  });
-  return map;
-};
 
 
 export function PatientExamination({
@@ -86,8 +51,6 @@ export function PatientExamination({
                                      onNavigateToAppointments,
                                      onNavigateToCreatePrescription
                                    }: PatientExaminationProps) {
-  const [currentNote, setCurrentNote] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
   const [isAppointmentDialogOpen, setIsAppointmentDialogOpen] = useState(false);
@@ -99,7 +62,6 @@ export function PatientExamination({
   const [labTestTypes, setLabTestTypes] = useState<LabTestTypeDTO[]>([]);
   const [labTests, setLabTests] = useState<LabTestDTO[]>([]);
   const [attachments, setAttachments] = useState<MedicalAttachmentDTO[]>([]);
-  const [dentalChartData, setDentalChartData] = useState<Record<string, string[]>>({});
   const [internalNote, setInternalNote] = useState("");
   const [symptoms, setSymptoms] = useState<string>("");
   const [conditions, setConditions] = useState<Array<{
@@ -207,7 +169,6 @@ export function PatientExamination({
         setLabTestTypes(labTypesRes);
         setAttachments(attachmentRes);
         setLabTests(labTestsRes);
-        setDentalChartData(mapToothIssuesToChart(patientRes.toothIssues));
       } catch (err) {
         setError(
             err instanceof Error ? err.message : "Không tải được dữ liệu khám"
@@ -232,13 +193,6 @@ export function PatientExamination({
     return labTests.filter((lt) => lt.appointmentId === appointmentId);
   }, [labTests]);
 
-  const resultFiles = useMemo(() => {
-    if (!filteredAttachments.length) return [];
-    if (selectedLabTestId) {
-      return filteredAttachments.filter((f) => f.labTestId === selectedLabTestId);
-    }
-    return filteredAttachments;
-  }, [filteredAttachments, selectedLabTestId]);
 
   const selectedLabTest = useMemo(
       () => labTestsForAppointment.find((lt) => lt.id === selectedLabTestId),
@@ -252,14 +206,6 @@ export function PatientExamination({
     COMPLETED: { label: "Hoàn thành", color: "bg-green-100 text-green-800" },
     COMPLETE: { label: "Hoàn thành", color: "bg-green-100 text-green-800" },
     CANCELLED: { label: "Hủy", color: "bg-red-100 text-red-800" },
-  };
-
-  const applyTemplate = (templateId: string) => {
-    const template = noteTemplates.find((t) => t.id === templateId);
-    if (template) {
-      setCurrentNote(template.content);
-      setSelectedTemplate(templateId);
-    }
   };
 
   const handleAddCondition = () => {
@@ -278,29 +224,6 @@ export function PatientExamination({
 
   const handleRemoveCondition = (index: number) => {
     setConditions(conditions.filter((_, i) => i !== index));
-  };
-
-  const buildConditionsFromChart = () => {
-    const conditionsFromChart: Array<{
-      toothNumber?: number;
-      name?: string;
-      status?: string;
-      treatment?: string;
-      surface?: string;
-    }> = [];
-
-    Object.entries(dentalChartData).forEach(([toothNumber, toothConditions]) => {
-      if (toothConditions && toothConditions.length > 0) {
-        conditionsFromChart.push({
-          toothNumber: Number(toothNumber),
-          name: toothConditions.join(", "),
-          status: "ACTIVE",
-          treatment: internalNote?.slice(0, 250) || undefined,
-        });
-      }
-    });
-
-    return conditionsFromChart;
   };
 
   const upsertMedicalHistoryByAppointment = async () => {
@@ -335,24 +258,12 @@ export function PatientExamination({
     try {
       await upsertMedicalHistoryByAppointment();
 
-      await patientController.updateProfile(patientId, {
-        userId: patientId,
-        toothIssues: Object.entries(dentalChartData).map(
-          ([toothNumber, toothConditions]) => ({
-            toothNumber: Number(toothNumber),
-            status: "ACTIVE",
-            description: toothConditions.join(", "),
-          })
-        ),
-      });
-
       await appointmentController.updateStatus(appointmentId, "COMPLETED");
 
       toast.success("Đã lưu và hoàn tất khám");
 
       setSymptoms("");
       setConditions([]);
-      setDentalChartData({});
       setInternalNote("");
     } catch (err) {
       toast.error(
@@ -689,8 +600,7 @@ export function PatientExamination({
           <div className="col-span-12 lg:col-span-6 space-y-4">
             <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm min-h-[560px]">
               <CardHeader className="p-4 pb-0">
-                <CardTitle className="text-sm text-neutral-text flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+                <CardTitle className="typo-h4 flex items-center gap-2">
                   Khu vực khám bệnh
                 </CardTitle>
               </CardHeader>
@@ -698,31 +608,10 @@ export function PatientExamination({
                 <Tabs defaultValue="notes" className="flex flex-col gap-4">
                   <TabsList className="self-start">
                     <TabsTrigger value="notes">Ghi chú khám</TabsTrigger>
-                    <TabsTrigger value="dental">Dental chart</TabsTrigger>
                     <TabsTrigger value="labtests">Lab test</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="notes" className="space-y-4">
-                    <div className="flex gap-2 flex-wrap">
-                      {noteTemplates.map((template) => (
-                          <Button
-                              key={template.id}
-                              variant={
-                                selectedTemplate === template.id ? "default" : "outline"
-                              }
-                              size="sm"
-                              onClick={() => applyTemplate(template.id)}
-                              className={
-                                selectedTemplate === template.id
-                                    ? "bg-primary hover:bg-primary/90"
-                                    : ""
-                              }
-                          >
-                            {template.name}
-                          </Button>
-                      ))}
-                    </div>
-
                     <div className="space-y-4">
                       {/* Triệu chứng */}
                       <div>
@@ -806,33 +695,6 @@ export function PatientExamination({
                      
                     </div>
 
-                  </TabsContent>
-
-                  <TabsContent value="dental" className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <p className="text-sm text-neutral-text">
-                          Dental chart (đánh dấu trực tiếp trong lúc khám)
-                        </p>
-                      </div>
-                      <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-lg"
-                          onClick={() =>
-                              toast.info("Dental chart được lưu cùng lúc với Lưu khám")
-                          }
-                      >
-                        Tự động lưu khi hoàn tất khám
-                      </Button>
-                    </div>
-                    <div className="border border-[#e8e8e8] rounded-[12px] p-4 bg-white">
-                      <DentalChart
-                          value={dentalChartData}
-                          onChange={setDentalChartData}
-                      />
-                    </div>
                   </TabsContent>
 
                   <TabsContent value="labtests" className="space-y-4">
@@ -948,45 +810,6 @@ export function PatientExamination({
                               </div>
                           )}
                         </div>
-
-
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4 text-primary" />
-                            <p className="text-sm text-neutral-text">
-                              Kết quả / file đính kèm từ lab
-                            </p>
-                          </div>
-                          {resultFiles.length === 0 ? (
-                              <p className="text-sm text-neutral-text/60">
-                                Chưa có kết quả lab.
-                              </p>
-                          ) : (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {resultFiles.map((file) => (
-                                    <Card
-                                        key={file.id}
-                                        className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm"
-                                    >
-                                      <CardContent className="p-3 space-y-1">
-                                        <p className="text-sm text-neutral-text line-clamp-1">
-                                          {file.filePath || "Tệp không tên"}
-                                        </p>
-                                        <p className="text-xs text-neutral-text/60">
-                                          Loại: {file.type || "khác"}
-                                        </p>
-                                        <p className="text-xs text-neutral-text/60">
-                                          Cập nhật:{" "}
-                                          {file.updatedAt
-                                              ? new Date(file.updatedAt).toLocaleDateString("vi-VN")
-                                              : "N/A"}
-                                        </p>
-                                      </CardContent>
-                                    </Card>
-                                ))}
-                              </div>
-                          )}
-                        </div>
                       </TabsContent>
                     </Tabs>
                   </TabsContent>
@@ -1000,7 +823,7 @@ export function PatientExamination({
             <div className="lg:sticky top-4 space-y-4">
               <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm text-neutral-text">
+                  <CardTitle className="typo-h4 flex items-center gap-2">
                     Ghi chú nội bộ
                   </CardTitle>
                 </CardHeader>
@@ -1016,14 +839,15 @@ export function PatientExamination({
 
               <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
                 <CardContent className="p-4 space-y-2">
-                  <Button
-                      className="w-full bg-primary hover:bg-primary/90 rounded-lg"
-                      onClick={handleSaveComplete}
-                      disabled={saving || savingDraft}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
-                  </Button>
+                  {onNavigateToCreatePrescription && (
+                    <Button
+                        className="w-full bg-primary hover:bg-primary/90 rounded-lg"
+                        onClick={() => onNavigateToCreatePrescription(localStorage.getItem('currentAppointmentId') || undefined, undefined)}
+                    >
+                      <Pill className="w-4 h-4 mr-2" />
+                      Tạo đơn thuốc
+                    </Button>
+                  )}
                   <Button
                       variant="outline"
                       className="w-full rounded-lg border-[#e8e8e8]"
@@ -1034,25 +858,13 @@ export function PatientExamination({
                     {savingDraft ? "Đang lưu nháp..." : "Lưu nháp"}
                   </Button>
                   <Button
-                      variant="outline"
-                      className="w-full rounded-lg border-[#e8e8e8]"
-                      onClick={() => onNavigateToTreatmentPlan("new")}
+                      className="w-full bg-primary hover:bg-primary/90 rounded-lg"
+                      onClick={handleSaveComplete}
+                      disabled={saving || savingDraft}
                   >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Tạo kế hoạch điều trị
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
                   </Button>
-
-                  {onNavigateToCreatePrescription && (
-                      <Button
-                          //variant="outline"
-                          className="w-full bg-primary hover:bg-primary/90 rounded-lg"
-                          onClick={() => onNavigateToCreatePrescription(localStorage.getItem('currentAppointmentId') || undefined, undefined)}
-                      >
-                        <Pill className="w-4 h-4 mr-2" />
-                        Tạo đơn thuốc
-                      </Button>
-                  )}
-
                 </CardContent>
               </Card>
             </div>
@@ -1091,7 +903,7 @@ export function PatientExamination({
               
               <div>
                 <Label className="text-[#01304e] mb-1 block">
-                  Răng số (tùy chọn)
+                  Răng số
                 </Label>
                 <Input
                   type="number"
@@ -1128,7 +940,7 @@ export function PatientExamination({
 
               <div>
                 <Label className="text-[#01304e] mb-1 block">
-                  Điều trị (tùy chọn)
+                  Cách điều trị
                 </Label>
                 <Input
                   value={newCondition.treatment || ""}
@@ -1140,7 +952,7 @@ export function PatientExamination({
 
               <div>
                 <Label className="text-[#01304e] mb-1 block">
-                  Bề mặt (tùy chọn)
+                  Bề mặt răng
                 </Label>
                 <Input
                   value={newCondition.surface || ""}

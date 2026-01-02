@@ -6,10 +6,8 @@ import {
   appointmentController,
   AppointmentDTO,
 } from '../../controllers/AppointmentController';
-import {
-  patientController,
-  PatientWithUser,
-} from '../../controllers/PatientController';
+import { patientController } from '../../controllers/PatientController';
+import { PatientWithUser } from '../../models';
 
 interface DashboardProps {
   onNavigateToPatient: (id: string) => void;
