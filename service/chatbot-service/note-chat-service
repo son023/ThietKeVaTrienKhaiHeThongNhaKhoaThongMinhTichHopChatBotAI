@@ -32,5 +32,27 @@ USE_GPU=false
 
 python build_knowledge_base.py
 
-# Bước 6: Chạy Service
+# Bước 6:
+chạy neo4j
+chạy mongodb
+
+# Bước 7: Chạy Service
 python -m app.main
+
+thu vien can tai:
+fastapi==0.127.0
+langchain_huggingface==1.2.0
+langchain_neo4j==0.6.0
+motor==3.7.1
+neo4j==6.0.3
+protobuf==6.33.2
+pydantic==2.12.5
+pymongo==4.15.5
+python-dotenv==1.2.1
+torch==2.9.1
+transformers==4.57.3
+uvicorn==0.40.0
+
+và
+pip install sentence-transformers
+pip install google.generativeai
