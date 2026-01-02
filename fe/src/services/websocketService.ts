@@ -61,6 +61,17 @@ export interface AppointmentCreatedNotification {
   timestamp?: number;
 }
 
+export interface LabTestRequestedNotification {
+  type: string;
+  labTestId?: string;
+  appointmentId?: string;
+  medicalHistoryId?: string;
+  doctorId?: string;
+  labTestTypeId?: string;
+  message: string;
+  timestamp?: number;
+}
+
 
 
 export const connectWebSocket = (): Client | null => {
@@ -694,6 +705,100 @@ export const subscribeToAppointmentCreated = (
       subscription.unsubscribe();
       activeSubscriptions.delete(subscriptionKey);
       console.log(`[WebSocket] Unsubscribed from appointment created notifications for user: ${userId}`);
+    }
+  };
+};
+
+export const subscribeToLabTestRequested = (
+  userId: string,
+  onNotification: (notification: LabTestRequestedNotification) => void
+): (() => void) => {
+  console.log(`[WebSocket] Subscribing to lab test requested notifications for user: ${userId}`);
+
+  if (!stompClient) {
+    console.log('[WebSocket] No client found, creating new connection...');
+    connectWebSocket();
+  }
+
+  const topic = `/topic/request-labtest`;
+  console.log(`[WebSocket] Topic: ${topic}`);
+
+  const subscriptionKey = `lab-test-requested-${userId}`;
+  if (activeSubscriptions.has(subscriptionKey)) {
+    console.log(`[WebSocket] Unsubscribing from existing subscription for: ${subscriptionKey}`);
+    const existingSub = activeSubscriptions.get(subscriptionKey);
+    existingSub?.unsubscribe();
+    activeSubscriptions.delete(subscriptionKey);
+  }
+
+  let retryCount = 0;
+  const maxRetries = 50;
+
+  const subscribe = () => {
+    if (stompClient && stompClient.connected) {
+      try {
+        const subscription = stompClient.subscribe(topic, (message: IMessage) => {
+          console.log(`[WebSocket] 📨 Message received on topic ${topic}:`, message.body);
+          try {
+            const rawNotification = JSON.parse(message.body);
+            console.log('[WebSocket] Raw lab test requested notification from backend:', rawNotification);
+
+            const notification: LabTestRequestedNotification = {
+              type: rawNotification.type || 'LAB_TEST_REQUESTED',
+              labTestId: rawNotification.labTestId || undefined,
+              appointmentId: rawNotification.appointmentId || undefined,
+              medicalHistoryId: rawNotification.medicalHistoryId || undefined,
+              doctorId: rawNotification.doctorId || undefined,
+              labTestTypeId: rawNotification.labTestTypeId || undefined,
+              message: rawNotification.message || 'Yêu cầu xét nghiệm mới đã được tạo',
+              timestamp: rawNotification.timestamp || Date.now(),
+            };
+
+            console.log('[WebSocket] Parsed LabTestRequestedNotification:', notification);
+            onNotification(notification);
+          } catch (error) {
+            console.error('[WebSocket] Error parsing lab test requested message:', error);
+            console.error('[WebSocket] Raw message body:', message.body);
+          }
+        });
+
+        activeSubscriptions.set(subscriptionKey, subscription);
+        console.log(`[WebSocket] Successfully subscribed to ${topic}`);
+        console.log(`[WebSocket] Total active subscriptions: ${activeSubscriptions.size}`);
+      } catch (error) {
+        console.error('[WebSocket] Error subscribing:', error);
+      }
+    } else {
+      retryCount++;
+      if (retryCount < maxRetries) {
+        setTimeout(subscribe, 100);
+      } else {
+        console.error('[WebSocket] Connection timeout');
+      }
+    }
+  };
+
+  if (stompClient?.connected) {
+    subscribe();
+  } else {
+    const checkConnection = setInterval(() => {
+      if (stompClient?.connected) {
+        clearInterval(checkConnection);
+        console.log('[WebSocket] Connection established, subscribing now');
+        subscribe();
+      } else if (retryCount >= maxRetries) {
+        clearInterval(checkConnection);
+        console.error('[WebSocket] Connection timeout');
+      }
+    }, 100);
+  }
+
+  return () => {
+    const subscription = activeSubscriptions.get(subscriptionKey);
+    if (subscription) {
+      subscription.unsubscribe();
+      activeSubscriptions.delete(subscriptionKey);
+      console.log(`[WebSocket] Unsubscribed from ${topic}`);
     }
   };
 };

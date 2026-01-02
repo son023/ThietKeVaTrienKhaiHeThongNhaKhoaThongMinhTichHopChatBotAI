@@ -1,6 +1,7 @@
 package com.main_project.notification_service.service;
 
 import com.main_project.notification_service.dto.LabTestCompletedNotificationMessage;
+import com.main_project.notification_service.dto.LabTestRequestedNotificationMessage;
 import com.main_project.notification_service.dto.InvoicePaidNotificationMessage;
 import com.main_project.notification_service.dto.PrescriptionDispensedNotificationMessage;
 import com.main_project.notification_service.dto.AppointmentCreatedNotificationMessage;
@@ -142,6 +143,33 @@ public class WebSocketNotificationService {
         messagingTemplate.convertAndSend(topic, notification);
         
         log.info("Appointment created notification sent to topic {} for appointment {}", topic, appointmentId);
+    }
+
+    public void sendLabTestRequestedNotification(
+            UUID labTestId,
+            UUID appointmentId,
+            UUID medicalHistoryId,
+            UUID doctorId,
+            UUID labTestTypeId,
+            String message) {
+        log.info("Sending lab test requested notification for labTest {} appointment={} doctor={}", 
+                labTestId, appointmentId, doctorId);
+
+        LabTestRequestedNotificationMessage notification = LabTestRequestedNotificationMessage.builder()
+                .type("LAB_TEST_REQUESTED")
+                .labTestId(labTestId != null ? labTestId.toString() : null)
+                .appointmentId(appointmentId != null ? appointmentId.toString() : null)
+                .medicalHistoryId(medicalHistoryId != null ? medicalHistoryId.toString() : null)
+                .doctorId(doctorId != null ? doctorId.toString() : null)
+                .labTestTypeId(labTestTypeId != null ? labTestTypeId.toString() : null)
+                .message(message != null ? message : "Yêu cầu xét nghiệm mới đã được tạo")
+                .timestamp(System.currentTimeMillis())
+                .build();
+
+        String topic = "/topic/request-labtest";
+        messagingTemplate.convertAndSend(topic, notification);
+        
+        log.info("Lab test requested notification sent to topic {} for labTest {}", topic, labTestId);
     }
 
 }
