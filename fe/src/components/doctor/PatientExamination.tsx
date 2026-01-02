@@ -842,7 +842,22 @@ export function PatientExamination({
                   {onNavigateToCreatePrescription && (
                     <Button
                         className="w-full bg-primary hover:bg-primary/90 rounded-lg"
-                        onClick={() => onNavigateToCreatePrescription(localStorage.getItem('currentAppointmentId') || undefined, undefined)}
+                        onClick={async () => {
+                          if (!appointmentId || !patientId) {
+                            toast.error("Không tìm thấy lịch hẹn hoặc bệnh nhân");
+                            return;
+                          }
+                          let medicalHistoryId: string | undefined;
+                          try {
+                            const historyByAppt = await medicalHistoryController.getByAppointmentId(appointmentId);
+                            if (historyByAppt && historyByAppt.length > 0) {
+                              medicalHistoryId = historyByAppt[0].id;
+                            }
+                          } catch (err) {
+                            console.warn("Lỗi khi lấy medical history:", err);
+                          }
+                          onNavigateToCreatePrescription(appointmentId, medicalHistoryId);
+                        }}
                     >
                       <Pill className="w-4 h-4 mr-2" />
                       Tạo đơn thuốc

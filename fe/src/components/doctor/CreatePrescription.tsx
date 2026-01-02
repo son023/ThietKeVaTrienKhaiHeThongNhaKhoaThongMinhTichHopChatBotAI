@@ -21,6 +21,7 @@ interface CreatePrescriptionEnhancedProps {
     medicalHistoryId: string;
     patientId: string;
     onCreated?: (id: string) => void;
+    onViewPrescription?: (dispenseOrderId: string) => void;
     onBack?: () => void;
 }
 
@@ -48,6 +49,7 @@ export function CreatePrescriptionEnhanced({
     medicalHistoryId,
     patientId,
     onCreated,
+    onViewPrescription,
     onBack,
 }: CreatePrescriptionEnhancedProps) {
     const [patient, setPatient] = useState<PatientWithUser | null>(null);
@@ -58,7 +60,7 @@ export function CreatePrescriptionEnhanced({
     const [errorDetail, setErrorDetail] = useState<PrescriptionErrorNotification | null>(null);
     const [loading, setLoading] = useState(true);
     const [showPreview, setShowPreview] = useState(false);
-    const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string }>({ status: 'LOADING' });
+    const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string; dispenseOrderId?: string }>({ status: 'LOADING' });
     const [checkingStatus, setCheckingStatus] = useState(false);
 
     const currentUser = authController.getCurrentUser();
@@ -280,9 +282,9 @@ export function CreatePrescriptionEnhanced({
                 <h2 className="typo-h3 mb-2">Hồ sơ đã có đơn thuốc</h2>
                 <p className="text-neutral-text/60 mb-4">Trạng thái: {statusInfo.status}</p>
                 <div className="flex gap-3">
-                    {statusInfo.prescriptionId && (
+                    {statusInfo.dispenseOrderId && (
                         <Button
-                            onClick={() => onCreated?.(statusInfo.prescriptionId!)}
+                            onClick={() => onViewPrescription?.(statusInfo.dispenseOrderId!)}
                             className="bg-primary text-white"
                         >
                             Xem / Sửa đơn thuốc
