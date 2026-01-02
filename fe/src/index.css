@@ -59,3 +59,43 @@
     color: #333333;
   }
 }
+
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-content,
+  .print-content * {
+    visibility: visible;
+  }
+  
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+  }
+
+  .print-content > div {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-content * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  @page {
+    size: A4;
+    margin: 1.5cm 1cm;
+  }
+
+  button:not(.print-content button),
+  .print\\:hidden {
+    display: none !important;
+  }
+}

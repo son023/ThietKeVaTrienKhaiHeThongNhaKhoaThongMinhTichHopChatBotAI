@@ -214,10 +214,10 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
         setIsCheckingPayment(true);
         console.log(prescriptionId);
         const paymentStatus = await inventoryController.getPaymentStatusOfPrescription(prescriptionId);
-
-
+        
+        
         setIsInvoicePaid(paymentStatus.isPaid || false);
-
+        
         if (paymentStatus.isPaid) {
           //toast.success('✅ Hóa đơn đã được thanh toán. Có thể cấp phát đơn thuốc.');
         } else {
@@ -229,7 +229,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
       } finally {
         setIsCheckingPayment(false);
       }
-    }
+    } 
     catch (error) {
       console.error('Load prescription detail error:', error);
       toast.error('Không thể tải chi tiết đơn thuốc');
@@ -259,7 +259,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   // useEffect(() => {
   //   const currentUser = authController.getCurrentUser();
   //   if (!currentUser || !prescriptionId) return;
-
+  
   //   const unsubscribe = subscribeToInvoicePaid(currentUser.id, (notification: InvoicePaidNotification) => {
   //     // Kiểm tra xem notification có liên quan đến đơn thuốc hiện tại không
   //     // (có thể so sánh qua appointmentId hoặc dispenseOrderId)
@@ -269,7 +269,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   //       loadData();
   //     }
   //   });
-
+  
   //   return () => {
   //     unsubscribe();
   //   };
@@ -296,10 +296,10 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
       await inventoryController.markAsSold(prescriptionId, currentUser.id);
       toast.success('Đơn thuốc đã được cấp phát thành công!');
-
+      
       // ✅ Reload data để cập nhật status
       await loadData();
-
+      
       // Không tự động quay lại nữa, để người dùng thấy nút đã bị disable
       // setTimeout(() => onBack(), 1500);
     } catch (error) {
@@ -410,8 +410,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                 Ghi chú của Bác sĩ:
               </p>
               <div className="space-y-1 text-sm text-neutral-text whitespace-pre-line">
-                {doctorNotes || 'Không có ghi chú'}
-              </div>
+                 {doctorNotes || 'Không có ghi chú'}
+            </div>
             </div>
           </div>
 
@@ -452,8 +452,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === tab.id
-                    ? 'border-primary text-primary bg-neutral-muted'
-                    : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
+                      ? 'border-primary text-primary bg-neutral-muted'
+                      : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
                     }`}
                 >
                   {tab.label}

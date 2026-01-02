@@ -21,6 +21,7 @@ interface CreatePrescriptionEnhancedProps {
     medicalHistoryId: string;
     patientId: string;
     onCreated?: (id: string) => void;
+    onViewPrescription?: (dispenseOrderId: string) => void;
     onBack?: () => void;
 }
 
@@ -44,12 +45,13 @@ const dosageTemplates = [
 ];
 
 export function CreatePrescriptionEnhanced({
-                                               appointmentId,
-                                               medicalHistoryId,
-                                               patientId,
-                                               onCreated,
-                                               onBack,
-                                           }: CreatePrescriptionEnhancedProps) {
+    appointmentId,
+    medicalHistoryId,
+    patientId,
+    onCreated,
+    onViewPrescription,
+    onBack,
+}: CreatePrescriptionEnhancedProps) {
     const [patient, setPatient] = useState<PatientWithUser | null>(null);
     const [medicalHistory, setMedicalHistory] = useState<MedicalHistoryDTO | null>(null);
     const [items, setItems] = useState<PrescriptionItem[]>([]);
@@ -58,7 +60,7 @@ export function CreatePrescriptionEnhanced({
     const [errorDetail, setErrorDetail] = useState<PrescriptionErrorNotification | null>(null);
     const [loading, setLoading] = useState(true);
     const [showPreview, setShowPreview] = useState(false);
-    const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string }>({ status: 'LOADING' });
+    const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string; dispenseOrderId?: string }>({ status: 'LOADING' });
     const [checkingStatus, setCheckingStatus] = useState(false);
 
     const currentUser = authController.getCurrentUser();
@@ -90,7 +92,7 @@ export function CreatePrescriptionEnhanced({
                 );
 
                 if(n.status === 'SUCCESS'){
-                    // Tự động onBack sau 1.5 giây để người dùng kịp đọc thông báo
+                // Tự động onBack sau 1.5 giây để người dùng kịp đọc thông báo
                     setTimeout(() => {
                         onBack?.();
                     }, 3000);
@@ -280,9 +282,9 @@ export function CreatePrescriptionEnhanced({
                 <h2 className="typo-h3 mb-2">Hồ sơ đã có đơn thuốc</h2>
                 <p className="text-neutral-text/60 mb-4">Trạng thái: {statusInfo.status}</p>
                 <div className="flex gap-3">
-                    {statusInfo.prescriptionId && (
+                    {statusInfo.dispenseOrderId && (
                         <Button
-                            onClick={() => onCreated?.(statusInfo.prescriptionId!)}
+                            onClick={() => onViewPrescription?.(statusInfo.dispenseOrderId!)}
                             className="bg-primary text-white"
                         >
                             Xem / Sửa đơn thuốc
@@ -683,25 +685,25 @@ export function CreatePrescriptionEnhanced({
                             <h3 className="font-semibold text-neutral-text mb-3">Danh sách thuốc:</h3>
                             <table className="w-full text-sm border-collapse">
                                 <thead>
-                                <tr className="bg-neutral-muted border-b border-neutral-border/30">
-                                    <th className="text-left p-3 font-semibold text-neutral-text">STT</th>
-                                    <th className="text-left p-3 font-semibold text-neutral-text">Tên thuốc</th>
-                                    <th className="text-center p-3 font-semibold text-neutral-text">SL</th>
-                                    <th className="text-left p-3 font-semibold text-neutral-text">Cách dùng</th>
-                                </tr>
+                                    <tr className="bg-neutral-muted border-b border-neutral-border/30">
+                                        <th className="text-left p-3 font-semibold text-neutral-text">STT</th>
+                                        <th className="text-left p-3 font-semibold text-neutral-text">Tên thuốc</th>
+                                        <th className="text-center p-3 font-semibold text-neutral-text">SL</th>
+                                        <th className="text-left p-3 font-semibold text-neutral-text">Cách dùng</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                {items.map((item, idx) => (
-                                    <tr key={idx} className="border-b border-neutral-border/20 hover:bg-neutral-muted/30 transition-colors">
-                                        <td className="p-3 text-neutral-text">{idx + 1}</td>
-                                        <td className="p-3 font-medium text-neutral-text">{item.name}</td>
-                                        <td className="text-center p-3 text-neutral-text">{item.quantity}</td>
-                                        <td className="p-3 text-xs text-neutral-text">
-                                            {item.dosage} - {item.frequency} - {item.duration}
-                                            {item.instruction && <div className="text-neutral-text/60 mt-1">{item.instruction}</div>}
-                                        </td>
-                                    </tr>
-                                ))}
+                                    {items.map((item, idx) => (
+                                        <tr key={idx} className="border-b border-neutral-border/20 hover:bg-neutral-muted/30 transition-colors">
+                                            <td className="p-3 text-neutral-text">{idx + 1}</td>
+                                            <td className="p-3 font-medium text-neutral-text">{item.name}</td>
+                                            <td className="text-center p-3 text-neutral-text">{item.quantity}</td>
+                                            <td className="p-3 text-xs text-neutral-text">
+                                                {item.dosage} - {item.frequency} - {item.duration}
+                                                {item.instruction && <div className="text-neutral-text/60 mt-1">{item.instruction}</div>}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
@@ -725,3 +727,4 @@ export function CreatePrescriptionEnhanced({
         </div>
     );
 }
+
