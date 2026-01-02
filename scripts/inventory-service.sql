@@ -183,13 +183,37 @@ CREATE INDEX idx_dispense_item_dispense_order_id ON public.dispense_item (dispen
 INSERT INTO public.medicine (id, name, unit, description, sale_price)
 VALUES
     ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Paracetamol 500mg', 'Viên', 'Thuốc giảm đau hạ sốt', 1000),
-    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Amoxicillin 500mg', 'Viên', 'Thuốc kháng sinh', 2000);
+    ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Amoxicillin 500mg', 'Viên', 'Thuốc kháng sinh', 2000),
+    -- Thuốc bình thường (đủ hàng)
+    ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Ibuprofen 400mg', 'Viên', 'Thuốc chống viêm giảm đau', 1500),
+    ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Omeprazole 20mg', 'Viên', 'Thuốc điều trị dạ dày', 3000),
+    -- Thuốc sắp hết hàng (tổng stock < 20)
+    ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Aspirin 100mg', 'Viên', 'Thuốc chống đông máu', 800),
+    ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Metformin 500mg', 'Viên', 'Thuốc điều trị tiểu đường', 2500),
+    ('11111111-1111-1111-1111-111111111111', 'Atorvastatin 20mg', 'Viên', 'Thuốc giảm cholesterol', 4000),
+    ('22222222-2222-2222-2222-222222222222', 'Amlodipine 5mg', 'Viên', 'Thuốc điều trị cao huyết áp', 3500),
+    ('33333333-3333-3333-3333-333333333333', 'Losartan 50mg', 'Viên', 'Thuốc điều trị cao huyết áp', 3200);
 
 -- 2. Insert Inventory Lot (Lô thuốc)
 INSERT INTO public.inventory_lot (id, lot_no, expire_date, quantity_on_hand, cost_price, medicine_id)
 VALUES
     ('2f989fbe-5479-4d63-a929-1e42833dcbeb', 'LOT2025_A', '2026-12-31', 1000, 800, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-    ('db3ca0f0-9d9a-4664-b8a6-f86e62d98756', 'LOT2025_B', '2026-12-31', 1000, 1500, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+    ('db3ca0f0-9d9a-4664-b8a6-f86e62d98756', 'LOT2025_B', '2026-12-31', 1000, 1500, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+    -- Thuốc đủ hàng (Ibuprofen, Omeprazole)
+    ('a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7', 'LOT2025_IBUP_001', '2026-12-31', 600, 1200, 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+    ('b2c3d4e5-f6a7-4890-b1c2-d3e4f5a6b7c8', 'LOT2025_OMEP_001', '2026-12-31', 500, 2500, 'dddddddd-dddd-dddd-dddd-dddddddddddd'),
+    -- Thuốc sắp hết hàng (tổng < 20)
+    ('c3d4e5f6-a7b8-4901-c2d3-e4f5a6b7c8d9', 'LOT2025_ASPI_001', '2026-12-31', 15, 600, 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), -- Aspirin: 15 viên
+    ('d4e5f6a7-b8c9-4012-d3e4-f5a6b7c8d9e0', 'LOT2025_MET_001', '2026-12-31', 8, 2000, 'ffffffff-ffff-ffff-ffff-ffffffffffff'), -- Metformin: 8 viên
+    ('e5f6a7b8-c9d0-4123-e4f5-a6b7c8d9e0f1', 'LOT2025_ATOR_001', '2026-12-31', 12, 3200, '11111111-1111-1111-1111-111111111111'), -- Atorvastatin: 12 viên
+    ('f6a7b8c9-d0e1-4234-f5a6-b7c8d9e0f1a2', 'LOT2025_AMLO_001', '2026-12-31', 5, 2800, '22222222-2222-2222-2222-222222222222'), -- Amlodipine: 5 viên
+    ('a7b8c9d0-e1f2-4345-a6b7-c8d9e0f1a2b3', 'LOT2025_LOS_001', '2026-12-31', 10, 2600, '33333333-3333-3333-3333-333333333333'), -- Losartan: 10 viên
+    -- Thuốc sắp hết hạn (trong vòng 60 ngày)
+    ('b8c9d0e1-f2a3-4456-b7c8-d9e0f1a2b3c4', 'LOT2024_VITC_001', CURRENT_DATE + INTERVAL '25 days', 200, 500, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), -- Vitamin C: 25 ngày nữa
+    ('c9d0e1f2-a3b4-4567-c8d9-e0f1a2b3c4d5', 'LOT2024_CALC_001', CURRENT_DATE + INTERVAL '30 days', 150, 800, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), -- Calcium: 30 ngày nữa
+    ('d0e1f2a3-b4c5-4678-d9e0-f1a2b3c4d5e6', 'LOT2024_MULTI_001', CURRENT_DATE + INTERVAL '45 days', 100, 1200, 'cccccccc-cccc-cccc-cccc-cccccccccccc'), -- Multivitamin: 45 ngày nữa
+    ('e1f2a3b4-c5d6-4789-e0f1-a2b3c4d5e6f7', 'LOT2024_VITD_001', CURRENT_DATE + INTERVAL '60 days', 80, 1500, 'dddddddd-dddd-dddd-dddd-dddddddddddd'), -- Vitamin D: 60 ngày nữa
+    ('f2a3b4c5-d6e7-4890-f1a2-b3c4d5e6f7a8', 'LOT2024_IRON_001', CURRENT_DATE + INTERVAL '15 days', 120, 1000, 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'); -- Iron: 15 ngày nữa
 
 -- 3. Insert Pharmacist (Dược sĩ)
 INSERT INTO public.pharmacist (user_id, certificate, degree)
@@ -199,6 +223,26 @@ VALUES (
            'Bằng cấp A'
        );
 
+INSERT INTO public.stock_ledger (id, type, quantity, reference_type, inventory_lot_id, pharmacist_id, create_at)
+VALUES
+    -- Thuốc ban đầu (Paracetamol, Amoxicillin)
+    (gen_random_uuid(), 'IN', 1000, 'IMPORT', '2f989fbe-5479-4d63-a929-1e42833dcbeb', '00000000-0000-0000-0000-000000000401', NOW()), -- Paracetamol: 1000 viên
+    (gen_random_uuid(), 'IN', 1000, 'IMPORT', 'db3ca0f0-9d9a-4664-b8a6-f86e62d98756', '00000000-0000-0000-0000-000000000401', NOW()), -- Amoxicillin: 1000 viên
+    -- Thuốc đủ hàng (Ibuprofen, Omeprazole)
+    (gen_random_uuid(), 'IN', 600, 'IMPORT', 'a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7', '00000000-0000-0000-0000-000000000401', NOW()),
+    (gen_random_uuid(), 'IN', 500, 'IMPORT', 'b2c3d4e5-f6a7-4890-b1c2-d3e4f5a6b7c8', '00000000-0000-0000-0000-000000000401', NOW()),
+    -- Thuốc sắp hết hàng
+    (gen_random_uuid(), 'IN', 15, 'IMPORT', 'c3d4e5f6-a7b8-4901-c2d3-e4f5a6b7c8d9', '00000000-0000-0000-0000-000000000401', NOW()), -- Aspirin: 15 viên
+    (gen_random_uuid(), 'IN', 8, 'IMPORT', 'd4e5f6a7-b8c9-4012-d3e4-f5a6b7c8d9e0', '00000000-0000-0000-0000-000000000401', NOW()), -- Metformin: 8 viên
+    (gen_random_uuid(), 'IN', 12, 'IMPORT', 'e5f6a7b8-c9d0-4123-e4f5-a6b7c8d9e0f1', '00000000-0000-0000-0000-000000000401', NOW()), -- Atorvastatin: 12 viên
+    (gen_random_uuid(), 'IN', 5, 'IMPORT', 'f6a7b8c9-d0e1-4234-f5a6-b7c8d9e0f1a2', '00000000-0000-0000-0000-000000000401', NOW()), -- Amlodipine: 5 viên
+    (gen_random_uuid(), 'IN', 10, 'IMPORT', 'a7b8c9d0-e1f2-4345-a6b7-c8d9e0f1a2b3', '00000000-0000-0000-0000-000000000401', NOW()), -- Losartan: 10 viên
+    -- Thuốc sắp hết hạn
+    (gen_random_uuid(), 'IN', 200, 'IMPORT', 'b8c9d0e1-f2a3-4456-b7c8-d9e0f1a2b3c4', '00000000-0000-0000-0000-000000000401', NOW()), -- Vitamin C: 200 viên
+    (gen_random_uuid(), 'IN', 150, 'IMPORT', 'c9d0e1f2-a3b4-4567-c8d9-e0f1a2b3c4d5', '00000000-0000-0000-0000-000000000401', NOW()), -- Calcium: 150 viên
+    (gen_random_uuid(), 'IN', 100, 'IMPORT', 'd0e1f2a3-b4c5-4678-d9e0-f1a2b3c4d5e6', '00000000-0000-0000-0000-000000000401', NOW()), -- Multivitamin: 100 viên
+    (gen_random_uuid(), 'IN', 80, 'IMPORT', 'e1f2a3b4-c5d6-4789-e0f1-a2b3c4d5e6f7', '00000000-0000-0000-0000-000000000401', NOW()), -- Vitamin D: 80 viên
+    (gen_random_uuid(), 'IN', 120, 'IMPORT', 'f2a3b4c5-d6e7-4890-f1a2-b3c4d5e6f7a8', '00000000-0000-0000-0000-000000000401', NOW()); -- Iron: 120 viên
 
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
