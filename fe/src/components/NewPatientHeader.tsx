@@ -226,7 +226,7 @@ export function NewPatientHeader({
             const serviceName = appointment.medicalServices?.[0]?.serviceName || 'Khám bệnh';
 
             // Tạo reminder 24 giờ trước (trong khoảng 23.5 - 24 giờ)
-            if (hoursUntilAppointment <= 24 && hoursUntilAppointment > 23.5) {
+            if (hoursUntilAppointment <= 24 && hoursUntilAppointment > 1) {
               const reminderId = `reminder-24h-${appointment.id}`;
               if (!remindersMap.has(reminderId)) {
                 remindersMap.set(reminderId, {
@@ -282,7 +282,7 @@ export function NewPatientHeader({
     // Load reminders khi component mount
     loadAppointmentReminders();
 
-    // Load reminders mỗi 5 phút để cập nhật thời gian
+    // Load reminders mỗi 1 phút để cập nhật thời gian
     const interval = setInterval(loadAppointmentReminders, 1 * 60 * 1000);
 
     return () => clearInterval(interval);

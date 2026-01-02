@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, {useState, useEffect, useRef, useMemo} from 'react';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -22,17 +22,17 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { connectWebSocket, subscribeToAppointmentRollback } from '../../services/websocketService';
 import { toast } from 'sonner';
-import { PatientWithUser, ToothIssue } from "../../models/Patient";
-import { medicalHistoryController, MedicalHistoryDTO } from "../../controllers/MedicalHistoryController";
-import { LabTestDTO, LabTestTypeDTO } from "../../models/LabTest";
-import { MedicalAttachmentDTO } from "../../models/MedicalAttachment";
-import { appointmentController, authController, doctorController, patientController } from "../../controllers";
-import { medicalAttachmentController } from "../../controllers/MedicalAttachmentController";
-import { labTestController } from "../../controllers/LabTestController";
-import { labTestTypeController } from "../../controllers/LabTestTypeController";
-import { Badge } from "../ui/badge";
-import { LabTestDetailDialog } from "./LabTestDetailDialog";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import {PatientWithUser, ToothIssue} from "../../models/Patient";
+import {medicalHistoryController, MedicalHistoryDTO} from "../../controllers/MedicalHistoryController";
+import {LabTestDTO, LabTestTypeDTO} from "../../models/LabTest";
+import {MedicalAttachmentDTO} from "../../models/MedicalAttachment";
+import {appointmentController, authController, doctorController, patientController} from "../../controllers";
+import {medicalAttachmentController} from "../../controllers/MedicalAttachmentController";
+import {labTestController} from "../../controllers/LabTestController";
+import {labTestTypeController} from "../../controllers/LabTestTypeController";
+import {Badge} from "../ui/badge";
+import {LabTestDetailDialog} from "./LabTestDetailDialog";
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "../ui/dialog";
 
 interface PatientExaminationProps {
   patientId: string | null;
@@ -79,13 +79,13 @@ const mapToothIssuesToChart = (issues?: ToothIssue[]) => {
 
 
 export function PatientExamination({
-  patientId,
-  appointmentId,
-  onBack,
-  onNavigateToTreatmentPlan,
-  onNavigateToAppointments,
-  onNavigateToCreatePrescription
-}: PatientExaminationProps) {
+                                     patientId,
+                                     appointmentId,
+                                     onBack,
+                                     onNavigateToTreatmentPlan,
+                                     onNavigateToAppointments,
+                                     onNavigateToCreatePrescription
+                                   }: PatientExaminationProps) {
   const [currentNote, setCurrentNote] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
@@ -132,16 +132,16 @@ export function PatientExamination({
   const [savingDraft, setSavingDraft] = useState(false);
 
   const Info = ({ label, value }: { label: string; value?: string }) => (
-    <div>
-      <p className="text-sm text-neutral-text/60 mb-1 font-medium">{label}</p>
-      <p className="text-neutral-text">{value || "Chưa có thông tin"}</p>
-    </div>
+      <div>
+        <p className="text-sm text-neutral-text/60 mb-1 font-medium">{label}</p>
+        <p className="text-neutral-text">{value || "Chưa có thông tin"}</p>
+      </div>
   );
 
   const NoteBlock = ({ value }: { value?: string }) => (
-    <div className="bg-neutral-muted p-4 rounded-lg whitespace-pre-wrap font-mono text-sm text-neutral-text border border-neutral-border/30">
-      {value || "Không có ghi chú"}
-    </div>
+      <div className="bg-neutral-muted p-4 rounded-lg whitespace-pre-wrap font-mono text-sm text-neutral-text border border-neutral-border/30">
+        {value || "Không có ghi chú"}
+      </div>
   );
 
   const formatDateTime = (iso?: string) => {
@@ -155,21 +155,6 @@ export function PatientExamination({
     });
   };
 
-  // Format gender helper
-  const formatGender = (gender: string | null | undefined): string => {
-    if (!gender) return "N/A";
-    switch (gender.toUpperCase()) {
-      case "MALE":
-        return "Nam";
-      case "FEMALE":
-        return "Nữ";
-      case "OTHER":
-        return "Khác";
-      default:
-        return gender;
-    }
-  };
-
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -177,16 +162,16 @@ export function PatientExamination({
     connectWebSocket();
     const navigateCallback = onNavigateToAppointments;
     const unsubscribe = subscribeToAppointmentRollback(
-      appointmentId,
-      (notification) => {
-        toast.error(
-          notification.message ||
-          "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
-        );
-        if (navigateCallback) {
-          navigateCallback();
+        appointmentId,
+        (notification) => {
+          toast.error(
+              notification.message ||
+              "Bắt đầu khám thất bại. Vui lòng quay lại trang lịch hẹn."
+          );
+          if (navigateCallback) {
+            navigateCallback();
+          }
         }
-      }
     );
     unsubscribeRef.current = unsubscribe;
 
@@ -209,13 +194,13 @@ export function PatientExamination({
       setError(null);
       try {
         const [patientRes, historyRes, labTypesRes, attachmentRes, labTestsRes] =
-          await Promise.all([
-            patientController.getWithUserById(patientId),
-            medicalHistoryController.getByPatientId(patientId).catch(() => []),
-            labTestTypeController.getAll().catch(() => []),
-            medicalAttachmentController.getAll().catch(() => []),
-            labTestController.getAll().catch(() => []),
-          ]);
+            await Promise.all([
+              patientController.getWithUserById(patientId),
+              medicalHistoryController.getByPatientId(patientId).catch(() => []),
+              labTestTypeController.getAll().catch(() => []),
+              medicalAttachmentController.getAll().catch(() => []),
+              labTestController.getAll().catch(() => []),
+            ]);
 
         setPatient(patientRes);
         setHistories(historyRes);
@@ -225,7 +210,7 @@ export function PatientExamination({
         setDentalChartData(mapToothIssuesToChart(patientRes.toothIssues));
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Không tải được dữ liệu khám"
+            err instanceof Error ? err.message : "Không tải được dữ liệu khám"
         );
       } finally {
         setLoading(false);
@@ -238,20 +223,14 @@ export function PatientExamination({
   const filteredAttachments = useMemo(() => {
     if (!appointmentId) return attachments;
     return attachments.filter(
-      (att) => !att.labTestId || att.labTestId === appointmentId
+        (att) => !att.labTestId || att.labTestId === appointmentId
     );
   }, [attachments]);
 
   const labTestsForAppointment = useMemo(() => {
     if (!appointmentId) return [];
     return labTests.filter((lt) => lt.appointmentId === appointmentId);
-  }, [labTests, appointmentId]);
-
-  // Tìm medical history hiện tại theo appointmentId
-  const currentMedicalHistory = useMemo(() => {
-    if (!appointmentId) return null;
-    return histories.find(h => h.appointmentId === appointmentId) || null;
-  }, [histories, appointmentId]);
+  }, [labTests]);
 
   const resultFiles = useMemo(() => {
     if (!filteredAttachments.length) return [];
@@ -262,8 +241,8 @@ export function PatientExamination({
   }, [filteredAttachments, selectedLabTestId]);
 
   const selectedLabTest = useMemo(
-    () => labTestsForAppointment.find((lt) => lt.id === selectedLabTestId),
-    [labTestsForAppointment, selectedLabTestId]
+      () => labTestsForAppointment.find((lt) => lt.id === selectedLabTestId),
+      [labTestsForAppointment, selectedLabTestId]
   );
 
   const labStatusMeta: Record<string, { label: string; color: string }> = {
@@ -359,11 +338,11 @@ export function PatientExamination({
       await patientController.updateProfile(patientId, {
         userId: patientId,
         toothIssues: Object.entries(dentalChartData).map(
-          ([toothNumber, toothConditions]) => ({
-            toothNumber: Number(toothNumber),
-            status: "ACTIVE",
-            description: toothConditions.join(", "),
-          })
+            ([toothNumber, toothConditions]) => ({
+              toothNumber: Number(toothNumber),
+              status: "ACTIVE",
+              description: toothConditions.join(", "),
+            })
         ),
       });
 
@@ -377,7 +356,7 @@ export function PatientExamination({
       setInternalNote("");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Không thể lưu thông tin khám"
+          err instanceof Error ? err.message : "Không thể lưu thông tin khám"
       );
     } finally {
       setSaving(false);
@@ -401,9 +380,9 @@ export function PatientExamination({
       toast.success("Đã lưu nháp khám ");
     } catch (err) {
       toast.error(
-        err instanceof Error
-          ? err.message
-          : "Không thể lưu nháp thông tin khám"
+          err instanceof Error
+              ? err.message
+              : "Không thể lưu nháp thông tin khám"
       );
     } finally {
       setSavingDraft(false);
@@ -434,7 +413,7 @@ export function PatientExamination({
       setLabTestTypeId("");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Gửi yêu cầu lab test thất bại"
+          err instanceof Error ? err.message : "Gửi yêu cầu lab test thất bại"
       );
     } finally {
       setRequestingLab(false);
@@ -487,7 +466,7 @@ export function PatientExamination({
 
       const appointmentDTO = await appointmentController.getById(appointmentId);
       const doctorDTO = await doctorController.getWithUserById(
-        appointmentDTO.doctorId
+          appointmentDTO.doctorId
       );
 
       // 2️⃣ merge dữ liệu mới
@@ -511,811 +490,796 @@ export function PatientExamination({
 
 
   const renderSnapshot = () => (
-    <Card className="rounded-[14px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onBack}
-              className="rounded-lg border-[#e8e8e8]"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại
-            </Button>
-            <div>
-              <h2 className="text-neutral-text text-lg">
-                {patient?.user?.fullName || "Bệnh nhân"}
-              </h2>
-              <p className="text-neutral-text/60 text-sm">
-                Mã BN: {patient?.userId || patientId || "-"} •{" "}
-                {formatGender(patient?.gender)}
-              </p>
-              <div className="flex items-center gap-3 text-sm text-neutral-text/70 mt-1">
-                {patient?.contactPhone && (
-                  <span className="flex items-center gap-1">
+      <Card className="rounded-[14px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onBack}
+                  className="rounded-lg border-[#e8e8e8]"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Quay lại
+              </Button>
+              <div>
+                <h2 className="text-neutral-text text-lg">
+                  {patient?.user?.fullName || "Bệnh nhân"}
+                </h2>
+                <p className="text-neutral-text/60 text-sm">
+                  Mã BN: {patient?.userId || patientId || "-"} •{" "}
+                  {patient?.gender || "Khác"}
+                </p>
+                <div className="flex items-center gap-3 text-sm text-neutral-text/70 mt-1">
+                  {patient?.contactPhone && (
+                      <span className="flex items-center gap-1">
                     <Phone className="w-3 h-3" /> {patient.contactPhone}
                   </span>
-                )}
-                {patient?.user?.email && (
-                  <span className="flex items-center gap-1">
+                  )}
+                  {patient?.user?.email && (
+                      <span className="flex items-center gap-1">
                     <Mail className="w-3 h-3" /> {patient.user.email}
                   </span>
-                )}
+                  )}
+                </div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              {patient?.bloodType && (
+                  <Badge variant="outline" className="border-primary text-primary">
+                    Nhóm máu: {patient.bloodType}
+                  </Badge>
+              )}
+              <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg border-[#e8e8e8]"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                In hồ sơ
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {patient?.bloodType && (
-              <Badge variant="outline" className="border-primary text-primary">
-                Nhóm máu: {patient.bloodType}
-              </Badge>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-lg border-[#e8e8e8]"
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              In hồ sơ
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
   );
 
   if (loading) {
     return (
-      <div className="p-6">
-        <Card className="rounded-[14px] border-[#e8e8e8]">
-          <CardContent className="p-6 text-neutral-text/70">
-            Đang tải dữ liệu khám...
-          </CardContent>
-        </Card>
-      </div>
+        <div className="p-6">
+          <Card className="rounded-[14px] border-[#e8e8e8]">
+            <CardContent className="p-6 text-neutral-text/70">
+              Đang tải dữ liệu khám...
+            </CardContent>
+          </Card>
+        </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
-        <Card className="rounded-[14px] border-[#e8e8e8]">
-          <CardContent className="p-6 text-red-500">{error}</CardContent>
-        </Card>
-      </div>
+        <div className="p-6">
+          <Card className="rounded-[14px] border-[#e8e8e8]">
+            <CardContent className="p-6 text-red-500">{error}</CardContent>
+          </Card>
+        </div>
     );
   }
 
   return (
-    <div className="p-6 flex flex-col gap-6 bg-[var(--page-bg)] min-h-screen">
-      {renderSnapshot()}
+      <div className="p-6 flex flex-col gap-6 bg-[var(--page-bg)] min-h-screen">
+        {renderSnapshot()}
 
-      <div className="grid grid-cols-12 gap-5">
-        {/* Left column: history & alerts */}
-        <div className="col-span-12 lg:col-span-3 space-y-4">
-          <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="typo-h4 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-red-100">
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                </div>
-                Dị ứng
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              {patient?.patientAllergies?.length ? (
-                patient.patientAllergies.map((al) => (
-                  <div
-                    key={`${al.allergyId}-${al.allergyName}-${al.reaction}-${al.note}`}
-                    className="p-3 rounded-lg border border-red-200 bg-red-50"
-                  >
-                    <p className="text-sm text-red-700 font-semibold">
-                      {al.allergyName || al.allergyCode || "Dị ứng"}
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">
-                      {al.reaction || al.note || al.severity || "Không có mô tả"}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-neutral-text/60">Không có dị ứng</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="typo-h4 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-orange-100">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
-                </div>
-                Bệnh nền
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              {patient?.underlyingDiseases?.length ? (
-                patient.underlyingDiseases.map((dis, idx) => (
-                  <div
-                    key={`${dis.name}-${dis.status}-${idx}`}
-                    className="p-3 rounded-lg border border-orange-200 bg-orange-50"
-                  >
-                    <p className="text-sm text-orange-700 font-semibold">
-                      {dis.name || "Bệnh nền"}
-                    </p>
-                    <p className="text-xs text-orange-600 mt-1">
-                      {dis.note || dis.status || dis.severity || "Không có mô tả"}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-neutral-text/60">Không có bệnh nền</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm h-[360px] overflow-hidden">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="typo-h4 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-primary/10">
-                  <Stethoscope className="w-4 h-4 text-primary" />
-                </div>
-                Lịch sử điều trị
-              </CardTitle>
-            </CardHeader>
-            <ScrollArea className="h-[300px]">
-              <div className="px-4 pb-4 space-y-3">
-                {histories.length === 0 && (
-                  <p className="text-sm text-neutral-text/60">
-                    Chưa có lịch sử điều trị.
-                  </p>
-                )}
-                {histories.map((item, idx) => (
-                  <Card
-                    key={item.id}
-                    className="rounded-lg border border-neutral-border/30 hover:border-primary hover:shadow-sm bg-neutral-surface transition-all cursor-pointer"
-                    onClick={() => handleViewVisit(item)}
-                  >
-                    <CardContent className="p-3 space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-neutral-text/60">
-                        <Calendar className="w-3 h-3" />
-                        <span>
-                          {item.createdAt
-                            ? new Date(item.createdAt).toLocaleDateString("vi-VN")
-                            : "N/A"}
-                        </span>
-                      </div>
-                      <p className="text-sm text-[#01304e] line-clamp-1">
-                        {item.symptoms || (item.conditions && item.conditions.length > 0
-                          ? item.conditions.map(c => c.name).filter(Boolean).join(", ")
-                          : "Chưa có thông tin")}
-                      </p>
-                      <p className="text-xs text-[#333333]/60 line-clamp-2">
-                        {item.conditions && item.conditions.length > 0
-                          ? `${item.conditions.length} tình trạng: ${item.conditions.map(c =>
-                            c.toothNumber ? `Răng ${c.toothNumber}` : c.name
-                          ).filter(Boolean).join(", ")}`
-                          : "Không có ghi chú"}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          </Card>
-        </div>
-
-        {/* Middle column: workspace */}
-        <div className="col-span-12 lg:col-span-6 space-y-4">
-          <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm min-h-[560px]">
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm text-neutral-text flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Khu vực khám bệnh
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <Tabs defaultValue="notes" className="flex flex-col gap-4">
-                <TabsList className="self-start">
-                  <TabsTrigger value="notes">Ghi chú khám</TabsTrigger>
-                  <TabsTrigger value="dental">Dental chart</TabsTrigger>
-                  <TabsTrigger value="labtests">Lab test</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="notes" className="space-y-4">
-                  <div className="flex gap-2 flex-wrap">
-                    {noteTemplates.map((template) => (
-                      <Button
-                        key={template.id}
-                        variant={
-                          selectedTemplate === template.id ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => applyTemplate(template.id)}
-                        className={
-                          selectedTemplate === template.id
-                            ? "bg-primary hover:bg-primary/90"
-                            : ""
-                        }
-                      >
-                        {template.name}
-                      </Button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Triệu chứng */}
-                    <div>
-                      <Label className="text-[#01304e] mb-2 block">
-                        Triệu chứng
-                      </Label>
-                      <Textarea
-                        value={symptoms}
-                        onChange={(e) => setSymptoms(e.target.value)}
-                        placeholder="Nhập triệu chứng của bệnh nhân..."
-                        className="rounded-[10px] h-[100px]"
-                      />
-                    </div>
-
-                    {/* Chuẩn đoán lâm sàng */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label className="text-[#01304e] block">
-                          Chuẩn đoán lâm sàng
-                        </Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsAddConditionDialogOpen(true)}
-                          className="rounded-[10px]"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Thêm chuẩn đoán
-                        </Button>
-                      </div>
-
-                      {conditions.length === 0 ? (
-                        <div className="border border-dashed border-[#e8e8e8] rounded-[10px] p-6 text-center">
-                          <p className="text-sm text-[#666666]">Chưa có chuẩn đoán lâm sàng nào</p>
-                          <p className="text-xs text-[#999999] mt-1">Nhấn "Thêm chuẩn đoán" để thêm mới</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {conditions.map((condition, index) => (
-                            <div
-                              key={index}
-                              className="border border-[#e8e8e8] rounded-[10px] p-3 bg-[#f5fbff] flex items-start justify-between"
-                            >
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  {condition.toothNumber && (
-                                    <Badge variant="outline" className="text-xs">
-                                      Răng {condition.toothNumber}
-                                    </Badge>
-                                  )}
-                                  {condition.status && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {condition.status}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm font-medium text-[#01304e]">{condition.name}</p>
-                                {condition.treatment && (
-                                  <p className="text-xs text-[#666666] mt-1">Điều trị: {condition.treatment}</p>
-                                )}
-                                {condition.surface && (
-                                  <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
-                                )}
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveCondition(index)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-
-                  </div>
-
-                </TabsContent>
-
-                <TabsContent value="dental" className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      <p className="text-sm text-neutral-text">
-                        Dental chart (đánh dấu trực tiếp trong lúc khám)
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-lg"
-                      onClick={() =>
-                        toast.info("Dental chart được lưu cùng lúc với Lưu khám")
-                      }
-                    >
-                      Tự động lưu khi hoàn tất khám
-                    </Button>
-                  </div>
-                  <div className="border border-[#e8e8e8] rounded-[12px] p-4 bg-white">
-                    <DentalChart
-                      value={dentalChartData}
-                      onChange={setDentalChartData}
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="labtests" className="space-y-4">
-                  <Tabs value={labTab} onValueChange={(v) => setLabTab(v as "request" | "results")}>
-                    <TabsList className="self-start">
-                      <TabsTrigger value="request">Tạo yêu cầu</TabsTrigger>
-                      <TabsTrigger value="results">Lịch sử</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="request" className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <ThermometerSun className="w-4 h-4 text-primary" />
-                        <p className="text-sm text-neutral-text">Gửi yêu cầu lab test</p>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="md:col-span-1">
-                          <Label className="text-neutral-text mb-1 block">
-                            Loại lab test
-                          </Label>
-                          <Select
-                            value={labTestTypeId}
-                            onValueChange={setLabTestTypeId}
-                          >
-                            <SelectTrigger className="rounded-lg">
-                              <SelectValue placeholder="Chọn loại lab test" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {labTestTypes.map((lt) => (
-                                <SelectItem key={lt.id} value={lt.id}>
-                                  {lt.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="md:col-span-2">
-                          <Label className="text-neutral-text mb-1 block">
-                            Hướng dẫn / ghi chú
-                          </Label>
-                          <Textarea
-                            value={labInstructions}
-                            onChange={(e) => setLabInstructions(e.target.value)}
-                            placeholder="Ví dụ: yêu cầu kết quả trong ngày, lưu ý dị ứng, ..."
-                            className="min-h-[100px]"
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        onClick={handleSendLabRequest}
-                        disabled={requestingLab}
-                        className="bg-primary hover:bg-primary/90 rounded-lg"
-                      >
-                        <ThermometerSun className="w-4 h-4 mr-2" />
-                        {requestingLab ? "Đang gửi..." : "Gửi yêu cầu lab test"}
-                      </Button>
-                    </TabsContent>
-
-                    <TabsContent value="results" className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <ThermometerSun className="w-4 h-4 text-primary" />
-                          <p className="text-sm text-neutral-text">Lịch sử yêu cầu</p>
-                        </div>
-                        {labTestsForAppointment.length === 0 ? (
-                          <p className="text-sm text-neutral-text/60">
-                            Chưa có yêu cầu lab test.
-                          </p>
-                        ) : (
-                          <div className="space-y-2">
-                            {labTestsForAppointment.map((lt) => {
-                              const statusMeta =
-                                labStatusMeta[lt.status || ""] ||
-                                labStatusMeta.REQUESTED;
-                              const isCompleted =
-                                lt.status === "COMPLETED" || lt.status === "COMPLETE";
-                              return (
-                                <Card
-                                  key={lt.id}
-                                  className={`rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm ${isCompleted ? "cursor-pointer hover:border-primary" : ""
-                                    }`}
-                                  onClick={() =>
-                                    isCompleted
-                                      ? (setSelectedLabTestId(lt.id), setIsLabTestDialogOpen(true))
-                                      : undefined
-                                  }
-                                >
-                                  <CardContent className="p-3 space-y-1">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <div className="text-sm text-neutral-text">
-                                        {lt.labTestType?.name || "Lab test"}
-                                      </div>
-                                      <Badge className={statusMeta.color}>{statusMeta.label}</Badge>
-                                    </div>
-                                    <p className="text-xs text-neutral-text/60">
-                                      {lt.instructions || "Không có ghi chú"}
-                                    </p>
-                                    <p className="text-xs text-neutral-text/60">
-                                      Tạo lúc:{" "}
-                                      {lt.createdAt
-                                        ? new Date(lt.createdAt).toLocaleString("vi-VN")
-                                        : "N/A"}
-                                    </p>
-                                    {isCompleted && (
-                                      <p className="text-xs text-primary">
-                                        Nhấp để xem kết quả
-                                      </p>
-                                    )}
-                                  </CardContent>
-                                </Card>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4 text-primary" />
-                          <p className="text-sm text-neutral-text">
-                            Kết quả / file đính kèm từ lab
-                          </p>
-                        </div>
-                        {resultFiles.length === 0 ? (
-                          <p className="text-sm text-neutral-text/60">
-                            Chưa có kết quả lab.
-                          </p>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {resultFiles.map((file) => (
-                              <Card
-                                key={file.id}
-                                className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm"
-                              >
-                                <CardContent className="p-3 space-y-1">
-                                  <p className="text-sm text-neutral-text line-clamp-1">
-                                    {file.filePath || "Tệp không tên"}
-                                  </p>
-                                  <p className="text-xs text-neutral-text/60">
-                                    Loại: {file.type || "khác"}
-                                  </p>
-                                  <p className="text-xs text-neutral-text/60">
-                                    Cập nhật:{" "}
-                                    {file.updatedAt
-                                      ? new Date(file.updatedAt).toLocaleDateString("vi-VN")
-                                      : "N/A"}
-                                  </p>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right column: actions */}
-        <div className="col-span-12 lg:col-span-3">
-          <div className="lg:sticky top-4 space-y-4">
+        <div className="grid grid-cols-12 gap-5">
+          {/* Left column: history & alerts */}
+          <div className="col-span-12 lg:col-span-3 space-y-4">
             <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-sm text-neutral-text">
-                  Ghi chú nội bộ
+              <CardHeader className="p-4 pb-3">
+                <CardTitle className="typo-h4 flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-red-100">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                  </div>
+                  Dị ứng
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <Textarea
-                  value={internalNote}
-                  onChange={(e) => setInternalNote(e.target.value)}
-                  placeholder="Ghi chú cho phụ tá..."
-                  className="min-h-[100px] text-sm"
-                />
+              <CardContent className="p-4 space-y-3">
+                {patient?.patientAllergies?.length ? (
+                    patient.patientAllergies.map((al) => (
+                        <div
+                            key={`${al.allergyId}-${al.allergyName}-${al.reaction}-${al.note}`}
+                            className="p-3 rounded-lg border border-red-200 bg-red-50"
+                        >
+                          <p className="text-sm text-red-700 font-semibold">
+                            {al.allergyName || al.allergyCode || "Dị ứng"}
+                          </p>
+                          <p className="text-xs text-red-600 mt-1">
+                            {al.reaction || al.note || al.severity || "Không có mô tả"}
+                          </p>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-xs text-neutral-text/60">Không có dị ứng</p>
+                )}
               </CardContent>
             </Card>
 
             <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
-              <CardContent className="p-4 space-y-2">
-                {/* Nút "Lưu & Hoàn tất khám" - chỉ hiển thị khi đã có medicalHistory */}
-                {currentMedicalHistory && (
+              <CardHeader className="p-4 pb-3">
+                <CardTitle className="typo-h4 flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-orange-100">
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                  </div>
+                  Bệnh nền
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {patient?.underlyingDiseases?.length ? (
+                    patient.underlyingDiseases.map((dis, idx) => (
+                        <div
+                            key={`${dis.name}-${dis.status}-${idx}`}
+                            className="p-3 rounded-lg border border-orange-200 bg-orange-50"
+                        >
+                          <p className="text-sm text-orange-700 font-semibold">
+                            {dis.name || "Bệnh nền"}
+                          </p>
+                          <p className="text-xs text-orange-600 mt-1">
+                            {dis.note || dis.status || dis.severity || "Không có mô tả"}
+                          </p>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-xs text-neutral-text/60">Không có bệnh nền</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm h-[360px] overflow-hidden">
+              <CardHeader className="p-4 pb-3">
+                <CardTitle className="typo-h4 flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <Stethoscope className="w-4 h-4 text-primary" />
+                  </div>
+                  Lịch sử điều trị
+                </CardTitle>
+              </CardHeader>
+              <ScrollArea className="h-[300px]">
+                <div className="px-4 pb-4 space-y-3">
+                  {histories.length === 0 && (
+                      <p className="text-sm text-neutral-text/60">
+                        Chưa có lịch sử điều trị.
+                      </p>
+                  )}
+                  {histories.map((item, idx) => (
+                      <Card
+                          key={item.id}
+                          className="rounded-lg border border-neutral-border/30 hover:border-primary hover:shadow-sm bg-neutral-surface transition-all cursor-pointer"
+                          onClick={() => handleViewVisit(item)}
+                      >
+                        <CardContent className="p-3 space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-neutral-text/60">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                          {item.createdAt
+                              ? new Date(item.createdAt).toLocaleDateString("vi-VN")
+                              : "N/A"}
+                        </span>
+                          </div>
+                          <p className="text-sm text-[#01304e] line-clamp-1">
+                            {item.symptoms || (item.conditions && item.conditions.length > 0
+                                ? item.conditions.map(c => c.name).filter(Boolean).join(", ")
+                                : "Chưa có thông tin")}
+                          </p>
+                          <p className="text-xs text-[#333333]/60 line-clamp-2">
+                            {item.conditions && item.conditions.length > 0
+                                ? `${item.conditions.length} tình trạng: ${item.conditions.map(c =>
+                                    c.toothNumber ? `Răng ${c.toothNumber}` : c.name
+                                ).filter(Boolean).join(", ")}`
+                                : "Không có ghi chú"}
+                          </p>
+                        </CardContent>
+                      </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </Card>
+          </div>
+
+          {/* Middle column: workspace */}
+          <div className="col-span-12 lg:col-span-6 space-y-4">
+            <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm min-h-[560px]">
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-sm text-neutral-text flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Khu vực khám bệnh
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <Tabs defaultValue="notes" className="flex flex-col gap-4">
+                  <TabsList className="self-start">
+                    <TabsTrigger value="notes">Ghi chú khám</TabsTrigger>
+                    <TabsTrigger value="dental">Dental chart</TabsTrigger>
+                    <TabsTrigger value="labtests">Lab test</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="notes" className="space-y-4">
+                    <div className="flex gap-2 flex-wrap">
+                      {noteTemplates.map((template) => (
+                          <Button
+                              key={template.id}
+                              variant={
+                                selectedTemplate === template.id ? "default" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => applyTemplate(template.id)}
+                              className={
+                                selectedTemplate === template.id
+                                    ? "bg-primary hover:bg-primary/90"
+                                    : ""
+                              }
+                          >
+                            {template.name}
+                          </Button>
+                      ))}
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Triệu chứng */}
+                      <div>
+                        <Label className="text-[#01304e] mb-2 block">
+                          Triệu chứng
+                        </Label>
+                        <Textarea
+                            value={symptoms}
+                            onChange={(e) => setSymptoms(e.target.value)}
+                            placeholder="Nhập triệu chứng của bệnh nhân..."
+                            className="rounded-[10px] h-[100px]"
+                        />
+                      </div>
+
+                      {/* Chuẩn đoán lâm sàng */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-[#01304e] block">
+                            Chuẩn đoán lâm sàng
+                          </Label>
+                          <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsAddConditionDialogOpen(true)}
+                              className="rounded-[10px]"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Thêm chuẩn đoán
+                          </Button>
+                        </div>
+
+                        {conditions.length === 0 ? (
+                            <div className="border border-dashed border-[#e8e8e8] rounded-[10px] p-6 text-center">
+                              <p className="text-sm text-[#666666]">Chưa có chuẩn đoán lâm sàng nào</p>
+                              <p className="text-xs text-[#999999] mt-1">Nhấn "Thêm chuẩn đoán" để thêm mới</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                              {conditions.map((condition, index) => (
+                                  <div
+                                      key={index}
+                                      className="border border-[#e8e8e8] rounded-[10px] p-3 bg-[#f5fbff] flex items-start justify-between"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        {condition.toothNumber && (
+                                            <Badge variant="outline" className="text-xs">
+                                              Răng {condition.toothNumber}
+                                            </Badge>
+                                        )}
+                                        {condition.status && (
+                                            <Badge variant="outline" className="text-xs">
+                                              {condition.status}
+                                            </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-sm font-medium text-[#01304e]">{condition.name}</p>
+                                      {condition.treatment && (
+                                          <p className="text-xs text-[#666666] mt-1">Điều trị: {condition.treatment}</p>
+                                      )}
+                                      {condition.surface && (
+                                          <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
+                                      )}
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleRemoveCondition(index)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                              ))}
+                            </div>
+                        )}
+                      </div>
+
+
+                    </div>
+
+                  </TabsContent>
+
+                  <TabsContent value="dental" className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <p className="text-sm text-neutral-text">
+                          Dental chart (đánh dấu trực tiếp trong lúc khám)
+                        </p>
+                      </div>
+                      <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() =>
+                              toast.info("Dental chart được lưu cùng lúc với Lưu khám")
+                          }
+                      >
+                        Tự động lưu khi hoàn tất khám
+                      </Button>
+                    </div>
+                    <div className="border border-[#e8e8e8] rounded-[12px] p-4 bg-white">
+                      <DentalChart
+                          value={dentalChartData}
+                          onChange={setDentalChartData}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="labtests" className="space-y-4">
+                    <Tabs value={labTab} onValueChange={(v) => setLabTab(v as "request" | "results")}>
+                      <TabsList className="self-start">
+                        <TabsTrigger value="request">Tạo yêu cầu</TabsTrigger>
+                        <TabsTrigger value="results">Lịch sử</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="request" className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ThermometerSun className="w-4 h-4 text-primary" />
+                          <p className="text-sm text-neutral-text">Gửi yêu cầu lab test</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="md:col-span-1">
+                            <Label className="text-neutral-text mb-1 block">
+                              Loại lab test
+                            </Label>
+                            <Select
+                                value={labTestTypeId}
+                                onValueChange={setLabTestTypeId}
+                            >
+                              <SelectTrigger className="rounded-lg">
+                                <SelectValue placeholder="Chọn loại lab test" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {labTestTypes.map((lt) => (
+                                    <SelectItem key={lt.id} value={lt.id}>
+                                      {lt.name}
+                                    </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label className="text-neutral-text mb-1 block">
+                              Hướng dẫn / ghi chú
+                            </Label>
+                            <Textarea
+                                value={labInstructions}
+                                onChange={(e) => setLabInstructions(e.target.value)}
+                                placeholder="Ví dụ: yêu cầu kết quả trong ngày, lưu ý dị ứng, ..."
+                                className="min-h-[100px]"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                            onClick={handleSendLabRequest}
+                            disabled={requestingLab}
+                            className="bg-primary hover:bg-primary/90 rounded-lg"
+                        >
+                          <ThermometerSun className="w-4 h-4 mr-2" />
+                          {requestingLab ? "Đang gửi..." : "Gửi yêu cầu lab test"}
+                        </Button>
+                      </TabsContent>
+
+                      <TabsContent value="results" className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ThermometerSun className="w-4 h-4 text-primary" />
+                            <p className="text-sm text-neutral-text">Lịch sử yêu cầu</p>
+                          </div>
+                          {labTestsForAppointment.length === 0 ? (
+                              <p className="text-sm text-neutral-text/60">
+                                Chưa có yêu cầu lab test.
+                              </p>
+                          ) : (
+                              <div className="space-y-2">
+                                {labTestsForAppointment.map((lt) => {
+                                  const statusMeta =
+                                      labStatusMeta[lt.status || ""] ||
+                                      labStatusMeta.REQUESTED;
+                                  const isCompleted =
+                                      lt.status === "COMPLETED" || lt.status === "COMPLETE";
+                                  return (
+                                      <Card
+                                          key={lt.id}
+                                          className={`rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm ${
+                                              isCompleted ? "cursor-pointer hover:border-primary" : ""
+                                          }`}
+                                          onClick={() =>
+                                              isCompleted
+                                                  ? (setSelectedLabTestId(lt.id), setIsLabTestDialogOpen(true))
+                                                  : undefined
+                                          }
+                                      >
+                                        <CardContent className="p-3 space-y-1">
+                                          <div className="flex items-center justify-between gap-2">
+                                            <div className="text-sm text-neutral-text">
+                                              {lt.labTestType?.name || "Lab test"}
+                                            </div>
+                                            <Badge className={statusMeta.color}>{statusMeta.label}</Badge>
+                                          </div>
+                                          <p className="text-xs text-neutral-text/60">
+                                            {lt.instructions || "Không có ghi chú"}
+                                          </p>
+                                          <p className="text-xs text-neutral-text/60">
+                                            Tạo lúc:{" "}
+                                            {lt.createdAt
+                                                ? new Date(lt.createdAt).toLocaleString("vi-VN")
+                                                : "N/A"}
+                                          </p>
+                                          {isCompleted && (
+                                              <p className="text-xs text-primary">
+                                                Nhấp để xem kết quả
+                                              </p>
+                                          )}
+                                        </CardContent>
+                                      </Card>
+                                  );
+                                })}
+                              </div>
+                          )}
+                        </div>
+
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <p className="text-sm text-neutral-text">
+                              Kết quả / file đính kèm từ lab
+                            </p>
+                          </div>
+                          {resultFiles.length === 0 ? (
+                              <p className="text-sm text-neutral-text/60">
+                                Chưa có kết quả lab.
+                              </p>
+                          ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {resultFiles.map((file) => (
+                                    <Card
+                                        key={file.id}
+                                        className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm"
+                                    >
+                                      <CardContent className="p-3 space-y-1">
+                                        <p className="text-sm text-neutral-text line-clamp-1">
+                                          {file.filePath || "Tệp không tên"}
+                                        </p>
+                                        <p className="text-xs text-neutral-text/60">
+                                          Loại: {file.type || "khác"}
+                                        </p>
+                                        <p className="text-xs text-neutral-text/60">
+                                          Cập nhật:{" "}
+                                          {file.updatedAt
+                                              ? new Date(file.updatedAt).toLocaleDateString("vi-VN")
+                                              : "N/A"}
+                                        </p>
+                                      </CardContent>
+                                    </Card>
+                                ))}
+                              </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right column: actions */}
+          <div className="col-span-12 lg:col-span-3">
+            <div className="lg:sticky top-4 space-y-4">
+              <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm text-neutral-text">
+                    Ghi chú nội bộ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <Textarea
+                      value={internalNote}
+                      onChange={(e) => setInternalNote(e.target.value)}
+                      placeholder="Ghi chú cho phụ tá..."
+                      className="min-h-[100px] text-sm"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm">
+                <CardContent className="p-4 space-y-2">
                   <Button
-                    className="w-full bg-primary hover:bg-primary/90 rounded-lg"
-                    onClick={handleSaveComplete}
-                    disabled={saving || savingDraft}
+                      className="w-full bg-primary hover:bg-primary/90 rounded-lg"
+                      onClick={handleSaveComplete}
+                      disabled={saving || savingDraft}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
                   </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  className="w-full rounded-lg border-[#e8e8e8]"
-                  onClick={handleSaveDraft}
-                  disabled={saving || savingDraft}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {savingDraft ? "Đang lưu nháp..." : "Lưu nháp"}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full rounded-lg border-[#e8e8e8]"
-                  onClick={() => onNavigateToTreatmentPlan("new")}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Tạo kế hoạch điều trị
-                </Button>
-
-                {/* Nút "Tạo đơn thuốc" - chỉ hiển thị khi đã có medicalHistory */}
-                {onNavigateToCreatePrescription && currentMedicalHistory && (
                   <Button
-                    className="w-full bg-primary hover:bg-primary/90 rounded-lg"
-                    onClick={async () => {
-                      try {
-                        // Đảm bảo medicalHistoryId được truyền đúng
-                        const medicalHistoryId = currentMedicalHistory.id;
-                        const appointmentIdToUse = appointmentId || localStorage.getItem('currentAppointmentId') || undefined;
-
-                        onNavigateToCreatePrescription(appointmentIdToUse, medicalHistoryId);
-                      } catch (error) {
-                        console.error('Error navigating to create prescription:', error);
-                        toast.error('Không thể tạo đơn thuốc');
-                      }
-                    }}
+                      variant="outline"
+                      className="w-full rounded-lg border-[#e8e8e8]"
+                      onClick={handleSaveDraft}
+                      disabled={saving || savingDraft}
                   >
-                    <Pill className="w-4 h-4 mr-2" />
-                    Tạo đơn thuốc
+                    <Save className="w-4 h-4 mr-2" />
+                    {savingDraft ? "Đang lưu nháp..." : "Lưu nháp"}
                   </Button>
-                )}
+                  <Button
+                      variant="outline"
+                      className="w-full rounded-lg border-[#e8e8e8]"
+                      onClick={() => onNavigateToTreatmentPlan("new")}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Tạo kế hoạch điều trị
+                  </Button>
 
-              </CardContent>
-            </Card>
+                  {onNavigateToCreatePrescription && (
+                      <Button
+                          //variant="outline"
+                          className="w-full bg-primary hover:bg-primary/90 rounded-lg"
+                          onClick={() => onNavigateToCreatePrescription(localStorage.getItem('currentAppointmentId') || undefined, undefined)}
+                      >
+                        <Pill className="w-4 h-4 mr-2" />
+                        Tạo đơn thuốc
+                      </Button>
+                  )}
+
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
 
-      <LabTestDetailDialog
-        labTest={selectedLabTest || null}
-        medicalAttachments={attachments}
-        open={isLabTestDialogOpen}
-        onOpenChange={(open) => {
-          setIsLabTestDialogOpen(open);
-          if (!open) {
-            setSelectedLabTestId(null);
-          }
-        }}
-      />
+        <LabTestDetailDialog
+            labTest={selectedLabTest || null}
+            medicalAttachments={attachments}
+            open={isLabTestDialogOpen}
+            onOpenChange={(open) => {
+              setIsLabTestDialogOpen(open);
+              if (!open) {
+                setSelectedLabTestId(null);
+              }
+            }}
+        />
 
-      <Dialog open={isAddConditionDialogOpen} onOpenChange={setIsAddConditionDialogOpen}>
-        <DialogContent className="max-w-md bg-white">
-          <DialogHeader>
-            <DialogTitle>Thêm chuẩn đoán lâm sàng</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div>
-              <Label className="text-[#01304e] mb-1 block">
-                Tên tình trạng <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={newCondition.name}
-                onChange={(e) => setNewCondition({ ...newCondition, name: e.target.value })}
-                placeholder="VD: Sâu răng, Viêm nướu..."
-                className="rounded-[10px]"
-              />
-            </div>
-
-            <div>
-              <Label className="text-[#01304e] mb-1 block">
-                Răng số (tùy chọn)
-              </Label>
-              <Input
-                type="number"
-                min={11}
-                max={48}
-                value={newCondition.toothNumber || ""}
-                onChange={(e) => setNewCondition({
-                  ...newCondition,
-                  toothNumber: e.target.value ? Number(e.target.value) : undefined
-                })}
-                placeholder="VD: 16, 25..."
-                className="rounded-[10px]"
-              />
-            </div>
-
-            <div>
-              <Label className="text-[#01304e] mb-1 block">
-                Trạng thái
-              </Label>
-              <Select
-                value={newCondition.status || "ACTIVE"}
-                onValueChange={(value) => setNewCondition({ ...newCondition, status: value })}
-              >
-                <SelectTrigger className="rounded-[10px] bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                  <SelectItem value="TREATED">TREATED</SelectItem>
-                  <SelectItem value="PENDING">PENDING</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-[#01304e] mb-1 block">
-                Điều trị (tùy chọn)
-              </Label>
-              <Input
-                value={newCondition.treatment || ""}
-                onChange={(e) => setNewCondition({ ...newCondition, treatment: e.target.value })}
-                placeholder="VD: Trám răng composite..."
-                className="rounded-[10px]"
-              />
-            </div>
-
-            <div>
-              <Label className="text-[#01304e] mb-1 block">
-                Bề mặt (tùy chọn)
-              </Label>
-              <Input
-                value={newCondition.surface || ""}
-                onChange={(e) => setNewCondition({ ...newCondition, surface: e.target.value })}
-                placeholder="VD: Mặt nhai, Mặt trong..."
-                className="rounded-[10px]"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddConditionDialogOpen(false);
-                  setNewCondition({ name: "", status: "ACTIVE" });
-                }}
-                className="rounded-[10px]"
-              >
-                Hủy
-              </Button>
-              <Button
-                onClick={handleAddCondition}
-                className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
-              >
-                Thêm
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isVisitDialogOpen} onOpenChange={setIsVisitDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto rounded-lg bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-neutral-text">
-              Lịch sử khám - {formatDateTime(selectedVisit?.createdAt)}
-            </DialogTitle>
-            <DialogDescription>
-              Thông tin chi tiết về lần khám bệnh
-            </DialogDescription>
-          </DialogHeader>
-
-          {!selectedVisit ? (
-            <p className="text-sm text-neutral-text/60 mt-4">
-              Không có dữ liệu lịch sử khám.
-            </p>
-          ) : (
+        <Dialog open={isAddConditionDialogOpen} onOpenChange={setIsAddConditionDialogOpen}>
+          <DialogContent className="max-w-md bg-white">
+            <DialogHeader>
+              <DialogTitle>Thêm chuẩn đoán lâm sàng</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 mt-4">
-
-              {/* Visit Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-[#d8f0ff]/30 rounded-lg">
-                <Info label="Ngày khám" value={formatDateTime(selectedVisit?.createdAt)} />
-                <Info label="Bác sĩ" value={selectedVisit.doctorName} />
-                <Info label="Triệu chứng" value={selectedVisit.symptoms || "Không có"} />
-                {selectedVisit.conditions && selectedVisit.conditions.length > 0 && (
-                  <div>
-                    <p className="text-xs text-[#666666] mb-1">Tình trạng ({selectedVisit.conditions.length}):</p>
-                    {selectedVisit.conditions.map((cond: any, idx: number) => (
-                      <div key={idx} className="text-sm text-[#333333] mb-1 pl-2 border-l-2 border-[#3FB5FF]">
-                        {cond.toothNumber && `Răng ${cond.toothNumber}: `}
-                        {cond.name} {cond.status && `(${cond.status})`}
-                        {cond.treatment && ` - ${cond.treatment}`}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Tên tình trạng <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                    value={newCondition.name}
+                    onChange={(e) => setNewCondition({ ...newCondition, name: e.target.value })}
+                    placeholder="VD: Sâu răng, Viêm nướu..."
+                    className="rounded-[10px]"
+                />
               </div>
 
-              {/* Clinical Notes */}
-              <Card className="rounded-[15px] border-[#e8e8e8]">
-                <CardHeader>
-                  <CardTitle className="text-neutral-text">Ghi chú lâm sàng</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <NoteBlock value={selectedVisit.clinicalNotes} />
-                </CardContent>
-              </Card>
-
-              {/* Dental Chart Notes */}
-              <Card className="rounded-[15px] border-[#e8e8e8]">
-                <CardHeader>
-                  <CardTitle className="text-neutral-text">Ghi chú sơ đồ răng</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <NoteBlock value={selectedVisit.dentalChartNotes} />
-                </CardContent>
-              </Card>
-
-              {/* Services */}
-              <Card className="rounded-[15px] border-[#e8e8e8]">
-                <CardHeader>
-                  <CardTitle className="text-neutral-text">Dịch vụ đã thực hiện</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {Array.isArray(selectedVisit.services) && selectedVisit.services.length > 0 ? (
-                    <div className="space-y-2">
-                      {selectedVisit.services.map((service: string, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 p-2 bg-[#d8f0ff]/30 rounded-lg"
-                        >
-                          <div className="w-2 h-2 bg-primary rounded-full" />
-                          <span className="text-sm text-neutral-text">
-                            {service}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-neutral-text/60">
-                      Không có dịch vụ nào
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsVisitDialogOpen(false)}
-                  className="rounded-lg border-[#e8e8e8]"
-                >
-                  Đóng
-                </Button>
-                <Button
-                  className="bg-primary hover:bg-primary/90 rounded-lg"
-                  onClick={() => console.log("In hồ sơ khám")}
-                >
-                  In hồ sơ
-                </Button>
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Răng số (tùy chọn)
+                </Label>
+                <Input
+                    type="number"
+                    min={11}
+                    max={48}
+                    value={newCondition.toothNumber || ""}
+                    onChange={(e) => setNewCondition({
+                      ...newCondition,
+                      toothNumber: e.target.value ? Number(e.target.value) : undefined
+                    })}
+                    placeholder="VD: 16, 25..."
+                    className="rounded-[10px]"
+                />
               </div>
 
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Trạng thái
+                </Label>
+                <Select
+                    value={newCondition.status || "ACTIVE"}
+                    onValueChange={(value) => setNewCondition({ ...newCondition, status: value })}
+                >
+                  <SelectTrigger className="rounded-[10px] bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="TREATED">TREATED</SelectItem>
+                    <SelectItem value="PENDING">PENDING</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Điều trị (tùy chọn)
+                </Label>
+                <Input
+                    value={newCondition.treatment || ""}
+                    onChange={(e) => setNewCondition({ ...newCondition, treatment: e.target.value })}
+                    placeholder="VD: Trám răng composite..."
+                    className="rounded-[10px]"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[#01304e] mb-1 block">
+                  Bề mặt (tùy chọn)
+                </Label>
+                <Input
+                    value={newCondition.surface || ""}
+                    onChange={(e) => setNewCondition({ ...newCondition, surface: e.target.value })}
+                    placeholder="VD: Mặt nhai, Mặt trong..."
+                    className="rounded-[10px]"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddConditionDialogOpen(false);
+                      setNewCondition({ name: "", status: "ACTIVE" });
+                    }}
+                    className="rounded-[10px]"
+                >
+                  Hủy
+                </Button>
+                <Button
+                    onClick={handleAddCondition}
+                    className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[10px]"
+                >
+                  Thêm
+                </Button>
+              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
-    </div>
+        <Dialog open={isVisitDialogOpen} onOpenChange={setIsVisitDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto rounded-lg bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-neutral-text">
+                Lịch sử khám - {formatDateTime(selectedVisit?.createdAt)}
+              </DialogTitle>
+              <DialogDescription>
+                Thông tin chi tiết về lần khám bệnh
+              </DialogDescription>
+            </DialogHeader>
+
+            {!selectedVisit ? (
+                <p className="text-sm text-neutral-text/60 mt-4">
+                  Không có dữ liệu lịch sử khám.
+                </p>
+            ) : (
+                <div className="space-y-4 mt-4">
+
+                  {/* Visit Info */}
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-[#d8f0ff]/30 rounded-lg">
+                    <Info label="Ngày khám" value={formatDateTime(selectedVisit?.createdAt)} />
+                    <Info label="Bác sĩ" value={selectedVisit.doctorName} />
+                    <Info label="Triệu chứng" value={selectedVisit.symptoms || "Không có"} />
+                    {selectedVisit.conditions && selectedVisit.conditions.length > 0 && (
+                        <div>
+                          <p className="text-xs text-[#666666] mb-1">Tình trạng ({selectedVisit.conditions.length}):</p>
+                          {selectedVisit.conditions.map((cond: any, idx: number) => (
+                              <div key={idx} className="text-sm text-[#333333] mb-1 pl-2 border-l-2 border-[#3FB5FF]">
+                                {cond.toothNumber && `Răng ${cond.toothNumber}: `}
+                                {cond.name} {cond.status && `(${cond.status})`}
+                                {cond.treatment && ` - ${cond.treatment}`}
+                              </div>
+                          ))}
+                        </div>
+                    )}
+                  </div>
+
+                  {/* Clinical Notes */}
+                  <Card className="rounded-[15px] border-[#e8e8e8]">
+                    <CardHeader>
+                      <CardTitle className="text-neutral-text">Ghi chú lâm sàng</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <NoteBlock value={selectedVisit.clinicalNotes} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Dental Chart Notes */}
+                  <Card className="rounded-[15px] border-[#e8e8e8]">
+                    <CardHeader>
+                      <CardTitle className="text-neutral-text">Ghi chú sơ đồ răng</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <NoteBlock value={selectedVisit.dentalChartNotes} />
+                    </CardContent>
+                  </Card>
+
+                  {/* Services */}
+                  <Card className="rounded-[15px] border-[#e8e8e8]">
+                    <CardHeader>
+                      <CardTitle className="text-neutral-text">Dịch vụ đã thực hiện</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {Array.isArray(selectedVisit.services) && selectedVisit.services.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedVisit.services.map((service: string, index: number) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-2 p-2 bg-[#d8f0ff]/30 rounded-lg"
+                                >
+                                  <div className="w-2 h-2 bg-primary rounded-full" />
+                                  <span className="text-sm text-neutral-text">
+                      {service}
+                    </span>
+                                </div>
+                            ))}
+                          </div>
+                      ) : (
+                          <p className="text-sm text-neutral-text/60">
+                            Không có dịch vụ nào
+                          </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsVisitDialogOpen(false)}
+                        className="rounded-lg border-[#e8e8e8]"
+                    >
+                      Đóng
+                    </Button>
+                    <Button
+                        className="bg-primary hover:bg-primary/90 rounded-lg"
+                        onClick={() => console.log("In hồ sơ khám")}
+                    >
+                      In hồ sơ
+                    </Button>
+                  </div>
+
+                </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+      </div>
   );
 
 }

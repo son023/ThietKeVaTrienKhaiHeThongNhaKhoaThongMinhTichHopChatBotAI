@@ -3,7 +3,6 @@ import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 're
 import { authController, doctorController } from './controllers';
 import type { DoctorWithUser } from './controllers/DoctorController';
 import { PrescriptionManagement } from './components/doctor/PrescriptionManagement';
-import { CreatePrescriptionEnhanced } from './components/doctor/CreatePrescription';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -51,14 +50,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     setSelectedMedicalHistoryId(payload.medicalHistoryId || null);
     setSelectedPatientId(payload.patientId || null);
     setCurrentPage('create-prescription');
-    
-    // Truyền params qua URL
-    const params = new URLSearchParams();
-    if (payload.appointmentId) params.set('appointmentId', payload.appointmentId);
-    if (payload.medicalHistoryId) params.set('medicalHistoryId', payload.medicalHistoryId);
-    if (payload.patientId) params.set('patientId', payload.patientId);
-    
-    navigate(`/doctor/create-prescription?${params.toString()}`);
+    navigate('/doctor/create-prescription');
   };
 
   useEffect(() => {
@@ -117,10 +109,6 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         navigate('/doctor/patients');
         break;
       case 'create-prescription':
-        // Clear state khi navigate từ sidebar để đảm bảo hiển thị PrescriptionManagement
-        setSelectedAppointmentId(null);
-        setSelectedMedicalHistoryId(null);
-        setSelectedPatientId(null);
         navigate('/doctor/create-prescription');
         break;
       case 'performance':
@@ -145,19 +133,19 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       setSelectedPatientId(patientId);
     }
     return (
-      <PatientExamination
-        patientId={patientId}
-        appointmentId={selectedAppointmentId}
-        onBack={() => navigate('/doctor/patients')}
-        onNavigateToAppointments={() => navigate('/doctor/appointments')}
-        onNavigateToTreatmentPlan={(planId) => {
-          setSelectedTreatmentPlanId(planId);
-          navigate(`/doctor/treatment-plans/${planId}`);
-        }}
-        onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
-          goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
-        }
-      />
+        <PatientExamination
+            patientId={patientId}
+            appointmentId={selectedAppointmentId}
+            onBack={() => navigate('/doctor/patients')}
+            onNavigateToAppointments={() => navigate('/doctor/appointments')}
+            onNavigateToTreatmentPlan={(planId) => {
+              setSelectedTreatmentPlanId(planId);
+              navigate(`/doctor/treatment-plans/${planId}`);
+            }}
+            onNavigateToCreatePrescription={(appointmentId, medicalHistoryId) =>
+                goCreatePrescription({ appointmentId, medicalHistoryId, patientId: selectedPatientId || undefined })
+            }
+        />
     );
   }
 
@@ -171,129 +159,98 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       setSelectedTreatmentPlanId(planId);
     }
     return (
-      <TreatmentPlanDetail
-        planId={planId}
-        onBack={() => navigate('/doctor/treatment-plans')}
-      />
-    );
-  }
-
-  function CreatePrescriptionRoute() {
-    const searchParams = new URLSearchParams(location.search);
-    
-    // Chỉ lấy params từ URL (không dùng state để đảm bảo tab từ sidebar luôn hiển thị PrescriptionManagement)
-    const appointmentId = searchParams.get('appointmentId');
-    const medicalHistoryId = searchParams.get('medicalHistoryId');
-    const patientId = searchParams.get('patientId');
-
-    // Nếu có đầy đủ thông tin từ URL, render CreatePrescriptionEnhanced
-    if (appointmentId && medicalHistoryId && patientId) {
-      return (
-        <CreatePrescriptionEnhanced
-          appointmentId={appointmentId}
-          medicalHistoryId={medicalHistoryId}
-          patientId={patientId}
-          onCreated={(prescriptionId) => {
-            // Quay lại trang examination
-            navigate(`/doctor/patients/${patientId}/examination`);
-          }}
-          onBack={() => {
-            // Quay lại trang examination
-            navigate(`/doctor/patients/${patientId}/examination`);
-          }}
+        <TreatmentPlanDetail
+            planId={planId}
+            onBack={() => navigate('/doctor/treatment-plans')}
         />
-      );
-    }
-
-    // Nếu không có params (ví dụ: click từ sidebar), hiển thị PrescriptionManagement để chọn
-    return (
-      <PrescriptionManagement
-        onBack={() => navigate('/doctor')}
-      />
     );
   }
 
 
   return (
-    <div className="flex h-screen">
-      <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DoctorHeader
-          onLogout={onLogout}
-          onGoHome={onGoHome}
-          doctor={doctor || undefined}
-          isLoading={isLoadingDoctor}
-        />
-        <main className="flex-1 overflow-y-auto">
-          <Routes>
-            <Route
-              path="/doctor"
-              element={
-                <Dashboard
-                  doctorId={doctorId}
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/appointments"
-              element={
-                <MyAppointments
-                  doctorId={doctorId}
-                  onNavigateToPatient={(patientId, appointmentId) => {
-                    setSelectedPatientId(patientId);
-                    setSelectedAppointmentId(appointmentId || null);
-                    navigate(`/doctor/patients/${patientId}/examination`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/patients"
-              element={
-                <MyPatients
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
-                  }}
-                  onNavigateToAppointments={() => navigate('/doctor/appointments')}
-                />
-              }
-            />
-            <Route
-              path="/doctor/patients/:patientId/examination"
-              element={<PatientExaminationRoute />}
-            />
-            <Route
-              path="/doctor/create-prescription"
-              element={<CreatePrescriptionRoute />}
-            />
-            <Route
-              path="/doctor/treatment-plans"
-              element={
-                <TreatmentPlans
-                  onNavigateToPlan={(id) => {
-                    setSelectedTreatmentPlanId(id);
-                    navigate(`/doctor/treatment-plans/${id}`);
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/treatment-plans/:planId"
-              element={<TreatmentPlanDetailRoute />}
-            />
-            <Route path="/doctor/performance" element={<PersonalPerformance />} />
-            <Route path="/doctor/account" element={<AccountSettings />} />
+      <div className="flex h-screen">
+        <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <DoctorHeader
+              onLogout={onLogout}
+              onGoHome={onGoHome}
+              doctor={doctor || undefined}
+              isLoading={isLoadingDoctor}
+          />
+          <main className="flex-1 overflow-y-auto">
+            <Routes>
+              <Route
+                  path="/doctor"
+                  element={
+                    <Dashboard
+                        doctorId={doctorId}
+                        onNavigateToPatient={(id) => {
+                          setSelectedPatientId(id);
+                          navigate(`/doctor/patients/${id}/examination`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/appointments"
+                  element={
+                    <MyAppointments
+                        doctorId={doctorId}
+                        onNavigateToPatient={(patientId, appointmentId) => {
+                          setSelectedPatientId(patientId);
+                          setSelectedAppointmentId(appointmentId || null);
+                          navigate(`/doctor/patients/${patientId}/examination`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/patients"
+                  element={
+                    <MyPatients
+                        onNavigateToPatient={(id) => {
+                          setSelectedPatientId(id);
+                          navigate(`/doctor/patients/${id}/examination`);
+                        }}
+                        onNavigateToAppointments={() => navigate('/doctor/appointments')}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/patients/:patientId/examination"
+                  element={<PatientExaminationRoute />}
+              />
+              <Route
+                  path="/doctor/create-prescription"
+                  element={
+                    <PrescriptionManagement
+                        onBack={() => navigate('/doctor')}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/treatment-plans"
+                  element={
+                    <TreatmentPlans
+                        onNavigateToPlan={(id) => {
+                          setSelectedTreatmentPlanId(id);
+                          navigate(`/doctor/treatment-plans/${id}`);
+                        }}
+                    />
+                  }
+              />
+              <Route
+                  path="/doctor/treatment-plans/:planId"
+                  element={<TreatmentPlanDetailRoute />}
+              />
+              <Route path="/doctor/performance" element={<PersonalPerformance />} />
+              <Route path="/doctor/account" element={<AccountSettings />} />
 
-            {/* fallback trong DoctorApp */}
-            <Route path="*" element={<Navigate to="/doctor" replace />} />
-          </Routes>
-        </main>
+              {/* fallback trong DoctorApp */}
+              <Route path="*" element={<Navigate to="/doctor" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
   );
 }
