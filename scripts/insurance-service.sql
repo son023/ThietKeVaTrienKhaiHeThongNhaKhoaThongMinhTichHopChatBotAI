@@ -22,13 +22,9 @@ CREATE TABLE IF NOT EXISTS public.insurance_policy
     status          VARCHAR(255),
     update_at       TIMESTAMP,
 
--- Khóa chính
     CONSTRAINT insurance_policy_pkey PRIMARY KEY (id),
-    -- Ràng buộc duy nhất
     CONSTRAINT uk_policy_number UNIQUE (policy_number)
     );
-
----
 
 -- ---------------------------------------------------------------------
 -- Bảng 2: bhyt_catalogue
@@ -42,11 +38,8 @@ CREATE TABLE IF NOT EXISTS public.bhyt_catalogue
     service_name        VARCHAR(255),
     service_type        VARCHAR(50),
 
-    -- Khóa chính
     CONSTRAINT bhyt_catalogue_pkey PRIMARY KEY (id)
     );
-
----
 
 -- ---------------------------------------------------------------------
 -- Bảng 3: patient_insurance
@@ -62,19 +55,14 @@ CREATE TABLE IF NOT EXISTS public.patient_insurance
     update_at           TIMESTAMP,
     insurance_policy_id UUID,
 
-    -- Khóa chính
     CONSTRAINT patient_insurance_pkey PRIMARY KEY (id),
-    -- Ràng buộc duy nhất
     CONSTRAINT uk_patient_id UNIQUE (patient_id),
 
-    -- Khóa ngoại
     CONSTRAINT fk_patient_insurance_policy
     FOREIGN KEY (insurance_policy_id)
     REFERENCES public.insurance_policy (id)
     ON DELETE CASCADE
     );
-
----
 
 -- ---------------------------------------------------------------------
 -- Bảng 4: insurance_claim
@@ -93,17 +81,13 @@ CREATE TABLE IF NOT EXISTS public.insurance_claim
     update_at            TIMESTAMP,
     patient_insurance_id UUID,
 
-    -- Khóa chính
     CONSTRAINT insurance_claim_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại
     CONSTRAINT fk_claim_patient_insurance
     FOREIGN KEY (patient_insurance_id)
     REFERENCES public.patient_insurance (id)
     ON DELETE CASCADE
     );
-
----
 
 -- ---------------------------------------------------------------------
 -- Bảng 5: claim_item
@@ -120,23 +104,18 @@ CREATE TABLE IF NOT EXISTS public.claim_item
     bhyt_catalogue_id    UUID,
     insurance_claim_id   UUID,
 
-    -- Khóa chính
     CONSTRAINT claim_item_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại 1
     CONSTRAINT fk_item_claim
     FOREIGN KEY (insurance_claim_id)
     REFERENCES public.insurance_claim (id)
     ON DELETE CASCADE,
 
-    -- Khóa ngoại 2
     CONSTRAINT fk_item_catalogue
     FOREIGN KEY (bhyt_catalogue_id)
     REFERENCES public.bhyt_catalogue (id)
     ON DELETE SET NULL
     );
-
----
 
 -- ---------------------------------------------------------------------
 -- Bảng 6: claim_document
@@ -150,83 +129,166 @@ CREATE TABLE IF NOT EXISTS public.claim_document
     upload_at          TIMESTAMP,
     insurance_claim_id UUID,
 
-    -- Khóa chính
     CONSTRAINT claim_document_pkey PRIMARY KEY (id),
 
-    -- Khóa ngoại
     CONSTRAINT fk_document_claim
     FOREIGN KEY (insurance_claim_id)
     REFERENCES public.insurance_claim (id)
     ON DELETE CASCADE
     );
 
--- ---------------------------------------------------------------------
--- Tạo Index
--- ---------------------------------------------------------------------
 CREATE INDEX idx_patient_insurance_policy_id ON public.patient_insurance (insurance_policy_id);
 CREATE INDEX idx_claim_patient_insurance_id ON public.insurance_claim (patient_insurance_id);
 CREATE INDEX idx_item_claim_id ON public.claim_item (insurance_claim_id);
 CREATE INDEX idx_item_catalogue_id ON public.claim_item (bhyt_catalogue_id);
 CREATE INDEX idx_document_claim_id ON public.claim_document (insurance_claim_id);
 
+-- =========================================================
+-- INSERT DATA
+-- =========================================================
 
--- =====================================================================
--- INSERT DATA (Dữ liệu mẫu)
--- =====================================================================
-
--- 1. Insert Insurance Policy
-INSERT INTO public.insurance_policy
-(coverage_amount, deductible, end_date, start_date, create_at, update_at, id, policy_number, policy_type, status)
+-- =========================================================
+-- 1) INSURANCE_POLICY
+-- =========================================================
+INSERT INTO public.insurance_policy (id, policy_number, policy_type, coverage_amount, deductible, start_date, end_date, status, create_at, update_at)
 VALUES
-    (95, 2000000, '2026-01-01', '2025-01-01', NULL, NULL, 'a1a1a1a1-1111-4111-8111-111111111111', 'PVI-GOLD-2025', 'Gold', 'ACTIVE'),
-    (80, 1000000, '2026-01-01', '2025-01-01', NULL, NULL, 'b2b2b2b2-2222-4222-8222-222222222222', 'BAOVIET-SILVER-2025', 'Silver', 'ACTIVE'),
-    (100, 0, '2026-12-31', '2024-01-01', '2025-11-23 08:51:04.15516+00', '2025-11-23 08:51:04.15516+00', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'POL-2025-TEST', 'FULL', 'ACTIVE');
+('a1a1a1a1-1111-4111-8111-111111111111', 'BHYT-2026-GOLD', 'BHYT', 80, 0, '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-01 08:00:00+07', '2025-12-01 08:00:00+07'),
+('b2b2b2b2-2222-4222-8222-222222222222', 'BHYT-2026-STANDARD', 'BHYT', 80, 0, '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-01 08:00:00+07', '2025-12-01 08:00:00+07'),
+('c3c3c3c3-3333-4333-8333-333333333333', 'BHYT-2026-BASIC', 'BHYT', 80, 0, '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-01 08:00:00+07', '2025-12-01 08:00:00+07');
 
+-- =========================================================
+-- 2) BHYT_CATALOGUE
+-- Tạo catalogue cho Medical Services, Lab Test Types, và Medicines
+-- =========================================================
 
--- 2. Insert Bhyt Catalogue
-INSERT INTO public.bhyt_catalogue
-(is_covered, max_coverage_amount, id, service_code, service_type, service_name)
+-- BHYT cho Medical Services (service_code = medical_service_id, type = MEDICAL_SERVICE)
+INSERT INTO public.bhyt_catalogue (id, service_code, service_name, service_type, is_covered, max_coverage_amount)
 VALUES
-    (true, 10000, '5473aed8-4c33-48b4-a01e-415e3ce75bd6', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'MEDICINE', 'Paracetamol BHYT'),
-    (true, 20000, '59ae9a49-8d32-41ee-bcb7-c5da19ffc01d', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'MEDICINE', 'Amoxicillin BHYT'),
-    (true, 30000, 'f5f5f5f5-5555-4555-8555-555555555555', 'f5f5f5f5-5555-4555-8555-555555555556', 'DENTAL', 'Nhổ răng khôn'),
-    (true, 40000, 'f6f6f6f6-6666-4666-8666-666666666666', 'f6f6f6f6-6666-4666-8666-666666666667', 'DENTAL', 'Trám răng composite');
+-- Các dịch vụ cơ bản được BHYT chi trả
+('bb000000-0000-0000-0000-000000000013', '33000000-0000-0000-0000-000000000013', 'Nhổ răng', 'MEDICAL_SERVICE', true, 1000000),
+('bb000000-0000-0000-0000-000000000014', '33000000-0000-0000-0000-000000000014', 'Điều trị tủy răng', 'MEDICAL_SERVICE', true, 800000),
+('bb000000-0000-0000-0000-000000000018', '33000000-0000-0000-0000-000000000018', 'Hàn răng', 'MEDICAL_SERVICE', true, 250000),
+('bb000000-0000-0000-0000-000000000019', '33000000-0000-0000-0000-000000000019', 'Lấy cao răng', 'MEDICAL_SERVICE', true, 200000),
+('bb000000-0000-0000-0000-000000000020', '33000000-0000-0000-0000-000000000020', 'Chụp phim Xquang', 'MEDICAL_SERVICE', true, 80000);
 
-
--- 3. Insert Patient Insurance
-INSERT INTO public.patient_insurance
-(
-    id,
-    patient_id,
-    issue_date,
-    expiry_date,
-    status,
-    create_at,
-    update_at,
-    insurance_policy_id
-)
+-- BHYT cho Lab Test Types (service_code = lab_test_type_id, type = LAB_TEST)
+INSERT INTO public.bhyt_catalogue (id, service_code, service_name, service_type, is_covered, max_coverage_amount)
 VALUES
-(
-    'c3c3c3c3-3333-4333-8333-333333333333',
-    'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
-    '2025-02-15',
-    '2026-02-15',
-    'ACTIVE',
-    NULL,
-    NULL,
-    'a1a1a1a1-1111-4111-8111-111111111111'
-),
-(
-    'dddddddd-dddd-dddd-dddd-dddddddddddd',
-    'ffffffff-ffff-4fff-8fff-ffffffffffff',
-    '2024-01-01',
-    '2026-12-31',
-    'ACTIVE',
-    '2025-11-23 08:51:39',
-    '2025-11-23 08:51:39',
-    'b2b2b2b2-2222-4222-8222-222222222222'
-);
+('bb000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'Công thức máu (CBC)', 'LAB_TEST', true, 150000),
+('bb000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000002', 'Đông máu (PT, APTT)', 'LAB_TEST', true, 200000),
+('bb000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000003', 'Glucose máu', 'LAB_TEST', true, 50000),
+('bb000000-0000-0000-0000-000000000012', '50000000-0000-0000-0000-000000000012', 'X-quang Panorama', 'LAB_TEST', true, 100000),
+('bb000000-0000-0000-0000-000000000021', '50000000-0000-0000-0000-000000000013', 'X-quang Periapical', 'LAB_TEST', true, 50000);
 
+-- BHYT cho Medicines (service_code = medicine_id, type = MEDICINE)
+INSERT INTO public.bhyt_catalogue (id, service_code, service_name, service_type, is_covered, max_coverage_amount)
+VALUES
+('bb000000-0000-0000-0000-000000000101', 'aaaa0000-0000-0000-0000-000000000001', 'Amoxicillin 500mg', 'MEDICINE', true, 2500),
+('bb000000-0000-0000-0000-000000000102', 'aaaa0000-0000-0000-0000-000000000002', 'Augmentin 625mg', 'MEDICINE', true, 7000),
+('bb000000-0000-0000-0000-000000000103', 'aaaa0000-0000-0000-0000-000000000003', 'Azithromycin 250mg', 'MEDICINE', true, 4500),
+('bb000000-0000-0000-0000-000000000104', 'aaaa0000-0000-0000-0000-000000000004', 'Metronidazole 250mg', 'MEDICINE', true, 1800),
+('bb000000-0000-0000-0000-000000000105', 'aaaa0000-0000-0000-0000-000000000005', 'Paracetamol 500mg', 'MEDICINE', true, 800),
+('bb000000-0000-0000-0000-000000000106', 'aaaa0000-0000-0000-0000-000000000006', 'Ibuprofen 400mg', 'MEDICINE', true, 3000),
+('bb000000-0000-0000-0000-000000000109', 'aaaa0000-0000-0000-0000-000000000009', 'Omeprazole 20mg', 'MEDICINE', true, 2500),
+('bb000000-0000-0000-0000-000000000110', 'aaaa0000-0000-0000-0000-000000000010', 'Esomeprazole 40mg', 'MEDICINE', true, 4500),
+('bb000000-0000-0000-0000-000000000113', 'aaaa0000-0000-0000-0000-000000000013', 'Prednisolone 5mg', 'MEDICINE', true, 2200),
+('bb000000-0000-0000-0000-000000000117', 'aaaa0000-0000-0000-0000-000000000017', 'Vitamin C 500mg', 'MEDICINE', true, 1200);
+
+-- =========================================================
+-- 3) PATIENT_INSURANCE
+-- Giả sử 5 bệnh nhân có BHYT
+-- =========================================================
+INSERT INTO public.patient_insurance (id, patient_id, insurance_policy_id, issue_date, expiry_date, status, create_at, update_at)
+VALUES
+('c1c1c1c1-1111-1111-1111-111111111101', '00000000-0000-0000-0000-000000000101', 'a1a1a1a1-1111-4111-8111-111111111111', '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-20 08:00:00+07', '2025-12-20 08:00:00+07'),
+('c1c1c1c1-1111-1111-1111-111111111102', '00000000-0000-0000-0000-000000000102', 'b2b2b2b2-2222-4222-8222-222222222222', '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-20 08:00:00+07', '2025-12-20 08:00:00+07'),
+('c1c1c1c1-1111-1111-1111-111111111103', '00000000-0000-0000-0000-000000000103', 'c3c3c3c3-3333-4333-8333-333333333333', '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-20 08:00:00+07', '2025-12-20 08:00:00+07'),
+('c1c1c1c1-1111-1111-1111-111111111104', '00000000-0000-0000-0000-000000000106', 'a1a1a1a1-1111-4111-8111-111111111111', '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-20 08:00:00+07', '2025-12-20 08:00:00+07'),
+('c1c1c1c1-1111-1111-1111-111111111105', '00000000-0000-0000-0000-000000000108', 'b2b2b2b2-2222-4222-8222-222222222222', '2026-01-01', '2026-12-31', 'ACTIVE', '2025-12-20 08:00:00+07', '2025-12-20 08:00:00+07');
+
+-- =========================================================
+-- 4) INSURANCE_CLAIM
+-- Tạo claim cho các lịch khám có BHYT
+-- =========================================================
+-- Giả sử các lịch khám có claim: 101, 102, 104, 106, 108, 115, 116
+INSERT INTO public.insurance_claim (id, patient_insurance_id, claim_date, approval_date, status, total_claim_amount, total_insurance_pay, patient_pay_amount, notes, create_at, update_at)
+VALUES
+-- Claim cho appointment 101 (Patient 101 - trám răng)
+('d1d1d1d1-1111-1111-1111-111111111101', 'c1c1c1c1-1111-1111-1111-111111111101', '2026-01-05 09:30:00+07', '2026-01-05 10:00:00+07', 'APPROVED', 350000, 280000, 70000, 'Đã duyệt BHYT cho trám răng', '2026-01-05 09:35:00+07', '2026-01-05 10:00:00+07'),
+
+-- Claim cho appointment 102 (Patient 101 - cạo vôi răng)
+('d1d1d1d1-1111-1111-1111-111111111102', 'c1c1c1c1-1111-1111-1111-111111111101', '2026-01-12 11:00:00+07', '2026-01-12 11:30:00+07', 'APPROVED', 350000, 200000, 150000, 'BHYT chi trả một phần cạo vôi răng', '2026-01-12 11:05:00+07', '2026-01-12 11:30:00+07'),
+
+-- Claim cho appointment 104 (Patient 102 - điều trị tủy)
+('d1d1d1d1-1111-1111-1111-111111111104', 'c1c1c1c1-1111-1111-1111-111111111102', '2026-01-06 11:00:00+07', '2026-01-06 12:00:00+07', 'APPROVED', 1200000, 800000, 400000, 'BHYT chi trả điều trị tủy và thuốc', '2026-01-06 11:05:00+07', '2026-01-06 12:00:00+07'),
+
+-- Claim cho appointment 106 (Patient 103 - nhổ răng khôn)
+('d1d1d1d1-1111-1111-1111-111111111106', 'c1c1c1c1-1111-1111-1111-111111111103', '2026-01-07 09:00:00+07', '2026-01-07 09:30:00+07', 'APPROVED', 1500000, 1000000, 500000, 'BHYT chi trả nhổ răng và một phần thuốc', '2026-01-07 09:05:00+07', '2026-01-07 09:30:00+07'),
+
+-- Claim cho appointment 108 (Patient 103 - trám răng)
+('d1d1d1d1-1111-1111-1111-111111111108', 'c1c1c1c1-1111-1111-1111-111111111103', '2026-01-22 10:30:00+07', '2026-01-22 11:00:00+07', 'APPROVED', 350000, 250000, 100000, 'BHYT chi trả trám răng', '2026-01-22 10:35:00+07', '2026-01-22 11:00:00+07'),
+
+-- Claim cho appointment 115 (Patient 108 - trám răng)
+('d1d1d1d1-1111-1111-1111-111111111115', 'c1c1c1c1-1111-1111-1111-111111111105', '2026-01-13 08:30:00+07', '2026-01-13 09:00:00+07', 'APPROVED', 350000, 250000, 100000, 'BHYT chi trả trám răng', '2026-01-13 08:35:00+07', '2026-01-13 09:00:00+07'),
+
+-- Claim cho appointment 116 (Patient 108 - điều trị tủy)
+('d1d1d1d1-1111-1111-1111-111111111116', 'c1c1c1c1-1111-1111-1111-111111111105', '2026-01-18 16:00:00+07', '2026-01-18 16:30:00+07', 'APPROVED', 1200000, 800000, 400000, 'BHYT chi trả điều trị tủy và thuốc', '2026-01-18 16:05:00+07', '2026-01-18 16:30:00+07');
+
+-- =========================================================
+-- 5) CLAIM_ITEM
+-- =========================================================
+-- Claim 101 items
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111101', 'd1d1d1d1-1111-1111-1111-111111111101', 'bb000000-0000-0000-0000-000000000018', 1, 350000, 350000, 0.8, 280000, 70000);
+
+-- Claim 102 items
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111102', 'd1d1d1d1-1111-1111-1111-111111111102', 'bb000000-0000-0000-0000-000000000019', 1, 350000, 350000, 0.57, 200000, 150000);
+
+-- Claim 104 items (điều trị tủy + thuốc)
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111104', 'd1d1d1d1-1111-1111-1111-111111111104', 'bb000000-0000-0000-0000-000000000014', 1, 1200000, 1200000, 0.67, 800000, 400000),
+-- Thuốc Amoxicillin
+('e1e1e1e1-1111-1111-1111-111111111105', 'd1d1d1d1-1111-1111-1111-111111111104', 'bb000000-0000-0000-0000-000000000101', 15, 3000, 45000, 0.8, 36000, 9000),
+-- Thuốc Ibuprofen
+('e1e1e1e1-1111-1111-1111-111111111106', 'd1d1d1d1-1111-1111-1111-111111111104', 'bb000000-0000-0000-0000-000000000106', 15, 3500, 52500, 0.8, 42000, 10500),
+-- Thuốc Omeprazole
+('e1e1e1e1-1111-1111-1111-111111111107', 'd1d1d1d1-1111-1111-1111-111111111104', 'bb000000-0000-0000-0000-000000000109', 10, 3000, 30000, 0.8, 24000, 6000);
+
+-- Claim 106 items (nhổ răng + thuốc)
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111108', 'd1d1d1d1-1111-1111-1111-111111111106', 'bb000000-0000-0000-0000-000000000013', 1, 1500000, 1500000, 0.67, 1000000, 500000),
+-- Thuốc Augmentin
+('e1e1e1e1-1111-1111-1111-111111111109', 'd1d1d1d1-1111-1111-1111-111111111106', 'bb000000-0000-0000-0000-000000000102', 14, 8000, 112000, 0.8, 89600, 22400);
+
+-- Claim 108 items
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111110', 'd1d1d1d1-1111-1111-1111-111111111108', 'bb000000-0000-0000-0000-000000000018', 1, 350000, 350000, 0.71, 250000, 100000);
+
+-- Claim 115 items
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111111', 'd1d1d1d1-1111-1111-1111-111111111115', 'bb000000-0000-0000-0000-000000000018', 1, 350000, 350000, 0.71, 250000, 100000);
+
+-- Claim 116 items (điều trị tủy + thuốc)
+INSERT INTO public.claim_item (id, insurance_claim_id, bhyt_catalogue_id, quantity, unit_price, total_amount, insurance_pay_ratio, insurance_pay_amount, patient_pay_amount)
+VALUES
+('e1e1e1e1-1111-1111-1111-111111111112', 'd1d1d1d1-1111-1111-1111-111111111116', 'bb000000-0000-0000-0000-000000000014', 1, 1200000, 1200000, 0.67, 800000, 400000),
+-- Thuốc Amoxicillin
+('e1e1e1e1-1111-1111-1111-111111111113', 'd1d1d1d1-1111-1111-1111-111111111116', 'bb000000-0000-0000-0000-000000000101', 21, 3000, 63000, 0.8, 50400, 12600),
+-- Thuốc Ibuprofen
+('e1e1e1e1-1111-1111-1111-111111111114', 'd1d1d1d1-1111-1111-1111-111111111116', 'bb000000-0000-0000-0000-000000000106', 15, 3500, 52500, 0.8, 42000, 10500),
+-- Thuốc Omeprazole
+('e1e1e1e1-1111-1111-1111-111111111115', 'd1d1d1d1-1111-1111-1111-111111111116', 'bb000000-0000-0000-0000-000000000109', 14, 3000, 42000, 0.8, 33600, 8400);
+
+-- =========================================================
+-- AXON FRAMEWORK TABLES
+-- =========================================================
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,

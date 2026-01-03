@@ -68,15 +68,59 @@ CREATE INDEX idx_lab_test_type ON lab_test(lab_test_type_id);
 CREATE INDEX idx_lab_test_technician ON lab_test(lab_technician_id);
 CREATE INDEX idx_attachment_test ON medical_attachment(lab_test_id);
 
+-- =========================================================
+-- 1) LAB_TECHNICIAN (3 người)
+-- =========================================================
 INSERT INTO lab_technician (user_id, license_number)
-VALUES ('00000000-0000-0000-0000-000000000501', 'LCN-KTV-001');
+VALUES 
+('00000000-0000-0000-0000-000000000501', 'KTV-RHM-001234'),
+('00000000-0000-0000-0000-000000000502', 'KTV-RHM-005678'),
+('00000000-0000-0000-0000-000000000503', 'KTV-RHM-009012');
 
-INSERT INTO lab_test_type (name, description)
-VALUES ('Huyết học', 'Phân tích tế bào máu ngoại vi');
+-- =========================================================
+-- 2) LAB_TEST_TYPE (Các loại xét nghiệm nha khoa)
+-- =========================================================
+INSERT INTO lab_test_type (id, name, description)
+VALUES
+-- Xét nghiệm máu cơ bản
+('50000000-0000-0000-0000-000000000001', 'Công thức máu (CBC)', 'Xét nghiệm số lượng hồng cầu, bạch cầu, tiểu cầu'),
+('50000000-0000-0000-0000-000000000002', 'Đông máu (PT, APTT)', 'Xét nghiệm thời gian đông máu trước phẫu thuật'),
+('50000000-0000-0000-0000-000000000003', 'Glucose máu', 'Xét nghiệm đường huyết đối với bệnh nhân tiểu đường'),
 
-INSERT INTO lab_test_type (name, description)
-VALUES ('Chức năng Gan', 'Đánh giá men gan (AST, ALT)');
+-- Xét nghiệm sinh hóa
+('50000000-0000-0000-0000-000000000004', 'Chức năng gan (AST, ALT)', 'Xét nghiệm men gan'),
+('50000000-0000-0000-0000-000000000005', 'Chức năng thận (Creatinine, Urea)', 'Xét nghiệm chức năng thận'),
+('50000000-0000-0000-0000-000000000006', 'Điện giải đồ (Na, K, Cl)', 'Xét nghiệm điện giải máu'),
 
+-- Xét nghiệm vi sinh
+('50000000-0000-0000-0000-000000000007', 'Cấy khuẩn răng miệng', 'Xác định vi khuẩn gây nhiễm trùng răng miệng'),
+('50000000-0000-0000-0000-000000000008', 'Kháng sinh đồ', 'Xác định kháng sinh nhạy cảm với vi khuẩn'),
+
+-- Xét nghiệm miễn dịch
+('50000000-0000-0000-0000-000000000009', 'HBsAg (Viêm gan B)', 'Sàng lọc viêm gan B'),
+('50000000-0000-0000-0000-000000000010', 'Anti-HCV (Viêm gan C)', 'Sàng lọc viêm gan C'),
+('50000000-0000-0000-0000-000000000011', 'HIV Rapid Test', 'Sàng lọc HIV'),
+
+-- Xét nghiệm chẩn đoán hình ảnh
+('50000000-0000-0000-0000-000000000012', 'X-quang Panorama', 'Chụp phim toàn cảnh răng hàm mặt'),
+('50000000-0000-0000-0000-000000000013', 'X-quang Periapical', 'Chụp phim quanh chóp răng'),
+('50000000-0000-0000-0000-000000000014', 'X-quang Cephalometric', 'Chụp phim sọ nghiêng cho chỉnh nha'),
+('50000000-0000-0000-0000-000000000015', 'CBCT (Cone Beam CT)', 'Chụp CT cone beam 3D cho Implant'),
+
+-- Xét nghiệm mô bệnh học
+('50000000-0000-0000-0000-000000000016', 'Sinh thiết mô mềm', 'Xét nghiệm mô học tổn thương niêm mạc miệng'),
+('50000000-0000-0000-0000-000000000017', 'Sinh thiết mô xương hàm', 'Xét nghiệm mô học tổn thương xương hàm'),
+
+-- Xét nghiệm khác
+('50000000-0000-0000-0000-000000000018', 'Test dị ứng thuốc', 'Test dị ứng với các loại thuốc nha khoa'),
+('50000000-0000-0000-0000-000000000019', 'Test dị ứng vật liệu', 'Test dị ứng với vật liệu nha khoa (latex, acrylic, nickel)'),
+('50000000-0000-0000-0000-000000000020', 'Nước bọt pH Test', 'Đo pH nước bọt đánh giá nguy cơ sâu răng');
+
+-- LƯU Ý: Không thêm bản ghi lab_test và medical_attachment theo yêu cầu
+
+-- =========================================================
+-- AXON FRAMEWORK TABLES
+-- =========================================================
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,

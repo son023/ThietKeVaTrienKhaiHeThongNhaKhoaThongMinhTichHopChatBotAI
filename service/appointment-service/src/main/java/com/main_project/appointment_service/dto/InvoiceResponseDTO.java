@@ -1,6 +1,5 @@
 package com.main_project.appointment_service.dto;
 
-import com.do_an.paymentservice.dto.response.InvoiceItemResponseDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
