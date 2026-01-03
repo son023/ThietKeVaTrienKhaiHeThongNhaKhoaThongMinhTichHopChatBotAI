@@ -171,6 +171,7 @@ public class InvoiceEventHandler {
 
     private CreateInvoiceRequestDTO buildInvoiceRequest(InvoiceCreateEvent command) {
         CreateInvoiceRequestDTO dto = new CreateInvoiceRequestDTO();
+        dto.setId(command.getInvoiceId());
         dto.setAppointmentId(command.getAppointmentId());
         dto.setReceptionistId(command.getDoctorId());
         dto.setCurrency("VND");

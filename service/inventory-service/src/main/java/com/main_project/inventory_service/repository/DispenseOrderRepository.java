@@ -29,6 +29,9 @@ public interface DispenseOrderRepository extends JpaRepository<DispenseOrder, UU
 
     // Tìm đơn gần nhất theo hồ sơ bệnh án với danh sách trạng thái
     Optional<DispenseOrder> findFirstByMedicalHistoryIdAndStatusInOrderByCreateAtDesc(UUID medicalHistoryId, List<String> statuses);
+
+    // Tìm đơn gần nhất theo hồ sơ bệnh án, loại bỏ CANCELED
+    Optional<DispenseOrder> findFirstByMedicalHistoryIdAndStatusNotOrderByCreateAtDesc(UUID medicalHistoryId, String status);
 }
 
 

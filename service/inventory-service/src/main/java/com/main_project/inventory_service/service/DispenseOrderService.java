@@ -17,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -250,9 +247,12 @@ public Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId) 
 }
 
     @Override
-    public DispenseOrderResponse getByMedicalHistoryId(UUID id) {
-        DispenseOrder order = dispenseOrderRepository.findByMedicalHistoryId(id).get();
-        return mapToResponse(order);
+    @Transactional(readOnly = true)
+    public Optional<DispenseOrderResponse> getByMedicalHistoryId(UUID id) {
+        Optional<DispenseOrder> orderOpt = dispenseOrderRepository
+                .findFirstByMedicalHistoryIdAndStatusNotOrderByCreateAtDesc(id, "CANCELED");
+        
+        return orderOpt.map(this::mapToResponse);
     }
 
     // ==================== NEW METHODS FOR REFACTORING ====================

@@ -6,6 +6,7 @@ import com.main_project.inventory_service.dto.DispenseOrderResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IDispenseOrderService {
@@ -24,7 +25,7 @@ public interface IDispenseOrderService {
 
     Map<String, Object> getPaymentStatusOfPrescription(UUID dispenseOrderId);
 
-    DispenseOrderResponse getByMedicalHistoryId(UUID id);
+    Optional<DispenseOrderResponse> getByMedicalHistoryId(UUID id);
 
     Map<String, Object> getPrescriptionStatusByMedicalHistoryId(UUID medicalHistoryId);
     

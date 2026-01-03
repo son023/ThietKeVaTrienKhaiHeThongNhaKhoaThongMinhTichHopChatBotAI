@@ -18,7 +18,7 @@ import java.util.UUID;
 public class Invoice {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id; // varchar(50)
 
 

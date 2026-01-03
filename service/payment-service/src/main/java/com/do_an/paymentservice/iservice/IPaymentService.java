@@ -14,8 +14,8 @@ import java.util.UUID;
 public interface IPaymentService {
     // Business logic methods
     PaymentResponseDTO initiatePayment(CreatePaymentRequestDTO request);
-    PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId);
-    PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId);
+    PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId, UUID appointmentId);
+    PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId, UUID appointmentId);
     void handlePayOSWebhook(String transactionId, boolean isSuccess, String bankTransactionId);
     PaymentResponseDTO getPaymentStatusOfInvoice(UUID invoiceId);
     PaymentResponseDTO getPaymentById(UUID paymentId);

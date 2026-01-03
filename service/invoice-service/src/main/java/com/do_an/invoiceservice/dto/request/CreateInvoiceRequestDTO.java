@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Data
 public class CreateInvoiceRequestDTO {
+    private UUID id;
     @NotNull
     private UUID receptionistId;
     @NotNull

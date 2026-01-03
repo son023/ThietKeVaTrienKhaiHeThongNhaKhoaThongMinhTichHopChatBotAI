@@ -41,10 +41,10 @@ public class PaymentCommandHandler {
         UUID paymentId = command.getPaymentId();
         
         // Kiểm tra xem có thể cập nhật status không
-        if (!paymentService.canUpdatePaymentStatus(paymentId)) {
-            log.warn("Payment {} đã thanh toán thành công, không thể cập nhật sang trạng thái khác.", paymentId);
-            return;
-        }
+//        if (!paymentService.canUpdatePaymentStatus(paymentId)) {
+//            log.warn("Payment {} đã thanh toán thành công, không thể cập nhật sang trạng thái khác.", paymentId);
+//            return;
+//        }
 
         // Cập nhật status thông qua aggregate
         paymentAggregateRepository.load(paymentId.toString())

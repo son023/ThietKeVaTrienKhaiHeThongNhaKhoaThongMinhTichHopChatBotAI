@@ -10,6 +10,7 @@ import com.do_an.paymentservice.client.PatientClient;
 import com.do_an.paymentservice.dto.request.CreatePaymentRequestDTO;
 import com.do_an.paymentservice.dto.request.UpdatePaymentRequestDTO;
 import com.do_an.paymentservice.dto.response.*;
+import com.do_an.paymentservice.dto.response.DispenseOrderResponse;
 import com.do_an.paymentservice.entity.Payment;
 import com.do_an.paymentservice.entity.PaymentMethod;
 import com.do_an.paymentservice.entity.PaymentStatus;
@@ -23,6 +24,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.GenericEventMessage;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.payos.PayOS;
@@ -67,15 +69,28 @@ public class PaymentService implements IPaymentService {
 
         // Lấy thông tin Invoice từ invoice-service (bao gồm danh sách InvoiceItem)
         InvoiceResponseDTO invoice;
-        UUID dispenseOrderId;
+        UUID dispenseOrderId = null;
         try {
             invoice = invoiceClient.getInvoiceById(request.getInvoiceId());
             log.info("Đã lấy thông tin Invoice: {}, Status: {}, TotalAmount: {}", 
                     invoice.getId(), invoice.getStatus(), invoice.getTotalAmount());
 
-            MedicalHistoryResponseDTO medicalHistoryResponseDTO =  patientClient.getByAppointment(invoice.getAppointmentId()).get(0);
-            DispenseOrderResponse dispenseOrderResponse = inventoryClient.getByMedicalHistoryId(medicalHistoryResponseDTO.getId());
-            dispenseOrderId = dispenseOrderResponse.getId();
+            // Thử lấy DispenseOrder (có thể không có)
+            try {
+                MedicalHistoryResponseDTO medicalHistoryResponseDTO = patientClient.getByAppointment(invoice.getAppointmentId()).get(0);
+                ResponseEntity<DispenseOrderResponse> responseEntity = inventoryClient.getByMedicalHistoryId(medicalHistoryResponseDTO.getId());
+                
+                if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+                    dispenseOrderId = responseEntity.getBody().getId();
+                    log.info("Đã tìm thấy DispenseOrder: {}", dispenseOrderId);
+                } else {
+                    log.info("Không tìm thấy DispenseOrder cho medicalHistoryId: {}. Tiếp tục thanh toán không có DispenseOrder.", 
+                            medicalHistoryResponseDTO.getId());
+                }
+            } catch (Exception e) {
+                log.warn("Lỗi khi lấy DispenseOrder: {}. Tiếp tục thanh toán không có DispenseOrder.", e.getMessage());
+                // Tiếp tục thanh toán mà không có DispenseOrder
+            }
             
             // Kiểm tra Invoice có items không
             if (invoice.getItems() == null || invoice.getItems().isEmpty()) {
@@ -113,9 +128,9 @@ public class PaymentService implements IPaymentService {
         }
 
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
-            return handleCashPayment(request, invoice, dispenseOrderId);
+            return handleCashPayment(request, invoice, dispenseOrderId, invoice.getAppointmentId());
         } else {
-            return handleBankTransferPayment(request, invoice, dispenseOrderId);
+            return handleBankTransferPayment(request, invoice, dispenseOrderId, invoice.getAppointmentId());
         }
     }
 
@@ -146,7 +161,7 @@ public class PaymentService implements IPaymentService {
      * Xử lý thanh toán tiền mặt
      */
     @Transactional
-    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId) {
+    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId, UUID appointmentId) {
         log.info("Xử lý thanh toán CASH cho Invoice: {}", request.getInvoiceId());
 
         Payment payment = Payment.builder()
@@ -174,6 +189,7 @@ public class PaymentService implements IPaymentService {
         // Hoặc để PaymentAggregate tự xử lý nếu logic của bạn cho phép
         commandGateway.send(new UpdatePaymentStatusCommand(
                 payment.getId(),
+//                appointmentId,
                 "SUCCESSFUL",
                 "Đã thanh toán đầy đủ tiền mặt"
         ));
@@ -194,7 +210,7 @@ public class PaymentService implements IPaymentService {
      * Sử dụng InvoiceItem để tạo ItemData chi tiết cho payOS
      */
     @Transactional
-    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId) {
+    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId, UUID appointmentId) {
         log.info("Xử lý thanh toán BANK_TRANSFER cho Invoice: {}", request.getInvoiceId());
 
         try {
@@ -325,6 +341,8 @@ public class PaymentService implements IPaymentService {
             PaymentStatus newStatus = isSuccess ? PaymentStatus.SUCCESSFUL : PaymentStatus.FAILED;
             String reason = isSuccess ? "Thanh toán qua payOS - Thành công" : "Thanh toán thất bại";
 
+
+
             // 1. CẬP NHẬT DB TRỰC TIẾP (Để response nhanh cho Webhook)
 //            payment.setStatus(newStatus);
 //            if (isSuccess) {
@@ -337,6 +355,7 @@ public class PaymentService implements IPaymentService {
             // Đây là phần BỔ SUNG QUAN TRỌNG
             commandGateway.send(new UpdatePaymentStatusCommand(
                     payment.getId(),
+//                    appointmentId,
                     newStatus.toString(),
                     reason
             ));

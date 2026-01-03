@@ -135,6 +135,14 @@ export function PatientExamination({
     });
   };
 
+  const formatGender = (gender?: string) => {
+    if (!gender) return "-";
+    const g = gender.toLowerCase();
+    if (g === "male") return "Nam";
+    if (g === "female") return "Nữ";
+    return "Khác";
+  };
+
   // LocalStorage utility functions
   const getDraftStorageKey = () => {
     if (!appointmentId) return null;
@@ -661,7 +669,7 @@ export function PatientExamination({
                 </h2>
                 <p className="text-neutral-text/60 text-sm">
                   Mã BN: {patient?.userId || patientId || "-"} •{" "}
-                  {patient?.gender || "Khác"}
+                  {formatGender(patient?.gender)}
                 </p>
                 <div className="flex items-center gap-3 text-sm text-neutral-text/70 mt-1">
                   {patient?.contactPhone && (
