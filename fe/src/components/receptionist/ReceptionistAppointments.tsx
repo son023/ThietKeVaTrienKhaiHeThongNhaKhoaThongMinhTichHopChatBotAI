@@ -21,12 +21,11 @@ interface Appointment {
   duration: number;
   doctorId: string;
   status:
-    | 'waiting_confirm'
-    | 'waiting_checkin'
-    | 'checked_in'
-    | 'in_treatment'
-    | 'waiting_payment'
-    | 'completed';
+  | 'waiting_checkin'
+  | 'checked_in'
+  | 'in_treatment'
+  | 'waiting_payment'
+  | 'completed';
   service: string;
 }
 
@@ -71,30 +70,28 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'waiting_confirm':
-        return 'Chờ xác nhận';
       case 'waiting_checkin':
-        return 'Đã xác nhận';
+        return 'Chờ check-in';
       case 'checked_in':
         return 'Đã check-in';
       case 'in_treatment':
         return 'Đang khám';
-      case 'completed':
-        return 'Hoàn thành';
       case 'waiting_payment':
         return 'Chờ thanh toán';
+      case 'completed':
+        return 'Hoàn tất';
       default:
         return status;
     }
   };
 
-  const filteredDoctors = selectedDoctor === 'all' 
+  const filteredDoctors = selectedDoctor === 'all'
     ? doctors.filter(d => d.id !== 'all')
     : doctors.filter(d => d.id === selectedDoctor);
 
   const filteredAppointments = useMemo(
-    () => selectedDoctor === 'all' 
-      ? appointments 
+    () => selectedDoctor === 'all'
+      ? appointments
       : appointments.filter(apt => apt.doctorId === selectedDoctor),
     [appointments, selectedDoctor]
   );
@@ -131,15 +128,18 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
   const mapStatus = (status: string): Appointment['status'] => {
     switch (status) {
       case 'CONFIRMED':
-        return 'waiting_checkin';
+        return 'waiting_checkin';      // Chờ check-in
       case 'CHECKED':
-        return 'checked_in';
+        return 'checked_in';            // Đã check-in
       case 'IN_PROGRESS':
-        return 'in_treatment';
+        return 'in_treatment';          // Đang khám
       case 'COMPLETED':
-        return 'completed';
+        return 'waiting_payment';       // Chờ thanh toán
+      case 'COMPLETED_INVOICE':
+        return 'completed';             // Hoàn tất
       default:
-        return 'waiting_confirm';
+        // Nếu có status không xác định, mặc định là waiting_checkin
+        return 'waiting_checkin';
     }
   };
 
@@ -461,15 +461,11 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       )}
 
       {/* Legend */}
-      <div className="mt-4 flex items-center gap-4 text-sm">
+      <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
         <span className="text-[#333333]/60">Trạng thái:</span>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded" />
-          <span>Chờ xác nhận</span>
-        </div>
-        <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
-          <span>Đã xác nhận</span>
+          <span>Chờ check-in</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-purple-100 border border-purple-300 rounded" />
@@ -480,8 +476,12 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
           <span>Đang khám</span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-orange-100 border border-orange-300 rounded" />
+          <span>Chờ thanh toán</span>
+        </div>
+        <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded" />
-          <span>Hoàn thành</span>
+          <span>Hoàn tất</span>
         </div>
       </div>
 
