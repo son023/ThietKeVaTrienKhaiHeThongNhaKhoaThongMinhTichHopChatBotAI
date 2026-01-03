@@ -10,6 +10,16 @@ export interface UpdateUserRequestDTO {
   roleNames?: string[];
 }
 
+export interface CreateUserRequestDTO {
+  email: string;
+  password: string;
+  fullName: string;
+  phone: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  roleNames?: string[];
+}
+
 class UserController {
   private baseUrl = API_CONFIG.ENDPOINTS.USERS;
 
@@ -96,6 +106,26 @@ class UserController {
     });
     const user = await this.handleResponse<RawUser>(res);
     return this.normalizeUser(user);
+  }
+
+  async create(data: CreateUserRequestDTO): Promise<UserDTO> {
+    const res = await fetch(createApiUrl(this.baseUrl), {
+      method: "POST",
+      headers: getApiHeaders(true),
+      body: JSON.stringify(data),
+    });
+    const user = await this.handleResponse<RawUser>(res);
+    return this.normalizeUser(user);
+  }
+
+  async delete(id: string): Promise<void> {
+    const res = await fetch(createApiUrl(this.baseUrl, id), {
+      method: "DELETE",
+      headers: getApiHeaders(true),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to delete user: ${res.statusText}`);
+    }
   }
 }
 
