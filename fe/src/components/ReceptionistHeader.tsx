@@ -9,9 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useNotifications } from "../contexts/NotificationContext";
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { authController } from "../controllers/AuthController";
+import type { UserDTO } from "../models/User";
 
 interface ReceptionistHeaderProps {
   onLogout: () => void;
@@ -39,6 +41,34 @@ export function ReceptionistHeader({
   } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Load user data and avatar from localStorage
+  useEffect(() => {
+    const currentUser = authController.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      // Load avatar preview from localStorage
+      const savedAvatar = localStorage.getItem(`avatar_preview_${currentUser.id}`);
+      if (savedAvatar) {
+        setAvatarPreview(savedAvatar);
+      }
+    }
+
+    // Listen for storage changes to update avatar when changed in AccountSettings
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('avatar_preview_')) {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser && e.key === `avatar_preview_${currentUser.id}`) {
+          setAvatarPreview(e.newValue);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,6 +104,28 @@ export function ReceptionistHeader({
     return date.toLocaleDateString('vi-VN');
   };
 
+  const getInitials = (name: string | undefined) => {
+    if (!name || name.trim() === '') {
+      return 'LT';
+    }
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return parts[0][0] + parts[parts.length - 1][0];
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Use useMemo for displayName like DoctorHeader
+  const displayName = useMemo(() => user?.fullName, [user]);
+  const subtitle = useMemo(() => {
+    if (user?.primaryRole) return user.primaryRole;
+    return "Lễ tân";
+  }, [user]);
+  const avatarFallback = useMemo(
+    () => (displayName ? getInitials(displayName) : "LT"),
+    [displayName]
+  );
+
   const handleNotificationClick = async (notification: { id: string; read: boolean }) => {
     if (!notification.read) {
       await markAsRead(notification.id);
@@ -86,13 +138,7 @@ export function ReceptionistHeader({
       {/* Search Bar */}
       <div className="flex-1 max-w-xl mx-8">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Tìm kiếm bệnh nhân (Tên, SĐT, Mã BN...)"
-            className="pl-10 bg-[#f8f9fa] border-gray-200"
-            onChange={(e) => onSearch(e.target.value)}
-          />
+          
         </div>
       </div>
 
@@ -101,7 +147,7 @@ export function ReceptionistHeader({
         {/* New Appointment Button */}
         <Button
           onClick={onNewAppointment}
-          className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 text-white gap-2"
+          className="bg-primary hover:bg-primary-strong rounded-[15px] shadow-lg transition-all duration-200"
         >
           <Plus className="w-4 h-4" />
           Đặt lịch mới
@@ -111,7 +157,7 @@ export function ReceptionistHeader({
         <Button
           onClick={onNewPatient}
           variant="outline"
-          className="border-[#3FB5FF] text-[#3FB5FF] hover:bg-[#3FB5FF]/10 gap-2"
+          className="gap-2"
         >
           <Plus className="w-4 h-4" />
           Thêm Bệnh nhân
@@ -206,13 +252,16 @@ export function ReceptionistHeader({
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
               <Avatar className="w-10 h-10">
+                {(avatarPreview || user?.imageUrl) ? (
+                  <AvatarImage src={avatarPreview || user?.imageUrl} alt={displayName || 'Avatar'} />
+                ) : null}
                 <AvatarFallback className="bg-[#3FB5FF] text-white">
-                  LT
+                  {avatarFallback}
                 </AvatarFallback>
               </Avatar>
               <div className="text-left">
-                <p className="text-sm text-[#01304e]">Lễ tân</p>
-                <p className="text-xs text-gray-500">Receptionist</p>
+                <p className="text-sm text-[#01304e]">{displayName || 'Lễ tân'}</p>
+                <p className="text-xs text-gray-500">{subtitle}</p>
               </div>
             </button>
           </DropdownMenuTrigger>

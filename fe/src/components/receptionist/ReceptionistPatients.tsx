@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Search, Phone, Mail, Calendar, User, Eye } from "lucide-react";
+import { Search, Phone, Mail, Calendar, User, Eye, Filter } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,6 +16,21 @@ import {
   patientController,
   PatientWithUser,
 } from "../../controllers/PatientController";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
 
 interface ReceptionistPatientsProps {
   onPatientSelect: (patientId: string) => void;
@@ -43,30 +58,58 @@ export function ReceptionistPatients({
   >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filter state
+  const [filterType, setFilterType] = useState<"day" | "month">("day");
+  const [selectedDay, setSelectedDay] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  ); // Format: YYYY-MM-DD
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
+  ); // Format: YYYY-MM
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    const loadTodayPatients = async () => {
+    const loadPatients = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const appointments = await appointmentController.getAll();
-        const today = new Date();
+        
+        let filteredAppointments = appointments;
+        
+        if (filterType === "day") {
+          // Filter by selected day
+          const selected = new Date(selectedDay);
+          filteredAppointments = appointments.filter((apt) => {
+            if (!apt.appointmentStartTime) return false;
+            const aptDate = new Date(apt.appointmentStartTime);
+            return (
+              !isNaN(aptDate.getTime()) &&
+              aptDate.getFullYear() === selected.getFullYear() &&
+              aptDate.getMonth() === selected.getMonth() &&
+              aptDate.getDate() === selected.getDate()
+            );
+          });
+        } else if (filterType === "month") {
+          // Filter by selected month
+          const [year, month] = selectedMonth.split("-").map(Number);
+          filteredAppointments = appointments.filter((apt) => {
+            if (!apt.appointmentStartTime) return false;
+            const aptDate = new Date(apt.appointmentStartTime);
+            return (
+              !isNaN(aptDate.getTime()) &&
+              aptDate.getMonth() === month - 1 &&
+              aptDate.getFullYear() === year
+            );
+          });
+        }
 
-        const isSameDay = (dateStr: string) => {
-          const d = new Date(dateStr);
-          return (
-            !isNaN(d.getTime()) &&
-            d.getFullYear() === today.getFullYear() &&
-            d.getMonth() === today.getMonth() &&
-            d.getDate() === today.getDate()
-          );
-        };
-
-        const todayAppointments = appointments.filter(
-          (apt) =>
-            apt.appointmentStartTime && isSameDay(apt.appointmentStartTime)
-        );
+        const todayAppointments = filteredAppointments;
 
         const patientIds = Array.from(
           new Set(todayAppointments.map((apt) => apt.patientId).filter(Boolean))
@@ -87,22 +130,38 @@ export function ReceptionistPatients({
         todayAppointments.forEach((apt) => {
           if (!apt.patientId || !apt.appointmentStartTime) return;
           const start = new Date(apt.appointmentStartTime);
-          patientTimeMap[apt.patientId] = isNaN(start.getTime())
-            ? '-'
-            : start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+          if (isNaN(start.getTime())) {
+            patientTimeMap[apt.patientId] = '-';
+          } else {
+            if (filterType === "day") {
+              // Show time only for day filter
+              patientTimeMap[apt.patientId] = start.toLocaleTimeString('vi-VN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+            } else {
+              // Show full date for month filter
+              patientTimeMap[apt.patientId] = start.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              });
+            }
+          }
         });
 
         setPatients(patientData.filter(Boolean) as PatientWithUser[]);
         setPatientAppointments(patientTimeMap);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Khong the tai danh sach benh nhan hom nay');
+        setError(err instanceof Error ? err.message : 'Không thể tải danh sách bệnh nhân');
       } finally {
         setLoading(false);
       }
     };
 
-    loadTodayPatients();
-  }, []);
+    loadPatients();
+    setCurrentPage(1); // Reset to first page when filter changes
+  }, [filterType, selectedDay, selectedMonth]);
 
   const filteredPatients: DisplayPatient[] = useMemo(
     () =>
@@ -135,6 +194,13 @@ export function ReceptionistPatients({
         ),
     [patients, searchQuery, patientAppointments]
   );
+  
+  // Pagination calculations
+  const totalPatients = filteredPatients.length;
+  const totalPages = Math.ceil(totalPatients / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPatients = filteredPatients.slice(startIndex, endIndex);
 
   return (
     <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
@@ -157,40 +223,49 @@ export function ReceptionistPatients({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200">
-            + Thêm Bệnh nhân mới
-          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-neutral-text/70" />
+            <span className="text-sm font-medium text-neutral-text">
+              Lọc theo:
+            </span>
+          </div>
+          
+          <Select value={filterType} onValueChange={(value: "day" | "month") => setFilterType(value)}>
+            <SelectTrigger className="w-[140px] border-neutral-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Theo ngày</SelectItem>
+              <SelectItem value="month">Theo tháng</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {filterType === "day" && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-neutral-text/70">Chọn ngày:</span>
+              <Input
+                type="date"
+                value={selectedDay}
+                onChange={(e) => setSelectedDay(e.target.value)}
+                className="w-[160px] border-neutral-border"
+              />
+            </div>
+          )}
+
+          {filterType === "month" && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-neutral-text/70">Chọn tháng:</span>
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-[160px] border-neutral-border"
+              />
+            </div>
+          )}
         </div>
       </Card>
-
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
-            Tổng số bệnh nhân hôm nay
-          </p>
-          <p className="text-3xl font-bold text-neutral-text">
-            {patients.length}
-          </p>
-        </Card>
-        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
-            Bệnh nhân mới (tháng này)
-          </p>
-          <p className="text-3xl font-bold text-green-600">-</p>
-        </Card>
-        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
-            Cả lịch hẹn hôm nay
-          </p>
-          <p className="text-3xl font-bold text-primary">{patients.length}</p>
-        </Card>
-        <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <p className="text-sm text-neutral-text/70 mb-2 font-medium">
-            Cần liên hệ lại
-          </p>
-          <p className="text-3xl font-bold text-accent-orange">-</p>
-        </Card>
-      </div>
 
       <Card className="border-neutral-border bg-neutral-surface shadow-sm">
         <Table>
@@ -212,7 +287,7 @@ export function ReceptionistPatients({
                 Ngày sinh
               </TableHead>
               <TableHead className="font-semibold text-neutral-heading">
-                Giờ hẹn hôm nay
+                {filterType === "day" ? "Giờ hẹn" : "Ngày hẹn"}
               </TableHead>
               <TableHead className="font-semibold text-neutral-heading">
                 Ghi chú
@@ -229,7 +304,9 @@ export function ReceptionistPatients({
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin"></div>
                     <p className="text-neutral-text/70 font-medium">
-                      Đang tải danh sách bệnh nhân hôm nay...
+                      {filterType === "day" 
+                        ? "Đang tải danh sách bệnh nhân..." 
+                        : "Đang tải danh sách bệnh nhân..."}
                     </p>
                   </div>
                 </TableCell>
@@ -248,13 +325,15 @@ export function ReceptionistPatients({
                       <User className="w-8 h-8 text-neutral-text/40" />
                     </div>
                     <p className="text-neutral-text/60 font-medium">
-                      Không tìm thấy bệnh nhân nào có lịch hôm nay
+                      {filterType === "day" 
+                        ? "Không tìm thấy bệnh nhân nào có lịch trong ngày này" 
+                        : "Không tìm thấy bệnh nhân nào có lịch trong tháng này"}
                     </p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPatients.map((patient) => (
+              paginatedPatients.map((patient) => (
                 <TableRow
                   key={patient.id}
                   className="cursor-pointer hover:bg-neutral-muted/30 transition-colors border-b border-neutral-border"
@@ -319,6 +398,68 @@ export function ReceptionistPatients({
             )}
           </TableBody>
         </Table>
+        
+        {/* Total Patient Count */}
+        {filteredPatients.length > 0 && (
+          <div className="px-6 py-3 border-t border-neutral-border">
+            <div className="text-sm text-neutral-text/70">
+              Hiển thị <span className="font-medium text-neutral-text">{startIndex + 1}</span> đến{" "}
+              <span className="font-medium text-neutral-text">{Math.min(endIndex, totalPatients)}</span> trong tổng số{" "}
+              <span className="font-medium text-neutral-text">{totalPatients}</span> bệnh nhân
+            </div>
+          </div>
+        )}
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center px-6 py-4 border-t border-neutral-border">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <PaginationItem key={page}>
+                          <span className="px-2">...</span>
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+          </div>
+        )}
       </Card>
     </div>
   );
