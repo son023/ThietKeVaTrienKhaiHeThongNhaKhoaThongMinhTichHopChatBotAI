@@ -17,7 +17,6 @@ interface Appointment {
   doctor: string;
   phone: string;
   status:
-    | "waiting_confirm"
     | "waiting_checkin"
     | "checked_in"
     | "in_treatment"
@@ -62,8 +61,12 @@ export function ReceptionistDashboard({
         return "checked_in";
       case "IN_PROGRESS":
         return "in_treatment";
+      case "COMPLETED":
+        return "waiting_payment";
+      case "COMPLETED_INVOICE":
+        return "completed";
       default:
-        return "waiting_confirm";
+        return "waiting_checkin";
     }
   };
 
@@ -108,11 +111,6 @@ export function ReceptionistDashboard({
   }, [refreshToken]);
 
   const statusConfig = {
-    waiting_confirm: {
-      label: "Chờ xác nhận",
-      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      count: 2,
-    },
     waiting_checkin: {
       label: "Chờ check-in",
       color: "bg-blue-100 text-blue-800 border-blue-200",
@@ -201,7 +199,7 @@ export function ReceptionistDashboard({
 
       {/* Kanban Board */}
       {!loading && !error && (
-        <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-5 gap-4 overflow-x-auto pb-4">
           {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map(
             (status) => {
               const config = statusConfig[status];
@@ -269,16 +267,6 @@ export function ReceptionistDashboard({
 
                           {/* Action Buttons - Compact */}
                           <div className="pt-2 border-t border-neutral-border">
-                            {status === "waiting_confirm" && (
-                              <Button
-                                size="sm"
-                                className="w-full bg-primary hover:bg-primary-strong h-7 text-xs font-medium shadow-sm transition-all duration-200"
-                                onClick={() => handleAction(apt.id, "confirm")}
-                              >
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Xác nhận
-                              </Button>
-                            )}
                             {status === "waiting_checkin" && (
                               <Button
                                 size="sm"
