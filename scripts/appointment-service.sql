@@ -51,161 +51,131 @@ CREATE TABLE public.appointment_medical_service
     ON DELETE RESTRICT
 );
 
-INSERT INTO public.medical_service (
-    id, price, service_name, service_time, service_type, status, img_url, description
-)
-VALUES (
-           '33333333-0000-0000-0000-000000000001',
-           300000,
-           'Cạo vôi răng',
-           30,
-           'GEN',
-           'ACTIVE',
-           'uploads/images/cao-voi-rang.jpg',
-           'Cạo vôi răng là phương pháp làm sạch cao răng, mảng bám và vi khuẩn bám chặt trên bề mặt răng và dưới nướu – những nguyên nhân chính dẫn đến viêm nướu và hôi miệng.
-           Quy trình bao gồm:
-           • Kiểm tra tổng quát tình trạng răng miệng;
-           • Dùng máy siêu âm để làm sạch cao răng;
-           • Đánh bóng răng giúp bề mặt răng mịn màng, giảm bám mảng sau này.
-           Lợi ích:
-           • Ngăn ngừa viêm nướu, chảy máu chân răng;
-           • Hơi thở thơm tho hơn;
-           • Hạn chế nguy cơ viêm nha chu.
-           Khuyến nghị thực hiện mỗi 6 tháng một lần.'
-       ),
-       (
-           '33333333-0000-0000-0000-000000000002',
-           500000,
-           'Trám răng thẩm mỹ',
-           40,
-           'GEN',
-           'ACTIVE',
-           'uploads/images/tram-rang-tham-my.jpg',
-           'Trám răng thẩm mỹ là kỹ thuật phục hồi răng bị sâu, mẻ hoặc nứt bằng vật liệu composite có màu sắc giống hệt răng thật.
-           Quy trình:
-           • Làm sạch vùng sâu hoặc tổn thương;
-           • Tạo hình khoang trám phù hợp;
-           • Đặt vật liệu composite và chiếu đèn đông cứng;
-           • Điều chỉnh khớp cắn và đánh bóng.
-           Lợi ích:
-           • Khôi phục hình dạng và chức năng của răng;
-           • Mang lại tính thẩm mỹ cao mà không gây đau;
-           • Chi phí hợp lý, thực hiện nhanh.
-           Thích hợp cho các trường hợp sâu răng nhẹ – trung bình hoặc răng mẻ nhỏ.'
-       ),
-       (
-           '33333333-0000-0000-0000-000000000003',
-           1500000,
-           'Điều trị tủy răng',
-           90,
-           'ENDO',
-           'ACTIVE',
-           'uploads/images/dieu-tri-tuy-1.jpg',
-           'Điều trị tủy răng (Root Canal Treatment) là phương pháp loại bỏ phần tủy răng bị viêm hoặc nhiễm trùng nhằm bảo tồn răng thật.
-           Quy trình:
-           • Chụp X-quang để đánh giá tình trạng ống tủy;
-           • Gây tê và mở đường vào ống tủy;
-           • Làm sạch và tạo hình ống tủy bằng hệ thống file xoay;
-           • Khử trùng ống tủy bằng dung dịch chuyên dụng;
-           • Trám bít ống tủy và phục hồi thân răng bằng vật liệu composite hoặc mão sứ.
-           Khi nào cần điều trị tủy:
-           • Đau nhức kéo dài, đau khi nhai;
-           • Răng nhạy cảm với nóng lạnh;
-           • Răng bị sâu lớn, viêm tủy, áp xe.
-           Đây là phương pháp giúp giữ lại răng thật, tránh phải nhổ răng.'
-       ),
-       (
-           '33333333-0000-0000-0000-000000000004',
-           30000000,
-           'Niềng răng mắc cài kim loại',
-           120,
-           'ORTHO',
-           'ACTIVE',
-           'uploads/images/nieng-rang-mac-cai.png',
-           'Niềng răng mắc cài kim loại là phương pháp chỉnh nha sử dụng hệ thống mắc cài và dây cung để điều chỉnh vị trí răng về đúng chuẩn khớp cắn.
-           Quy trình:
-           • Khám và chụp X-quang, Scan 3D;
-           • Lập phác đồ điều trị riêng cho từng bệnh nhân;
-           • Gắn mắc cài và dây cung;
-           • Tái khám định kỳ mỗi 4–6 tuần để siết răng;
-           • Kết thúc điều trị và đeo hàm duy trì.
-           Phù hợp với:
-           • Răng hô, móm, lệch lạc, chen chúc;
-           • Khớp cắn sâu, khớp cắn hở.
-           Đây là phương pháp hiệu quả, chi phí hợp lý và áp dụng phổ biến cho cả trẻ em và người lớn.'
-       ),
-       (
-           '33333333-0000-0000-0000-000000000005',
-           18000000,
-           'Cấy ghép Implant',
-           120,
-           'IMPL',
-           'ACTIVE',
-           'uploads/images/cay-ghep-implant.jpg',
-           'Cấy ghép Implant là phương pháp phục hồi răng mất bằng cách đặt một trụ titanium vào xương hàm, sau đó gắn răng sứ lên trên. Đây là giải pháp hiện đại nhất hiện nay giúp khôi phục khả năng ăn nhai và thẩm mỹ.
-           Quy trình:
-           • Thăm khám, chụp CT ConeBeam đánh giá mật độ xương;
-           • Cấy trụ Implant vào xương hàm;
-           • Chờ tích hợp xương 2–3 tháng;
-           • Gắn Abutment và mão sứ hoàn thiện.
-           Lợi ích:
-           • Ăn nhai chắc chắn như răng thật;
-           • Không mài răng kế bên;
-           • Ngăn tiêu xương hàm sau khi mất răng.
-           Phù hợp cho người mất 1 hoặc nhiều răng, mất răng lâu năm.'
-       ),
-       (
-           '33333333-0000-0000-0000-000000000006',
-           6000000,
-           'Dán sứ Veneer',
-           75,
-           'COS',
-           'ACTIVE',
-           'uploads/images/dan-su-veneer.jpg',
-           'Dán sứ Veneer là kỹ thuật thẩm mỹ sử dụng miếng sứ siêu mỏng 0.3–0.5mm dán lên mặt ngoài răng nhằm cải thiện màu sắc và hình dáng răng mà gần như không phải mài nhỏ răng.
-           Quy trình:
-           • Kiểm tra tổng quát và tư vấn thiết kế nụ cười (Smile Design);
-           • Mài cực mỏng bề mặt răng (nếu cần);
-           • Lấy dấu răng hoặc scan 3D;
-           • Chế tác miếng sứ Veneer tại labo;
-           • Dán Veneer bằng keo chuyên dụng.
-           Lợi ích:
-           • Màu sắc trắng tự nhiên, bền màu;
-           • Ít xâm lấn, bảo tồn mô răng thật tối đa;
-           • Khắc phục răng xỉn màu, thưa, ngắn hoặc không đều.
-           Phù hợp với nhu cầu thẩm mỹ nụ cười cao.'
-       );
+-- =========================================================
+-- 1) MEDICAL_SERVICE (20 dịch vụ nha khoa)
+-- =========================================================
+INSERT INTO public.medical_service (id, price, service_name, service_time, service_type, status, img_url, description)
+VALUES 
+-- Dịch vụ 1: Chụp phim Xquang
+('33000000-0000-0000-0000-000000000001', 5000000, 'Chụp phim Xquang, chụp ảnh, lấy mẫu lập kế hoạch điều trị chỉnh nha hoặc thiết kế nụ cười (Smile Design)', 30, 'ORTHO', 'ACTIVE', 'uploads/images/xquang.jpg', 'Chụp phim toàn cảnh, chụp ảnh nội ngoại răng miệng, lấy dấu hàm để lập kế hoạch điều trị chỉnh nha hoặc thiết kế nụ cười thẩm mỹ.'),
 
--- Lịch hẹn 1: Đã xác nhận (CONFIRMED)
-INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status)
-VALUES (
-           '44444444-0000-0000-0000-000000000001', -- ID Lịch hẹn 1
-           '99999999-0000-0000-0000-000000000012',
-           'd903022a-1000-4001-8001-000000000003',
-           NOW() + INTERVAL '1 hour',
-           NOW() + INTERVAL '1 hour 30 minutes',
-           'CHECKED'
-       );
--- Lịch hẹn 2: Đang chờ (PENDING)
-INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status)
-VALUES (
-           '44444444-0000-0000-0000-000000000002', -- ID Lịch hẹn 2
-           '99999999-0000-0000-0000-000000000012',
-           'd903022a-1000-4001-8001-000000000008',
-           NOW() + INTERVAL '3 days 10 hours',
-           NOW() + INTERVAL '3 days 10 hours 45 minutes',
-           'IN_PROGRESS'
-       );
+-- Dịch vụ 2-4: Chỉnh nha
+('33000000-0000-0000-0000-000000000002', 100000000, 'Chỉnh nha hai hàm bằng khay trong suốt Invisalign', 60, 'ORTHO', 'ACTIVE', 'uploads/images/invisalign.jpg', 'Chỉnh nha bằng khay trong suốt Invisalign cao cấp từ Mỹ, thời gian điều trị 12-18 tháng.'),
+('33000000-0000-0000-0000-000000000003', 60000000, 'Chỉnh nha hai hàm bằng khay trong suốt Việt Nam', 60, 'ORTHO', 'ACTIVE', 'uploads/images/khay-trong-suot.jpg', 'Chỉnh nha bằng khay trong suốt sản xuất tại Việt Nam, thời gian điều trị 15-24 tháng.'),
+('33000000-0000-0000-0000-000000000004', 40000000, 'Chỉnh nha cố định hai hàm với mắc cài', 60, 'ORTHO', 'ACTIVE', 'uploads/images/nieng-rang-mac-cai.png', 'Chỉnh nha cố định bằng mắc cài kim loại hoặc sứ, thời gian điều trị 18-24 tháng.'),
 
+-- Dịch vụ 5-6: Chỉnh nha khác
+('33000000-0000-0000-0000-000000000005', 7500000, 'Chỉnh nha giai đoạn tăng trưởng hoặc phục vụ cho các dịch vụ khác', 45, 'ORTHO', 'ACTIVE', 'uploads/images/chinh-nha-tre-em.jpg', 'Chỉnh nha cho trẻ em đang trong giai đoạn phát triển xương hàm.'),
+('33000000-0000-0000-0000-000000000006', 5000000, 'Chỉnh nha hàm tháo lắp (một hàm)', 30, 'ORTHO', 'ACTIVE', 'uploads/images/ham-thao-lap.jpg', 'Khí cụ chỉnh nha tháo lắp cho một hàm, phù hợp các trường hợp đơn giản.'),
+
+-- Dịch vụ 7-9: Răng sứ thẩm mỹ
+('33000000-0000-0000-0000-000000000007', 9000000, 'Mặt dán một răng sứ Veneer', 45, 'COS', 'ACTIVE', 'uploads/images/dan-su-veneer.png', 'Dán sứ Veneer siêu mỏng giúp cải thiện màu sắc và hình dáng răng mà không cần mài nhiều.'),
+('33000000-0000-0000-0000-000000000008', 6000000, 'Chụp một răng toàn sứ cao cấp', 60, 'COS', 'ACTIVE', 'uploads/images/rang-su-cao-cap.jpg', 'Mão sứ toàn diện làm từ sứ cao cấp, độ thẩm mỹ cao, bền vững.'),
+('33000000-0000-0000-0000-000000000009', 3500000, 'Chụp một răng sứ kim loại', 45, 'COS', 'ACTIVE', 'uploads/images/rang-su-kim-loai.jpg', 'Mão sứ kim loại có độ bền cao, phù hợp cho răng hàm.'),
+
+-- Dịch vụ 10-11: Implant
+('33000000-0000-0000-0000-000000000010', 18000000, 'Cắm ghép một Implant cao cấp Hàn Quốc', 90, 'IMPL', 'ACTIVE', 'uploads/images/cay-ghep-implant.jpg', 'Cấy ghép trụ Implant titanium Hàn Quốc (Osstem, Dentium) vào xương hàm.'),
+('33000000-0000-0000-0000-000000000011', 30000000, 'Cắm ghép một Implant cao cấp Mỹ hoặc Đức', 90, 'IMPL', 'ACTIVE', 'uploads/images/implant-cao-cap.jpg', 'Cấy ghép trụ Implant cao cấp từ Mỹ (Nobel Biocare) hoặc Đức (Straumann).'),
+
+-- Dịch vụ 12: Ghép xương
+('33000000-0000-0000-0000-000000000012', 3500000, 'Ghép xương hoặc nâng xoang một vị trí', 60, 'IMPL', 'ACTIVE', 'uploads/images/ghep-xuong.jpg', 'Ghép xương hoặc nâng xoang hàm trên để tạo nền cho cấy ghép Implant.'),
+
+-- Dịch vụ 12A-12B: Nhổ răng và điều trị tủy
+('33000000-0000-0000-0000-000000000013', 1500000, 'Nhổ một răng', 30, 'GEN', 'ACTIVE', 'uploads/images/nho-rang.jpg', 'Nhổ răng thường hoặc răng khôn.'),
+('33000000-0000-0000-0000-000000000014', 1200000, 'Chữa tủy một răng bằng Laser và/hoặc máy', 90, 'ENDO', 'ACTIVE', 'uploads/images/dieu-tri-tuy-rang.jpg', 'Điều trị tủy răng bằng công nghệ Laser và máy xoay Rotary hiện đại.'),
+
+-- Dịch vụ 15-16: Điều trị Laser
+('33000000-0000-0000-0000-000000000015', 3000000, 'Điều trị viêm lợi hai hàm bằng Laser', 45, 'PERIO', 'ACTIVE', 'uploads/images/dieu-tri-loi-laser.jpg', 'Điều trị viêm lợi, viêm nha chu bằng công nghệ Laser không đau.'),
+('33000000-0000-0000-0000-000000000016', 7500000, 'Phẫu thuật làm dài thân răng bằng Laser điều trị cười hở lợi', 60, 'PERIO', 'ACTIVE', 'uploads/images/pttm-loi.jpg', 'Phẫu thuật thẩm mỹ nướu để cải thiện tình trạng cười hở lợi.'),
+
+-- Dịch vụ 17: Tẩy trắng
+('33000000-0000-0000-0000-000000000017', 3000000, 'Tẩy trắng răng bằng ánh sáng lạnh tại phòng khám', 60, 'COS', 'ACTIVE', 'uploads/images/tay-trang-rang.jpg', 'Tẩy trắng răng bằng công nghệ ánh sáng lạnh Whitening, hiệu quả ngay sau 1 buổi.'),
+
+-- Dịch vụ 18-19: Hàn trám và vệ sinh
+('33000000-0000-0000-0000-000000000018', 350000, 'Hàn một răng', 30, 'GEN', 'ACTIVE', 'uploads/images/tram-rang-tham-my.jpg', 'Trám răng sâu bằng vật liệu composite thẩm mỹ.'),
+('33000000-0000-0000-0000-000000000019', 350000, 'Lấy cao răng, đánh bóng hai hàm', 30, 'GEN', 'ACTIVE', 'uploads/images/cao-voi-rang.jpg', 'Cạo vôi răng và đánh bóng răng cho cả hai hàm.'),
+
+-- Dịch vụ 20: Chụp phim
+('33000000-0000-0000-0000-000000000020', 100000, 'Chụp phim Xquang Panorama hoặc Cephalometric', 15, 'GEN', 'ACTIVE', 'uploads/images/xquang-rang.jpg', 'Chụp phim toàn cảnh hoặc phim sọ nghiêng để chẩn đoán.');
+
+-- =========================================================
+-- 2) APPOINTMENT (16 lịch hẹn từ 4/1-11/1, mỗi ngày 2 appointments)
+-- Tất cả đều COMPLETED và có dispense_order
+-- =========================================================
+INSERT INTO public.appointment (id, doctor_id, patient_id, appointment_start_time, appointment_end_time, status, created_at, updated_at)
+VALUES
+-- Ngày 4/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000101', '2026-01-04 09:00:00+07', '2026-01-04 09:30:00+07', 'COMPLETED', '2026-01-03 10:00:00+07', '2026-01-04 09:30:00+07'),
+('44000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000102', '2026-01-04 14:00:00+07', '2026-01-04 14:30:00+07', 'COMPLETED', '2026-01-03 11:00:00+07', '2026-01-04 14:30:00+07'),
+
+-- Ngày 5/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000203', '00000000-0000-0000-0000-000000000103', '2026-01-05 09:00:00+07', '2026-01-05 10:00:00+07', 'COMPLETED', '2026-01-04 10:00:00+07', '2026-01-05 10:00:00+07'),
+('44000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000104', '2026-01-05 14:30:00+07', '2026-01-05 15:30:00+07', 'COMPLETED', '2026-01-04 11:00:00+07', '2026-01-05 15:30:00+07'),
+
+-- Ngày 6/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000105', '2026-01-06 09:00:00+07', '2026-01-06 10:00:00+07', 'COMPLETED', '2026-01-05 10:00:00+07', '2026-01-06 10:00:00+07'),
+('44000000-0000-0000-0000-000000000106', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000106', '2026-01-06 14:00:00+07', '2026-01-06 15:00:00+07', 'COMPLETED', '2026-01-05 11:00:00+07', '2026-01-06 15:00:00+07'),
+
+-- Ngày 7/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000107', '00000000-0000-0000-0000-000000000204', '00000000-0000-0000-0000-000000000107', '2026-01-07 09:00:00+07', '2026-01-07 10:00:00+07', 'COMPLETED', '2026-01-06 10:00:00+07', '2026-01-07 10:00:00+07'),
+('44000000-0000-0000-0000-000000000108', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000108', '2026-01-07 14:30:00+07', '2026-01-07 16:00:00+07', 'COMPLETED', '2026-01-06 11:00:00+07', '2026-01-07 16:00:00+07'),
+
+-- Ngày 8/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000109', '00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000109', '2026-01-08 09:00:00+07', '2026-01-08 10:00:00+07', 'COMPLETED', '2026-01-07 10:00:00+07', '2026-01-08 10:00:00+07'),
+('44000000-0000-0000-0000-000000000110', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000110', '2026-01-08 14:00:00+07', '2026-01-08 15:00:00+07', 'COMPLETED', '2026-01-07 11:00:00+07', '2026-01-08 15:00:00+07'),
+
+-- Ngày 9/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000111', '00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000101', '2026-01-09 09:00:00+07', '2026-01-09 10:00:00+07', 'COMPLETED', '2026-01-08 10:00:00+07', '2026-01-09 10:00:00+07'),
+('44000000-0000-0000-0000-000000000112', '00000000-0000-0000-0000-000000000203', '00000000-0000-0000-0000-000000000102', '2026-01-09 14:30:00+07', '2026-01-09 16:00:00+07', 'COMPLETED', '2026-01-08 11:00:00+07', '2026-01-09 16:00:00+07'),
+
+-- Ngày 10/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000113', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000103', '2026-01-10 09:00:00+07', '2026-01-10 10:00:00+07', 'COMPLETED', '2026-01-09 10:00:00+07', '2026-01-10 10:00:00+07'),
+('44000000-0000-0000-0000-000000000114', '00000000-0000-0000-0000-000000000204', '00000000-0000-0000-0000-000000000104', '2026-01-10 14:00:00+07', '2026-01-10 15:00:00+07', 'COMPLETED', '2026-01-09 11:00:00+07', '2026-01-10 15:00:00+07'),
+
+-- Ngày 11/1/2026: 2 appointments
+('44000000-0000-0000-0000-000000000115', '00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000105', '2026-01-11 09:00:00+07', '2026-01-11 10:00:00+07', 'COMPLETED', '2026-01-10 10:00:00+07', '2026-01-11 10:00:00+07'),
+('44000000-0000-0000-0000-000000000116', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000106', '2026-01-11 14:30:00+07', '2026-01-11 16:00:00+07', 'COMPLETED', '2026-01-10 11:00:00+07', '2026-01-11 16:00:00+07');
+
+-- =========================================================
+-- 3) APPOINTMENT_MEDICAL_SERVICE (16 appointments)
+-- =========================================================
 INSERT INTO public.appointment_medical_service (appointment_id, medical_service_id)
 VALUES
-    -- Dịch vụ 1 & 2 cho Lịch hẹn 1
-    ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001'),
-    ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000002'),
+-- Ngày 4/1: Appointment 101, 102
+('44000000-0000-0000-0000-000000000101', '33000000-0000-0000-0000-000000000018'), -- Trám răng
+('44000000-0000-0000-0000-000000000102', '33000000-0000-0000-0000-000000000019'), -- Cạo vôi răng
 
-    -- Dịch vụ 3 cho Lịch hẹn 2
-    ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000003');
+-- Ngày 5/1: Appointment 103, 104
+('44000000-0000-0000-0000-000000000103', '33000000-0000-0000-0000-000000000014'), -- Điều trị tủy
+('44000000-0000-0000-0000-000000000104', '33000000-0000-0000-0000-000000000008'), -- Chụp răng sứ
 
+-- Ngày 6/1: Appointment 105, 106
+('44000000-0000-0000-0000-000000000105', '33000000-0000-0000-0000-000000000007'), -- Dán sứ Veneer
+('44000000-0000-0000-0000-000000000106', '33000000-0000-0000-0000-000000000010'), -- Cấy ghép Implant
+
+-- Ngày 7/1: Appointment 107, 108
+('44000000-0000-0000-0000-000000000107', '33000000-0000-0000-0000-000000000001'), -- Tư vấn chỉnh nha + chụp phim
+('44000000-0000-0000-0000-000000000108', '33000000-0000-0000-0000-000000000014'), -- Điều trị tủy
+
+-- Ngày 8/1: Appointment 109, 110
+('44000000-0000-0000-0000-000000000109', '33000000-0000-0000-0000-000000000013'), -- Nhổ răng
+('44000000-0000-0000-0000-000000000110', '33000000-0000-0000-0000-000000000015'), -- Điều trị viêm lợi
+
+-- Ngày 9/1: Appointment 111, 112
+('44000000-0000-0000-0000-000000000111', '33000000-0000-0000-0000-000000000018'), -- Trám răng
+('44000000-0000-0000-0000-000000000112', '33000000-0000-0000-0000-000000000014'), -- Điều trị tủy
+
+-- Ngày 10/1: Appointment 113, 114
+('44000000-0000-0000-0000-000000000113', '33000000-0000-0000-0000-000000000019'), -- Cạo vôi răng
+('44000000-0000-0000-0000-000000000114', '33000000-0000-0000-0000-000000000017'), -- Tẩy trắng răng
+
+-- Ngày 11/1: Appointment 115, 116
+('44000000-0000-0000-0000-000000000115', '33000000-0000-0000-0000-000000000018'), -- Trám răng
+('44000000-0000-0000-0000-000000000116', '33000000-0000-0000-0000-000000000020'); -- Chụp phim Xquang
+
+-- =========================================================
+-- AXON FRAMEWORK TABLES
+-- =========================================================
 CREATE TABLE IF NOT EXISTS public.token_entry
 (
     processor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
