@@ -7,5 +7,6 @@ public enum AppointmentStatus {
     FAILED,
     PROGRESSING,
     IN_PROGRESS,
-    COMPLETED
+    COMPLETED,
+    COMPLETED_INVOICE
 }

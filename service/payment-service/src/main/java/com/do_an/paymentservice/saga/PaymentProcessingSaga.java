@@ -74,7 +74,7 @@ public class PaymentProcessingSaga {
         // Đánh dấu Invoice là PAID
         commandGateway.sendAndWait(new MarkInvoiceAsPaidCommand(event.getInvoiceId()));
 
-//        commandGateway.send(new MarkAppointmentAsCompletedInvoiceCommand());
+
 
 
     }
