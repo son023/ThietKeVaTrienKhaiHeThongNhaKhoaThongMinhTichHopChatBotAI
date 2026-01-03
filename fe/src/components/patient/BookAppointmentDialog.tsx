@@ -256,9 +256,9 @@ export function BookAppointmentDialog({
             medicalServiceIds: formData.services,
         })
             .then(() => {
-                toast.success('Đặt lịch hẹn thành công!', {
-                    description: `Bạn đã đặt lịch ${formData.services.length} dịch vụ vào ${formData.date?.toLocaleDateString('vi-VN')} lúc ${formData.time}`,
-                });
+                // toast.success('Đặt lịch hẹn thành công!', {
+                //     description: `Bạn đã đặt lịch ${formData.services.length} dịch vụ vào ${formData.date?.toLocaleDateString('vi-VN')} lúc ${formData.time}`,
+                // });
                 handleClose();
                 if (onSuccess) {
                     onSuccess();

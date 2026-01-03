@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -94,8 +95,13 @@ public class DispenseOrderController {
 
     @GetMapping("/medical-history/{id}")
     public ResponseEntity<DispenseOrderResponse> getByMedicalHistoryId(@PathVariable UUID id) {
-        DispenseOrderResponse response = dispenseOrderService.getByMedicalHistoryId(id);
-        return ResponseEntity.ok(response);
+        Optional<DispenseOrderResponse> responseOpt = dispenseOrderService.getByMedicalHistoryId(id);
+        
+        if (responseOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(responseOpt.get());
     }
 
     @GetMapping("/medical-history/{medicalHistoryId}/prescription-status")

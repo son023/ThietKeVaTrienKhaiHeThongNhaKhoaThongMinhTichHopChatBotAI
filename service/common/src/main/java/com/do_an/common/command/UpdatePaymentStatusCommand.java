@@ -14,6 +14,7 @@ import java.util.UUID;
 public class UpdatePaymentStatusCommand {
     @TargetAggregateIdentifier
     private UUID paymentId;
+//    private UUID appointmentId;
 
     private String status;
 

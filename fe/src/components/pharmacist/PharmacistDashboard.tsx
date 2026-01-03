@@ -328,8 +328,8 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
                     <div className="flex items-center gap-3">
                       <span
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold ${prescription.status === 'Chờ cấp'
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                            : 'bg-red-100 text-red-800 border border-red-200'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-red-100 text-red-800 border border-red-200'
                           }`}
                       >
                         {prescription.status}
@@ -402,7 +402,7 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
               lowStockDrugs.slice(0, 5).map((drug, index) => (
                 <div
                   key={index}
-                  className="p-5 rounded-lg border border-amber-300 bg-amber-50 cursor-pointer hover:shadow-md hover:bg-amber-100 transition-all duration-200 group"
+                  className="p-5 rounded-lg border border-neutral-gray-200 hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer group"
                   onClick={() => onNavigate('inventory')}
                 >
                   <div className="flex items-center justify-between">
@@ -410,12 +410,12 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
                       <p className="font-semibold text-neutral-heading mb-1.5">
                         {drug.name}
                       </p>
-                      <p className="text-sm text-amber-800">
+                      <p className="text-sm text-neutral-gray-500">
                         Tồn kho: <span className="font-semibold">{drug.stock} {drug.unit}</span> / Ngưỡng: {drug.threshold} {drug.unit}
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition-colors">
-                      <Package className="w-6 h-6 text-amber-700" />
+                    <div className="p-3 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
+                      <Package className="w-6 h-6 text-amber-600" />
                     </div>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
               expiringDrugs.slice(0, 5).map((drug, index) => (
                 <div
                   key={index}
-                  className="p-5 rounded-lg border border-red-300 bg-red-50 cursor-pointer hover:shadow-md hover:bg-red-100 transition-all duration-200 group"
+                  className="p-5 rounded-lg border border-neutral-gray-200 hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer group"
                   onClick={() => onNavigate('inventory')}
                 >
                   <div className="flex items-center justify-between">
@@ -448,12 +448,12 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
                       <p className="font-semibold text-neutral-heading mb-1.5">
                         {drug.name}
                       </p>
-                      <p className="text-sm text-red-800">
+                      <p className="text-sm text-neutral-gray-500">
                         Lô {drug.batch} • HSD: {drug.expiry} • Còn <span className="font-semibold">{drug.daysLeft} ngày</span>
                       </p>
                     </div>
-                    <div className="p-3 rounded-lg bg-red-100 group-hover:bg-red-200 transition-colors">
-                      <AlertTriangle className="w-6 h-6 text-red-700" />
+                    <div className="p-3 rounded-lg bg-neutral-muted group-hover:bg-primary/10 transition-colors">
+                      <AlertTriangle className="w-6 h-6 text-red-600" />
                     </div>
                   </div>
                 </div>

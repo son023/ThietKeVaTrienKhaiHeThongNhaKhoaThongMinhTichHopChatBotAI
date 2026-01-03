@@ -52,7 +52,7 @@ public class InvoiceService implements IInvoiceService {
         Invoice invoice = invoiceMapper.toEntity(request);
         //String invoiceId = "invoice-" + (System.currentTimeMillis() % 10000000000L); // chỉ lấy 10 chữ số cuối
         //invoice.setId(UUID.fromString(invoiceId));
-
+        invoice.setId(request.getId());
         invoice.setStatus("PENDING"); // <-- THAY ĐỔI: Bắt đầu là PENDING
         invoice.setIssueAt(LocalDateTime.now());
 
