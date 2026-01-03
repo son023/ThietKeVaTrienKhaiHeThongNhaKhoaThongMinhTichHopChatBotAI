@@ -9,7 +9,13 @@ import com.do_an.userservice.entity.UserRole;
 import com.do_an.userservice.exceptions.UserNotFoundException;
 import com.do_an.userservice.mapper.UserMapper;
 import com.do_an.userservice.client.PatientServiceClient;
+import com.do_an.userservice.client.DoctorServiceClient;
+import com.do_an.userservice.client.LabTechnicianServiceClient;
+import com.do_an.userservice.client.PharmacistServiceClient;
 import com.do_an.userservice.dto.patient.PatientCreateRequest;
+import com.do_an.userservice.dto.doctor.DoctorCreateRequest;
+import com.do_an.userservice.dto.labtechnician.LabTechnicianCreateRequest;
+import com.do_an.userservice.dto.pharmacist.PharmacistCreateRequest;
 import com.do_an.userservice.repository.RoleRepository;
 import com.do_an.userservice.repository.UserRepository;
 import com.do_an.userservice.repository.UserRoleRepository;
@@ -32,6 +38,9 @@ public class UserService {
     private final UserMapper userMapper;
     private final FileStorageService fileStorageService;
     private final PatientServiceClient patientServiceClient;
+    private final DoctorServiceClient doctorServiceClient;
+    private final LabTechnicianServiceClient labTechnicianServiceClient;
+    private final PharmacistServiceClient pharmacistServiceClient;
 
     @Transactional
     public UserDTO createUser(CreateUserRequestDTO request) {
@@ -73,19 +82,74 @@ public class UserService {
             userRole.setRole(defaultRole);
             userRoles.add(userRole);
         }
-        try {
-            PatientCreateRequest patientRequest = PatientCreateRequest.builder()
-                    .userId(savedUser.getId())
-                    .contactPhone(savedUser.getPhone())
-                    .build();
+        
+        userRoleRepository.saveAll(userRoles);
 
-            patientServiceClient.createPatient(patientRequest);
-            log.info("Đã tạo patient cho userId: {}", savedUser.getId());
-        } catch (Exception ex) {
-            log.error("Lỗi khi tạo patient cho userId {}: {}", savedUser.getId(), ex.getMessage(), ex);
+        boolean shouldCreatePatient = false;
+        if (request.getRoleNames() == null || request.getRoleNames().isEmpty()) {
+            shouldCreatePatient = true;
+        } else if (request.getRoleNames().size() == 1 && 
+                   request.getRoleNames().get(0).toUpperCase().equals("PATIENT")) {
+            shouldCreatePatient = true;
+        }
+        
+        if (shouldCreatePatient) {
+            try {
+                PatientCreateRequest patientRequest = PatientCreateRequest.builder()
+                        .userId(savedUser.getId())
+                        .contactPhone(savedUser.getPhone())
+                        .build();
+                patientServiceClient.createPatient(patientRequest);
+                log.info("Đã tạo patient cho userId: {}", savedUser.getId());
+            } catch (Exception ex) {
+                log.error("Lỗi khi tạo patient cho userId {}: {}", savedUser.getId(), ex.getMessage(), ex);
+            }
         }
 
-        userRoleRepository.saveAll(userRoles);
+        for (UserRole userRole : userRoles) {
+            String roleName = userRole.getRole().getRoleName().toUpperCase();
+            
+            try {
+                switch (roleName) {
+                    case "PATIENT":
+                        break;
+                        
+                    case "DOCTOR":
+                        DoctorCreateRequest doctorRequest = DoctorCreateRequest.builder()
+                                .userId(savedUser.getId())
+                                .specializationCode("GEN") // Default specialization - General
+                                .build();
+                        doctorServiceClient.createDoctor(doctorRequest);
+                        log.info("Đã tạo doctor cho userId: {}", savedUser.getId());
+                        break;
+                        
+                    case "LAB_TECHNICIAN":
+                        LabTechnicianCreateRequest labTechRequest = LabTechnicianCreateRequest.builder()
+                                .userId(savedUser.getId())
+                                .build();
+                        labTechnicianServiceClient.createLabTechnician(labTechRequest);
+                        log.info("Đã tạo lab technician cho userId: {}", savedUser.getId());
+                        break;
+                        
+                    case "PHARMACIST":
+                        PharmacistCreateRequest pharmacistRequest = PharmacistCreateRequest.builder()
+                                .userId(savedUser.getId())
+                                .degree("None") 
+                                .certificate("None")
+                                .build();
+                        pharmacistServiceClient.createPharmacist(pharmacistRequest);
+                        log.info("Đã tạo pharmacist cho userId: {}", savedUser.getId());
+                        break;
+                        
+                    default:
+                        log.debug("No additional service record needed for role: {}", roleName);
+                        break;
+                }
+            } catch (Exception ex) {
+                log.error("Lỗi khi tạo {} record cho userId {}: {}", roleName, savedUser.getId(), ex.getMessage(), ex);
+            }
+        }
+        
         log.info("Đã tạo user thành công: {}", savedUser.getId());
         return userMapper.toDto(savedUser);
     }

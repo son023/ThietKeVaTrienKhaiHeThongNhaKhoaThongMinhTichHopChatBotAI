@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, UserCog, Mail, Phone, Trash2, Save } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
@@ -32,6 +32,8 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { userController, CreateUserRequestDTO } from '../../controllers/UserController';
+import { UserDTO } from '../../models';
 
 interface AdminStaffProps {
   onNavigateToStaffDetail: (id: string) => void;
@@ -41,97 +43,173 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
+  const [staff, setStaff] = useState<UserDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const staff = [
-    {
-      id: 'staff1',
-      name: 'BS. Nguyễn Văn Hùng',
-      position: 'Bác sĩ Nha khoa',
-      specialty: 'Tổng quát',
-      email: 'hung.nguyen@dental.vn',
-      phone: '0901234567',
-      role: 'Bác sĩ',
-      status: 'active',
-    },
-    {
-      id: 'staff2',
-      name: 'BS. Trần Thị Mai',
-      position: 'Bác sĩ Nha khoa',
-      specialty: 'Phục hình',
-      email: 'mai.tran@dental.vn',
-      phone: '0912345678',
-      role: 'Bác sĩ',
-      status: 'active',
-    },
-    {
-      id: 'staff3',
-      name: 'Lê Thị Hoa',
-      position: 'Lễ tân',
-      specialty: '',
-      email: 'hoa.le@dental.vn',
-      phone: '0923456789',
-      role: 'Lễ tân',
-      status: 'active',
-    },
-    {
-      id: 'staff4',
-      name: 'BS. Lê Văn Phong',
-      position: 'Bác sĩ Nha khoa',
-      specialty: 'Chỉnh nha',
-      email: 'phong.le@dental.vn',
-      phone: '0934567890',
-      role: 'Bác sĩ',
-      status: 'active',
-    },
-    {
-      id: 'staff5',
-      name: 'Nguyễn Thị Lan',
-      position: 'Kỹ thuật viên',
-      specialty: 'X-quang',
-      email: 'lan.nguyen@dental.vn',
-      phone: '0945678901',
-      role: 'KTV',
-      status: 'active',
-    },
-    {
-      id: 'staff6',
-      name: 'BS. Phạm Thị Lan',
-      position: 'Bác sĩ Nha khoa',
-      specialty: 'Nha chu',
-      email: 'lanpham@dental.vn',
-      phone: '0956789012',
-      role: 'Bác sĩ',
-      status: 'inactive',
-    },
-  ];
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    position: '',
+    specialty: '',
+    role: '',
+    licenseNumber: '',
+    address: '',
+    dateOfBirth: '',
+    gender: '',
+    notes: '',
+  });
+
+  useEffect(() => {
+    loadStaff();
+  }, []);
+
+  const loadStaff = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const users = await userController.getAll();
+      const staffUsers = users.filter(u => 
+        u.roles.some(role => ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'PHARMACIST'].includes(role))
+      );
+      setStaff(staffUsers);
+    } catch (err: any) {
+      console.error('Failed to load staff:', err);
+      setError(err.message || 'Không thể tải danh sách nhân viên');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateStaff = async () => {
+    try {
+      if (!formData.fullName || !formData.email || !formData.phone || !formData.password || !formData.role) {
+        alert('Vui lòng điền đầy đủ các trường bắt buộc');
+        return;
+      }
+
+      setSaving(true);
+      
+      const createRequest: CreateUserRequestDTO = {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        roleNames: [formData.role],
+        isActive: true,
+      };
+
+      await userController.create(createRequest);
+      await loadStaff();
+      
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        password: '',
+        position: '',
+        specialty: '',
+        role: '',
+        licenseNumber: '',
+        address: '',
+        dateOfBirth: '',
+        gender: '',
+        notes: '',
+      });
+      setIsAddDialogOpen(false);
+      
+      alert('Thêm nhân viên thành công!');
+    } catch (err: any) {
+      console.error('Failed to create staff:', err);
+      alert(err.message || 'Không thể thêm nhân viên');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteStaff = async () => {
+    if (!staffToDelete) return;
+    
+    try {
+      await userController.delete(staffToDelete);
+      await loadStaff();
+      setStaffToDelete(null);
+      alert('Xóa nhân viên thành công!');
+    } catch (err: any) {
+      console.error('Failed to delete staff:', err);
+      alert(err.message || 'Không thể xóa nhân viên');
+    }
+  };
 
   const filteredStaff = staff.filter((person) =>
-    person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    person.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     person.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    person.role.toLowerCase().includes(searchQuery.toLowerCase())
+    person.primaryRole.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getRoleDisplay = (role: string) => {
+    switch (role) {
+      case 'DOCTOR':
+        return 'Bác sĩ';
+      case 'RECEPTIONIST':
+        return 'Lễ tân';
+      case 'LAB_TECHNICIAN':
+        return 'KTV';
+      case 'PHARMACIST':
+        return 'Dược sĩ';
+      case 'ADMIN':
+        return 'Admin';
+      default:
+        return role;
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'Bác sĩ':
+      case 'DOCTOR':
         return <Badge className="bg-[#3FB5FF]">Bác sĩ</Badge>;
-      case 'Lễ tân':
+      case 'RECEPTIONIST':
         return <Badge className="bg-purple-500">Lễ tân</Badge>;
-      case 'KTV':
+      case 'LAB_TECHNICIAN':
         return <Badge className="bg-green-500">KTV</Badge>;
-      case 'Admin':
+      case 'PHARMACIST':
+        return <Badge className="bg-orange-500">Dược sĩ</Badge>;
+      case 'ADMIN':
         return <Badge className="bg-red-500">Admin</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'active') {
+  const getStatusBadge = (isActive: boolean) => {
+    if (isActive) {
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Hoạt động</Badge>;
     }
     return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">Khóa</Badge>;
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-[#fcfeff]">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-[#333333]/60">Đang tải dữ liệu...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-[#fcfeff]">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-red-600">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-[#fcfeff]">
@@ -148,7 +226,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                 Thêm nhân viên mới
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
               <DialogHeader>
                 <DialogTitle className="text-[#01304e]">Thêm nhân viên mới</DialogTitle>
                 <DialogDescription>
@@ -162,25 +240,9 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <Input 
                       id="staff-name" 
                       placeholder="Nhập họ và tên nhân viên" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="staff-position">Vị trí <span className="text-red-500">*</span></Label>
-                    <Input 
-                      id="staff-position" 
-                      placeholder="Ví dụ: Bác sĩ Nha khoa" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="staff-specialty">Chuyên môn</Label>
-                    <Input 
-                      id="staff-specialty" 
-                      placeholder="Ví dụ: Tổng quát, Phục hình..." 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     />
                   </div>
                   
@@ -190,7 +252,9 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                       id="staff-phone" 
                       type="tel"
                       placeholder="0901234567" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
                   
@@ -200,7 +264,21 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                       id="staff-email" 
                       type="email"
                       placeholder="email@dental.vn" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="staff-password">Mật khẩu <span className="text-red-500">*</span></Label>
+                    <Input 
+                      id="staff-password" 
+                      type="password"
+                      placeholder="Nhập mật khẩu" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
                   </div>
                   
@@ -209,22 +287,48 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <select 
                       id="staff-role"
                       className="flex h-10 w-full rounded-[10px] border border-[#e8e8e8] bg-white px-3 py-2 text-sm"
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     >
                       <option value="">Chọn vai trò</option>
-                      <option value="doctor">Bác sĩ</option>
-                      <option value="receptionist">Lễ tân</option>
-                      <option value="technician">Kỹ thuật viên</option>
-                      <option value="pharmacist">Dược sĩ</option>
-                      <option value="admin">Quản trị viên</option>
+                      <option value="DOCTOR">Bác sĩ</option>
+                      <option value="RECEPTIONIST">Lễ tân</option>
+                      <option value="LAB_TECHNICIAN">Kỹ thuật viên</option>
+                      <option value="PHARMACIST">Dược sĩ</option>
+                      <option value="ADMIN">Quản trị viên</option>
                     </select>
                   </div>
-                  
+
                   <div>
+                    <Label htmlFor="staff-position">Vị trí</Label>
+                    <Input 
+                      id="staff-position" 
+                      placeholder="Ví dụ: Bác sĩ Nha khoa" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.position}
+                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="col-span-2">
+                    <Label htmlFor="staff-specialty">Chuyên môn</Label>
+                    <Input 
+                      id="staff-specialty" 
+                      placeholder="Ví dụ: Tổng quát, Phục hình..." 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.specialty}
+                      onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="col-span-2">
                     <Label htmlFor="staff-license">Số giấy phép hành nghề</Label>
                     <Input 
                       id="staff-license" 
                       placeholder="Số giấy phép (nếu có)" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.licenseNumber}
+                      onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
                     />
                   </div>
                   
@@ -233,7 +337,9 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <Input 
                       id="staff-address" 
                       placeholder="Nhập địa chỉ" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
                   </div>
                   
@@ -242,7 +348,9 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <Input 
                       id="staff-dob" 
                       type="date"
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     />
                   </div>
                   
@@ -251,6 +359,8 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <select 
                       id="staff-gender"
                       className="flex h-10 w-full rounded-[10px] border border-[#e8e8e8] bg-white px-3 py-2 text-sm"
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     >
                       <option value="">Chọn giới tính</option>
                       <option value="male">Nam</option>
@@ -263,7 +373,9 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     <Textarea 
                       id="staff-notes" 
                       placeholder="Ghi chú về nhân viên..."
-                      className="rounded-[10px] border-[#e8e8e8] min-h-[80px]" 
+                      className="rounded-[10px] border-[#e8e8e8] min-h-[80px]"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
                 </div>
@@ -273,19 +385,17 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                     variant="outline" 
                     onClick={() => setIsAddDialogOpen(false)} 
                     className="rounded-[10px]"
+                    disabled={saving}
                   >
                     Hủy
                   </Button>
                   <Button 
                     className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
-                    onClick={() => {
-                      // Handle save staff logic here
-                      console.log('Saving staff...');
-                      setIsAddDialogOpen(false);
-                    }}
+                    onClick={handleCreateStaff}
+                    disabled={saving}
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Lưu nhân viên
+                    {saving ? 'Đang lưu...' : 'Lưu nhân viên'}
                   </Button>
                 </div>
               </div>
@@ -324,7 +434,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#333333]/60 mb-1">Bác sĩ</p>
-                <p className="text-[#01304e]">{staff.filter(s => s.role === 'Bác sĩ').length}</p>
+                <p className="text-[#01304e]">{staff.filter(s => s.primaryRole === 'DOCTOR').length}</p>
               </div>
               <div className="w-8 h-8 bg-[#3FB5FF]/10 rounded-full flex items-center justify-center">
                 <UserCog className="w-5 h-5 text-[#3FB5FF]" />
@@ -339,7 +449,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
               <div>
                 <p className="text-sm text-[#333333]/60 mb-1">Lễ tân / KTV</p>
                 <p className="text-[#01304e]">
-                  {staff.filter(s => s.role === 'Lễ tân' || s.role === 'KTV').length}
+                  {staff.filter(s => s.primaryRole === 'RECEPTIONIST' || s.primaryRole === 'LAB_TECHNICIAN').length}
                 </p>
               </div>
               <div className="w-8 h-8 bg-purple-500/10 rounded-full flex items-center justify-center">
@@ -354,7 +464,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#333333]/60 mb-1">Đang hoạt động</p>
-                <p className="text-[#01304e]">{staff.filter(s => s.status === 'active').length}</p>
+                <p className="text-[#01304e]">{staff.filter(s => s.isActive).length}</p>
               </div>
               <div className="w-8 h-8 bg-green-500/10 rounded-full flex items-center justify-center">
                 <UserCog className="w-5 h-5 text-green-500" />
@@ -387,15 +497,19 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                 >
                   <TableCell>
                     <div>
-                      <p className="text-[#333333]">{person.name}</p>
-                      <p className="text-sm text-[#333333]/60">{person.position}</p>
+                      <p className="text-[#333333]">{person.fullName}</p>
+                      <p className="text-sm text-[#333333]/60">{getRoleDisplay(person.primaryRole)}</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {person.specialty ? (
-                      <Badge variant="outline" className="bg-blue-50">
-                        {person.specialty}
-                      </Badge>
+                    {person.roles.length > 0 ? (
+                      <div className="flex gap-1 flex-wrap">
+                        {person.roles.map((role) => (
+                          <Badge key={role} variant="outline" className="bg-blue-50">
+                            {getRoleDisplay(role)}
+                          </Badge>
+                        ))}
+                      </div>
                     ) : (
                       <span className="text-[#333333]/40">—</span>
                     )}
@@ -406,14 +520,16 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
                         <Mail className="w-4 h-4" />
                         {person.email}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-[#333333]/60">
-                        <Phone className="w-4 h-4" />
-                        {person.phone}
-                      </div>
+                      {person.phone && (
+                        <div className="flex items-center gap-2 text-sm text-[#333333]/60">
+                          <Phone className="w-4 h-4" />
+                          {person.phone}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell>{getRoleBadge(person.role)}</TableCell>
-                  <TableCell>{getStatusBadge(person.status)}</TableCell>
+                  <TableCell>{getRoleBadge(person.primaryRole)}</TableCell>
+                  <TableCell>{getStatusBadge(person.isActive)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -467,11 +583,7 @@ export function AdminStaff({ onNavigateToStaffDetail }: AdminStaffProps) {
             <AlertDialogCancel className="rounded-[10px]">Hủy</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 rounded-[10px]"
-              onClick={() => {
-                // Handle delete staff logic here
-                console.log('Deleting staff:', staffToDelete);
-                setStaffToDelete(null);
-              }}
+              onClick={handleDeleteStaff}
             >
               Xóa nhân viên
             </AlertDialogAction>
