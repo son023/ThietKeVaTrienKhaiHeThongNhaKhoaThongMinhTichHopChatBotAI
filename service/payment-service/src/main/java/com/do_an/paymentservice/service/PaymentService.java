@@ -128,9 +128,9 @@ public class PaymentService implements IPaymentService {
         }
 
         if (request.getPaymentMethod() == PaymentMethod.CASH) {
-            return handleCashPayment(request, invoice, dispenseOrderId, invoice.getAppointmentId());
+            return handleCashPayment(request, invoice, dispenseOrderId);
         } else {
-            return handleBankTransferPayment(request, invoice, dispenseOrderId, invoice.getAppointmentId());
+            return handleBankTransferPayment(request, invoice, dispenseOrderId);
         }
     }
 
@@ -161,7 +161,7 @@ public class PaymentService implements IPaymentService {
      * Xử lý thanh toán tiền mặt
      */
     @Transactional
-    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId, UUID appointmentId) {
+    public PaymentResponseDTO handleCashPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenseOrderId) {
         log.info("Xử lý thanh toán CASH cho Invoice: {}", request.getInvoiceId());
 
         Payment payment = Payment.builder()
@@ -189,7 +189,6 @@ public class PaymentService implements IPaymentService {
         // Hoặc để PaymentAggregate tự xử lý nếu logic của bạn cho phép
         commandGateway.send(new UpdatePaymentStatusCommand(
                 payment.getId(),
-//                appointmentId,
                 "SUCCESSFUL",
                 "Đã thanh toán đầy đủ tiền mặt"
         ));
@@ -210,7 +209,7 @@ public class PaymentService implements IPaymentService {
      * Sử dụng InvoiceItem để tạo ItemData chi tiết cho payOS
      */
     @Transactional
-    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId, UUID appointmentId) {
+    public PaymentResponseDTO handleBankTransferPayment(CreatePaymentRequestDTO request, InvoiceResponseDTO invoice, UUID dispenserOrderId) {
         log.info("Xử lý thanh toán BANK_TRANSFER cho Invoice: {}", request.getInvoiceId());
 
         try {
@@ -355,7 +354,6 @@ public class PaymentService implements IPaymentService {
             // Đây là phần BỔ SUNG QUAN TRỌNG
             commandGateway.send(new UpdatePaymentStatusCommand(
                     payment.getId(),
-//                    appointmentId,
                     newStatus.toString(),
                     reason
             ));
