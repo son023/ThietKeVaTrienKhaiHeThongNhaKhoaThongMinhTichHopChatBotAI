@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/labtest-service/medical-attachments/file").permitAll()
+                        .requestMatchers("/labtest-service/lab-technicians").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(customRequestFilter, UsernamePasswordAuthenticationFilter.class)
