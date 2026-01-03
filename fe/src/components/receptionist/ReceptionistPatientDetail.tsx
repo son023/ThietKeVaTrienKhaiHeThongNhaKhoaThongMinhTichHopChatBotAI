@@ -67,7 +67,7 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={onBack} className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
+          <Button variant="outline" size="icon" onClick={onBack} className="border-neutral-border hover:bg-primary hover:border-primary transition-all">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
