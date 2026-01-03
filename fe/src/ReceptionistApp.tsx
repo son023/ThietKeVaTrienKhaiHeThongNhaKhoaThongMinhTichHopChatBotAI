@@ -264,7 +264,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
       <ReceptionistInvoice
         invoiceId={invoiceId}
         onBack={handleBackToInvoiceList}
-        mode="payment"
+        mode={invoiceViewMode}
       />
     );
   }
