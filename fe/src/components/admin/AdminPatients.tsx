@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Phone, Calendar, User, Save } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
@@ -22,6 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { patientController } from '../../controllers/PatientController';
+import { userController, CreateUserRequestDTO } from '../../controllers/UserController';
+import { PatientWithUser } from '../../models/Patient';
 
 interface AdminPatientsProps {
   onNavigateToPatientDetail: (id: string) => void;
@@ -30,55 +33,143 @@ interface AdminPatientsProps {
 export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [patients, setPatients] = useState<PatientWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const patients = [
-    {
-      id: 'BN001',
-      name: 'Nguyễn Văn An',
-      phone: '0901234567',
-      email: 'an.nguyen@email.com',
-      lastVisit: '25/10/2025',
-      nextAppointment: '30/10/2025',
-      status: 'active',
-      totalVisits: 12,
-    },
-    {
-      id: 'BN002',
-      name: 'Trần Thị Bình',
-      phone: '0912345678',
-      email: 'binh.tran@email.com',
-      lastVisit: '24/10/2025',
-      nextAppointment: null,
-      status: 'active',
-      totalVisits: 5,
-    },
-    {
-      id: 'BN003',
-      name: 'Lê Văn Cường',
-      phone: '0923456789',
-      email: 'cuong.le@email.com',
-      lastVisit: '20/10/2025',
-      nextAppointment: '27/10/2025',
-      status: 'active',
-      totalVisits: 8,
-    },
-    {
-      id: 'BN004',
-      name: 'Phạm Thị Dung',
-      phone: '0934567890',
-      email: 'dung.pham@email.com',
-      lastVisit: '23/10/2025',
-      nextAppointment: '28/10/2025',
-      status: 'active',
-      totalVisits: 15,
-    },
-  ];
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    password: '',
+    dob: '',
+    gender: '',
+    address: '',
+    insuranceNumber: '',
+    emergencyContact: '',
+    medicalHistory: '',
+    notes: '',
+  });
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const patientsData = await patientController.getAll();
+
+      const patientsWithUser = await Promise.all(
+        patientsData.map(async (patient) => {
+          try {
+            const user = await userController.getById(patient.userId);
+            return { ...patient, user };
+          } catch (err) {
+            console.error(`Failed to load user for patient ${patient.userId}`, err);
+            return { ...patient, user: undefined };
+          }
+        })
+      );
+      
+      setPatients(patientsWithUser);
+    } catch (err: any) {
+      console.error('Failed to load patients:', err);
+      setError(err.message || 'Không thể tải danh sách bệnh nhân');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePatient = async () => {
+    try {
+      if (!formData.fullName || !formData.phone || !formData.password) {
+        alert('Vui lòng điền đầy đủ các trường bắt buộc (Họ tên, Số điện thoại, Mật khẩu)');
+        return;
+      }
+
+      setSaving(true);
+      
+      // Create user with PATIENT role
+      const createUserRequest: CreateUserRequestDTO = {
+        fullName: formData.fullName,
+        email: formData.email || `${formData.phone}@temp.com`, // Fallback email if not provided
+        phone: formData.phone,
+        password: formData.password,
+        roleNames: ['PATIENT'], // Only PATIENT role
+        isActive: true,
+      };
+
+      const user = await userController.create(createUserRequest);
+      
+      // Patient record is automatically created by backend
+      // But we can update it with additional info if needed
+      if (formData.dob || formData.gender || formData.address || formData.insuranceNumber) {
+        await patientController.updateProfile(user.id, {
+          userId: user.id,
+          dob: formData.dob || undefined,
+          gender: formData.gender || undefined,
+          address: formData.address || undefined,
+          contactPhone: formData.phone,
+          insuranceNumber: formData.insuranceNumber || undefined,
+        });
+      }
+      
+      // Reload patients list
+      await loadPatients();
+      
+      // Reset form and close dialog
+      setFormData({
+        fullName: '',
+        phone: '',
+        email: '',
+        password: '',
+        dob: '',
+        gender: '',
+        address: '',
+        insuranceNumber: '',
+        emergencyContact: '',
+        medicalHistory: '',
+        notes: '',
+      });
+      setIsAddDialogOpen(false);
+      
+      alert('Thêm bệnh nhân thành công!');
+    } catch (err: any) {
+      console.error('Failed to create patient:', err);
+      alert(err.message || 'Không thể thêm bệnh nhân');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone.includes(searchQuery) ||
-    patient.id.toLowerCase().includes(searchQuery.toLowerCase())
+    patient.user?.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.contactPhone?.includes(searchQuery) ||
+    patient.userId.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-[#fcfeff]">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-[#333333]/60">Đang tải dữ liệu...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-[#fcfeff]">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-red-600">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-[#fcfeff]">
@@ -95,7 +186,7 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                 Thêm bệnh nhân mới
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
               <DialogHeader>
                 <DialogTitle className="text-[#01304e]">Thêm bệnh nhân mới</DialogTitle>
                 <DialogDescription>
@@ -109,7 +200,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Input 
                       id="patient-name" 
                       placeholder="Nhập họ và tên bệnh nhân" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     />
                   </div>
                   
@@ -119,7 +212,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                       id="patient-phone" 
                       type="tel"
                       placeholder="0901234567" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
                   
@@ -129,7 +224,21 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                       id="patient-email" 
                       type="email"
                       placeholder="email@example.com" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="patient-password">Mật khẩu <span className="text-red-500">*</span></Label>
+                    <Input 
+                      id="patient-password" 
+                      type="password"
+                      placeholder="Nhập mật khẩu" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
                   </div>
                   
@@ -138,7 +247,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Input 
                       id="patient-dob" 
                       type="date"
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.dob}
+                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                     />
                   </div>
                   
@@ -147,11 +258,13 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <select 
                       id="patient-gender"
                       className="flex h-10 w-full rounded-[10px] border border-[#e8e8e8] bg-white px-3 py-2 text-sm"
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     >
                       <option value="">Chọn giới tính</option>
-                      <option value="male">Nam</option>
-                      <option value="female">Nữ</option>
-                      <option value="other">Khác</option>
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                      <option value="OTHER">Khác</option>
                     </select>
                   </div>
                   
@@ -160,7 +273,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Input 
                       id="patient-address" 
                       placeholder="Nhập địa chỉ" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     />
                   </div>
                   
@@ -169,7 +284,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Input 
                       id="patient-insurance" 
                       placeholder="Nhập mã số BHYT (nếu có)" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.insuranceNumber}
+                      onChange={(e) => setFormData({ ...formData, insuranceNumber: e.target.value })}
                     />
                   </div>
                   
@@ -178,7 +295,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Input 
                       id="patient-emergency" 
                       placeholder="Tên và số điện thoại người nhà" 
-                      className="rounded-[10px] border-[#e8e8e8]" 
+                      className="rounded-[10px] border-[#e8e8e8]"
+                      value={formData.emergencyContact}
+                      onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
                     />
                   </div>
                   
@@ -187,7 +306,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Textarea 
                       id="patient-medical-history" 
                       placeholder="Ghi chú về tiền sử bệnh, dị ứng thuốc..."
-                      className="rounded-[10px] border-[#e8e8e8] min-h-[80px]" 
+                      className="rounded-[10px] border-[#e8e8e8] min-h-[80px]"
+                      value={formData.medicalHistory}
+                      onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
                     />
                   </div>
                   
@@ -196,7 +317,9 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     <Textarea 
                       id="patient-notes" 
                       placeholder="Ghi chú khác về bệnh nhân..."
-                      className="rounded-[10px] border-[#e8e8e8] min-h-[60px]" 
+                      className="rounded-[10px] border-[#e8e8e8] min-h-[60px]"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </div>
                 </div>
@@ -206,19 +329,17 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                     variant="outline" 
                     onClick={() => setIsAddDialogOpen(false)} 
                     className="rounded-[10px]"
+                    disabled={saving}
                   >
                     Hủy
                   </Button>
                   <Button 
                     className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
-                    onClick={() => {
-                      // Handle save patient logic here
-                      console.log('Saving patient...');
-                      setIsAddDialogOpen(false);
-                    }}
+                    onClick={handleCreatePatient}
+                    disabled={saving}
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Lưu bệnh nhân
+                    {saving ? 'Đang lưu...' : 'Lưu bệnh nhân'}
                   </Button>
                 </div>
               </div>
@@ -311,38 +432,32 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
             <TableBody>
               {filteredPatients.map((patient) => (
                 <TableRow
-                  key={patient.id}
+                  key={patient.userId}
                   className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => onNavigateToPatientDetail(patient.userId)}
                 >
-                  <TableCell className="text-[#333333]/60">{patient.id}</TableCell>
-                  <TableCell className="text-[#333333]">{patient.name}</TableCell>
+                  <TableCell className="text-[#333333]/60">{patient.userId.substring(0, 8).toUpperCase()}</TableCell>
+                  <TableCell className="text-[#333333]">{patient.user?.fullName || 'N/A'}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm text-[#333333]/60">
                         <Phone className="w-4 h-4" />
-                        {patient.phone}
+                        {patient.contactPhone || patient.user?.phone || 'N/A'}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 text-[#333333]/60">
                       <Calendar className="w-4 h-4" />
-                      {patient.lastVisit}
+                      {patient.user?.createdAt ? new Date(patient.user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {patient.nextAppointment ? (
-                      <div className="flex items-center gap-2 text-[#3FB5FF]">
-                        <Calendar className="w-4 h-4" />
-                        {patient.nextAppointment}
-                      </div>
-                    ) : (
-                      <span className="text-[#333333]/40">—</span>
-                    )}
+                    <span className="text-[#333333]/40">—</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-blue-50">
-                      {patient.totalVisits} lần
+                      — lần
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -352,7 +467,7 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
                       className="rounded-[10px]"
                       onClick={(e: any) => {
                         e.stopPropagation();
-                        onNavigateToPatientDetail(patient.id);
+                        onNavigateToPatientDetail(patient.userId);
                       }}
                     >
                       Xem hồ sơ

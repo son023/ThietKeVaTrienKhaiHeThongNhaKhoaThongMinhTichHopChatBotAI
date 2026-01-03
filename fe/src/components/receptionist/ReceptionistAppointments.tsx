@@ -1,16 +1,16 @@
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Checkbox } from '../ui/checkbox';
-import { ChevronLeft, ChevronRight, ClipboardPlus, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { appointmentController } from '../../controllers/AppointmentController';
+import { ChevronLeft, ChevronRight, Filter, Clock, User } from 'lucide-react';
+import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
 import CheckinDialog from './CheckinDialog';
 
 interface Doctor {
   id: string;
   name: string;
-  color: string;
 }
 
 interface Appointment {
@@ -35,51 +35,98 @@ interface ReceptionistAppointmentsProps {
 }
 
 export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointmentsProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDoctor, setSelectedDoctor] = useState('all');
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  
-  const doctors: Doctor[] = [
-    { id: '1', name: 'BS. Phạm Thị Ngọc Mai', color: '#3FB5FF' },
-    { id: '2', name: 'BS. Lê Văn Anh', color: '#10B981' },
-    { id: '3', name: 'BS. Nguyễn Thu Hà', color: '#F59E0B' },
-  ];
 
-  const [selectedDoctors, setSelectedDoctors] = useState<string[]>(doctors.map(d => d.id));
+  // State for doctors
+  const [doctors, setDoctors] = useState<Doctor[]>([{ id: 'all', name: 'Tất cả bác sĩ' }]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
 
+  // State for appointments
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
 
-  const timeSlots = Array.from({ length: 13 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`);
+  const timeSlots = Array.from({ length: 10 }, (_, i) => `${8 + i}:00`);
 
-  const statusColors = {
-    waiting_confirm: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    waiting_checkin: 'bg-primary/10 text-primary-strong border-primary/30',
-    checked_in: 'bg-purple-50 text-purple-700 border-purple-200',
-    in_treatment: 'bg-green-50 text-green-700 border-green-200',
-    waiting_payment: 'bg-accent-orange/10 text-accent-orange border-accent-orange/30',
-    completed: 'bg-neutral-muted text-neutral-text border-neutral-border',
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'waiting_checkin':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'checked_in':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'in_treatment':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'waiting_payment':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'completed':
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
   };
 
-  const toggleDoctor = (doctorId: string) => {
-    setSelectedDoctors(prev =>
-      prev.includes(doctorId)
-        ? prev.filter(id => id !== doctorId)
-        : [...prev, doctorId]
-    );
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'waiting_confirm':
+        return 'Chờ xác nhận';
+      case 'waiting_checkin':
+        return 'Đã xác nhận';
+      case 'checked_in':
+        return 'Đã check-in';
+      case 'in_treatment':
+        return 'Đang khám';
+      case 'completed':
+        return 'Hoàn thành';
+      case 'waiting_payment':
+        return 'Chờ thanh toán';
+      default:
+        return status;
+    }
+  };
+
+  const filteredDoctors = selectedDoctor === 'all' 
+    ? doctors.filter(d => d.id !== 'all')
+    : doctors.filter(d => d.id === selectedDoctor);
+
+  const filteredAppointments = useMemo(
+    () => selectedDoctor === 'all' 
+      ? appointments 
+      : appointments.filter(apt => apt.doctorId === selectedDoctor),
+    [appointments, selectedDoctor]
+  );
+
+  // Generate week dates
+  const getWeekDates = (date: Date) => {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(date.setDate(diff));
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
+  };
+
+  const weekDates = getWeekDates(new Date(currentDate));
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    if (viewMode === 'day') {
+      newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+    } else {
+      newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+    }
+    setCurrentDate(newDate);
   };
 
   const openCheckInDialog = async (apt: Appointment) => {
     setSelectedAppointment(apt);
     setCheckInDialogOpen(true);
   };
-
-  const filteredAppointments = useMemo(
-    () => appointments.filter(apt => selectedDoctors.includes(apt.doctorId)),
-    [appointments, selectedDoctors]
-  );
 
   const mapStatus = (status: string): Appointment['status'] => {
     switch (status) {
@@ -96,13 +143,41 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
     }
   };
 
+  // Load doctors from backend
+  const loadDoctors = async () => {
+    try {
+      setLoadingDoctors(true);
+      const doctorsData = await doctorController.getWithUserDetails();
+      
+      const mappedDoctors: Doctor[] = doctorsData.map((doc: DoctorWithUser) => ({
+        id: doc.userId,
+        name: doc.user?.fullName ? `BS. ${doc.user.fullName}` : `BS. ${doc.userId.substring(0, 8)}`,
+      }));
+
+      setDoctors([{ id: 'all', name: 'Tất cả bác sĩ' }, ...mappedDoctors]);
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+      // Fallback to default doctors if API fails
+      setDoctors([
+        { id: 'all', name: 'Tất cả bác sĩ' },
+        { id: '1', name: 'BS. Phạm Thị Ngọc Mai' },
+        { id: '2', name: 'BS. Lê Văn Anh' },
+        { id: '3', name: 'BS. Nguyễn Thu Hà' },
+      ]);
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
+
+  // Load appointments from backend
   const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
       setAppointmentsError(null);
-      const today = selectedDate;
-      const data = await appointmentController.getByDate(today);
-      const mapped: Appointment[] = data.map((apt) => {
+      
+      const data = await appointmentController.getByDate(currentDate);
+      
+      const mapped: Appointment[] = data.map((apt: AppointmentDTO) => {
         const start = new Date(apt.appointmentStartTime);
         return {
           id: apt.id,
@@ -115,183 +190,300 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
           service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
         };
       });
+      
       setAppointments(mapped);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Không thể tải lịch hẹn';
       setAppointmentsError(msg);
+      console.error('Error loading appointments:', error);
     } finally {
       setLoadingAppointments(false);
     }
   };
 
+  // Load doctors on mount
+  useEffect(() => {
+    loadDoctors();
+  }, []);
+
+  // Load appointments when date or refreshToken changes
   useEffect(() => {
     loadAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, refreshToken]);
+  }, [currentDate, refreshToken]);
 
   return (
-    <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-text tracking-tight mb-2">Lịch hẹn (Tổng quan)</h1>
-          <p className="text-neutral-text/70 font-medium">Quản lý lịch hẹn của tất cả bác sĩ</p>
+    <div className="p-6 bg-[#fcfeff]">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-[#01304e] mb-1">Quản lý Lịch hẹn</h1>
+            <p className="text-sm text-[#333333]/60">Điều phối lịch hẹn toàn phòng khám</p>
+          </div>
         </div>
 
-        {/* View Mode */}
-        <div className="flex items-center gap-2 bg-neutral-surface border border-neutral-border rounded-lg p-1">
-          <Button
-            size="sm"
-            variant={viewMode === 'day' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('day')}
-            className={viewMode === 'day' ? 'bg-primary hover:bg-primary-strong text-white' : 'hover:bg-neutral-muted text-neutral-text'}
-          >
-            Ngày
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'week' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('week')}
-            className={viewMode === 'week' ? 'bg-primary hover:bg-primary-strong text-white' : 'hover:bg-neutral-muted text-neutral-text'}
-          >
-            Tuần
-          </Button>
+        {/* Filters */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-[#333333]/60" />
+            <Select value={selectedDoctor} onValueChange={setSelectedDoctor} disabled={loadingDoctors}>
+              <SelectTrigger className="w-48 rounded-[10px] border-[#e8e8e8]">
+                <SelectValue placeholder={loadingDoctors ? "Đang tải..." : "Chọn bác sĩ"} />
+              </SelectTrigger>
+              <SelectContent>
+                {doctors.map((doctor) => (
+                  <SelectItem key={doctor.id} value={doctor.id}>
+                    {doctor.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v as any)}>
+            <TabsList>
+              <TabsTrigger value="day">Ngày</TabsTrigger>
+              <TabsTrigger value="week">Tuần</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateDate('prev')}
+              className="rounded-[10px]"
+              disabled={loadingAppointments}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-[#333333] min-w-[200px] text-center">
+              {viewMode === 'day' 
+                ? currentDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
+                : `${weekDates[0].toLocaleDateString('vi-VN', { day: 'numeric', month: 'short' })} - ${weekDates[6].toLocaleDateString('vi-VN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+              }
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateDate('next')}
+              className="rounded-[10px]"
+              disabled={loadingAppointments}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+              className="rounded-[10px]"
+              disabled={loadingAppointments}
+            >
+              Hôm nay
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Date Navigation */}
-      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" size="icon" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-neutral-text">
-              {selectedDate.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </h2>
-          </div>
-
-          <Button variant="outline" size="icon" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </Card>
-
+      {/* Loading State */}
       {loadingAppointments && (
-        <Card className="p-6 border-neutral-border bg-neutral-surface">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-sm text-neutral-text/70 font-medium">Đang tải lịch hẹn...</p>
-          </div>
-        </Card>
-      )}
-      {appointmentsError && (
-        <Card className="p-5 border-red-200 bg-red-50">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-sm text-red-700 font-medium">{appointmentsError}</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Doctor Filter */}
-      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
-        <h3 className="text-sm font-semibold text-neutral-text mb-4">Bộ lọc Bác sĩ</h3>
-        <div className="flex flex-wrap gap-4">
-          {doctors.map((doctor) => (
-            <div key={doctor.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-muted transition-colors">
-              <Checkbox
-                id={`doctor-${doctor.id}`}
-                checked={selectedDoctors.includes(doctor.id)}
-                onCheckedChange={() => toggleDoctor(doctor.id)}
-                className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <label
-                htmlFor={`doctor-${doctor.id}`}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <div
-                  className="w-3 h-3 rounded-full ring-2 ring-offset-2 ring-neutral-border"
-                  style={{ backgroundColor: doctor.color }}
-                />
-                <span className="text-sm text-neutral-text font-medium">{doctor.name}</span>
-              </label>
+        <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-12 h-12 border-4 border-[#3FB5FF]/30 border-t-[#3FB5FF] rounded-full animate-spin"></div>
+              <p className="text-[#333333]/70 font-medium">Đang tải lịch hẹn...</p>
             </div>
-          ))}
-        </div>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Calendar Grid */}
-      <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
-        <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] gap-4">
-          {/* Time Column */}
-          <div className="space-y-4">
-            <div className="h-10" /> {/* Header spacer */}
-            {timeSlots.map((time) => (
-              <div key={time} className="h-16 flex items-start justify-end pr-2 text-xs text-neutral-text/60 font-medium">
-                {time}
-              </div>
-            ))}
-          </div>
+      {/* Error State */}
+      {appointmentsError && !loadingAppointments && (
+        <Card className="rounded-[15px] border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 text-red-600 flex-shrink-0">⚠️</div>
+              <p className="text-red-700 font-medium">{appointmentsError}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Doctor Columns */}
-          {doctors
-            .filter(doctor => selectedDoctors.includes(doctor.id))
-            .map((doctor) => (
-              <div key={doctor.id} className="space-y-4">
-                {/* Doctor Header */}
-                <div className="h-10 flex items-center justify-center border-b-2 pb-2 transition-colors" style={{ borderColor: doctor.color }}>
-                  <span className="text-sm font-semibold text-neutral-text">{doctor.name}</span>
+      {/* Day View */}
+      {!loadingAppointments && !appointmentsError && viewMode === 'day' && (
+        <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <div className="min-w-[1000px]">
+                {/* DoctorHeader */}
+                <div className="grid grid-cols-[200px_1fr] border-b border-[#e8e8e8]">
+                  <div className="p-4 bg-gray-50 border-r border-[#e8e8e8]">
+                    <p className="text-sm text-[#01304e]">Bác sĩ / Phòng</p>
+                  </div>
+                  <div className="grid grid-cols-10 bg-gray-50">
+                    {timeSlots.map((time) => (
+                      <div key={time} className="p-4 border-r border-[#e8e8e8] text-center">
+                        <p className="text-sm text-[#333333]/60">{time}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Time Slots */}
-                <div className="relative space-y-1">
-                  {timeSlots.map((time) => {
-                    const doctorAppts = filteredAppointments.filter(
-                      apt => apt.doctorId === doctor.id && apt.time === time
-                    );
-
-                    return (
-                      <div key={time} className="h-16 border border-neutral-border bg-neutral-muted/20 rounded-lg hover:bg-neutral-muted/40 transition-all relative">
-                        {doctorAppts.map((apt) => (
-                          <div
-                            key={apt.id}
-                            className={`absolute inset-0 p-2 rounded-lg border-2 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all ${statusColors[apt.status]}`}
-                            style={{
-                              height: `${(apt.duration / 30) * 32}px`,
-                            }}
-                          >
-                            {apt.status !== 'checked_in' && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="absolute top-1 right-1 h-7 px-2 text-[11px] bg-neutral-surface/90 hover:bg-neutral-surface shadow-md border border-neutral-border"
-                                onClick={() => openCheckInDialog(apt)}
-                              >
-                                <ClipboardPlus className="w-3 h-3 mr-1" />
-                                Check-in
-                              </Button>
-                            )}
-                            {apt.status === 'checked_in' && (
-                              <div className="absolute top-1 right-1 flex items-center gap-1 text-green-700 text-[11px] bg-neutral-surface/90 px-2 py-1 rounded shadow-sm border border-green-200">
-                                <ShieldCheck className="w-3 h-3" />
-                                Đã check-in
-                              </div>
-                            )}
-                            <p className="text-xs font-medium line-clamp-1">{apt.patientName}</p>
-                            <p className="text-xs text-neutral-text/70">{apt.service}</p>
-                            <p className="text-xs mt-1 text-neutral-text/60">{apt.time} ({apt.duration}p)</p>
-                          </div>
+                {/* Doctor Rows */}
+                {filteredDoctors.length === 0 && (
+                  <div className="p-8 text-center text-[#333333]/60">
+                    Không có bác sĩ nào được chọn
+                  </div>
+                )}
+                {filteredDoctors.map((doctor) => {
+                  const doctorAppointments = filteredAppointments.filter(a => a.doctorId === doctor.id);
+                  
+                  return (
+                    <div key={doctor.id} className="grid grid-cols-[200px_1fr] border-b border-[#e8e8e8]">
+                      <div className="p-4 bg-white border-r border-[#e8e8e8]">
+                        <p className="text-sm text-[#333333]">{doctor.name}</p>
+                        <p className="text-xs text-[#333333]/60 mt-1">
+                          {doctorAppointments.length} lịch hẹn
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-10 bg-white relative min-h-[80px]">
+                        {timeSlots.map((time, index) => (
+                          <div key={time} className="border-r border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors" />
                         ))}
+                        
+                        {/* Appointments */}
+                        {doctorAppointments.map((apt) => {
+                          const startHour = parseInt(apt.time.split(':')[0]);
+                          const startMin = parseInt(apt.time.split(':')[1]);
+                          const startCol = (startHour - 8) + (startMin / 60);
+                          const widthCols = apt.duration / 60;
+                          
+                          return (
+                            <div
+                              key={apt.id}
+                              className={`absolute top-2 bottom-2 p-2 rounded-[8px] border cursor-pointer hover:shadow-lg transition-all ${getStatusColor(apt.status)}`}
+                              style={{
+                                left: `${startCol * 10}%`,
+                                width: `${widthCols * 10}%`,
+                              }}
+                              onClick={() => openCheckInDialog(apt)}
+                            >
+                              <p className="text-xs truncate">{apt.patientName}</p>
+                              <p className="text-xs truncate opacity-80">{apt.service}</p>
+                              <p className="text-xs opacity-60">{apt.time}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Week View */}
+      {!loadingAppointments && !appointmentsError && viewMode === 'week' && (
+        <Card className="rounded-[15px] border-[#e8e8e8] shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <div className="min-w-[1200px]">
+                {/* DoctorHeader with days */}
+                <div className="grid grid-cols-8 border-b border-[#e8e8e8] bg-gray-50">
+                  <div className="p-4 border-r border-[#e8e8e8]">
+                    <p className="text-sm text-[#01304e]">Bác sĩ</p>
+                  </div>
+                  {weekDates.map((date, index) => {
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    return (
+                      <div key={index} className={`p-4 border-r border-[#e8e8e8] text-center ${isToday ? 'bg-[#d8f0ff]/50' : ''}`}>
+                        <p className="text-xs text-[#333333]/60">
+                          {date.toLocaleDateString('vi-VN', { weekday: 'short' })}
+                        </p>
+                        <p className={`text-sm ${isToday ? 'text-[#3FB5FF]' : 'text-[#333333]'}`}>
+                          {date.getDate()}/{date.getMonth() + 1}
+                        </p>
                       </div>
                     );
                   })}
                 </div>
+
+                {/* Doctor rows with appointments */}
+                {filteredDoctors.map((doctor) => (
+                  <div key={doctor.id} className="grid grid-cols-8 border-b border-[#e8e8e8] min-h-[120px]">
+                    <div className="p-4 bg-white border-r border-[#e8e8e8]">
+                      <p className="text-sm text-[#333333]">{doctor.name}</p>
+                    </div>
+                    {weekDates.map((date, dayIndex) => {
+                      const dayAppointments = filteredAppointments.filter(
+                        a => a.doctorId === doctor.id && 
+                        new Date(currentDate).toDateString() === date.toDateString()
+                      );
+                      const isToday = date.toDateString() === new Date().toDateString();
+                      
+                      return (
+                        <div 
+                          key={dayIndex} 
+                          className={`p-2 border-r border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors ${isToday ? 'bg-[#d8f0ff]/10' : 'bg-white'}`}
+                        >
+                          <div className="space-y-1">
+                            {dayAppointments.map((apt) => (
+                              <div
+                                key={apt.id}
+                                className={`p-2 rounded-[6px] border text-xs cursor-pointer hover:shadow-md transition-all ${getStatusColor(apt.status)}`}
+                                onClick={() => openCheckInDialog(apt)}
+                              >
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Clock className="w-3 h-3" />
+                                  <span className="truncate">{apt.time}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  <span className="truncate">{apt.patientName}</span>
+                                </div>
+                              </div>
+                            ))}
+                            {dayAppointments.length === 0 && (
+                              <p className="text-xs text-[#333333]/40 text-center py-4">Không có lịch</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Legend */}
+      <div className="mt-4 flex items-center gap-4 text-sm">
+        <span className="text-[#333333]/60">Trạng thái:</span>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded" />
+          <span>Chờ xác nhận</span>
         </div>
-      </Card>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
+          <span>Đã xác nhận</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-purple-100 border border-purple-300 rounded" />
+          <span>Đã check-in</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
+          <span>Đang khám</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded" />
+          <span>Hoàn thành</span>
+        </div>
+      </div>
 
       <CheckinDialog
         open={checkInDialogOpen}
@@ -318,29 +510,6 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
           );
         }}
       />
-
-      {/* Legend */}
-      <Card className="p-5 border-neutral-border bg-neutral-surface shadow-sm">
-        <div className="flex items-center gap-6 text-sm flex-wrap">
-          <span className="text-neutral-text font-semibold">Trạng thái:</span>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-yellow-500 ring-2 ring-offset-1 ring-yellow-200" />
-            <span className="text-neutral-text">Chờ xác nhận</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-primary ring-2 ring-offset-1 ring-primary/30" />
-            <span className="text-neutral-text">Đã xác nhận</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-purple-500 ring-2 ring-offset-1 ring-purple-200" />
-            <span className="text-neutral-text">Đã check-in</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-500 ring-2 ring-offset-1 ring-green-200" />
-            <span className="text-neutral-text">Đang khám</span>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }

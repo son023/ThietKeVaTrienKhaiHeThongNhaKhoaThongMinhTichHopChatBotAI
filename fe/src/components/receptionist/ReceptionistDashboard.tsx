@@ -1,13 +1,27 @@
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { User, CheckCircle2, AlertCircle, DollarSign } from "lucide-react";
+import { User, CheckCircle2, AlertCircle, DollarSign, Phone, Mail, Calendar as CalendarIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   appointmentController,
   AppointmentDTO,
 } from "../../controllers/AppointmentController";
 import CheckinDialog from "./CheckinDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 interface Appointment {
   id: string;
@@ -17,7 +31,6 @@ interface Appointment {
   doctor: string;
   phone: string;
   status:
-    | "waiting_confirm"
     | "waiting_checkin"
     | "checked_in"
     | "in_treatment"
@@ -53,6 +66,12 @@ export function ReceptionistDashboard({
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
+  
+  // Patient list modal state
+  const [patientListOpen, setPatientListOpen] = useState(false);
+  const [patientListType, setPatientListType] = useState<'tomorrow' | 'late'>('tomorrow');
+  const [latePatients, setLatePatients] = useState<Appointment[]>([]);
+  const [tomorrowAppointments, setTomorrowAppointments] = useState<Appointment[]>([]);
 
   const mapStatus = (status: string): Appointment["status"] => {
     switch (status) {
@@ -62,8 +81,12 @@ export function ReceptionistDashboard({
         return "checked_in";
       case "IN_PROGRESS":
         return "in_treatment";
+      case "COMPLETED":
+        return "waiting_payment";
+      case "COMPLETED_INVOICE":
+        return "completed";
       default:
-        return "waiting_confirm";
+        return "waiting_checkin";
     }
   };
 
@@ -107,12 +130,66 @@ export function ReceptionistDashboard({
     loadAppointments();
   }, [refreshToken]);
 
+  // Load tomorrow's appointments
+  useEffect(() => {
+    const loadTomorrowAppointments = async () => {
+      try {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const appointmentDTOs = await appointmentController.getByDate(tomorrow);
+        const transformed = appointmentDTOs.map(transformAppointment);
+        setTomorrowAppointments(transformed);
+      } catch (err) {
+        console.error('Error loading tomorrow appointments:', err);
+        setTomorrowAppointments([]);
+      }
+    };
+
+    loadTomorrowAppointments();
+  }, [refreshToken]);
+
+  // Calculate late patients (more than 5 minutes past appointment time, today only, waiting_checkin status)
+  useEffect(() => {
+    const calculateLatePatients = () => {
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const late = appointments.filter((apt) => {
+        // Only include patients with waiting_checkin status (CONFIRMED)
+        if (apt.status !== 'waiting_checkin') {
+          return false;
+        }
+        
+        // Parse appointment time (format: "HH:MM")
+        const [hours, minutes] = apt.time.split(':').map(Number);
+        const appointmentTime = new Date();
+        appointmentTime.setHours(hours, minutes, 0, 0);
+        
+        // Check if appointment is today
+        const aptDate = new Date(appointmentTime);
+        aptDate.setHours(0, 0, 0, 0);
+        const isToday = aptDate.getTime() === today.getTime();
+        
+        // Calculate time difference in minutes
+        const diffMs = now.getTime() - appointmentTime.getTime();
+        const diffMinutes = diffMs / (1000 * 60);
+        
+        // Late if: today's appointment, more than 5 minutes late, and status is waiting_checkin
+        return isToday && diffMinutes > 5;
+      });
+      
+      setLatePatients(late);
+    };
+
+    calculateLatePatients();
+    // Update every minute to keep the list current
+    const interval = setInterval(calculateLatePatients, 60000);
+    
+    return () => clearInterval(interval);
+  }, [appointments]);
+
   const statusConfig = {
-    waiting_confirm: {
-      label: "Chờ xác nhận",
-      color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      count: 2,
-    },
     waiting_checkin: {
       label: "Chờ check-in",
       color: "bg-blue-100 text-blue-800 border-blue-200",
@@ -201,7 +278,7 @@ export function ReceptionistDashboard({
 
       {/* Kanban Board */}
       {!loading && !error && (
-        <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-5 gap-4 overflow-x-auto pb-4">
           {(Object.keys(statusConfig) as Array<keyof typeof statusConfig>).map(
             (status) => {
               const config = statusConfig[status];
@@ -269,16 +346,6 @@ export function ReceptionistDashboard({
 
                           {/* Action Buttons - Compact */}
                           <div className="pt-2 border-t border-neutral-border">
-                            {status === "waiting_confirm" && (
-                              <Button
-                                size="sm"
-                                className="w-full bg-primary hover:bg-primary-strong h-7 text-xs font-medium shadow-sm transition-all duration-200"
-                                onClick={() => handleAction(apt.id, "confirm")}
-                              >
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Xác nhận
-                              </Button>
-                            )}
                             {status === "waiting_checkin" && (
                               <Button
                                 size="sm"
@@ -371,7 +438,7 @@ export function ReceptionistDashboard({
                 Gọi điện xác nhận lịch hẹn ngày mai
               </h3>
               <Badge className="bg-accent-lime text-neutral-text font-medium px-3 py-1">
-                5 BN
+                {tomorrowAppointments.length} BN
               </Badge>
             </div>
             <p className="text-xs text-neutral-text/70 mb-4 leading-relaxed">
@@ -381,6 +448,10 @@ export function ReceptionistDashboard({
               size="sm"
               variant="outline"
               className="w-full border-neutral-border hover:bg-neutral-muted hover:text-strong hover:border-primary "
+              onClick={() => {
+                setPatientListType('tomorrow');
+                setPatientListOpen(true);
+              }}
             >
               Xem danh sách
             </Button>
@@ -392,7 +463,7 @@ export function ReceptionistDashboard({
                 Theo dõi bệnh nhân trễ hẹn
               </h3>
               <Badge className="bg-accent-orange text-white font-medium px-3 py-1">
-                2 BN
+                {latePatients.length} BN
               </Badge>
             </div>
             <p className="text-xs text-neutral-text/70 mb-4 leading-relaxed">
@@ -402,12 +473,125 @@ export function ReceptionistDashboard({
               size="sm"
               variant="outline"
               className="w-full border-neutral-border hover:text-strong hover:bg-neutral-muted hover:border-primary transition-all duration-200"
+              onClick={() => {
+                setPatientListType('late');
+                setPatientListOpen(true);
+              }}
             >
               Xem danh sách
             </Button>
           </Card>
         </div>
       </div>
+
+      {/* Patient List Modal */}
+      <Dialog open={patientListOpen} onOpenChange={setPatientListOpen} modal>
+        <DialogContent 
+          className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-white"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-neutral-heading">
+              {patientListType === 'tomorrow' 
+                ? 'Danh sách bệnh nhân cần gọi điện xác nhận ngày mai' 
+                : 'Danh sách bệnh nhân trễ hẹn'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-neutral-muted/30">
+                  <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Thời gian hẹn</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patientListType === 'tomorrow' ? (
+                  // Real data for tomorrow's appointments
+                  tomorrowAppointments.length > 0 ? tomorrowAppointments.map((apt) => (
+                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
+                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">-</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">{apt.time}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
+                        Không có lịch hẹn nào vào ngày mai
+                      </TableCell>
+                    </TableRow>
+                  )
+                ) : (
+                  // Real data for late patients (today only, >5 minutes late)
+                  latePatients.length > 0 ? latePatients.map((apt) => {
+                    const now = new Date();
+                    const [hours, minutes] = apt.time.split(':').map(Number);
+                    const appointmentTime = new Date();
+                    appointmentTime.setHours(hours, minutes, 0, 0);
+                    const diffMs = now.getTime() - appointmentTime.getTime();
+                    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                    
+                    return (
+                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
+                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">-</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-red-600" />
+                          <span className="text-sm text-red-600 font-medium">{apt.time} (Trễ {diffMinutes} phút)</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
+                    </TableRow>
+                  );
+                  }) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
+                        Không có bệnh nhân trễ hẹn hôm nay
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

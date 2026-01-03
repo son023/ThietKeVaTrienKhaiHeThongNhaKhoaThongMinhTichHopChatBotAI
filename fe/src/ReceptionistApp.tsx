@@ -26,6 +26,7 @@ import {
 import { BookAppointmentDialog } from './components/patient/BookAppointmentDialog';
 import { patientController } from './controllers/PatientController';
 import { userController } from './controllers/UserController';
+import { invoiceController } from './controllers/InvoiceController';
 import { PatientWithUser } from './models/Patient';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { authController } from './controllers';
@@ -84,11 +85,32 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
     navigate(`/receptionist/patients/${patientId}`);
   };
 
-  const handleCreateInvoice = () => {
-    setShowInvoice(true);
-    setSelectedInvoiceId(null);
-    setCurrentPage('invoices');
-    navigate('/receptionist/invoices/new');
+  const handleCreateInvoice = async (appointmentId?: string) => {
+    try {
+      if (appointmentId) {
+        const invoices = await invoiceController.getInvoicesByAppointmentId(appointmentId);
+        if (invoices && invoices.length > 0) {
+          const invoice = invoices[0];
+          handleViewInvoice(invoice.id, 'payment');
+          return;
+        }
+      }
+
+      setShowInvoice(true);
+      setSelectedInvoiceId(null);
+      setCurrentPage('invoices');
+      if (appointmentId) {
+        navigate(`/receptionist/invoices/new?appointmentId=${appointmentId}`);
+      } else {
+        navigate('/receptionist/invoices/new');
+      }
+    } catch (error) {
+      console.error('Error finding invoice:', error);
+      setShowInvoice(true);
+      setSelectedInvoiceId(null);
+      setCurrentPage('invoices');
+      navigate('/receptionist/invoices/new');
+    }
   };
 
   const handleViewInvoice = (invoiceId: string, mode: 'view' | 'payment' = 'view') => {

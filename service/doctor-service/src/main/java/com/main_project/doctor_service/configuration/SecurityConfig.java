@@ -29,6 +29,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/doctor-service/doctors").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(customRequestFilter, UsernamePasswordAuthenticationFilter.class)
