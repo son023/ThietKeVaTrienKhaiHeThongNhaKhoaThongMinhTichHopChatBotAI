@@ -178,7 +178,7 @@ export function AdminAppointments() {
                 Tạo lịch hẹn mới
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
               <DialogHeader>
                 <DialogTitle className="text-[#01304e]">Tạo lịch hẹn mới</DialogTitle>
                 <DialogDescription>
