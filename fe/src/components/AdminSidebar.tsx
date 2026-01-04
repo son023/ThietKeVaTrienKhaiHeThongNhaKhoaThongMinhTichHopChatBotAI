@@ -8,12 +8,9 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   const menuItems = [
-    { id: 'admin-dashboard', label: 'Bảng điều khiển', icon: Home },
-    { id: 'admin-appointments', label: 'Quản lý Lịch hẹn', icon: Calendar },
     { id: 'admin-patients', label: 'Quản lý Bệnh nhân', icon: Users },
     { id: 'admin-staff', label: 'Quản lý Nhân viên', icon: UserCog },
     { id: 'admin-services', label: 'Quản lý Dịch vụ', icon: Briefcase },
-    { id: 'admin-inventory', label: 'Quản lý Kho', icon: Package },
     { id: 'admin-finance', label: 'Quản lý Tài chính', icon: Receipt },
     { id: 'admin-reports', label: 'Báo cáo & Thống kê', icon: BarChart3 },
     { id: 'admin-settings', label: 'Cài đặt Hệ thống', icon: Settings },

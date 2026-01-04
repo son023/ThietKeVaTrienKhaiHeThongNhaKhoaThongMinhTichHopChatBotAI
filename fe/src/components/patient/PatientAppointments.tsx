@@ -465,7 +465,7 @@ export function PatientAppointments() {
 
         {/* Cancel Dialog - Cải thiện giao diện */}
         <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-          <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
+          <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden bg-white">
             {/* Header với gradient background */}
             <div className="bg-gradient-to-br from-red-50 via-red-50/80 to-orange-50 px-6 py-5 border-b border-red-100">
               <div className="flex items-start gap-4">

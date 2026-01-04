@@ -71,7 +71,7 @@ export function LabTestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl sm:max-w-6xl max-h-[90vh] overflow-y-auto bg-neutral-surface p-0 rounded-2xl">
+      <DialogContent className="max-w-6xl sm:max-w-6xl max-h-[90vh] overflow-y-auto bg-white p-0 rounded-2xl">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-border/30">
           <DialogTitle className="typo-h3">
             Chi tiết kết quả lab test
