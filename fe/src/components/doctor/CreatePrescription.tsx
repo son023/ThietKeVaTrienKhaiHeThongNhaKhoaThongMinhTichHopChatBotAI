@@ -62,6 +62,7 @@ export function CreatePrescriptionEnhanced({
     const [showPreview, setShowPreview] = useState(false);
     const [statusInfo, setStatusInfo] = useState<{ status: string; prescriptionId?: string; dispenseOrderId?: string }>({ status: 'LOADING' });
     const [checkingStatus, setCheckingStatus] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const currentUser = authController.getCurrentUser();
     const doctorId = currentUser?.id;
@@ -91,11 +92,11 @@ export function CreatePrescriptionEnhanced({
                     }
                 );
 
-                if(n.status === 'SUCCESS'){
-                // Tự động onBack sau 1.5 giây để người dùng kịp đọc thông báo
+                if (n.status === 'SUCCESS') {
+                    // Tự động onBack sau 1.5 giây để người dùng kịp đọc thông báo
                     setTimeout(() => {
                         onBack?.();
-                    }, 3000);
+                    }, 1500);
 
                 }
 
@@ -213,6 +214,7 @@ export function CreatePrescriptionEnhanced({
         if (!medicalHistoryId || !patientId) return toast.error("Thiếu thông tin");
         if (items.length === 0) return toast.error("Chưa có thuốc trong đơn");
         if (isBlocked) return toast.error("Hồ sơ đã có đơn thuốc ở trạng thái không cho phép tạo mới");
+        if (isSubmitting) return; // Prevent double submission
 
         // Validate
         for (const item of items) {
@@ -245,6 +247,7 @@ export function CreatePrescriptionEnhanced({
         };
 
         try {
+            setIsSubmitting(true);
             const res = await prescriptionController.createPrescription(payload)
             //toast.success("Đã tạo đơn thuốc thành công")
             // Nếu tạo đơn thành công thì mới callback để màn hình cha chuyển trang
@@ -252,6 +255,11 @@ export function CreatePrescriptionEnhanced({
         } catch (e: any) {
             // Lỗi sẽ được báo qua websocket (PrescriptionProcessNotificationEvent)
             //toast.error(e.message || "Lỗi tạo đơn thuốc");
+            setIsSubmitting(false);
+        } finally {
+            // Reset sau khi nhận phản hồi (thành công hoặc lỗi)
+            // Note: WebSocket sẽ gửi notification, sau đó component có thể unmount
+            setTimeout(() => setIsSubmitting(false), 3000);
         }
     };
 
@@ -321,9 +329,22 @@ export function CreatePrescriptionEnhanced({
                         <Printer className="w-4 h-4 mr-2" />
                         Xem trước
                     </Button> */}
-                    <Button onClick={handleSubmit} disabled={items.length === 0} className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
-                        <Save className="w-4 h-4 mr-2" />
-                        Lưu đơn thuốc
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={items.length === 0 || isSubmitting}
+                        className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                Đang xử lý...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4 mr-2" />
+                                Lưu đơn thuốc
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>
