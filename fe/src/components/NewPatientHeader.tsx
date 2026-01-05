@@ -93,7 +93,6 @@ export function NewPatientHeader({
 
   const menuItems = [
     { id: "home", label: "Trang chủ" },
-    { id: "dashboard", label: "Bảng điều khiển" },
     { id: "appointments", label: "Lịch hẹn" },
     { id: "payment", label: "Thanh toán" },
     { id: "medical-records", label: "Hồ sơ bệnh án" },

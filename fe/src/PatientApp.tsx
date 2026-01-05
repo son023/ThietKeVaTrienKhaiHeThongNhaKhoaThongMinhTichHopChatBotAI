@@ -9,7 +9,6 @@ import {
 import { NewPatientHeader } from "./components/NewPatientHeader";
 import { PatientFooter } from "./components/patient/PatientFooter";
 import { PatientHome } from "./components/patient/PatientHome";
-import { PatientDashboard } from "./components/patient/PatientDashboard";
 import { PatientAppointments } from "./components/patient/PatientAppointments";
 import { PatientMedicalRecords } from "./components/patient/PatientMedicalRecords";
 import { PatientPayment } from "./components/patient/PatientPayment";
@@ -30,9 +29,7 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   const [isChatOpen, setIsChatOpen] = useState(false); // ✅ Lifted state
 
   useEffect(() => {
-    if (location.pathname.startsWith("/patient/dashboard")) {
-      setCurrentPage("dashboard");
-    } else if (location.pathname.startsWith("/patient/appointments")) {
+    if (location.pathname.startsWith("/patient/appointments")) {
       setCurrentPage("appointments");
     } else if (location.pathname.startsWith("/patient/payment")) {
       setCurrentPage("payment");
@@ -49,9 +46,6 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
     switch (page) {
       case "home":
         navigate("/patient");
-        break;
-      case "dashboard":
-        navigate("/patient/dashboard");
         break;
       case "appointments":
         navigate("/patient/appointments");
@@ -103,10 +97,6 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
             <Route
               path="/patient"
               element={<PatientHome onNavigate={handleNavigate} onOpenChatbot={() => setIsChatOpen(true)} />}
-            />
-            <Route
-              path="/patient/dashboard"
-              element={<PatientDashboard onNavigate={handleNavigate} />}
             />
             <Route
               path="/patient/appointments"
