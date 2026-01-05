@@ -1,5 +1,6 @@
 package com.do_an.userservice.controller;
 
+import com.do_an.userservice.dto.request.ChangePasswordRequestDTO;
 import com.do_an.userservice.dto.request.CreateUserRequestDTO;
 import com.do_an.userservice.dto.request.LoginRequest;
 import com.do_an.userservice.dto.request.UpdateUserRequestDTO;
@@ -135,6 +136,25 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody LoginRequest credentials) {
         return authService.login(credentials);
+    }
+
+    @Operation(
+            summary = "Đổi mật khẩu",
+            description = "Đổi mật khẩu của user. Yêu cầu cung cấp mật khẩu cũ và mật khẩu mới."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Đổi mật khẩu thành công"),
+            @ApiResponse(responseCode = "400", description = "Mật khẩu cũ không đúng"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy user")
+    })
+    @PutMapping("/{userId}/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Parameter(description = "ID của User", required = true)
+            @PathVariable UUID userId,
+            @Parameter(description = "Thông tin đổi mật khẩu (mật khẩu cũ và mới)", required = true)
+            @Valid @RequestBody ChangePasswordRequestDTO request) {
+        userService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 
 }
