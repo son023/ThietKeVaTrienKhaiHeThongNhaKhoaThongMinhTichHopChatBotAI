@@ -31,11 +31,11 @@ interface Appointment {
   doctor: string;
   phone: string;
   status:
-    | "waiting_checkin"
-    | "checked_in"
-    | "in_treatment"
-    | "waiting_payment"
-    | "completed";
+  | "waiting_checkin"
+  | "checked_in"
+  | "in_treatment"
+  | "waiting_payment"
+  | "completed";
   service?: string;
 }
 
@@ -66,12 +66,16 @@ export function ReceptionistDashboard({
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
-  
+
   // Patient list modal state
   const [patientListOpen, setPatientListOpen] = useState(false);
-  const [patientListType, setPatientListType] = useState<'tomorrow' | 'late'>('tomorrow');
+  const [patientListType, setPatientListType] = useState<"tomorrow" | "late">(
+    "tomorrow"
+  );
   const [latePatients, setLatePatients] = useState<Appointment[]>([]);
-  const [tomorrowAppointments, setTomorrowAppointments] = useState<Appointment[]>([]);
+  const [tomorrowAppointments, setTomorrowAppointments] = useState<
+    Appointment[]
+  >([]);
 
   const mapStatus = (status: string): Appointment["status"] => {
     switch (status) {
@@ -154,38 +158,38 @@ export function ReceptionistDashboard({
       const now = new Date();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const late = appointments.filter((apt) => {
         // Only include patients with waiting_checkin status (CONFIRMED)
         if (apt.status !== 'waiting_checkin') {
           return false;
         }
-        
+
         // Parse appointment time (format: "HH:MM")
         const [hours, minutes] = apt.time.split(':').map(Number);
         const appointmentTime = new Date();
         appointmentTime.setHours(hours, minutes, 0, 0);
-        
+
         // Check if appointment is today
         const aptDate = new Date(appointmentTime);
         aptDate.setHours(0, 0, 0, 0);
         const isToday = aptDate.getTime() === today.getTime();
-        
+
         // Calculate time difference in minutes
         const diffMs = now.getTime() - appointmentTime.getTime();
         const diffMinutes = diffMs / (1000 * 60);
-        
+
         // Late if: today's appointment, more than 5 minutes late, and status is waiting_checkin
         return isToday && diffMinutes > 5;
       });
-      
+
       setLatePatients(late);
     };
 
     calculateLatePatients();
     // Update every minute to keep the list current
     const interval = setInterval(calculateLatePatients, 60000);
-    
+
     return () => clearInterval(interval);
   }, [appointments]);
 
@@ -486,60 +490,84 @@ export function ReceptionistDashboard({
 
       {/* Patient List Modal */}
       <Dialog open={patientListOpen} onOpenChange={setPatientListOpen} modal>
-        <DialogContent 
-          className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-white"
+        <DialogContent
+          className="max-w-7xl max-h-[80vh] overflow-hidden flex flex-col bg-white"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-neutral-heading">
-              {patientListType === 'tomorrow' 
-                ? 'Danh sách bệnh nhân cần gọi điện xác nhận ngày mai' 
+              {patientListType === 'tomorrow'
+                ? 'Danh sách bệnh nhân cần gọi điện xác nhận ngày mai'
                 : 'Danh sách bệnh nhân trễ hẹn'}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Thời gian hẹn</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Họ tên
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Số điện thoại
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Email
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Thời gian hẹn
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patientListType === 'tomorrow' ? (
+                {patientListType === "tomorrow" ? (
                   // Real data for tomorrow's appointments
-                  tomorrowAppointments.length > 0 ? tomorrowAppointments.map((apt) => (
-                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
-                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">-</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">{apt.time}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
-                    </TableRow>
-                  )) : (
+                  tomorrowAppointments.length > 0 ? (
+                    tomorrowAppointments.map((apt) => (
+                      <TableRow
+                        key={apt.id}
+                        className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border"
+                      >
+                        <TableCell className="font-mono text-sm text-neutral-text">
+                          {apt.patientId.substring(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="text-sm text-neutral-heading font-medium">
+                          {apt.patientName}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">
+                              {apt.phone || "N/A"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">-</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">
+                              {apt.time}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-neutral-text/70">
+                          {apt.service || "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-neutral-text/60"
+                      >
                         Không có lịch hẹn nào vào ngày mai
                       </TableCell>
                     </TableRow>
@@ -553,32 +581,32 @@ export function ReceptionistDashboard({
                     appointmentTime.setHours(hours, minutes, 0, 0);
                     const diffMs = now.getTime() - appointmentTime.getTime();
                     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-                    
+
                     return (
-                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
-                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">-</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5 text-red-600" />
-                          <span className="text-sm text-red-600 font-medium">{apt.time} (Trễ {diffMinutes} phút)</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
-                    </TableRow>
-                  );
+                      <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                        <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
+                        <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">-</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-3.5 h-3.5 text-red-600" />
+                            <span className="text-sm text-red-600 font-medium">{apt.time} (Trễ {diffMinutes} phút)</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
+                      </TableRow>
+                    );
                   }) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
