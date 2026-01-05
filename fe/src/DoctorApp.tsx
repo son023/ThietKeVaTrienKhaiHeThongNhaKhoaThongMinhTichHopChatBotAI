@@ -240,9 +240,10 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
               element={
                 <Dashboard
                   doctorId={doctorId}
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
+                  onNavigateToPatient={(patientId, appointmentId) => {
+                    setSelectedPatientId(patientId);
+                    setSelectedAppointmentId(appointmentId || null);
+                    navigate(`/doctor/patients/${patientId}/examination`);
                   }}
                 />
               }
