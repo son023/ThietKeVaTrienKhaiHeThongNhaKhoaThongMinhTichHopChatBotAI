@@ -313,7 +313,7 @@ export function TestQueue({ selectedTestId }: TestQueueProps) {
                                                     Tải kết quả
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="max-w-[640px] bg-neutral-surface">
+                                            <DialogContent className="max-w-[640px] bg-white">
                                                 <DialogHeader>
                                                     <DialogTitle className="font-semibold text-neutral-heading">
                                                         Tải lên kết quả xét nghiệm

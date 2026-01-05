@@ -262,7 +262,7 @@ export function AdminInventory() {
 
       {/* Edit Product Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-[15px] max-w-2xl">
+        <DialogContent className="rounded-[15px] max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle className="text-[#01304e]">Chỉnh sửa sản phẩm</DialogTitle>
             <DialogDescription>

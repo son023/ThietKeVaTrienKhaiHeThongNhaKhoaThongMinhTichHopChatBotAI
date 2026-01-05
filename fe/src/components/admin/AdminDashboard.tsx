@@ -401,7 +401,7 @@ export function AdminDashboard() {
 
       {/* Alert Action Dialog */}
       <Dialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-        <DialogContent className="rounded-[15px] max-w-2xl">
+        <DialogContent className="rounded-[15px] max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle className="text-[#01304e] flex items-center gap-2">
               {currentAlert?.type === 'inventory' && <Package className="w-5 h-5 text-orange-600" />}
