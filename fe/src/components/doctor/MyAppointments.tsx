@@ -19,23 +19,19 @@ interface MyAppointmentsProps {
 }
 
 const statusMap: Record<string, { label: string; style: string }> = {
-  PENDING: {
-    label: "Chờ xác nhận",
-    style: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  CHECKED: {
+    label: "Đã check-in",
+    style: "bg-purple-100 text-purple-800 border-purple-300",
   },
   CONFIRMED: {
     label: "Đã xác nhận",
     style: "bg-green-100 text-green-800 border-green-300",
   },
-  CHECKED: {
-    label: "Đã check-in",
-    style: "bg-purple-100 text-purple-800 border-purple-300",
+  CANCELLED: {
+    label: "Đã hủy",
+    style: "bg-red-100 text-red-800 border-red-300",
   },
   IN_PROGRESS: {
-    label: "Đang khám",
-    style: "bg-blue-100 text-blue-800 border-blue-300",
-  },
-  PROGRESSING: {
     label: "Đang khám",
     style: "bg-blue-100 text-blue-800 border-blue-300",
   },
@@ -44,16 +40,8 @@ const statusMap: Record<string, { label: string; style: string }> = {
     style: "bg-gray-100 text-gray-800 border-gray-300",
   },
   COMPLETED_INVOICE: {
-    label: "Đã hoàn thành - Có hóa đơn",
+    label: "Đã thanh toán",
     style: "bg-emerald-100 text-emerald-800 border-emerald-300",
-  },
-  CANCELLED: {
-    label: "Đã hủy",
-    style: "bg-red-100 text-red-800 border-red-300",
-  },
-  FAILED: {
-    label: "Không đến",
-    style: "bg-gray-100 text-gray-800 border-gray-300",
   },
 };
 
@@ -166,24 +154,23 @@ export function MyAppointments({
   }, [filteredAppointments]);
 
   const renderStatus = (status: string) => {
-    const meta = statusMap[status] || statusMap["pending"];
+    const meta = statusMap[status] || statusMap["CONFIRMED"];
     return <Badge className={meta.style}>{meta.label}</Badge>;
   };
 
   const isCheckedIn = (status: string) => {
-    return status === "checked_in" || status === "CHECKED";
+    return status === "CHECKED";
   };
 
   const isInProgress = (status: string) => {
-    return status === "in_progress" || status === "IN_PROGRESS" || status === "PROGRESSING";
+    return status === "IN_PROGRESS";
   };
 
   const isViewOnly = (status: string) => {
     return (
       status === "COMPLETED" ||
       status === "COMPLETED_INVOICE" ||
-      status === "CANCELLED" ||
-      status === "FAILED"
+      status === "CANCELLED"
     );
   };
 
