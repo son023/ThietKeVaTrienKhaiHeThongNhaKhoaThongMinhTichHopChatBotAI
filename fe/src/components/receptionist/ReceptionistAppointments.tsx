@@ -18,6 +18,7 @@ interface Appointment {
   patientId: string;
   patientName: string;
   time: string;
+  endTime: string;
   duration: number;
   doctorId: string;
   status:
@@ -179,15 +180,50 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       
       const mapped: Appointment[] = data.map((apt: AppointmentDTO) => {
         const start = new Date(apt.appointmentStartTime);
+        const end = new Date(apt.appointmentEndTime);
+
+        let durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+        if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+          const servicesTime = apt.medicalServices?.reduce(
+            (sum, sv) => sum + (sv.serviceTime || 0),
+            0
+          ) ?? 0;
+          durationMinutes = servicesTime > 0 ? servicesTime : 60;
+        }
+
+        durationMinutes = Math.min(Math.max(durationMinutes, 15), 240);
+
+        const startLabel = start.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const endLabel = end.toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        
+        const serviceNames =
+          apt.medicalServices?.map((s) => s.serviceName).filter(Boolean) ?? [];
+        let serviceLabel = 'Khám tổng quát';
+        if (serviceNames.length > 0) {
+          const firstTwo = serviceNames.slice(0, 2).join(', ');
+          const moreCount = serviceNames.length - 2;
+          serviceLabel =
+            moreCount > 0
+              ? `${firstTwo} +${moreCount} dịch vụ khác`
+              : firstTwo;
+        }
+
         return {
           id: apt.id,
           patientId: apt.patientId,
           patientName: `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`,
-          time: start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-          duration: 60,
+          time: startLabel,
+          endTime: endLabel,
+          duration: durationMinutes,
           doctorId: apt.doctorId,
           status: mapStatus(apt.status),
-          service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
+          service: serviceLabel,
         };
       });
       
@@ -227,7 +263,7 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#333333]/60" />
             <Select value={selectedDoctor} onValueChange={setSelectedDoctor} disabled={loadingDoctors}>
-              <SelectTrigger className="w-48 rounded-[10px] border-[#e8e8e8]">
+              <SelectTrigger className="w-48 rounded-[10px] border-[#e8e8e8] bg-white">
                 <SelectValue placeholder={loadingDoctors ? "Đang tải..." : "Chọn bác sĩ"} />
               </SelectTrigger>
               <SelectContent>
@@ -361,7 +397,9 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                           return (
                             <div
                               key={apt.id}
-                              className={`absolute top-2 bottom-2 p-2 rounded-[8px] border cursor-pointer hover:shadow-lg transition-all ${getStatusColor(apt.status)}`}
+                              className={`absolute top-2 bottom-2 p-2 rounded-[8px] border cursor-pointer hover:shadow-lg transition-all ${
+                                getStatusColor(apt.status)
+                              }`}
                               style={{
                                 left: `${startCol * 10}%`,
                                 width: `${widthCols * 10}%`,
@@ -370,7 +408,9 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                             >
                               <p className="text-xs truncate">{apt.patientName}</p>
                               <p className="text-xs truncate opacity-80">{apt.service}</p>
-                              <p className="text-xs opacity-60">{apt.time}</p>
+                              <p className="text-xs opacity-60">
+                                {apt.time} - {apt.endTime}
+                              </p>
                             </div>
                           );
                         })}
@@ -429,22 +469,28 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                           className={`p-2 border-r border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors ${isToday ? 'bg-[#d8f0ff]/10' : 'bg-white'}`}
                         >
                           <div className="space-y-1">
-                            {dayAppointments.map((apt) => (
-                              <div
-                                key={apt.id}
-                                className={`p-2 rounded-[6px] border text-xs cursor-pointer hover:shadow-md transition-all ${getStatusColor(apt.status)}`}
-                                onClick={() => openCheckInDialog(apt)}
-                              >
-                                <div className="flex items-center gap-1 mb-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span className="truncate">{apt.time}</span>
+                            {dayAppointments.map((apt) => {
+                              return (
+                                <div
+                                  key={apt.id}
+                                  className={`p-2 rounded-[6px] border text-xs cursor-pointer hover:shadow-md transition-all ${getStatusColor(
+                                    apt.status
+                                  )}`}
+                                  onClick={() => openCheckInDialog(apt)}
+                                >
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span className="truncate">
+                                      {apt.time} - {apt.endTime}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <User className="w-3 h-3" />
+                                    <span className="truncate">{apt.patientName}</span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  <span className="truncate">{apt.patientName}</span>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                             {dayAppointments.length === 0 && (
                               <p className="text-xs text-[#333333]/40 text-center py-4">Không có lịch</p>
                             )}
@@ -501,6 +547,7 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
               }
             : null
         }
+        isReadOnly={selectedAppointment?.status !== 'waiting_checkin'}
         onCheckedIn={() => {
           if (!selectedAppointment) return;
           setAppointments((prev) =>
