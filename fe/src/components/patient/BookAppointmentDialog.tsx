@@ -64,7 +64,7 @@ export function BookAppointmentDialog({
             doctor: '',
             date: undefined,
             time: '',
-            patientName: user?.fullName ?? '',
+            patientName: user?.fullname ?? '',
             patientPhone: patientPhone ?? user?.phone ?? '',
             patientEmail: patientEmail ?? user?.email ?? '',
             notes: '',
