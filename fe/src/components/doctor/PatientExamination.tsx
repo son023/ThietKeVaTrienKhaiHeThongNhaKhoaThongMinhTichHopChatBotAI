@@ -1041,7 +1041,7 @@ export function PatientExamination({
                               <SelectTrigger className="rounded-lg" disabled={isViewOnly}>
                                 <SelectValue placeholder="Chọn loại lab test" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-white max-h-[300px] overflow-y-auto">
                                 {labTestTypes.map((lt) => (
                                     <SelectItem key={lt.id} value={lt.id}>
                                       {lt.name}
