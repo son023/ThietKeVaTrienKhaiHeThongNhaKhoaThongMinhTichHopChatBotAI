@@ -228,16 +228,12 @@ services:
       - --all
       - --config
       - /etc/ngrok.yml
-      - --authtoken
-      - ${NGROK_AUTHTOKEN}
     ports:
       - "4040:4040"  # Ngrok web interface
     volumes:
       - ./ngrok/ngrok.yml:/etc/ngrok.yml:ro
     networks:
       - microservice-network
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4040/api/tunnels"]
       interval: 10s

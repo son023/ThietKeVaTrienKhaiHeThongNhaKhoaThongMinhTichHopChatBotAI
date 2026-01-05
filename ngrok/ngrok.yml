@@ -3,6 +3,9 @@
 # Authtoken sẽ được inject từ .env file qua command line trong docker-compose.yml
 version: "3"
 
+agent:
+  authtoken: 351cxY2sgkPnbkPtoV6oLlHfejf_Y4dzTcQv3uP5zt8JpNMH
+
 tunnels:
   payment-service:
     proto: http
