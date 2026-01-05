@@ -41,10 +41,11 @@ export interface CheckinDialogProps {
     doctorName?: string;
     serviceName?: string;
   } | null;
+  isReadOnly?: boolean;
   onCheckedIn?: () => void;
 }
 
-export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: CheckinDialogProps) {
+export function CheckinDialog({ open, onOpenChange, appointment, isReadOnly = false, onCheckedIn }: CheckinDialogProps) {
   const [allergies, setAllergies] = useState<AllergyDTO[]>([]);
   const [loadingAllergies, setLoadingAllergies] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -212,9 +213,14 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-2xl bg-white border-neutral-border">
         <DialogHeader>
-          <DialogTitle className="text-neutral-text text-xl font-bold">Hồ sơ ban đầu & Check-in</DialogTitle>
+          <DialogTitle className="text-neutral-text text-xl font-bold">
+            {isReadOnly ? 'Xem hồ sơ bệnh nhân' : 'Hồ sơ ban đầu & Check-in'}
+          </DialogTitle>
           <DialogDescription className="text-neutral-text/70">
-            Nhập thông tin dị ứng, bệnh nền, tiền sử răng miệng trước khi check-in.
+            {isReadOnly
+              ? 'Thông tin hồ sơ bệnh nhân (chế độ xem)'
+              : 'Nhập thông tin dị ứng, bệnh nền, tiền sử răng miệng trước khi check-in.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -233,7 +239,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                 value={formData.address}
                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                 placeholder="Địa chỉ liên hệ"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -245,7 +251,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                   setFormData((prev) => ({ ...prev, contactPhone: e.target.value }))
                 }
                 placeholder="Số điện thoại bệnh nhân"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -254,7 +260,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
               <Select
                 value={formData.bloodType}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, bloodType: value }))}
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
               >
                 <SelectTrigger className="bg-neutral-surface border-neutral-border">
                   <SelectValue placeholder="Chọn nhóm máu" />
@@ -286,7 +292,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                   setFormData((prev) => ({ ...prev, insuranceNumber: e.target.value }))
                 }
                 placeholder="Số thẻ BHYT (nếu có)"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -305,7 +311,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                 selectedIds={formData.allergyIds}
                 onSelect={addAllergy}
                 onRemove={removeAllergy}
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
               />
             )}
           </div>
@@ -313,16 +319,18 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-neutral-text font-medium">Bệnh nền</Label>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setShowAddForm(true)}
-                disabled={loadingProfile}
-                className="h-8 gap-1 bg-primary hover:bg-primary-strong"
-              >
-                <Plus className="w-4 h-4" />
-                Thêm bệnh
-              </Button>
+              {!isReadOnly && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowAddForm(true)}
+                  disabled={loadingProfile}
+                  className="h-8 gap-1 bg-primary hover:bg-primary-strong"
+                >
+                  <Plus className="w-4 h-4" />
+                  Thêm bệnh
+                </Button>
+              )}
             </div>
 
             {/* Add Form */}
@@ -393,15 +401,17 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                           {disease.description || '-'}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeDisease(index)}
-                            className="h-8 w-8 p-0 hover:bg-red-100"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </Button>
+                          {!isReadOnly && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeDisease(index)}
+                              className="h-8 w-8 p-0 hover:bg-red-100"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -423,16 +433,18 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
 
           <div className="flex justify-end gap-3 pt-4 border-t border-neutral-border">
             <Button variant="outline" onClick={close} disabled={saving} className="border-neutral-border hover:bg-neutral-muted transition-all">
-              Hủy
+              {isReadOnly ? 'Đóng' : 'Hủy'}
             </Button>
-            <Button
-              disabled={saving}
-              onClick={handleSubmit}
-              className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
-            >
-              <Save className="w-4 h-4" />
-              {saving ? 'Đang lưu...' : 'Lưu hồ sơ & Check-in'}
-            </Button>
+            {!isReadOnly && (
+              <Button
+                disabled={saving}
+                onClick={handleSubmit}
+                className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Đang lưu...' : 'Lưu hồ sơ & Check-in'}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
