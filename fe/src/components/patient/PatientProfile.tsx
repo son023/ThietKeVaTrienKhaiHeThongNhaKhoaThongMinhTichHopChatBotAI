@@ -7,7 +7,6 @@ import {
   Calendar,
   Lock,
   Bell,
-  Shield,
   CreditCard,
   FileText,
 } from "lucide-react";
@@ -54,6 +53,12 @@ export function PatientProfile() {
     smsNotification: true,
     emailNotification: true,
   });
+
+  // Password form state
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Load data on mount
   useEffect(() => {
@@ -157,8 +162,45 @@ export function PatientProfile() {
     }
   };
 
-  const handleChangePassword = () => {
-    toast.success("Yêu cầu đổi mật khẩu đã được gửi đến email của bạn");
+  const handleChangePassword = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập");
+      return;
+    }
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Vui lòng điền đầy đủ tất cả các trường");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Mật khẩu mới không khớp");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await authController.changePassword(user.id, currentPassword, newPassword);
+      
+      toast.success("Đổi mật khẩu thành công");
+      
+      // Clear password fields
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error("Error changing password:", error);
+      const errorMessage = error instanceof Error ? error.message : "Không thể đổi mật khẩu";
+      toast.error(errorMessage);
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const formatDate = (dateString: string | null | undefined): string => {
@@ -232,7 +274,7 @@ export function PatientProfile() {
               Bảo hiểm
             </TabsTrigger>
             <TabsTrigger value="security" className="font-medium">
-              Bảo mật
+              Đổi mật khẩu
             </TabsTrigger>
             <TabsTrigger value="notifications" className="font-medium">
               Thông báo
@@ -559,55 +601,94 @@ export function PatientProfile() {
 
           {/* Security Tab */}
           <TabsContent value="security">
-            <div className="space-y-5">
-              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-12 h-12 bg-[var(--accent-ghost)] rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Lock className="w-6 h-6 text-[var(--accent-light)]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
-                      Đổi mật khẩu
-                    </h3>
-                    <p className="text-sm text-[var(--text-regular)] opacity-70">
-                      Cập nhật mật khẩu định kỳ để bảo vệ tài khoản của bạn
-                    </p>
-                  </div>
+            <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-[var(--accent-ghost)] rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lock className="w-6 h-6 text-[var(--accent-light)]" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
+                    Đổi mật khẩu
+                  </h3>
+                  <p className="text-sm text-[var(--text-regular)] opacity-70">
+                    Cập nhật mật khẩu định kỳ để bảo vệ tài khoản của bạn
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="current-password"
+                    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2 block"
+                  >
+                    Mật khẩu hiện tại <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="current-password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="new-password"
+                    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2 block"
+                  >
+                    Mật khẩu mới <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="confirm-password"
+                    className="font-medium text-[var(--text-regular)] opacity-70 text-sm mb-2 block"
+                  >
+                    Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    onClick={() => {
+                      setCurrentPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
+                    variant="outline"
+                  >
+                    Hủy
+                  </Button>
                   <Button
                     onClick={handleChangePassword}
-                    className="bg-white border-2 border-[var(--accent-light)] text-[var(--accent-light)] hover:bg-[var(--accent-ghost)]"
+                    disabled={changingPassword}
+                    className="bg-gradient-to-r from-[var(--accent-light)] to-[var(--accent)]"
                   >
-                    Đổi mật khẩu
+                    {changingPassword ? "Đang xử lý..." : "Xác nhận đổi mật khẩu"}
                   </Button>
                 </div>
-              </Card>
-
-              <Card className="p-6 md:p-8 border-[var(--border-soft)] bg-[var(--surface-bg)] shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="typo-h4 text-[var(--text-strong)] mb-1">
-                      Xác thực hai yếu tố
-                    </h3>
-                    <p className="text-sm text-[var(--text-regular)] opacity-70 mb-4">
-                      Tăng cường bảo mật tài khoản với xác thực hai yếu tố qua
-                      SMS
-                    </p>
-                    <div className="flex items-center justify-between bg-[var(--surface-muted)] rounded-xl p-4">
-                      <div>
-                        <p className="font-medium text-[var(--text-strong)] text-sm mb-1">
-                          Trạng thái
-                        </p>
-                        <p className="text-sm text-green-600">Đã kích hoạt</p>
-                      </div>
-                      <Switch checked={true} />
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
           </TabsContent>
 
           {/* Notifications Tab */}

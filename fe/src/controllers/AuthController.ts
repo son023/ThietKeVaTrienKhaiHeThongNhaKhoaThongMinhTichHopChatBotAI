@@ -173,6 +173,46 @@ class AuthController {
       throw error instanceof Error ? error : new Error("Lỗi xác thực");
     }
   }
+
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    try {
+      const url = createApiUrl(
+        API_CONFIG.ENDPOINTS.USERS,
+        userId,
+        "change-password"
+      );
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: getApiHeaders(true),
+        body: JSON.stringify({
+          oldPassword,
+          newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Mật khẩu cũ không đúng");
+        }
+        if (response.status === 404) {
+          throw new Error("Không tìm thấy người dùng");
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Change password error:", error);
+      throw error instanceof Error
+        ? error
+        : new Error("Lỗi đổi mật khẩu không xác định");
+    }
+  }
 }
 
 export const authController = new AuthController();
