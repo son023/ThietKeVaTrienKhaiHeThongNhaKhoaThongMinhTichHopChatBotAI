@@ -35,10 +35,11 @@ export interface CheckinDialogProps {
     doctorName?: string;
     serviceName?: string;
   } | null;
+  isReadOnly?: boolean;
   onCheckedIn?: () => void;
 }
 
-export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: CheckinDialogProps) {
+export function CheckinDialog({ open, onOpenChange, appointment, isReadOnly = false, onCheckedIn }: CheckinDialogProps) {
   const [allergies, setAllergies] = useState<AllergyDTO[]>([]);
   const [loadingAllergies, setLoadingAllergies] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -169,9 +170,14 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-2xl bg-white border-neutral-border">
         <DialogHeader>
-          <DialogTitle className="text-neutral-text text-xl font-bold">Hồ sơ ban đầu & Check-in</DialogTitle>
+          <DialogTitle className="text-neutral-text text-xl font-bold">
+            {isReadOnly ? 'Xem hồ sơ bệnh nhân' : 'Hồ sơ ban đầu & Check-in'}
+          </DialogTitle>
           <DialogDescription className="text-neutral-text/70">
-            Nhập thông tin dị ứng, bệnh nền, tiền sử răng miệng trước khi check-in.
+            {isReadOnly 
+              ? 'Thông tin hồ sơ bệnh nhân (chế độ xem)'
+              : 'Nhập thông tin dị ứng, bệnh nền, tiền sử răng miệng trước khi check-in.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -190,7 +196,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                 value={formData.address}
                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                 placeholder="Địa chỉ liên hệ"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -202,7 +208,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                   setFormData((prev) => ({ ...prev, contactPhone: e.target.value }))
                 }
                 placeholder="Số điện thoại bệnh nhân"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -211,7 +217,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
               <Select
                 value={formData.bloodType}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, bloodType: value }))}
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
               >
                 <SelectTrigger className="bg-neutral-surface border-neutral-border">
                   <SelectValue placeholder="Chọn nhóm máu" />
@@ -243,7 +249,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                   setFormData((prev) => ({ ...prev, insuranceNumber: e.target.value }))
                 }
                 placeholder="Số thẻ BHYT (nếu có)"
-                disabled={loadingProfile}
+                disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
             </div>
@@ -264,11 +270,16 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
                   {allergies.map((allergy) => (
                     <label
                       key={allergy.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-surface/50 p-2 rounded transition-colors"
+                      className={`flex items-center gap-2 text-sm p-2 rounded transition-colors ${
+                        isReadOnly 
+                          ? 'cursor-default' 
+                          : 'cursor-pointer hover:bg-neutral-surface/50'
+                      }`}
                     >
                       <Checkbox
                         checked={formData.allergyIds.includes(allergy.id)}
-                        onCheckedChange={() => toggleAllergy(allergy.id)}
+                        onCheckedChange={() => !isReadOnly && toggleAllergy(allergy.id)}
+                        disabled={isReadOnly}
                         className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                       <span className="text-neutral-text">{allergy.name}</span>
@@ -288,30 +299,39 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
               }
               placeholder="Ví dụ: Tiểu đường type 2&#10;Tăng huyết áp"
               rows={3}
-              className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
+              disabled={isReadOnly}
+              className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
             />
           </div>
 
           {formError && <div className="text-sm text-red-600 font-medium p-3 bg-red-50 border border-red-200 rounded-lg">{formError}</div>}
 
-          {requireMedicalInfoMissing && (
+          {!isReadOnly && requireMedicalInfoMissing && (
             <div className="text-xs text-accent-orange font-medium p-3 bg-accent-orange/10 border border-accent-orange/30 rounded-lg">
               Bắt buộc nhập ít nhất 1 dị ứng hoặc 1 bệnh nền trước khi check-in.
             </div>
           )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-neutral-border">
-            <Button variant="outline" onClick={close} disabled={saving} className="border-neutral-border hover:bg-neutral-muted transition-all">
-              Hủy
-            </Button>
-            <Button
-              disabled={saving || requireMedicalInfoMissing}
-              onClick={handleSubmit}
-              className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
-            >
-              <Save className="w-4 h-4" />
-              {saving ? 'Đang lưu...' : 'Lưu hồ sơ & Check-in'}
-            </Button>
+            {isReadOnly ? (
+              <Button variant="outline" onClick={close} className="border-neutral-border hover:bg-neutral-muted transition-all">
+                Đóng
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={close} disabled={saving} className="border-neutral-border hover:bg-neutral-muted transition-all">
+                  Hủy
+                </Button>
+                <Button
+                  disabled={saving || requireMedicalInfoMissing}
+                  onClick={handleSubmit}
+                  className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
+                >
+                  <Save className="w-4 h-4" />
+                  {saving ? 'Đang lưu...' : 'Lưu hồ sơ & Check-in'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
