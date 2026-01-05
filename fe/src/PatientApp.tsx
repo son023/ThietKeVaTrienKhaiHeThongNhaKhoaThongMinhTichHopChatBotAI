@@ -27,6 +27,7 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState("home");
+  const [isChatOpen, setIsChatOpen] = useState(false); // ✅ Lifted state
 
   useEffect(() => {
     if (location.pathname.startsWith("/patient/dashboard")) {
@@ -73,11 +74,7 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
   // Header muốn "open chatbot" nhưng widget là self-contained (không nhận prop isOpen).
   // Giải pháp: trigger click vào FAB của widget khi đang đóng.
   const handleOpenChatbotFromHeader = () => {
-    const openBtn = document.querySelector(
-      'button[aria-label="Mở chat"]'
-    ) as HTMLButtonElement | null;
-
-    openBtn?.click();
+    setIsChatOpen(true);
   };
 
   const currentUser = authController.getCurrentUser();
@@ -95,13 +92,17 @@ export default function PatientApp({ onLogout, onGoHome }: PatientAppProps) {
         />
 
         {/* ✅ Self-contained Floating Chat Widget */}
-        <PatientChatbot onNavigate={handleNavigate} />
+        <PatientChatbot
+          onNavigate={handleNavigate}
+          isOpen={isChatOpen}
+          onToggle={() => setIsChatOpen(!isChatOpen)}
+        />
         {/* Main Content */}
         <main className="flex-1 w-full mt-24">
           <Routes>
             <Route
               path="/patient"
-              element={<PatientHome onNavigate={handleNavigate} />}
+              element={<PatientHome onNavigate={handleNavigate} onOpenChatbot={() => setIsChatOpen(true)} />}
             />
             <Route
               path="/patient/dashboard"
