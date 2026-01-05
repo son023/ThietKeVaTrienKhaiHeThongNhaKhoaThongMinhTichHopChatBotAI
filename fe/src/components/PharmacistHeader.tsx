@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Bell, Home, X, CheckCircle, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { connectWebSocket, subscribeToInvoicePaid, InvoicePaidNotification } from '../services/websocketService';
@@ -12,7 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import type { UserDTO } from '../models/User';
 
 interface PharmacistHeaderProps {
   onLogout: () => void;
@@ -24,6 +25,8 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const notificationRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const {
     notifications,
@@ -31,7 +34,35 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    refreshNotifications,
+    loading,
   } = useNotifications();
+
+  // Load user data and avatar from localStorage
+  useEffect(() => {
+    const currentUser = authController.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      // Load avatar preview from localStorage
+      const savedAvatar = localStorage.getItem(`avatar_preview_${currentUser.id}`);
+      if (savedAvatar) {
+        setAvatarPreview(savedAvatar);
+      }
+    }
+
+    // Listen for storage changes to update avatar when changed in AccountSettings
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('avatar_preview_')) {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser && e.key === `avatar_preview_${currentUser.id}`) {
+          setAvatarPreview(e.newValue);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
 
 
@@ -43,9 +74,61 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showNotifications]);
+
+  useEffect(() => {
+    if (showNotifications) {
+      refreshNotifications();
+    }
+  }, [showNotifications, refreshNotifications]);
+
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Vừa xong';
+    if (minutes < 60) return `${minutes} phút trước`;
+    if (hours < 24) return `${hours} giờ trước`;
+    if (days < 7) return `${days} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  const getInitials = (name: string | undefined) => {
+    if (!name || name.trim() === '') {
+      return 'DS';
+    }
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return parts[0][0] + parts[parts.length - 1][0];
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const handleNotificationClick = async (notification: { id: string; read: boolean }) => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    setShowNotifications(false);
+  };
+
+  // Use useMemo for displayName like ReceptionistHeader
+  const displayName = useMemo(() => user?.fullName, [user]);
+  const subtitle = useMemo(() => {
+    if (user?.primaryRole) return user.primaryRole;
+    return "Dược sĩ";
+  }, [user]);
+  const avatarFallback = useMemo(
+    () => (displayName ? getInitials(displayName) : "DS"),
+    [displayName]
+  );
 
 
 
@@ -77,7 +160,9 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
             >
               <Bell className="w-5 h-5 text-gray-600" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
               )}
             </button>
             {/* Notifications Dropdown */}
@@ -99,56 +184,39 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
                 </div>
                 {/* Notifications List */}
                 <div className="overflow-y-auto flex-1">
-                  {notifications.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <Bell className="w-12 h-12 text-[#d6edfa] mx-auto mb-3" />
-                      <p className="font-['Fz_Poppins:Regular',sans-serif] text-[14px] text-[#6c757d]">
-                        Chưa có thông báo
-                      </p>
+                  {loading ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Đang tải thông báo...
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Không có thông báo
                     </div>
                   ) : (
-                    <div className="divide-y divide-[#e5e7eb]">
-                      {notifications.map((notif) => (
-                        <div
-                          key={notif.id}
-                          className={`p-4 hover:bg-[#f8f9fa] transition-colors cursor-pointer ${!notif.read ? 'bg-[#ecf8ff]' : ''
-                            }`}
-                          onClick={() => markAsRead(notif.id)}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <CheckCircle
-                                  className={`w-4 h-4 flex-shrink-0 ${notif.read ? 'text-[#6c757d]' : 'text-[#28a745]'
-                                    }`}
-                                />
-                                <p className="font-['Fz_Poppins:SemiBold',sans-serif] text-[14px] text-[#01304e]">
-                                  {notif.title}
-                                </p>
-                                {!notif.read && (
-                                  <span className="w-2 h-2 bg-[#3fb5ff] rounded-full flex-shrink-0"></span>
-                                )}
-                              </div>
-                              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[13px] text-[#6c757d] mb-2">
-                                {notif.message}
-                              </p>
-                              <p className="font-['Fz_Poppins:Regular',sans-serif] text-[11px] text-[#999999]">
-                                {new Date(notif.timestamp).toLocaleString('vi-VN')}
-                              </p>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteNotification(notif.id);
-                              }}
-                              className="p-1 hover:bg-[#fff5f5] rounded transition-colors flex-shrink-0"
-                            >
-                              <X className="w-4 h-4 text-[#dc3545]" />
-                            </button>
+                    notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        onClick={() => handleNotificationClick(notif)}
+                        className={`p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer ${
+                          !notif.read ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm text-[#01304e] mb-1">
+                              {notif.title}
+                            </p>
+                            <p className="text-sm text-gray-700">{notif.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTime(notif.timestamp)}
+                            </p>
                           </div>
+                          {!notif.read && (
+                            <div className="w-2 h-2 bg-[#3FB5FF] rounded-full flex-shrink-0 mt-1" />
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -160,11 +228,16 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
                 <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-[#3FB5FF] text-white">DS</AvatarFallback>
+                  {(avatarPreview || user?.imageUrl) ? (
+                    <AvatarImage src={avatarPreview || user?.imageUrl} alt={displayName || 'Avatar'} />
+                  ) : null}
+                  <AvatarFallback className="bg-[#3FB5FF] text-white">
+                    {avatarFallback}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-left">
-                  <p className="text-sm text-[#01304e]">Dược sĩ</p>
-                  <p className="text-xs text-gray-500">Pharmacist</p>
+                  <p className="text-sm text-[#01304e]">{displayName || 'Dược sĩ'}</p>
+                  <p className="text-xs text-gray-500">{subtitle}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -182,7 +255,10 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={onLogout} className="cursor-pointer text-red-600">
+              <DropdownMenuItem
+                onClick={onLogout}
+                className="cursor-pointer text-red-600"
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Đăng xuất
               </DropdownMenuItem>

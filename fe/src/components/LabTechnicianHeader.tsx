@@ -1,7 +1,17 @@
 import { Bell, LogOut, Home, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { useNotifications } from '../contexts/NotificationContext';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { authController } from '../controllers/AuthController';
+import type { UserDTO } from '../models/User';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface LabTechnicianHeaderProps {
     onLogout: () => void;
@@ -19,6 +29,34 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
     } = useNotifications();
     const [showNotifications, setShowNotifications] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const [user, setUser] = useState<UserDTO | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+    // Load user data and avatar from localStorage
+    useEffect(() => {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser) {
+            setUser(currentUser);
+            // Load avatar preview from localStorage
+            const savedAvatar = localStorage.getItem(`avatar_preview_${currentUser.id}`);
+            if (savedAvatar) {
+                setAvatarPreview(savedAvatar);
+            }
+        }
+
+        // Listen for storage changes to update avatar when changed in AccountSettings
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key?.startsWith('avatar_preview_')) {
+                const currentUser = authController.getCurrentUser();
+                if (currentUser && e.key === `avatar_preview_${currentUser.id}`) {
+                    setAvatarPreview(e.newValue);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -54,12 +92,34 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
         return date.toLocaleDateString('vi-VN');
     };
 
+    const getInitials = (name: string | undefined) => {
+        if (!name || name.trim() === '') {
+            return 'LT';
+        }
+        const parts = name.trim().split(' ');
+        if (parts.length >= 2) {
+            return parts[0][0] + parts[parts.length - 1][0];
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
     const handleNotificationClick = async (notification: { id: string; read: boolean }) => {
         if (!notification.read) {
             await markAsRead(notification.id);
         }
         setShowNotifications(false);
     };
+
+    // Use useMemo for displayName like ReceptionistHeader
+    const displayName = useMemo(() => user?.fullName, [user]);
+    const subtitle = useMemo(() => {
+        if (user?.primaryRole) return user.primaryRole;
+        return "Kỹ thuật viên";
+    }, [user]);
+    const avatarFallback = useMemo(
+        () => (displayName ? getInitials(displayName) : "LT"),
+        [displayName]
+    );
 
     return (
         <header className="h-16 bg-neutral-surface border-b border-neutral-border flex items-center justify-between px-6 shadow-sm">
@@ -154,39 +214,47 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
                     )}
                 </div>
 
-                <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-lg border border-primary/20">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="font-semibold text-white text-sm">
-              LT
-            </span>
-                    </div>
-                    <div>
-                        <p className="font-medium text-neutral-heading text-sm">
-                            Nguyễn Thị Lan
-                        </p>
-                        <p className="font-normal text-neutral-text/60 text-xs">
-                            Kỹ thuật viên
-                        </p>
-                    </div>
-                </div>
-
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onGoHome}
-                    className="text-neutral-text/70 hover:text-primary hover:bg-primary/10 transition-all duration-200"
-                >
-                    <Home className="w-4 h-4" />
-                </Button>
-
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onLogout}
-                    className="text-neutral-text/70 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
-                >
-                    <LogOut className="w-4 h-4" />
-                </Button>
+                {/* User Menu */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
+                            <Avatar className="w-10 h-10">
+                                {(avatarPreview || user?.imageUrl) ? (
+                                    <AvatarImage src={avatarPreview || user?.imageUrl} alt={displayName || 'Avatar'} />
+                                ) : null}
+                                <AvatarFallback className="bg-[#3FB5FF] text-white">
+                                    {avatarFallback}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="text-left">
+                                <p className="text-sm text-[#01304e]">{displayName || 'Kỹ thuật viên'}</p>
+                                <p className="text-xs text-gray-500">{subtitle}</p>
+                            </div>
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem className="cursor-pointer">
+                            Tài khoản của tôi
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {onGoHome && (
+                            <>
+                                <DropdownMenuItem onClick={onGoHome} className="cursor-pointer">
+                                    <Home className="w-4 h-4 mr-2" />
+                                    Trang chủ
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                            </>
+                        )}
+                        <DropdownMenuItem
+                            onClick={onLogout}
+                            className="cursor-pointer text-red-600"
+                        >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Đăng xuất
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

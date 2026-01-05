@@ -3,23 +3,13 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Camera, Loader2, AlertCircle, User, Lock } from 'lucide-react';
+import { Camera, Loader2, User, Lock } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { authController } from '../../controllers/AuthController';
 import { userController, UpdateUserRequestDTO } from '../../controllers/UserController';
 import { UserDTO } from '../../models/User';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
 
 export function ReceptionistAccountSettings() {
   const [user, setUser] = useState<UserDTO | null>(null);
@@ -28,9 +18,6 @@ export function ReceptionistAccountSettings() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [canEditName, setCanEditName] = useState(false);
-  const [daysUntilEdit, setDaysUntilEdit] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -66,25 +53,6 @@ export function ReceptionistAccountSettings() {
           if (savedAvatar) {
             setAvatarPreview(savedAvatar);
           }
-          
-          // Check if user can edit name (7 days since last update)
-          // IMPORTANT: If fullName is empty/undefined, allow editing (first time setup)
-          if (!currentUser.fullName || currentUser.fullName.trim() === '') {
-            setCanEditName(true);
-            setDaysUntilEdit(0);
-          } else {
-            const lastNameUpdate = localStorage.getItem(`last_name_update_${currentUser.id}`);
-            if (lastNameUpdate) {
-              const lastUpdateDate = new Date(lastNameUpdate);
-              const daysSinceUpdate = Math.floor((Date.now() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24));
-              setDaysUntilEdit(Math.max(0, 7 - daysSinceUpdate));
-              setCanEditName(daysSinceUpdate >= 7);
-            } else {
-              // First time, can edit
-              setCanEditName(true);
-              setDaysUntilEdit(0);
-            }
-          }
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -98,19 +66,6 @@ export function ReceptionistAccountSettings() {
   }, []);
 
   const handleSaveProfile = async () => {
-    if (!user) return;
-
-    // Check if name can be edited
-    if (!canEditName) {
-      toast.error(`Bạn chỉ có thể chỉnh sửa tên sau ${daysUntilEdit} ngày nữa`);
-      return;
-    }
-
-    // Show confirmation dialog
-    setShowConfirmDialog(true);
-  };
-
-  const confirmSaveProfile = async () => {
     if (!user) return;
 
     try {
@@ -137,15 +92,7 @@ export function ReceptionistAccountSettings() {
       setUser(mergedUser);
       localStorage.setItem('currentUser', JSON.stringify(mergedUser));
       
-      // Save last update timestamp
-      localStorage.setItem(`last_name_update_${user.id}`, new Date().toISOString());
-      
-      // Reset edit permission
-      setCanEditName(false);
-      setDaysUntilEdit(7);
-      
       toast.success('Cập nhật thông tin thành công');
-      setShowConfirmDialog(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Không thể cập nhật thông tin');
@@ -405,24 +352,15 @@ export function ReceptionistAccountSettings() {
                   </div>
                 </div>
 
-                {/* Full Name with Edit Restriction */}
+                {/* Full Name */}
                 <div>
                   <Label htmlFor="fullName" className="text-neutral-text font-medium mb-2 block">Họ và tên</Label>
-                  {!canEditName && daysUntilEdit > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-md mb-2">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>Bạn chỉ có thể chỉnh sửa tên sau {daysUntilEdit} ngày nữa</span>
-                    </div>
-                  )}
                   <Input 
                     id="fullName" 
                     value={fullName}
                     onChange={handleFullNameChange}
-                    disabled={!canEditName}
                     placeholder={fullName ? "Chỉ chữ cái và khoảng trắng" : "Nhập họ và tên của bạn"}
-                    className={`rounded-xl border-neutral-border/30 ${
-                      canEditName ? 'focus:border-primary' : 'bg-neutral-muted cursor-not-allowed'
-                    }`}
+                    className="rounded-xl border-neutral-border/30 focus:border-primary"
                   />
                 </div>
 
@@ -542,26 +480,6 @@ export function ReceptionistAccountSettings() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Confirmation Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận chỉnh sửa</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn chỉnh sửa thông tin không? Sau khi chỉnh sửa, bạn sẽ phải đợi 7 ngày để có thể chỉnh sửa lại.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
-              Hủy
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSaveProfile}>
-              Xác nhận
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

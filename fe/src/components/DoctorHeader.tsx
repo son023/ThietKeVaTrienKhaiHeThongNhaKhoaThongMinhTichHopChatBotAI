@@ -1,16 +1,17 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { Bell, LogOut, User, Settings, Home, X } from "lucide-react";
+import { Bell, LogOut, Home, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import type { DoctorWithUser } from "../controllers/DoctorController";
 import { useNotifications } from "../contexts/NotificationContext";
+import { authController } from "../controllers/AuthController";
+import type { UserDTO } from "../models/User";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -35,6 +36,34 @@ export function DoctorHeader({
   } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Load user data and avatar from localStorage
+  useEffect(() => {
+    const currentUser = authController.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      // Load avatar preview from localStorage
+      const savedAvatar = localStorage.getItem(`avatar_preview_${currentUser.id}`);
+      if (savedAvatar) {
+        setAvatarPreview(savedAvatar);
+      }
+    }
+
+    // Listen for storage changes to update avatar when changed in AccountSettings
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('avatar_preview_')) {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser && e.key === `avatar_preview_${currentUser.id}`) {
+          setAvatarPreview(e.newValue);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,21 +99,32 @@ export function DoctorHeader({
     return date.toLocaleDateString('vi-VN');
   };
 
+  const getInitials = (name: string | undefined) => {
+    if (!name || name.trim() === '') {
+      return 'BS';
+    }
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return parts[0][0] + parts[parts.length - 1][0];
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const handleNotificationClick = async (notification: { id: string; read: boolean }) => {
     if (!notification.read) {
       await markAsRead(notification.id);
     }
     setShowNotifications(false);
   };
-  const displayName = useMemo(() => doctor?.user?.fullName, [doctor]);
+
+  // Use useMemo for displayName like ReceptionistHeader
+  const displayName = useMemo(() => user?.fullName, [user]);
   const subtitle = useMemo(() => {
-    const specialization = doctor?.specializationCodes?.[0];
-    if (specialization) return `Chuyen khoa: ${specialization}`;
-    if (doctor?.workingHospital) return doctor.workingHospital;
-    return "Ho so bac si";
-  }, [doctor]);
+    if (user?.primaryRole) return user.primaryRole;
+    return "Bác sĩ";
+  }, [user]);
   const avatarFallback = useMemo(
-    () => (displayName ? displayName.slice(0, 2).toUpperCase() : "DR"),
+    () => (displayName ? getInitials(displayName) : "BS"),
     [displayName]
   );
 
@@ -191,46 +231,44 @@ export function DoctorHeader({
             )}
           </div>
 
+          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-3 cursor-pointer hover:bg-[#d8f0ff]/30 rounded-[10px] px-3 py-2 transition-colors">
-                <div className="text-right">
-                  <p className="text-[#333333]">
-                    {isLoading ? "Dang tai..." : displayName}
-                  </p>
-                  <p className="text-sm text-[#333333]/60">
-                    {isLoading ? "" : subtitle}
-                  </p>
-                </div>
-                <Avatar>
-                  <AvatarImage src={doctor?.user?.imageUrl || undefined} />
-                  <AvatarFallback>{avatarFallback}</AvatarFallback>
+              <button className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 transition-colors">
+                <Avatar className="w-10 h-10">
+                  {(avatarPreview || user?.imageUrl) ? (
+                    <AvatarImage src={avatarPreview || user?.imageUrl} alt={displayName || 'Avatar'} />
+                  ) : null}
+                  <AvatarFallback className="bg-[#3FB5FF] text-white">
+                    {avatarFallback}
+                  </AvatarFallback>
                 </Avatar>
-              </div>
+                <div className="text-left">
+                  <p className="text-sm text-[#01304e]">{displayName || 'Bác sĩ'}</p>
+                  <p className="text-xs text-gray-500">{subtitle}</p>
+                </div>
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-56 rounded-[10px] border-[#e8e8e8]"
-              align="end"
-            >
-              <DropdownMenuLabel className="text-[#01304e]">
-                Tai khoan
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
-              <DropdownMenuItem className="cursor-pointer rounded-[8px]">
-                <User className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Ho so ca nhan</span>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem className="cursor-pointer">
+                Tài khoản của tôi
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer rounded-[8px]">
-                <Settings className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Cai dat</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
+              <DropdownMenuSeparator />
+              {onGoHome && (
+                <>
+                  <DropdownMenuItem onClick={onGoHome} className="cursor-pointer">
+                    <Home className="w-4 h-4 mr-2" />
+                    Trang chủ
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem
-                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-[8px]"
                 onClick={onLogout}
+                className="cursor-pointer text-red-600"
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Dang xuat</span>
+                <LogOut className="w-4 h-4 mr-2" />
+                Đăng xuất
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

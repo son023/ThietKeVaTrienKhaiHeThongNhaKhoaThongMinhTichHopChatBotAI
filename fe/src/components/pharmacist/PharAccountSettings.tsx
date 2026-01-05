@@ -7,12 +7,12 @@ import { Camera, Loader2, User, Lock } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { authController } from '../../controllers/AuthController';
 import { userController, UpdateUserRequestDTO } from '../../controllers/UserController';
-import { labTechnicianController, LabTechnicianRequest } from '../../controllers/LabTechnicianController';
+import { pharmacistController, PharmacistRequest } from '../../controllers/PharmacistController';
 import { UserDTO } from '../../models/User';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
-export function LabAccountSettings() {
+export function PharAccountSettings() {
   const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,16 +21,18 @@ export function LabAccountSettings() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lab technician-specific state
-  const [labTechnicianData, setLabTechnicianData] = useState<{
-    licenseNumber?: string;
+  // Pharmacist-specific state
+  const [pharmacistData, setPharmacistData] = useState<{
+    degree?: string;
+    certificate?: string;
   } | null>(null);
 
   // Form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
+  const [degree, setDegree] = useState('');
+  const [certificate, setCertificate] = useState('');
 
   // Password form state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -50,13 +52,14 @@ export function LabAccountSettings() {
           setPhone(currentUser.phone || '');
           setEmail(currentUser.email || '');
           
-          // Load lab technician data
+          // Load pharmacist data
           try {
-            const labTech = await labTechnicianController.getById(currentUser.id);
-            setLabTechnicianData(labTech);
-            setLicenseNumber(labTech.licenseNumber || '');
+            const pharmacist = await pharmacistController.getById(currentUser.id);
+            setPharmacistData(pharmacist);
+            setDegree(pharmacist.degree || '');
+            setCertificate(pharmacist.certificate || '');
           } catch (error) {
-            console.error('Error loading lab technician data:', error);
+            console.error('Error loading pharmacist data:', error);
           }
           
           // Load avatar preview from localStorage
@@ -99,17 +102,18 @@ export function LabAccountSettings() {
       setUser(mergedUser);
       localStorage.setItem('currentUser', JSON.stringify(mergedUser));
       
-      // Update lab technician data
-      if (labTechnicianData) {
-        const labTechUpdate: LabTechnicianRequest = {
+      // Update pharmacist data
+      if (pharmacistData) {
+        const pharmacistUpdate: PharmacistRequest = {
           userId: user.id,
-          licenseNumber: licenseNumber || undefined,
+          degree: degree || '',
+          certificate: certificate || '',
         };
         
         try {
-          await labTechnicianController.update(user.id, labTechUpdate);
+          await pharmacistController.update(user.id, pharmacistUpdate);
         } catch (error) {
-          console.error('Error updating lab technician data:', error);
+          console.error('Error updating pharmacist data:', error);
         }
       }
       
@@ -232,7 +236,7 @@ export function LabAccountSettings() {
 
   const getInitials = (name: string | undefined) => {
     if (!name || name.trim() === '') {
-      return 'LT';
+      return 'DS';
     }
     const parts = name.trim().split(' ');
     if (parts.length >= 2) {
@@ -244,7 +248,7 @@ export function LabAccountSettings() {
   // Use useMemo for displayName
   const displayName = useMemo(() => user?.fullName, [user]);
   const avatarFallback = useMemo(
-    () => (displayName ? getInitials(displayName) : 'LT'),
+    () => (displayName ? getInitials(displayName) : 'DS'),
     [displayName]
   );
 
@@ -361,14 +365,25 @@ export function LabAccountSettings() {
                   </div>
                 </div>
 
-                {/* Lab Technician-specific fields */}
+                {/* Pharmacist-specific fields */}
                 <div>
-                  <Label htmlFor="license" className="text-neutral-text font-medium mb-2 block">Số giấy phép hành nghề</Label>
+                  <Label htmlFor="degree" className="text-neutral-text font-medium mb-2 block">Bằng cấp</Label>
                   <Input 
-                    id="license" 
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    placeholder="Nhập số giấy phép"
+                    id="degree" 
+                    value={degree}
+                    onChange={(e) => setDegree(e.target.value)}
+                    placeholder="Nhập bằng cấp"
+                    className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="certificate" className="text-neutral-text font-medium mb-2 block">Chứng chỉ</Label>
+                  <Input 
+                    id="certificate" 
+                    value={certificate}
+                    onChange={(e) => setCertificate(e.target.value)}
+                    placeholder="Nhập chứng chỉ"
                     className="rounded-xl border-neutral-border/30 focus:border-primary" 
                   />
                 </div>
@@ -469,3 +484,4 @@ export function LabAccountSettings() {
     </div>
   );
 }
+
