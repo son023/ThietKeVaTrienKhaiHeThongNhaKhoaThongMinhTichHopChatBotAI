@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
 import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
+import { userController } from '../../controllers/UserController';
+import { patientController } from '../../controllers/PatientController';
+import { toast } from 'sonner';
 import CheckinDialog from './CheckinDialog';
 
 interface Doctor {
@@ -121,8 +124,59 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
   };
 
   const openCheckInDialog = async (apt: Appointment) => {
+    // Only allow check-in for waiting_checkin status
+    if (apt.status !== 'waiting_checkin') {
+      toast.error('Chỉ có thể check-in cho lịch hẹn đang chờ check-in');
+      return;
+    }
+
     setSelectedAppointment(apt);
     setCheckInDialogOpen(true);
+  };
+
+  // Helper function to assign appointments to rows (prevent overlap)
+  const assignAppointmentsToRows = (appointments: Appointment[]) => {
+    // Sort by start time
+    const sorted = [...appointments].sort((a, b) => {
+      const aTime = parseInt(a.time.replace(':', ''));
+      const bTime = parseInt(b.time.replace(':', ''));
+      return aTime - bTime;
+    });
+
+    const rows: Array<{ appointments: Appointment[]; endTime: number }> = [];
+    const appointmentRowMap = new Map<string, number>();
+
+    sorted.forEach((apt) => {
+      const [hours, minutes] = apt.time.split(':').map(Number);
+      const startTime = hours * 60 + minutes; // Convert to minutes
+      const endTime = startTime + apt.duration;
+
+      // Find first available row
+      let assignedRow = -1;
+      for (let i = 0; i < rows.length; i++) {
+        if (startTime >= rows[i].endTime) {
+          // No overlap, can use this row
+          assignedRow = i;
+          break;
+        }
+      }
+
+      // If no row available, create new row
+      if (assignedRow === -1) {
+        assignedRow = rows.length;
+        rows.push({ appointments: [], endTime: 0 });
+      }
+
+      // Assign appointment to row
+      rows[assignedRow].appointments.push(apt);
+      rows[assignedRow].endTime = endTime;
+      appointmentRowMap.set(apt.id, assignedRow);
+    });
+
+    return {
+      rowCount: rows.length,
+      getRow: (aptId: string) => appointmentRowMap.get(aptId) || 0,
+    };
   };
 
   const mapStatus = (status: string): Appointment['status'] => {
@@ -148,7 +202,7 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
     try {
       setLoadingDoctors(true);
       const doctorsData = await doctorController.getWithUserDetails();
-      
+
       const mappedDoctors: Doctor[] = doctorsData.map((doc: DoctorWithUser) => ({
         id: doc.userId,
         name: doc.user?.fullName ? `BS. ${doc.user.fullName}` : `BS. ${doc.userId.substring(0, 8)}`,
@@ -174,23 +228,39 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
     try {
       setLoadingAppointments(true);
       setAppointmentsError(null);
-      
+
       const data = await appointmentController.getByDate(currentDate);
-      
-      const mapped: Appointment[] = data.map((apt: AppointmentDTO) => {
-        const start = new Date(apt.appointmentStartTime);
-        return {
-          id: apt.id,
-          patientId: apt.patientId,
-          patientName: `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`,
-          time: start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-          duration: 60,
-          doctorId: apt.doctorId,
-          status: mapStatus(apt.status),
-          service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
-        };
-      });
-      
+
+      // ✅ Transform with real patient data (async)
+      const mapped: Appointment[] = await Promise.all(
+        data.map(async (apt: AppointmentDTO) => {
+          const start = new Date(apt.appointmentStartTime);
+
+          // ✅ Fetch real patient name
+          let patientName = `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`;
+
+          try {
+            const patientData = await patientController.getWithUserById(apt.patientId);
+            if (patientData.user?.fullName) {
+              patientName = patientData.user.fullName;
+            }
+          } catch (err) {
+            console.warn(`Cannot fetch patient data for ${apt.patientId}:`, err);
+          }
+
+          return {
+            id: apt.id,
+            patientId: apt.patientId,
+            patientName,
+            time: start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            duration: 60,
+            doctorId: apt.doctorId,
+            status: mapStatus(apt.status),
+            service: apt.medicalServices?.[0]?.serviceName || 'Khám tổng quát',
+          };
+        })
+      );
+
       setAppointments(mapped);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Không thể tải lịch hẹn';
@@ -258,7 +328,7 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="text-[#333333] min-w-[200px] text-center">
-              {viewMode === 'day' 
+              {viewMode === 'day'
                 ? currentDate.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })
                 : `${weekDates[0].toLocaleDateString('vi-VN', { day: 'numeric', month: 'short' })} - ${weekDates[6].toLocaleDateString('vi-VN', { day: 'numeric', month: 'short', year: 'numeric' })}`
               }
@@ -337,7 +407,12 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                 )}
                 {filteredDoctors.map((doctor) => {
                   const doctorAppointments = filteredAppointments.filter(a => a.doctorId === doctor.id);
-                  
+
+                  // ✅ Assign appointments to rows
+                  const { rowCount, getRow } = assignAppointmentsToRows(doctorAppointments);
+                  const rowHeight = 80; // Base height per row
+                  const totalHeight = rowCount * rowHeight;
+
                   return (
                     <div key={doctor.id} className="grid grid-cols-[200px_1fr] border-b border-[#e8e8e8]">
                       <div className="p-4 bg-white border-r border-[#e8e8e8]">
@@ -346,25 +421,34 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                           {doctorAppointments.length} lịch hẹn
                         </p>
                       </div>
-                      <div className="grid grid-cols-10 bg-white relative min-h-[80px]">
+                      <div
+                        className="grid grid-cols-10 bg-white relative"
+                        style={{ minHeight: `${totalHeight}px` }} // ✅ Dynamic height
+                      >
                         {timeSlots.map((time, index) => (
                           <div key={time} className="border-r border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors" />
                         ))}
-                        
+
                         {/* Appointments */}
                         {doctorAppointments.map((apt) => {
                           const startHour = parseInt(apt.time.split(':')[0]);
                           const startMin = parseInt(apt.time.split(':')[1]);
                           const startCol = (startHour - 8) + (startMin / 60);
                           const widthCols = apt.duration / 60;
-                          
+
+                          const row = getRow(apt.id);  // ✅ Get assigned row
+                          const top = row * rowHeight + 4;  // ✅ Calculate Y position
+                          const height = rowHeight - 8;
+
                           return (
                             <div
                               key={apt.id}
-                              className={`absolute top-2 bottom-2 p-2 rounded-[8px] border cursor-pointer hover:shadow-lg transition-all ${getStatusColor(apt.status)}`}
+                              className={`absolute p-2 rounded-[8px] border cursor-pointer hover:shadow-lg transition-all ${getStatusColor(apt.status)}`}
                               style={{
                                 left: `${startCol * 10}%`,
                                 width: `${widthCols * 10}%`,
+                                top: `${top}px`,      // ✅ Row-based position
+                                height: `${height}px`, // ✅ Fixed height
                               }}
                               onClick={() => openCheckInDialog(apt)}
                             >
@@ -418,14 +502,14 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
                     </div>
                     {weekDates.map((date, dayIndex) => {
                       const dayAppointments = filteredAppointments.filter(
-                        a => a.doctorId === doctor.id && 
-                        new Date(currentDate).toDateString() === date.toDateString()
+                        a => a.doctorId === doctor.id &&
+                          new Date(currentDate).toDateString() === date.toDateString()
                       );
                       const isToday = date.toDateString() === new Date().toDateString();
-                      
+
                       return (
-                        <div 
-                          key={dayIndex} 
+                        <div
+                          key={dayIndex}
                           className={`p-2 border-r border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors ${isToday ? 'bg-[#d8f0ff]/10' : 'bg-white'}`}
                         >
                           <div className="space-y-1">
@@ -494,11 +578,11 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
         appointment={
           selectedAppointment
             ? {
-                id: selectedAppointment.id,
-                patientId: selectedAppointment.patientId,
-                patientName: selectedAppointment.patientName,
-                serviceName: selectedAppointment.service,
-              }
+              id: selectedAppointment.id,
+              patientId: selectedAppointment.patientId,
+              patientName: selectedAppointment.patientName,
+              serviceName: selectedAppointment.service,
+            }
             : null
         }
         onCheckedIn={() => {

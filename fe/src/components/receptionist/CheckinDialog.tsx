@@ -8,11 +8,8 @@ import {
 } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { ScrollArea } from '../ui/scroll-area';
-import { Checkbox } from '../ui/checkbox';
 import { Button } from '../ui/button';
-import { Save } from 'lucide-react';
+import { Save, Plus, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { medicalServiceController, AllergyDTO } from '../../controllers/MedicalServiceController';
 import { patientController, PatientProfileRequest } from '../../controllers/PatientController';
@@ -24,6 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
+import { AllergySearchInput } from './AllergySearchInput';
 
 export interface CheckinDialogProps {
   open: boolean;
@@ -50,14 +56,12 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
     bloodType: '',
     insuranceNumber: '',
     allergyIds: [] as string[],
-    underlyingDiseases: '',
+    underlyingDiseases: [] as Array<{ name: string; description: string; }>,
   });
 
-  const requireMedicalInfoMissing = useMemo(() => {
-    const hasAllergy = formData.allergyIds.length > 0;
-    const hasUnderlying = formData.underlyingDiseases.trim().length > 0;
-    return !(hasAllergy || hasUnderlying);
-  }, [formData.allergyIds.length, formData.underlyingDiseases]);
+  // State for adding new disease
+  const [newDisease, setNewDisease] = useState({ name: '', description: '' });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const resetForm = () => {
     setFormError(null);
@@ -67,8 +71,10 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
       bloodType: '',
       insuranceNumber: '',
       allergyIds: [],
-      underlyingDiseases: '',
+      underlyingDiseases: [],
     });
+    setNewDisease({ name: '', description: '' });
+    setShowAddForm(false);
   };
 
   const close = () => {
@@ -93,12 +99,26 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
     try {
       setLoadingProfile(true);
       const profile = await patientController.getById(appointment.patientId);
+
+      // ✅ Extract allergy IDs from patient profile
+      const existingAllergyIds = profile.patientAllergies?.map(
+        (pa) => pa.allergyId
+      ).filter(Boolean) || [];
+
+      // ✅ Transform underlying diseases to our format
+      const existingDiseases = profile.underlyingDiseases?.map((disease) => ({
+        name: disease.name || '',
+        description: disease.note || '', // Backend uses 'note' field
+      })).filter(d => d.name) || [];
+
       setFormData((prev) => ({
         ...prev,
         address: profile.address || '',
         contactPhone: profile.contactPhone || '',
         bloodType: profile.bloodType || '',
         insuranceNumber: profile.insuranceNumber || '',
+        allergyIds: existingAllergyIds,        // ✅ Auto-fill allergies
+        underlyingDiseases: existingDiseases,  // ✅ Auto-fill diseases
       }));
     } catch (error) {
       // keep defaults if profile not found
@@ -116,21 +136,45 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
     }
   }, [open, appointment?.patientId]);
 
-  const toggleAllergy = (id: string) => {
+  const addAllergy = (allergy: AllergyDTO) => {
     setFormData((prev) => ({
       ...prev,
-      allergyIds: prev.allergyIds.includes(id)
-        ? prev.allergyIds.filter((a) => a !== id)
-        : [...prev.allergyIds, id],
+      allergyIds: [...prev.allergyIds, allergy.id],
+    }));
+  };
+
+  const removeAllergy = (allergyId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      allergyIds: prev.allergyIds.filter((id) => id !== allergyId),
+    }));
+  };
+
+  const addDisease = () => {
+    if (!newDisease.name.trim()) {
+      toast.error('Vui lòng nhập tên bệnh');
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      underlyingDiseases: [...prev.underlyingDiseases, { ...newDisease }],
+    }));
+
+    setNewDisease({ name: '', description: '' });
+    setShowAddForm(false);
+    toast.success('Đã thêm bệnh nền');
+  };
+
+  const removeDisease = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      underlyingDiseases: prev.underlyingDiseases.filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = async () => {
     if (!appointment?.id || !appointment.patientId) return;
-    if (requireMedicalInfoMissing) {
-      setFormError('Vui lòng nhập ít nhất 1 dị ứng hoặc 1 bệnh nền trước khi check-in.');
-      return;
-    }
 
     setSaving(true);
     setFormError(null);
@@ -141,11 +185,10 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
       bloodType: formData.bloodType || undefined,
       insuranceNumber: formData.insuranceNumber || undefined,
       patientAllergies: formData.allergyIds.map((id) => ({ allergyId: id })),
-      underlyingDiseases: formData.underlyingDiseases
-        .split('\n')
-        .map((v) => v.trim())
-        .filter(Boolean)
-        .map((name) => ({ name })),
+      underlyingDiseases: formData.underlyingDiseases.map((disease) => ({
+        name: disease.name,
+        note: disease.description || undefined,
+      })),
     };
 
     try {
@@ -250,62 +293,140 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
           </div>
 
           <div className="space-y-2">
-            <Label className="text-neutral-text font-medium">Dị ứng (chọn trong danh mục)</Label>
-            <ScrollArea className="h-32 border border-neutral-border rounded-lg p-3 bg-neutral-muted/20">
-              {loadingAllergies ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                  <p className="text-sm text-neutral-text/70 font-medium">Đang tải danh mục dị ứng...</p>
-                </div>
-              ) : allergies.length === 0 ? (
-                <p className="text-sm text-neutral-text/60 text-center py-4">Chưa có danh mục dị ứng</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {allergies.map((allergy) => (
-                    <label
-                      key={allergy.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-surface/50 p-2 rounded transition-colors"
-                    >
-                      <Checkbox
-                        checked={formData.allergyIds.includes(allergy.id)}
-                        onCheckedChange={() => toggleAllergy(allergy.id)}
-                        className="border-neutral-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      />
-                      <span className="text-neutral-text">{allergy.name}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
+            <Label className="text-neutral-text font-medium">Dị ứng </Label>
+            {loadingAllergies ? (
+              <div className="flex items-center gap-2 p-4 bg-neutral-muted/20 rounded-lg">
+                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                <p className="text-sm text-neutral-text/70 font-medium">Đang tải danh mục dị ứng...</p>
+              </div>
+            ) : (
+              <AllergySearchInput
+                allergies={allergies}
+                selectedIds={formData.allergyIds}
+                onSelect={addAllergy}
+                onRemove={removeAllergy}
+                disabled={loadingProfile}
+              />
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-neutral-text font-medium">Bệnh nền (mỗi dòng một bệnh)</Label>
-            <Textarea
-              value={formData.underlyingDiseases}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, underlyingDiseases: e.target.value }))
-              }
-              placeholder="Ví dụ: Tiểu đường type 2&#10;Tăng huyết áp"
-              rows={3}
-              className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
-            />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-neutral-text font-medium">Bệnh nền</Label>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setShowAddForm(true)}
+                disabled={loadingProfile}
+                className="h-8 gap-1 bg-primary hover:bg-primary-strong"
+              >
+                <Plus className="w-4 h-4" />
+                Thêm bệnh
+              </Button>
+            </div>
+
+            {/* Add Form */}
+            {showAddForm && (
+              <div className="p-4 bg-neutral-muted/20 rounded-lg border border-neutral-border space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Tên bệnh <span className="text-red-600">*</span></Label>
+                    <Input
+                      value={newDisease.name}
+                      onChange={(e) => setNewDisease(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="VD: Tiểu đường type 2"
+                      className="border-neutral-border focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Mô tả</Label>
+                    <Input
+                      value={newDisease.description}
+                      onChange={(e) => setNewDisease(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="VD: Đang dùng Metformin 500mg"
+                      className="border-neutral-border focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setNewDisease({ name: '', description: '' });
+                    }}
+                    className="border-neutral-border"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={addDisease}
+                    className="bg-primary hover:bg-primary-strong"
+                  >
+                    <Check className="w-4 h-4 mr-1" />
+                    Thêm
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Disease Table */}
+            {formData.underlyingDiseases.length > 0 && (
+              <div className="border border-neutral-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-neutral-muted/30">
+                      <TableHead className="w-[40%] font-semibold">Tên bệnh</TableHead>
+                      <TableHead className="w-[50%] font-semibold">Mô tả</TableHead>
+                      <TableHead className="w-[10%] text-center font-semibold">Xóa</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {formData.underlyingDiseases.map((disease, index) => (
+                      <TableRow key={index} className="hover:bg-neutral-muted/10">
+                        <TableCell className="font-medium text-neutral-text">{disease.name}</TableCell>
+                        <TableCell className="text-sm text-neutral-text/70">
+                          {disease.description || '-'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDisease(index)}
+                            className="h-8 w-8 p-0 hover:bg-red-100"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {formData.underlyingDiseases.length === 0 && !showAddForm && (
+              <div className="text-center py-8 bg-neutral-muted/20 rounded-lg border border-dashed border-neutral-border">
+                <p className="text-sm text-neutral-text/60">
+                  Chưa có bệnh nền. Nhấn "Thêm bệnh" để bắt đầu.
+                </p>
+              </div>
+            )}
           </div>
 
           {formError && <div className="text-sm text-red-600 font-medium p-3 bg-red-50 border border-red-200 rounded-lg">{formError}</div>}
-
-          {requireMedicalInfoMissing && (
-            <div className="text-xs text-accent-orange font-medium p-3 bg-accent-orange/10 border border-accent-orange/30 rounded-lg">
-              Bắt buộc nhập ít nhất 1 dị ứng hoặc 1 bệnh nền trước khi check-in.
-            </div>
-          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-neutral-border">
             <Button variant="outline" onClick={close} disabled={saving} className="border-neutral-border hover:bg-neutral-muted transition-all">
               Hủy
             </Button>
             <Button
-              disabled={saving || requireMedicalInfoMissing}
+              disabled={saving}
               onClick={handleSubmit}
               className="bg-primary hover:bg-primary-strong flex items-center gap-2 shadow-sm transition-all duration-200"
             >
