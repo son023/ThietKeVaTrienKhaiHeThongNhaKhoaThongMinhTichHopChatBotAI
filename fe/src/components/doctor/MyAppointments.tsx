@@ -43,6 +43,10 @@ const statusMap: Record<string, { label: string; style: string }> = {
     label: "Đã hoàn thành",
     style: "bg-gray-100 text-gray-800 border-gray-300",
   },
+  COMPLETED_INVOICE: {
+    label: "Đã hoàn thành - Có hóa đơn",
+    style: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  },
   CANCELLED: {
     label: "Đã hủy",
     style: "bg-red-100 text-red-800 border-red-300",
@@ -177,6 +181,7 @@ export function MyAppointments({
   const isViewOnly = (status: string) => {
     return (
       status === "COMPLETED" ||
+      status === "COMPLETED_INVOICE" ||
       status === "CANCELLED" ||
       status === "FAILED"
     );
