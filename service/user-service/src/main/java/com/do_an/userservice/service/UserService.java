@@ -21,6 +21,7 @@ import com.do_an.userservice.repository.UserRepository;
 import com.do_an.userservice.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,7 @@ public class UserService {
     private final DoctorServiceClient doctorServiceClient;
     private final LabTechnicianServiceClient labTechnicianServiceClient;
     private final PharmacistServiceClient pharmacistServiceClient;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserDTO createUser(CreateUserRequestDTO request) {
@@ -56,7 +58,7 @@ public class UserService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullname(request.getFullName());
         user.setPhone(request.getPhone());
         user.setImageUrl(request.getImageUrl());
@@ -315,7 +317,7 @@ public class UserService {
             throw new IllegalArgumentException("Tài khoản đã bị vô hiệu hóa");
         }
 
-        if (!password.equals(user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("Mật khẩu không đúng");
         }
         
@@ -358,5 +360,26 @@ public class UserService {
         }
 
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, String oldPassword, String newPassword) {
+        log.info("Đổi mật khẩu cho user: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng: " + userId));
+        
+        if (!user.isActive()) {
+            throw new IllegalArgumentException("Tài khoản đã bị vô hiệu hóa");
+        }
+        
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu cũ không đúng");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        log.info("Đổi mật khẩu thành công cho user: {}", userId);
     }
 }

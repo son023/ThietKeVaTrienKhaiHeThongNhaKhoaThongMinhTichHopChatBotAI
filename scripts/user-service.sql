@@ -48,42 +48,42 @@ INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, 
 
 -- RECEPTIONIST (3 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000301', '12345678', 'thu.recep@clinic.com', '0900000301', 'Đặng Minh Thu', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07'),
-('00000000-0000-0000-0000-000000000302', '12345678', 'linh.recep@clinic.com', '0900000302', 'Trần Bảo Linh', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07'),
-('00000000-0000-0000-0000-000000000303', '12345678', 'hoa.recep@clinic.com', '0900000303', 'Nguyễn Thu Hoa', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07');
+('00000000-0000-0000-0000-000000000301', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'thu.recep@clinic.com', '0900000301', 'Đặng Minh Thu', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07'),
+('00000000-0000-0000-0000-000000000302', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'linh.recep@clinic.com', '0900000302', 'Trần Bảo Linh', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07'),
+('00000000-0000-0000-0000-000000000303', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'hoa.recep@clinic.com', '0900000303', 'Nguyễn Thu Hoa', true, '2025-01-05 08:00:00+07', '2025-01-05 08:00:00+07');
 
 -- LAB_TECHNICIAN (3 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000501', '12345678', 'vy.lab@clinic.com', '0900000501', 'Phan Bảo Vy', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07'),
-('00000000-0000-0000-0000-000000000502', '12345678', 'nam.lab@clinic.com', '0900000502', 'Lê Hoàng Nam', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07'),
-('00000000-0000-0000-0000-000000000503', '12345678', 'tuan.lab@clinic.com', '0900000503', 'Võ Anh Tuấn', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07');
+('00000000-0000-0000-0000-000000000501', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'vy.lab@clinic.com', '0900000501', 'Phan Bảo Vy', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07'),
+('00000000-0000-0000-0000-000000000502', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'nam.lab@clinic.com', '0900000502', 'Lê Hoàng Nam', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07'),
+('00000000-0000-0000-0000-000000000503', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'tuan.lab@clinic.com', '0900000503', 'Võ Anh Tuấn', true, '2025-01-10 08:00:00+07', '2025-01-10 08:00:00+07');
 
 -- PHARMACIST (3 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000401', '12345678', 'khoa.pharm@clinic.com', '0900000401', 'Vũ Quốc Khoa', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07'),
-('00000000-0000-0000-0000-000000000402', '12345678', 'hien.pharm@clinic.com', '0900000402', 'Đỗ Thị Hiền', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07'),
-('00000000-0000-0000-0000-000000000403', '12345678', 'long.pharm@clinic.com', '0900000403', 'Phạm Thành Long', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07');
+('00000000-0000-0000-0000-000000000401', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'khoa.pharm@clinic.com', '0900000401', 'Vũ Quốc Khoa', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07'),
+('00000000-0000-0000-0000-000000000402', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'hien.pharm@clinic.com', '0900000402', 'Đỗ Thị Hiền', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07'),
+('00000000-0000-0000-0000-000000000403', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'long.pharm@clinic.com', '0900000403', 'Phạm Thành Long', true, '2025-01-08 08:00:00+07', '2025-01-08 08:00:00+07');
 
 -- DOCTOR (5 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000201', '12345678', 'dr.hung.pham@clinic.com', '0900000201', 'Bác sĩ Phạm Quang Hùng', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
-('00000000-0000-0000-0000-000000000202', '12345678', 'dr.ha.nguyen@clinic.com', '0900000202', 'Bác sĩ Nguyễn Thu Hà', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
-('00000000-0000-0000-0000-000000000203', '12345678', 'dr.minh.tran@clinic.com', '0900000203', 'Bác sĩ Trần Văn Minh', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
-('00000000-0000-0000-0000-000000000204', '12345678', 'dr.linh.le@clinic.com', '0900000204', 'Bác sĩ Lê Thị Linh', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
-('00000000-0000-0000-0000-000000000205', '12345678', 'dr.khang.vo@clinic.com', '0900000205', 'Bác sĩ Võ Đức Khang', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07');
+('00000000-0000-0000-0000-000000000201', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'dr.hung.pham@clinic.com', '0900000201', 'Bác sĩ Phạm Quang Hùng', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
+('00000000-0000-0000-0000-000000000202', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'dr.ha.nguyen@clinic.com', '0900000202', 'Bác sĩ Nguyễn Thu Hà', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
+('00000000-0000-0000-0000-000000000203', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'dr.minh.tran@clinic.com', '0900000203', 'Bác sĩ Trần Văn Minh', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
+('00000000-0000-0000-0000-000000000204', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'dr.linh.le@clinic.com', '0900000204', 'Bác sĩ Lê Thị Linh', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07'),
+('00000000-0000-0000-0000-000000000205', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'dr.khang.vo@clinic.com', '0900000205', 'Bác sĩ Võ Đức Khang', true, '2024-12-01 08:00:00+07', '2024-12-01 08:00:00+07');
 
 -- PATIENT (10 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000101', '12345678', 'mai.pham01@gmail.com', '0900000101', 'Phạm Thị Ngọc Mai', true, '2025-11-20 08:10:00+07', '2025-12-10 09:15:00+07'),
-('00000000-0000-0000-0000-000000000102', '12345678', 'tuan.le02@gmail.com', '0900000102', 'Lê Anh Tuấn', true, '2025-11-21 10:00:00+07', '2025-12-11 14:00:00+07'),
-('00000000-0000-0000-0000-000000000103', '12345678', 'linh.tran03@gmail.com', '0900000103', 'Trần Thị Linh', true, '2025-11-22 09:30:00+07', '2025-12-12 11:20:00+07'),
-('00000000-0000-0000-0000-000000000104', '12345678', 'hieu.nguyen04@gmail.com', '0900000104', 'Nguyễn Trung Hiếu', true, '2025-11-23 08:20:00+07', '2025-12-13 10:30:00+07'),
-('00000000-0000-0000-0000-000000000105', '12345678', 'thao.pham05@gmail.com', '0900000105', 'Phạm Thu Thảo', true, '2025-11-24 09:00:00+07', '2025-12-14 11:00:00+07'),
-('00000000-0000-0000-0000-000000000106', '12345678', 'duc.tran06@gmail.com', '0900000106', 'Trần Minh Đức', true, '2025-11-25 10:15:00+07', '2025-12-15 12:20:00+07'),
-('00000000-0000-0000-0000-000000000107', '12345678', 'hoa.le07@gmail.com', '0900000107', 'Lê Thu Hoa', true, '2025-11-26 11:30:00+07', '2025-12-16 13:40:00+07'),
-('00000000-0000-0000-0000-000000000108', '12345678', 'khanh.vo08@gmail.com', '0900000108', 'Võ Minh Khánh', true, '2025-11-27 12:45:00+07', '2025-12-17 14:50:00+07'),
-('00000000-0000-0000-0000-000000000109', '12345678', 'my.do09@gmail.com', '0900000109', 'Đỗ Thanh Mỹ', true, '2025-11-28 13:00:00+07', '2025-12-18 15:10:00+07'),
-('00000000-0000-0000-0000-000000000110', '12345678', 'quan.hoang10@gmail.com', '0900000110', 'Hoàng Minh Quân', true, '2025-11-29 14:20:00+07', '2025-12-19 16:30:00+07');
+('00000000-0000-0000-0000-000000000101', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'mai.pham01@gmail.com', '0900000101', 'Phạm Thị Ngọc Mai', true, '2025-11-20 08:10:00+07', '2025-12-10 09:15:00+07'),
+('00000000-0000-0000-0000-000000000102', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'tuan.le02@gmail.com', '0900000102', 'Lê Anh Tuấn', true, '2025-11-21 10:00:00+07', '2025-12-11 14:00:00+07'),
+('00000000-0000-0000-0000-000000000103', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'linh.tran03@gmail.com', '0900000103', 'Trần Thị Linh', true, '2025-11-22 09:30:00+07', '2025-12-12 11:20:00+07'),
+('00000000-0000-0000-0000-000000000104', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'hieu.nguyen04@gmail.com', '0900000104', 'Nguyễn Trung Hiếu', true, '2025-11-23 08:20:00+07', '2025-12-13 10:30:00+07'),
+('00000000-0000-0000-0000-000000000105', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'thao.pham05@gmail.com', '0900000105', 'Phạm Thu Thảo', true, '2025-11-24 09:00:00+07', '2025-12-14 11:00:00+07'),
+('00000000-0000-0000-0000-000000000106', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'duc.tran06@gmail.com', '0900000106', 'Trần Minh Đức', true, '2025-11-25 10:15:00+07', '2025-12-15 12:20:00+07'),
+('00000000-0000-0000-0000-000000000107', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'hoa.le07@gmail.com', '0900000107', 'Lê Thu Hoa', true, '2025-11-26 11:30:00+07', '2025-12-16 13:40:00+07'),
+('00000000-0000-0000-0000-000000000108', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'khanh.vo08@gmail.com', '0900000108', 'Võ Minh Khánh', true, '2025-11-27 12:45:00+07', '2025-12-17 14:50:00+07'),
+('00000000-0000-0000-0000-000000000109', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'my.do09@gmail.com', '0900000109', 'Đỗ Thanh Mỹ', true, '2025-11-28 13:00:00+07', '2025-12-18 15:10:00+07'),
+('00000000-0000-0000-0000-000000000110', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'quan.hoang10@gmail.com', '0900000110', 'Hoàng Minh Quân', true, '2025-11-29 14:20:00+07', '2025-12-19 16:30:00+07');
 
 -- =========================================================
 -- 3) USER_ROLE

@@ -1,4 +1,5 @@
-import { User, Lock, FileSignature, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Lock, FileSignature, Bell, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -6,8 +7,64 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Switch } from '../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { toast } from 'sonner';
+import { authController } from '../../controllers/AuthController';
+import { UserDTO } from '../../models';
 
 export function AccountSettings() {
+    const [user, setUser] = useState<UserDTO | null>(null);
+    const [changingPassword, setChangingPassword] = useState(false);
+
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    useEffect(() => {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, []);
+
+    const handleChangePassword = async () => {
+        if (!user) {
+            toast.error('Vui lòng đăng nhập');
+            return;
+        }
+
+        // Validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toast.error('Vui lòng điền đầy đủ tất cả các trường');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            toast.error('Mật khẩu mới không khớp');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+            return;
+        }
+
+        try {
+            setChangingPassword(true);
+            await authController.changePassword(user.id, currentPassword, newPassword);
+            
+            toast.success('Đổi mật khẩu thành công');
+
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error) {
+            console.error('Error changing password:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Không thể đổi mật khẩu';
+            toast.error(errorMessage);
+        } finally {
+            setChangingPassword(false);
+        }
+    };
     return (
         <div className="p-6 bg-[var(--page-bg)] min-h-screen">
             <div className="mb-8">
@@ -97,22 +154,60 @@ export function AccountSettings() {
                         <CardContent>
                             <div className="space-y-5 max-w-2xl">
                                 <div>
-                                    <Label htmlFor="current-password" className="text-neutral-text font-medium mb-2 block">Mật khẩu hiện tại</Label>
-                                    <Input id="current-password" type="password" className="rounded-xl border-neutral-border/30 focus:border-primary" />
+                                    <Label htmlFor="current-password" className="text-neutral-text font-medium mb-2 block">
+                                        Mật khẩu hiện tại <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input 
+                                        id="current-password" 
+                                        type="password" 
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        required
+                                        className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                                    />
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="new-password" className="text-neutral-text font-medium mb-2 block">Mật khẩu mới</Label>
-                                    <Input id="new-password" type="password" className="rounded-xl border-neutral-border/30 focus:border-primary" />
+                                    <Label htmlFor="new-password" className="text-neutral-text font-medium mb-2 block">
+                                        Mật khẩu mới <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input 
+                                        id="new-password" 
+                                        type="password" 
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        required
+                                        className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                                    />
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="confirm-password" className="text-neutral-text font-medium mb-2 block">Xác nhận mật khẩu mới</Label>
-                                    <Input id="confirm-password" type="password" className="rounded-xl border-neutral-border/30 focus:border-primary" />
+                                    <Label htmlFor="confirm-password" className="text-neutral-text font-medium mb-2 block">
+                                        Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input 
+                                        id="confirm-password" 
+                                        type="password" 
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                        className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                                    />
                                 </div>
 
-                                <Button className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all">
-                                    Đổi mật khẩu
+                                <Button 
+                                    className="bg-primary hover:bg-primary-strong text-white rounded-lg shadow-sm hover:shadow transition-all"
+                                    onClick={handleChangePassword}
+                                    disabled={changingPassword}
+                                >
+                                    {changingPassword ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Đang xử lý...
+                                        </>
+                                    ) : (
+                                        'Đổi mật khẩu'
+                                    )}
                                 </Button>
                             </div>
                         </CardContent>

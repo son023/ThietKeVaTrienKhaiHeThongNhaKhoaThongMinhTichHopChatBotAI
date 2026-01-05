@@ -155,7 +155,10 @@ export function ReceptionistAccountSettings() {
   };
 
   const handleChangePassword = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Vui lòng đăng nhập');
+      return;
+    }
 
     // Validation - all fields required
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -175,9 +178,7 @@ export function ReceptionistAccountSettings() {
 
     try {
       setChangingPassword(true);
-
-      // Note: You'll need to implement password change in AuthController
-      // For now, showing a success message
+      await authController.changePassword(user.id, currentPassword, newPassword);
       toast.success('Đổi mật khẩu thành công');
       
       // Clear password fields
