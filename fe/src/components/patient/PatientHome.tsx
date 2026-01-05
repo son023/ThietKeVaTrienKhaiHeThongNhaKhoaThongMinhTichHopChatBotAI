@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
   Sparkles,
@@ -196,6 +196,7 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
   const [selectedDoctor, setSelectedDoctor] = useState(doctorsData[1]); // Default to second doctor
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string; fullName: string; phone: string; email?: string } | null>(null);
 
   const nextService = () => {
     setCurrentServiceIndex((prev) => (prev + 1) % servicesData.length);
@@ -223,6 +224,18 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
     servicesData[(currentServiceIndex + 2) % servicesData.length],
   ];
 
+  useEffect(() => {
+    const user = authController.getCurrentUser();
+    if (user) {
+      setCurrentUser({
+        id: user.id,
+        fullName: user.fullName || '',
+        phone: user.phone || '',
+        email: user.email,
+      });
+    }
+  }, []);
+
   const handleBookingSuccess = () => {
     onNavigate("appointments");
   };
@@ -239,12 +252,17 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
   return (
     <div className="w-full bg-white mt-[40px]">
       {/* Book Appointment Dialog */}
-      <BookAppointmentDialog
-        isOpen={showBookingDialog}
-        onClose={() => setShowBookingDialog(false)}
-        onSuccess={handleBookingSuccess}
-      />
-
+      {currentUser && (
+        <BookAppointmentDialog
+          isOpen={showBookingDialog}
+          onClose={() => setShowBookingDialog(false)}
+          onSuccess={handleBookingSuccess}
+          patientId={currentUser.id}
+          patientName={currentUser.fullName}
+          patientPhone={currentUser.phone}
+          patientEmail={currentUser.email}
+        />
+      )}
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] py-[80px] px-[20px] md:px-[80px] overflow-hidden">
         <div className="absolute top-[20px] right-[20px] md:right-[80px] z-10">
