@@ -1,13 +1,22 @@
-import { useState } from 'react';
-import { User, Mail, Phone, Lock, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Mail, Phone, Lock, Bell, Loader2 } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { toast } from 'sonner';
+import { authController } from '../../controllers/AuthController';
+import { UserDTO } from '../../models';
 
 export function LabAccountSettings() {
+    const [user, setUser] = useState<UserDTO | null>(null);
+    const [changingPassword, setChangingPassword] = useState(false);
+    
+    // Password form state
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [profileData, setProfileData] = useState({
         fullName: 'Nguyễn Thị Lan',
         email: 'lan.nguyen@dentalcarex.vn',
@@ -23,12 +32,56 @@ export function LabAccountSettings() {
         reports: false,
     });
 
+    useEffect(() => {
+        const currentUser = authController.getCurrentUser();
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    }, []);
+
     const handleSaveProfile = () => {
         toast.success('Đã cập nhật thông tin cá nhân');
     };
 
-    const handleChangePassword = () => {
-        toast.success('Đã thay đổi mật khẩu');
+    const handleChangePassword = async () => {
+        if (!user) {
+            toast.error('Vui lòng đăng nhập');
+            return;
+        }
+
+        // Validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            toast.error('Vui lòng điền đầy đủ tất cả các trường');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            toast.error('Mật khẩu mới không khớp');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+            return;
+        }
+
+        try {
+            setChangingPassword(true);
+            await authController.changePassword(user.id, currentPassword, newPassword);
+            
+            toast.success('Đổi mật khẩu thành công');
+            
+            // Clear password fields
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error) {
+            console.error('Error changing password:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Không thể đổi mật khẩu';
+            toast.error(errorMessage);
+        } finally {
+            setChangingPassword(false);
+        }
     };
 
     return (
@@ -136,39 +189,68 @@ export function LabAccountSettings() {
                 <div className="space-y-4">
                     <div>
                         <Label className="font-medium text-neutral-heading mb-2 block">
-                            Mật khẩu hiện tại
+                            Mật khẩu hiện tại <span className="text-red-500">*</span>
                         </Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
-                            <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
+                            <Input 
+                                type="password" 
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                                className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" 
+                            />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label className="font-medium text-neutral-heading mb-2 block">
-                                Mật khẩu mới
+                                Mật khẩu mới <span className="text-red-500">*</span>
                             </Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
-                                <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
+                                <Input 
+                                    type="password" 
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                    className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" 
+                                />
                             </div>
                         </div>
 
                         <div>
                             <Label className="font-medium text-neutral-heading mb-2 block">
-                                Xác nhận mật khẩu mới
+                                Xác nhận mật khẩu mới <span className="text-red-500">*</span>
                             </Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-text/60" />
-                                <Input type="password" className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" />
+                                <Input 
+                                    type="password" 
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    className="pl-10 border-neutral-border focus:border-primary focus:ring-primary/20" 
+                                />
                             </div>
                         </div>
                     </div>
 
                     <div className="pt-4">
-                        <Button onClick={handleChangePassword} className="bg-primary hover:bg-primary-strong transition-all duration-200">
-                            Đổi mật khẩu
+                        <Button 
+                            onClick={handleChangePassword} 
+                            disabled={changingPassword}
+                            className="bg-primary hover:bg-primary-strong transition-all duration-200 disabled:opacity-50"
+                        >
+                            {changingPassword ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                'Đổi mật khẩu'
+                            )}
                         </Button>
                     </div>
                 </div>

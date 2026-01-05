@@ -80,15 +80,13 @@ export function LoginPage({
       {/* DoctorHeader */}
       <div className="bg-[#fcfeff] border-b border-[#ebf6fc]">
         <div className="max-w-[1400px] mx-auto px-[20px] sm:px-[40px] py-[20px]">
-          <button
+          <Button
             onClick={onBack}
-            className="flex items-center gap-[8px] text-[#3fb5ff] hover:text-[#3fb5ff]/80 transition-colors"
+            className="bg-primary hover:bg-primary-strong rounded-[15px] shadow-lg transition-all duration-200"
           >
             <ArrowLeft className="w-[20px] h-[20px]" />
-            <span className="font-['Fz_Poppins:Medium',sans-serif] text-[15px]">
-              Quay lại
-            </span>
-          </button>
+            Quay lại
+          </Button>
         </div>
       </div>
 

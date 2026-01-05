@@ -167,7 +167,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, onCheckedIn }: 
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="max-w-2xl bg-neutral-surface border-neutral-border">
+      <DialogContent className="max-w-2xl bg-white border-neutral-border">
         <DialogHeader>
           <DialogTitle className="text-neutral-text text-xl font-bold">Hồ sơ ban đầu & Check-in</DialogTitle>
           <DialogDescription className="text-neutral-text/70">

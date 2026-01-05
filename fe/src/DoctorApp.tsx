@@ -11,7 +11,6 @@ import { DoctorSidebar } from './components/DoctorSidebar';
 import { DoctorHeader } from './components/DoctorHeader';
 import { Dashboard } from './components/doctor/Dashboard';
 import { MyAppointments } from './components/doctor/MyAppointments';
-import { MyPatients } from './components/doctor/MyPatients';
 import {PatientExamination} from './components/doctor/PatientExamination';
 import { TreatmentPlans } from './components/doctor/TreatmentPlans';
 import { TreatmentPlanDetail } from './components/doctor/TreatmentPlanDetail';
@@ -80,8 +79,6 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     } else if (location.pathname.startsWith('/doctor/patients')) {
       if (location.pathname.includes('/examination')) {
         setCurrentPage('patient-examination');
-      } else {
-        setCurrentPage('patients');
       }
     } else if (location.pathname.startsWith('/doctor/create-prescription')) {
       setCurrentPage('create-prescription');
@@ -108,9 +105,6 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       case 'appointments':
         navigate('/doctor/appointments');
         break;
-      case 'patients':
-        navigate('/doctor/patients');
-        break;
       case 'create-prescription':
         setSelectedAppointmentId(null);
         setSelectedMedicalHistoryId(null);
@@ -134,7 +128,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
     const params = useParams<{ patientId: string }>();
     const patientId = params.patientId || selectedPatientId || null;
     if (!patientId) {
-      return <Navigate to="/doctor/patients" replace />;
+      return <Navigate to="/doctor" replace />;
     }
     if (patientId !== selectedPatientId) {
       setSelectedPatientId(patientId);
@@ -143,7 +137,7 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
       <PatientExamination
         patientId={patientId}
         appointmentId={selectedAppointmentId}
-        onBack={() => navigate('/doctor/patients')}
+        onBack={() => navigate('/doctor')}
         onNavigateToAppointments={() => navigate('/doctor/appointments')}
         onNavigateToTreatmentPlan={(planId) => {
           setSelectedTreatmentPlanId(planId);
@@ -263,18 +257,6 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
                     setSelectedAppointmentId(appointmentId || null);
                     navigate(`/doctor/patients/${patientId}/examination`);
                   }}
-                />
-              }
-            />
-            <Route
-              path="/doctor/patients"
-              element={
-                <MyPatients
-                  onNavigateToPatient={(id) => {
-                    setSelectedPatientId(id);
-                    navigate(`/doctor/patients/${id}/examination`);
-                  }}
-                  onNavigateToAppointments={() => navigate('/doctor/appointments')}
                 />
               }
             />

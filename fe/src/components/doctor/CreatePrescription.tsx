@@ -667,7 +667,7 @@ export function CreatePrescriptionEnhanced({
 
             {/* Preview Dialog */}
             <Dialog open={showPreview} onOpenChange={setShowPreview}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border-neutral-border/20 bg-neutral-surface">
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border-neutral-border/20 bg-white">
                     <DialogHeader>
                         <DialogTitle className="typo-h3">Xem trước đơn thuốc</DialogTitle>
                     </DialogHeader>

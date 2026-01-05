@@ -44,6 +44,7 @@ import { authController } from "../../controllers/AuthController";
 
 interface PatientHomeProps {
   onNavigate: (page: string) => void;
+  onOpenChatbot: () => void;
 }
 
 // Services data
@@ -190,7 +191,7 @@ const faqData = [
   },
 ];
 
-export function PatientHome({ onNavigate }: PatientHomeProps) {
+export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
   const [currentServiceIndex, setCurrentServiceIndex] = useState(0);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
   const [selectedDoctor, setSelectedDoctor] = useState(doctorsData[1]); // Default to second doctor
@@ -284,7 +285,9 @@ export function PatientHome({ onNavigate }: PatientHomeProps) {
                 >
                   Đặt lịch hẹn ngay
                 </button>
-                <button className="px-[32px] py-[16px] bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#ebf6fc] transition-all">
+                <button
+                  onClick={onOpenChatbot}
+                  className="px-[32px] py-[16px] bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#ebf6fc] transition-all">
                   Tư vấn miễn phí
                 </button>
               </div>
@@ -493,11 +496,10 @@ export function PatientHome({ onNavigate }: PatientHomeProps) {
               <div
                 key={doctor.id}
                 onClick={() => setSelectedDoctor(doctor)}
-                className={`bg-white rounded-[24px] overflow-hidden transition-all cursor-pointer group ${
-                  selectedDoctor.id === doctor.id
+                className={`bg-white rounded-[24px] overflow-hidden transition-all cursor-pointer group ${selectedDoctor.id === doctor.id
                     ? "shadow-[0px_8px_32px_0px_rgba(63,181,255,0.3)] ring-2 ring-[#3fb5ff]"
                     : "hover:shadow-[0px_8px_32px_0px_rgba(63,181,255,0.15)]"
-                }`}
+                  }`}
               >
                 <div className="relative h-[300px] overflow-hidden">
                   <ImageWithFallback
@@ -599,11 +601,10 @@ export function PatientHome({ onNavigate }: PatientHomeProps) {
                 <button
                   key={index}
                   onClick={() => setCurrentTestimonialIndex(index)}
-                  className={`w-[10px] h-[10px] rounded-full transition-all ${
-                    index === currentTestimonialIndex
+                  className={`w-[10px] h-[10px] rounded-full transition-all ${index === currentTestimonialIndex
                       ? "bg-[#3fb5ff] w-[32px]"
                       : "bg-[#d6edfa]"
-                  }`}
+                    }`}
                 />
               ))}
             </div>

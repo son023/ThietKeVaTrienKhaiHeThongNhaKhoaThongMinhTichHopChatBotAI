@@ -84,7 +84,7 @@ class MedicalServiceController {
     const url = createApiUrl('appointment', this.baseUrl);
     const res = await fetch(url, {
       method: 'POST',
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
       body: JSON.stringify(payload)
     });
     return this.handleResponse<MedicalServiceDTO>(res);
@@ -92,9 +92,11 @@ class MedicalServiceController {
 
   async update(id: string, payload: UpdateMedicalServiceRequest): Promise<MedicalServiceDTO> {
     const url = createApiUrl('appointment', `${this.baseUrl}/${id}`);
+    console.log('Update URL:', url);
+    console.log('Update payload:', payload);
     const res = await fetch(url, {
       method: 'PUT',
-      headers: getApiHeaders(),
+      headers: getApiHeaders(true),
       body: JSON.stringify(payload)
     });
     return this.handleResponse<MedicalServiceDTO>(res);
@@ -102,19 +104,19 @@ class MedicalServiceController {
 
   async deactivateById(id: string): Promise<void> {
     const url = createApiUrl('appointment', `${this.baseUrl}/deactivate/${id}`);
-    const res = await fetch(url, { method: 'PATCH', headers: getApiHeaders() });
+    const res = await fetch(url, { method: 'PATCH', headers: getApiHeaders(true) });
     await this.handleResponse<void>(res);
   }
 
   async deactivateByType(type: string): Promise<void> {
     const url = createApiUrl('appointment', `${this.baseUrl}/deactivate/type/${encodeURIComponent(type)}`);
-    const res = await fetch(url, { method: 'PATCH', headers: getApiHeaders() });
+    const res = await fetch(url, { method: 'PATCH', headers: getApiHeaders(true) });
     await this.handleResponse<void>(res);
   }
 
   async delete(id: string): Promise<void> {
     const url = createApiUrl('appointment', `${this.baseUrl}/${id}`);
-    const res = await fetch(url, { method: 'DELETE', headers: getApiHeaders() });
+    const res = await fetch(url, { method: 'DELETE', headers: getApiHeaders(true) });
     if (!res.ok && res.status !== 204) {
       await this.handleResponse(res);
     }

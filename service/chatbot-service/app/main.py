@@ -3,23 +3,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-# Import controller và hàm khởi tạo
 from app.api import chat_controller
 
-# --- LIFESPAN MANAGER (Quản lý vòng đời) ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Code chạy KHI SERVER BẬT (Startup)
     chat_controller.initialize_components()
     
-    yield # Server chạy tại đây
-    
-    # 2. Code chạy KHI SERVER TẮT (Shutdown)
+    yield
+
     chat_controller.shutdown_components()
 
 app = FastAPI(title="Dental AI Service", lifespan=lifespan)
 
-# CORS config
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
