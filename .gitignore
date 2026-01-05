@@ -19,3 +19,5 @@ venv/
 .vscode/
 intent_model/
 ner_model_final/
+
+.env

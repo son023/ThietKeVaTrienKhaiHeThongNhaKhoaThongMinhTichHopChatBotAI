@@ -216,6 +216,35 @@ services:
     ports:
       - "8086:8086"
 
+  ngrok:
+    image: ngrok/ngrok:3-alpine
+    container_name: ngrok
+    restart: always
+    depends_on:
+      payment-service:
+        condition: service_started
+    command:
+      - start
+      - --all
+      - --config
+      - /etc/ngrok.yml
+      - --authtoken
+      - ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"  # Ngrok web interface
+    volumes:
+      - ./ngrok/ngrok.yml:/etc/ngrok.yml:ro
+    networks:
+      - microservice-network
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4040/api/tunnels"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   labtest-service:
     <<: *spring-template
     build:
