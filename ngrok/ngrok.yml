@@ -10,5 +10,6 @@ tunnels:
     inspect: true
     schemes:
       - http
+      - https
 
 
