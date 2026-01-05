@@ -1,0 +1,15 @@
+# ngrok/ngrok.yml
+# Cấu hình ngrok để expose payment-service
+# Authtoken sẽ được inject từ .env file qua command line trong docker-compose.yml
+version: "3"
+
+tunnels:
+  payment-service:
+    proto: http
+    addr: payment-service:8086
+    inspect: true
+    schemes:
+      - http
+      - https
+
+

@@ -30,7 +30,7 @@ CREATE TABLE public.appointment
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
 
     CONSTRAINT appointment_status_check
-    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED','IN_PROGRESS', 'COMPLETED','COMPLETED_INVOICE'))
+    CHECK (status IN ('CHECKED', 'CONFIRMED', 'CANCELLED', 'IN_PROGRESS', 'COMPLETED','COMPLETED_INVOICE'))
 );
 
 CREATE TABLE public.appointment_medical_service
@@ -55,7 +55,7 @@ CREATE TABLE public.appointment_medical_service
 -- 1) MEDICAL_SERVICE (20 dịch vụ nha khoa)
 -- =========================================================
 INSERT INTO public.medical_service (id, price, service_name, service_time, service_type, status, img_url, description)
-VALUES 
+VALUES
 -- Dịch vụ 1: Chụp phim Xquang
 ('33000000-0000-0000-0000-000000000001', 5000000, 'Chụp phim Xquang, chụp ảnh, lấy mẫu lập kế hoạch điều trị chỉnh nha hoặc thiết kế nụ cười (Smile Design)', 30, 'ORTHO', 'ACTIVE', 'uploads/images/xquang.jpg', 'Chụp phim toàn cảnh, chụp ảnh nội ngoại răng miệng, lấy dấu hàm để lập kế hoạch điều trị chỉnh nha hoặc thiết kế nụ cười thẩm mỹ.'),
 
