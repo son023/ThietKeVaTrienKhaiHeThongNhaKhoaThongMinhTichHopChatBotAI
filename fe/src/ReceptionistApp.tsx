@@ -437,19 +437,24 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
           </DialogContent>
         </Dialog>
 
-        <BookAppointmentDialog
-          isOpen={bookingDialogOpen}
-          onClose={() => setBookingDialogOpen(false)}
-          onSuccess={() => {
-            setBookingDialogOpen(false);
-            setSelectedPatient(null);
-            setAppointmentRefreshToken((prev) => prev + 1);
-          }}
-          patientId={selectedPatient?.userId}
-          patientName={selectedPatient?.user?.fullName}
-          patientPhone={selectedPatient?.contactPhone || selectedPatient?.user?.phone}
-          patientEmail={selectedPatient?.user?.email}
-        />
+        {selectedPatient && (
+          <BookAppointmentDialog
+            isOpen={bookingDialogOpen}
+            onClose={() => {
+              setBookingDialogOpen(false);
+              setSelectedPatient(null);
+            }}
+            onSuccess={() => {
+              setBookingDialogOpen(false);
+              setSelectedPatient(null);
+              setAppointmentRefreshToken((prev) => prev + 1);
+            }}
+            patientId={selectedPatient.userId}
+            patientName={selectedPatient.user?.fullName || ''}
+            patientPhone={selectedPatient.contactPhone || selectedPatient.user?.phone || ''}
+            patientEmail={selectedPatient.user?.email}
+          />
+        )}
       </div>
       </div>
     </NotificationProvider>

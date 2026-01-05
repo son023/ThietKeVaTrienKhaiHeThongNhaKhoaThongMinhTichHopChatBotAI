@@ -10,16 +10,14 @@ import { toast } from 'sonner';
 import { medicalServiceController, MedicalServiceDTO } from '../../controllers/MedicalServiceController';
 import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
 import { appointmentController } from '../../controllers/AppointmentController';
-import { authController } from '../../controllers/AuthController';
-import { UserDTO } from '../../models';
 
 interface BookAppointmentDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: () => void;
-    patientId?: string;
-    patientName?: string;
-    patientPhone?: string;
+    patientId: string;
+    patientName: string;
+    patientPhone: string;
     patientEmail?: string;
 }
 
@@ -57,16 +55,15 @@ export function BookAppointmentDialog({
     });
 
     const resetForm = () => {
-        const user: UserDTO | null = authController.getCurrentUser();
         setCurrentStep(1);
         setFormData({
             services: [],
             doctor: '',
             date: undefined,
             time: '',
-            patientName: user?.fullname ?? '',
-            patientPhone: patientPhone ?? user?.phone ?? '',
-            patientEmail: patientEmail ?? user?.email ?? '',
+            patientName: patientName ?? '',
+            patientPhone: patientPhone ?? '',
+            patientEmail: patientEmail ?? '',
             notes: '',
         });
         setAvailableTimes([]);
@@ -95,7 +92,7 @@ export function BookAppointmentDialog({
             resetForm();
             loadData();
         }
-    }, [isOpen]);
+    }, [isOpen, patientId, patientName, patientPhone, patientEmail]);
 
     const combineDateTime = (date: Date, time: string) => {
         const [hour, minute] = time.split(':').map(Number);
@@ -183,10 +180,8 @@ export function BookAppointmentDialog({
             toast.error('Vui lòng chọn ngày khám');
             return;
         }
-        const user = authController.getCurrentUser();
-        const targetPatientId = patientId || user?.id;
-        if (!targetPatientId) {
-            toast.error('Vui lòng đăng nhập hoặc chọn bệnh nhân để đặt lịch');
+        if (!patientId) {
+            toast.error('Thông tin bệnh nhân không hợp lệ');
             return;
         }
 
@@ -205,7 +200,7 @@ export function BookAppointmentDialog({
         try {
             await appointmentController.holdSlot({
                 doctorId: formData.doctor,
-                patientId: targetPatientId,
+                patientId: patientId,
                 appointmentStartTime: start.toISOString(),
                 medicalServiceIds: formData.services,
             });
@@ -252,10 +247,8 @@ export function BookAppointmentDialog({
             return;
         }
 
-        const user = authController.getCurrentUser();
-        const targetPatientId = patientId || user?.id;
-        if (!targetPatientId) {
-            toast.error('Vui lòng đăng nhập hoặc chọn bệnh nhân để đặt lịch');
+        if (!patientId) {
+            toast.error('Thông tin bệnh nhân không hợp lệ');
             return;
         }
 
@@ -278,7 +271,7 @@ export function BookAppointmentDialog({
         setSubmitting(true);
         appointmentController.create({
             doctorId: formData.doctor,
-            patientId: targetPatientId,
+            patientId: patientId,
             appointmentStartTime: start.toISOString(),
             medicalServiceIds: formData.services,
         })

@@ -43,7 +43,7 @@ interface Invoice {
   date: string;
   doctor: string;
   amount: number;
-  status: 'unpaid' | 'paid' | 'partial' | 'cancelled';
+  status: 'unpaid' | 'paid' | 'cancelled';
   paymentMethod?: string;
 }
 
@@ -175,8 +175,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
         return 'PAID';
       case 'cancelled':
         return 'CANCELLED';
-      case 'partial':
-        return 'PENDING';
+
       default:
         return 'PENDING';
     }
@@ -186,10 +185,10 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const mapInvoiceFromBackend = async (invoice: InvoiceDTO): Promise<Invoice> => {
     try {
       console.log(`Mapping invoice ${invoice.id}, appointmentId: ${invoice.appointmentId}`);
-      
+
       const appointment = await getAppointment(invoice.appointmentId);
       console.log(`Appointment for ${invoice.id}:`, appointment ? 'found' : 'not found');
-      
+
       const patientUser = await getUser(appointment?.patientId);
       const doctorUser = await getUser(appointment?.doctorId);
 
@@ -274,8 +273,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
         return <Badge className="bg-red-100 text-red-800 border-red-200">Chưa thanh toán</Badge>;
       case 'paid':
         return <Badge className="bg-green-100 text-green-800 border-green-200">Đã thanh toán</Badge>;
-      case 'partial':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Thanh toán một phần</Badge>;
+
       case 'cancelled':
         return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Đã hủy</Badge>;
       default:
@@ -296,7 +294,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
   const unpaidInvoices = filteredInvoices.filter(inv => inv.status === 'unpaid');
   const paidInvoices = filteredInvoices.filter(inv => inv.status === 'paid');
-  const partialInvoices = filteredInvoices.filter(inv => inv.status === 'partial');
+
 
   // Pagination calculations for all invoices
   const totalAllInvoices = filteredInvoices.length;
@@ -319,12 +317,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
   const endIndexPaid = startIndexPaid + itemsPerPage;
   const paginatedPaidInvoices = paidInvoices.slice(startIndexPaid, endIndexPaid);
 
-  // Pagination calculations for partial invoices
-  const totalPartialInvoices = partialInvoices.length;
-  const totalPagesPartial = Math.ceil(totalPartialInvoices / itemsPerPage);
-  const startIndexPartial = (currentPage - 1) * itemsPerPage;
-  const endIndexPartial = startIndexPartial + itemsPerPage;
-  const paginatedPartialInvoices = partialInvoices.slice(startIndexPartial, endIndexPartial);
+
 
   const totalUnpaid = unpaidInvoices.reduce((sum, inv) => sum + inv.amount, 0);
   const totalPaid = paidInvoices.reduce((sum, inv) => sum + inv.amount, 0);
@@ -399,16 +392,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           <p className="text-xs text-neutral-text/60">{totalPaid.toLocaleString('vi-VN')}đ</p>
         </Card>
 
-        <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-neutral-text/70 font-medium">Thanh toán một phần</span>
-            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-yellow-600" />
-            </div>
-          </div>
-          <p className="text-2xl text-neutral-heading font-bold mb-1">{partialInvoices.length}</p>
-          <p className="text-xs text-neutral-text/60">Cần hoàn tất</p>
-        </Card>
+
 
         <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
@@ -460,9 +444,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           <TabsTrigger value="paid">
             Đã thanh toán ({paidInvoices.length})
           </TabsTrigger>
-          <TabsTrigger value="partial">
-            Thanh toán một phần ({partialInvoices.length})
-          </TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="all">
@@ -551,12 +533,12 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
+                      <PaginationPrevious
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    
+
                     {Array.from({ length: totalPagesAll }, (_, i) => i + 1).map((page) => {
                       if (
                         page === 1 ||
@@ -583,9 +565,9 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                       }
                       return null;
                     })}
-                    
+
                     <PaginationItem>
-                      <PaginationNext 
+                      <PaginationNext
                         onClick={() => setCurrentPage(prev => Math.min(totalPagesAll, prev + 1))}
                         className={currentPage === totalPagesAll ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
@@ -664,12 +646,12 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
+                      <PaginationPrevious
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    
+
                     {Array.from({ length: totalPagesUnpaid }, (_, i) => i + 1).map((page) => {
                       if (
                         page === 1 ||
@@ -696,9 +678,9 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                       }
                       return null;
                     })}
-                    
+
                     <PaginationItem>
-                      <PaginationNext 
+                      <PaginationNext
                         onClick={() => setCurrentPage(prev => Math.min(totalPagesUnpaid, prev + 1))}
                         className={currentPage === totalPagesUnpaid ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
@@ -781,12 +763,12 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
+                      <PaginationPrevious
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    
+
                     {Array.from({ length: totalPagesPaid }, (_, i) => i + 1).map((page) => {
                       if (
                         page === 1 ||
@@ -813,9 +795,9 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
                       }
                       return null;
                     })}
-                    
+
                     <PaginationItem>
-                      <PaginationNext 
+                      <PaginationNext
                         onClick={() => setCurrentPage(prev => Math.min(totalPagesPaid, prev + 1))}
                         className={currentPage === totalPagesPaid ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
@@ -827,131 +809,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           </Card>
         </TabsContent>
 
-        <TabsContent value="partial">
-          <Card className="border-neutral-border bg-neutral-surface shadow-sm">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mã HĐ</TableHead>
-                  <TableHead>Bệnh nhân</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead>Bác sĩ</TableHead>
-                  <TableHead className="text-right">Số tiền</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedPartialInvoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="cursor-pointer hover:bg-gray-50">
-                    <TableCell className="font-mono">{invoice.code}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm text-[#01304e]">{invoice.patientName}</p>
-                        <p className="text-xs text-gray-500">{invoice.patientCode}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{invoice.date}</TableCell>
-                    <TableCell className="text-sm">{invoice.doctor}</TableCell>
-                    <TableCell className="text-right text-yellow-600">
-                      {invoice.amount.toLocaleString('vi-VN')}đ
-                    </TableCell>
-                    <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          className="bg-primary hover:bg-primary-strong transition-all duration-200"
-                          onClick={() => onViewInvoice(invoice.id, 'payment')}
-                        >
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          Thanh toán tiếp
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all"
-                          onClick={() => onViewInvoice(invoice.id, 'view')}
-                        >
-                          <FileText className="w-3 h-3 mr-1" />
-                          Chi tiết
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
 
-            {partialInvoices.length === 0 && (
-              <div className="text-center py-12">
-                <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Không có hóa đơn thanh toán một phần</p>
-              </div>
-            )}
-
-            {/* Total Count */}
-            {totalPartialInvoices > 0 && (
-              <div className="px-6 py-3 border-t border-neutral-border">
-                <div className="text-sm text-neutral-text/70">
-                  Hiển thị <span className="font-medium text-neutral-text">{startIndexPartial + 1}</span> đến{" "}
-                  <span className="font-medium text-neutral-text">{Math.min(endIndexPartial, totalPartialInvoices)}</span> trong tổng số{" "}
-                  <span className="font-medium text-neutral-text">{totalPartialInvoices}</span> hóa đơn
-                </div>
-              </div>
-            )}
-
-            {/* Pagination Controls */}
-            {totalPagesPartial > 1 && (
-              <div className="flex justify-center px-6 py-4 border-t border-neutral-border">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                    
-                    {Array.from({ length: totalPagesPartial }, (_, i) => i + 1).map((page) => {
-                      if (
-                        page === 1 ||
-                        page === totalPagesPartial ||
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      } else if (page === currentPage - 2 || page === currentPage + 2) {
-                        return (
-                          <PaginationItem key={page}>
-                            <span className="px-2">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                      return null;
-                    })}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(prev => Math.min(totalPagesPartial, prev + 1))}
-                        className={currentPage === totalPagesPartial ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
