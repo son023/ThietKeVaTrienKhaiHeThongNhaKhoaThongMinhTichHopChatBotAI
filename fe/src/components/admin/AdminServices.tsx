@@ -1,4 +1,4 @@
-import { Plus, Save, Briefcase, Edit, Trash2, Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Save, Briefcase, Edit, Trash2, Loader2, AlertCircle, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -68,6 +68,9 @@ export function AdminServices() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingService, setDeletingService] = useState<Service | null>(null);
   
+  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
+  const [restoringService, setRestoringService] = useState<Service | null>(null);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -101,7 +104,6 @@ export function AdminServices() {
       
       // Map backend DTO to frontend interface
       const mappedServices: Service[] = data
-        .filter(s => s.status === 'ACTIVE') // Only show active services
         .map(dto => ({
           id: dto.id,
           name: dto.serviceName,
@@ -195,10 +197,25 @@ export function AdminServices() {
       const result = await medicalServiceController.update(editingService.id, payload);
       console.log('Update successful:', result);
       
-      // Close dialog and reload
+      // Update service in-place without reloading the entire list
+      setServices(prevServices => 
+        prevServices.map(service => 
+          service.id === editingService.id 
+            ? {
+                ...service,
+                name: editForm.name,
+                category: editForm.category,
+                price: editForm.price,
+                duration: editForm.duration,
+                description: editForm.description,
+              }
+            : service
+        )
+      );
+      
+      // Close dialog and clear form
       setIsEditDialogOpen(false);
       setEditingService(null);
-      await loadServices();
     } catch (err) {
       console.error('Error updating service:', err);
       alert(err instanceof Error ? err.message : 'Không thể cập nhật dịch vụ');
@@ -214,13 +231,61 @@ export function AdminServices() {
     if (!deletingService) return;
 
     try {
-      await medicalServiceController.delete(deletingService.id);
+      // Deactivate instead of delete to set status to INACTIVE
+      await medicalServiceController.deactivateById(deletingService.id);
+      
+      // Update service status in local state instead of removing
+      setServices(prevServices => 
+        prevServices.map(service => 
+          service.id === deletingService.id 
+            ? { ...service, status: 'INACTIVE' }
+            : service
+        )
+      );
+      
       setIsDeleteDialogOpen(false);
       setDeletingService(null);
-      await loadServices();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Không thể xóa dịch vụ');
       console.error('Error deleting service:', err);
+    }
+  };
+
+  const handleRestoreClick = (service: Service) => {
+    setRestoringService(service);
+    setIsRestoreDialogOpen(true);
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoringService) return;
+
+    try {
+      // Update service to set status to ACTIVE
+      const payload = {
+        serviceName: restoringService.name,
+        serviceType: restoringService.category,
+        serviceTime: restoringService.duration,
+        status: 'ACTIVE',
+        price: restoringService.price,
+        description: restoringService.description || undefined,
+      };
+      
+      await medicalServiceController.update(restoringService.id, payload);
+      
+      // Update service in local state
+      setServices(prevServices => 
+        prevServices.map(service => 
+          service.id === restoringService.id 
+            ? { ...service, status: 'ACTIVE' }
+            : service
+        )
+      );
+      
+      setIsRestoreDialogOpen(false);
+      setRestoringService(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Không thể khôi phục dịch vụ');
+      console.error('Error restoring service:', err);
     }
   };
 
@@ -431,25 +496,39 @@ export function AdminServices() {
                     </TableCell>
                     <TableCell className="text-[#333333]">{service.duration} phút</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="rounded-[10px]"
-                          onClick={() => handleEditService(service)}
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Sửa
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="rounded-[10px] text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => handleDeleteClick(service)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {service.status === 'INACTIVE' ? (
+                        <div className="flex justify-end items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="rounded-[10px] text-green-600 border-green-300 hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors"
+                            onClick={() => handleRestoreClick(service)}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            Khôi phục
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="rounded-[10px]"
+                            onClick={() => handleEditService(service)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Sửa
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="rounded-[10px] text-red-600 border-red-300 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
+                            onClick={() => handleDeleteClick(service)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -621,6 +700,35 @@ export function AdminServices() {
               onClick={handleConfirmDelete}
             >
               Xóa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Confirmation Dialog */}
+      <Dialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
+        <DialogContent className="rounded-[15px] max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#01304e]">Xác nhận khôi phục dịch vụ</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn khôi phục dịch vụ <span className="font-semibold text-[#01304e]">"{restoringService?.name}"</span> không?
+              Dịch vụ sẽ được kích hoạt lại và có thể sử dụng bình thường.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRestoreDialogOpen(false)} 
+              className="rounded-[10px]"
+            >
+              Hủy
+            </Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 rounded-[15px] text-white"
+              onClick={handleConfirmRestore}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Khôi phục
             </Button>
           </div>
         </DialogContent>

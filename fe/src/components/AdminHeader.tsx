@@ -119,25 +119,6 @@ export function AdminHeader({ onLogout, onGoHome }: AdminHeaderProps = {}) {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 rounded-[10px] border-[#e8e8e8]" align="end">
-              <DropdownMenuLabel className="text-[#01304e]">Tài khoản</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
-              <DropdownMenuItem className="cursor-pointer rounded-[8px]">
-                <User className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Hồ sơ cá nhân</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer rounded-[8px]">
-                <Settings className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Cài đặt</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
-              <DropdownMenuItem 
-                className="cursor-pointer rounded-[8px]"
-                onClick={onGoHome}
-              >
-                <Home className="mr-2 h-4 w-4 text-[#3FB5FF]" />
-                <span>Trang chủ</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#e8e8e8]" />
               <DropdownMenuItem 
                 className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 rounded-[8px]"
                 onClick={onLogout}
