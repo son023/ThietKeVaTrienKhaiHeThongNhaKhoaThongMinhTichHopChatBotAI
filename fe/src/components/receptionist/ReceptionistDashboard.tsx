@@ -69,9 +69,13 @@ export function ReceptionistDashboard({
 
   // Patient list modal state
   const [patientListOpen, setPatientListOpen] = useState(false);
-  const [patientListType, setPatientListType] = useState<'tomorrow' | 'late'>('tomorrow');
+  const [patientListType, setPatientListType] = useState<"tomorrow" | "late">(
+    "tomorrow"
+  );
   const [latePatients, setLatePatients] = useState<Appointment[]>([]);
-  const [tomorrowAppointments, setTomorrowAppointments] = useState<Appointment[]>([]);
+  const [tomorrowAppointments, setTomorrowAppointments] = useState<
+    Appointment[]
+  >([]);
 
   const mapStatus = (status: string): Appointment["status"] => {
     switch (status) {
@@ -301,8 +305,9 @@ export function ReceptionistDashboard({
                     </div>
                     <div className="h-1.5 bg-neutral-tint rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${config.color.split(" ")[0]
-                          } transition-all duration-300`}
+                        className={`h-full rounded-full ${
+                          config.color.split(" ")[0]
+                        } transition-all duration-300`}
                         style={{ width: "100%" }}
                       />
                     </div>
@@ -368,15 +373,15 @@ export function ReceptionistDashboard({
                             {(status === "checked_in" ||
                               status === "in_treatment" ||
                               status === "completed") && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-full h-7 text-[10px] border-neutral-border hover:bg-neutral-muted transition-all duration-200"
-                                  onClick={() => handleAction(apt.id, "view")}
-                                >
-                                  Chi tiết
-                                </Button>
-                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full h-7 text-[10px] border-neutral-border hover:bg-neutral-muted transition-all duration-200"
+                                onClick={() => handleAction(apt.id, "view")}
+                              >
+                                Chi tiết
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </Card>
@@ -406,11 +411,11 @@ export function ReceptionistDashboard({
         appointment={
           selectedAppointment
             ? {
-              id: selectedAppointment.id,
-              patientId: selectedAppointment.patientId,
-              patientName: selectedAppointment.patientName,
-              serviceName: selectedAppointment.service,
-            }
+                id: selectedAppointment.id,
+                patientId: selectedAppointment.patientId,
+                patientName: selectedAppointment.patientName,
+                serviceName: selectedAppointment.service,
+              }
             : null
         }
         onCheckedIn={() => {
@@ -501,42 +506,68 @@ export function ReceptionistDashboard({
             <Table>
               <TableHeader>
                 <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Thời gian hẹn</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Họ tên
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Số điện thoại
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Email
+                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">
+                    Thời gian hẹn
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patientListType === 'tomorrow' ? (
+                {patientListType === "tomorrow" ? (
                   // Real data for tomorrow's appointments
-                  tomorrowAppointments.length > 0 ? tomorrowAppointments.map((apt) => (
-                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
-                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">-</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">{apt.time}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
-                    </TableRow>
-                  )) : (
+                  tomorrowAppointments.length > 0 ? (
+                    tomorrowAppointments.map((apt) => (
+                      <TableRow
+                        key={apt.id}
+                        className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border"
+                      >
+                        <TableCell className="font-mono text-sm text-neutral-text">
+                          {apt.patientId.substring(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell className="text-sm text-neutral-heading font-medium">
+                          {apt.patientName}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">
+                              {apt.phone || "N/A"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">-</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
+                            <span className="text-sm text-neutral-text">
+                              {apt.time}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-neutral-text/70">
+                          {apt.service || "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-neutral-text/60"
+                      >
                         Không có lịch hẹn nào vào ngày mai
                       </TableCell>
                     </TableRow>
