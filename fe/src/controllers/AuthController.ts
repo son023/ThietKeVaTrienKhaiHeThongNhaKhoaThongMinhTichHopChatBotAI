@@ -19,7 +19,7 @@ class AuthController {
       }
 
       const createUserRequest: CreateUserRequest = {
-        
+        username: formData.email,
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
@@ -41,7 +41,11 @@ class AuthController {
         throw new Error(errorData.message || `HTTP Error: ${response.status}`);
       }
 
-      const userData: UserDTO = await response.json();
+      const rawUserData = await response.json();
+      const userData: UserDTO = {
+        ...rawUserData,
+        fullName: rawUserData.fullName || rawUserData.fullname || "",
+      };
 
       return {
         user: userData,
@@ -81,7 +85,11 @@ class AuthController {
         throw new Error(errorData.message || `HTTP Error: ${response.status}`);
       }
 
-      const userData: UserDTO = await response.json();
+      const rawUserData = await response.json();
+      const userData: UserDTO = {
+        ...rawUserData,
+        fullName: rawUserData.fullName || rawUserData.fullname || "",
+      };
 
       // Lưu thông tin user vào localStorage (có thể thay bằng session/cookie)
       localStorage.setItem("currentUser", JSON.stringify(userData));
