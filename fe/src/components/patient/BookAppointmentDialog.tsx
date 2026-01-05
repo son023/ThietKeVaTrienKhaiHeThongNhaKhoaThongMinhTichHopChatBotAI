@@ -64,7 +64,7 @@ export function BookAppointmentDialog({
             doctor: '',
             date: undefined,
             time: '',
-            patientName: patientName ?? user?.fullName ?? '',
+            patientName: user?.fullname ?? '',
             patientPhone: patientPhone ?? user?.phone ?? '',
             patientEmail: patientEmail ?? user?.email ?? '',
             notes: '',
@@ -504,9 +504,10 @@ export function BookAppointmentDialog({
                                 <Input
                                     id="patientName"
                                     value={formData.patientName}
-                                    onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
+                                    readOnly
+                                    disabled
                                     placeholder="Nhập họ và tên"
-                                    className="bg-background border-border text-foreground"
+                                    className="bg-muted border-border text-foreground cursor-not-allowed opacity-100"
                                 />
                             </div>
 
@@ -515,9 +516,10 @@ export function BookAppointmentDialog({
                                 <Input
                                     id="patientPhone"
                                     value={formData.patientPhone}
-                                    onChange={(e) => setFormData({ ...formData, patientPhone: e.target.value })}
+                                    readOnly
+                                    disabled
                                     placeholder="Nhập số điện thoại"
-                                    className="bg-background border-border text-foreground"
+                                    className="bg-muted border-border text-foreground cursor-not-allowed opacity-100"
                                 />
                             </div>
 
@@ -527,9 +529,10 @@ export function BookAppointmentDialog({
                                     id="patientEmail"
                                     type="email"
                                     value={formData.patientEmail}
-                                    onChange={(e) => setFormData({ ...formData, patientEmail: e.target.value })}
+                                    readOnly
+                                    disabled
                                     placeholder="Nhập email"
-                                    className="bg-background border-border text-foreground"
+                                    className="bg-muted border-border text-foreground cursor-not-allowed opacity-100"
                                 />
                             </div>
 
