@@ -733,13 +733,12 @@ export function PublicHomepage({
                     >
                       <div
                         onClick={() => setSelectedDoctor(doctor)}
-                        className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${
-                          selectedDoctor &&
+                        className={`group bg-gradient-to-b from-[#f8fcff] to-[#fcfeff] rounded-[20px] overflow-hidden border-2 hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)] transition-all cursor-pointer ${selectedDoctor &&
                           (selectedDoctor.userId || selectedDoctor.id) ===
-                            (doctor.userId || doctor.id)
-                            ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
-                            : "border-[#ebf6fc] hover:border-[#3fb5ff]"
-                        }`}
+                          (doctor.userId || doctor.id)
+                          ? "border-[#3fb5ff] shadow-[0px_8px_24px_0px_rgba(63,181,255,0.15)]"
+                          : "border-[#ebf6fc] hover:border-[#3fb5ff]"
+                          }`}
                       >
                         <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-[#e3f4fc] to-[#d6edfa]">
                           <img
@@ -771,11 +770,10 @@ export function PublicHomepage({
                   <button
                     key={index}
                     onClick={() => setCurrentDoctorIndex(index)}
-                    className={`h-[8px] rounded-full transition-all duration-500 ease-in-out ${
-                      index === currentDoctorIndex
-                        ? "w-[32px] bg-[#3fb5ff]"
-                        : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
-                    }`}
+                    className={`h-[8px] rounded-full transition-all duration-500 ease-in-out ${index === currentDoctorIndex
+                      ? "w-[32px] bg-[#3fb5ff]"
+                      : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
+                      }`}
                   />
                 ))}
               </div>
@@ -839,8 +837,8 @@ export function PublicHomepage({
                         src={
                           service.imgUrl ||
                           serviceIconPool[
-                            (currentServiceIndex * servicesPerPage + index) %
-                              serviceIconPool.length
+                          (currentServiceIndex * servicesPerPage + index) %
+                          serviceIconPool.length
                           ]
                         }
                         alt={service.serviceName}
@@ -888,11 +886,10 @@ export function PublicHomepage({
                 <button
                   key={index}
                   onClick={() => setCurrentServiceIndex(index)}
-                  className={`h-[8px] rounded-full transition-all ${
-                    index === currentServiceIndex
-                      ? "w-[32px] bg-[#3fb5ff]"
-                      : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
-                  }`}
+                  className={`h-[8px] rounded-full transition-all ${index === currentServiceIndex
+                    ? "w-[32px] bg-[#3fb5ff]"
+                    : "w-[8px] bg-[#d6edfa] hover:bg-[#3fb5ff]/50"
+                    }`}
                 />
               ))}
             </div>
@@ -1040,18 +1037,6 @@ export function PublicHomepage({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-
-          <div className="text-center mt-[40px]">
-            <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#666666] text-[16px] mb-[20px]">
-              Còn thắc mắc khác?
-            </p>
-            <button
-              onClick={() => onNavigate("contact")}
-              className="bg-[#ebf6fc] text-[#3fb5ff] px-[32px] py-[16px] rounded-[14px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#d6edfa] transition-all"
-            >
-              Liên hệ với chúng tôi
-            </button>
-          </div>
         </div>
       </section>
 
@@ -1069,7 +1054,7 @@ export function PublicHomepage({
             </h2>
             <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#fcfeff]/90 text-[20px] mb-[48px] leading-[1.6]">
               Đặt lịch hẹn ngay hôm nay và nhận ưu đãi đặc biệt cho khách hàng
-              mới. Tư vấn miễn phí 100% không phát sinh chi phí.
+              mới.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-[16px] justify-center items-center">
@@ -1079,12 +1064,6 @@ export function PublicHomepage({
               >
                 Đặt lịch miễn phí
                 <Calendar className="inline-block w-[22px] h-[22px] ml-[12px] group-hover:translate-x-[4px] transition-transform" />
-              </button>
-              <button
-                onClick={() => onNavigate("contact")}
-                className="bg-transparent text-[#fcfeff] px-[48px] py-[20px] rounded-[16px] font-['Fz_Poppins:SemiBold',sans-serif] text-[18px] border-2 border-[#fcfeff] hover:bg-[#fcfeff]/10 transition-all"
-              >
-                Liên hệ tư vấn
               </button>
             </div>
 
