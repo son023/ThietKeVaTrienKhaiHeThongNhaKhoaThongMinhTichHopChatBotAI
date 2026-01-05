@@ -22,6 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { userController } from "../../controllers/UserController";
+import { patientController } from "../../controllers/PatientController";
 
 interface Appointment {
   id: string;
@@ -69,13 +71,9 @@ export function ReceptionistDashboard({
 
   // Patient list modal state
   const [patientListOpen, setPatientListOpen] = useState(false);
-  const [patientListType, setPatientListType] = useState<"tomorrow" | "late">(
-    "tomorrow"
-  );
+  const [patientListType, setPatientListType] = useState<'tomorrow' | 'late'>('tomorrow');
   const [latePatients, setLatePatients] = useState<Appointment[]>([]);
-  const [tomorrowAppointments, setTomorrowAppointments] = useState<
-    Appointment[]
-  >([]);
+  const [tomorrowAppointments, setTomorrowAppointments] = useState<Appointment[]>([]);
 
   const mapStatus = (status: string): Appointment["status"] => {
     switch (status) {
@@ -94,20 +92,48 @@ export function ReceptionistDashboard({
     }
   };
 
-  const transformAppointment = (apt: AppointmentDTO): Appointment => {
+  const transformAppointment = async (apt: AppointmentDTO): Promise<Appointment> => {
     const startTime = new Date(apt.appointmentStartTime);
     const timeStr = startTime.toLocaleTimeString("vi-VN", {
       hour: "2-digit",
       minute: "2-digit",
     });
 
+    // ✅ Fetch real patient data
+    let patientName = `Bệnh nhân ${apt.patientId.substring(0, 8)}`;
+    let phone = "N/A";
+
+    try {
+      const patientData = await patientController.getWithUserById(apt.patientId);
+      if (patientData.user?.fullName) {
+        patientName = patientData.user.fullName;
+      }
+      if (patientData.user?.phone) {
+        phone = patientData.user.phone;
+      }
+    } catch (err) {
+      console.warn(`Cannot fetch patient data for ${apt.patientId}:`, err);
+    }
+
+    // ✅ Fetch real doctor data
+    let doctorName = `BS. ${apt.doctorId.substring(0, 8)}`;
+
+    try {
+      const doctorUser = await userController.getById(apt.doctorId);
+      if (doctorUser.fullName) {
+        doctorName = `BS. ${doctorUser.fullName}`;
+      }
+    } catch (err) {
+      console.warn(`Cannot fetch doctor data for ${apt.doctorId}:`, err);
+    }
+
     return {
       id: apt.id,
       patientId: apt.patientId,
-      patientName: `Bệnh nhân ${apt.patientId.substring(0, 8)}`,
+      patientName,
       time: timeStr,
-      doctor: `BS. ${apt.doctorId.substring(0, 8)}`,
-      phone: "N/A",
+      doctor: doctorName,
+      phone,
       status: mapStatus(apt.status),
       service: apt.medicalServices?.[0]?.serviceName || "Khám tổng quát",
     };
@@ -120,7 +146,11 @@ export function ReceptionistDashboard({
         const today = new Date();
         const appointmentDTOs = await appointmentController.getByDate(today);
 
-        const transformed = appointmentDTOs.map(transformAppointment);
+        // ✅ Transform with real data (async)
+        const transformed = await Promise.all(
+          appointmentDTOs.map(transformAppointment)
+        );
+
         setAppointments(transformed);
         setError(null);
       } catch (err) {
@@ -141,7 +171,12 @@ export function ReceptionistDashboard({
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const appointmentDTOs = await appointmentController.getByDate(tomorrow);
-        const transformed = appointmentDTOs.map(transformAppointment);
+
+        // ✅ Use Promise.all for async transform
+        const transformed = await Promise.all(
+          appointmentDTOs.map(transformAppointment)
+        );
+
         setTomorrowAppointments(transformed);
       } catch (err) {
         console.error('Error loading tomorrow appointments:', err);
@@ -305,9 +340,8 @@ export function ReceptionistDashboard({
                     </div>
                     <div className="h-1.5 bg-neutral-tint rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
-                          config.color.split(" ")[0]
-                        } transition-all duration-300`}
+                        className={`h-full rounded-full ${config.color.split(" ")[0]
+                          } transition-all duration-300`}
                         style={{ width: "100%" }}
                       />
                     </div>
@@ -318,7 +352,7 @@ export function ReceptionistDashboard({
                     {statusAppointments.map((apt) => (
                       <Card
                         key={apt.id}
-                        className="p-3 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer border-neutral-border bg-neutral-surface"
+                        className="p-3 hover:shadow-md transition-all duration-200 cursor-pointer border-neutral-border bg-neutral-surface"
                       >
                         <div className="space-y-2.5">
                           {/* Patient Info - Compact */}
@@ -373,15 +407,15 @@ export function ReceptionistDashboard({
                             {(status === "checked_in" ||
                               status === "in_treatment" ||
                               status === "completed") && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full h-7 text-[10px] border-neutral-border hover:bg-neutral-muted transition-all duration-200"
-                                onClick={() => handleAction(apt.id, "view")}
-                              >
-                                Chi tiết
-                              </Button>
-                            )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full h-7 text-[10px] border-neutral-border hover:bg-neutral-muted transition-all duration-200"
+                                  onClick={() => handleAction(apt.id, "view")}
+                                >
+                                  Chi tiết
+                                </Button>
+                              )}
                           </div>
                         </div>
                       </Card>
@@ -411,11 +445,11 @@ export function ReceptionistDashboard({
         appointment={
           selectedAppointment
             ? {
-                id: selectedAppointment.id,
-                patientId: selectedAppointment.patientId,
-                patientName: selectedAppointment.patientName,
-                serviceName: selectedAppointment.service,
-              }
+              id: selectedAppointment.id,
+              patientId: selectedAppointment.patientId,
+              patientName: selectedAppointment.patientName,
+              serviceName: selectedAppointment.service,
+            }
             : null
         }
         onCheckedIn={() => {
@@ -436,7 +470,7 @@ export function ReceptionistDashboard({
           Việc cần làm
         </h2>
         <div className="grid grid-cols-2 gap-5">
-          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-lg transition-all duration-200">
+          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-semibold text-neutral-text">
                 Gọi điện xác nhận lịch hẹn ngày mai
@@ -461,7 +495,7 @@ export function ReceptionistDashboard({
             </Button>
           </Card>
 
-          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-lg transition-all duration-200">
+          <Card className="p-5 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-semibold text-neutral-text">
                 Theo dõi bệnh nhân trễ hẹn
@@ -491,7 +525,7 @@ export function ReceptionistDashboard({
       {/* Patient List Modal */}
       <Dialog open={patientListOpen} onOpenChange={setPatientListOpen} modal>
         <DialogContent
-          className="max-w-7xl max-h-[80vh] overflow-hidden flex flex-col bg-white"
+          className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-white"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
@@ -506,68 +540,44 @@ export function ReceptionistDashboard({
             <Table>
               <TableHeader>
                 <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-heading">
-                    Họ tên
-                  </TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">
-                    Số điện thoại
-                  </TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">
-                    Email
-                  </TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">
-                    Thời gian hẹn
-                  </TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Thời gian hẹn</TableHead>
+                  <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patientListType === "tomorrow" ? (
+                {patientListType === 'tomorrow' ? (
                   // Real data for tomorrow's appointments
-                  tomorrowAppointments.length > 0 ? (
-                    tomorrowAppointments.map((apt) => (
-                      <TableRow
-                        key={apt.id}
-                        className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border"
-                      >
-                        <TableCell className="font-mono text-sm text-neutral-text">
-                          {apt.patientId.substring(0, 8).toUpperCase()}
-                        </TableCell>
-                        <TableCell className="text-sm text-neutral-heading font-medium">
-                          {apt.patientName}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
-                            <span className="text-sm text-neutral-text">
-                              {apt.phone || "N/A"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                            <span className="text-sm text-neutral-text">-</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
-                            <span className="text-sm text-neutral-text">
-                              {apt.time}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-neutral-text/70">
-                          {apt.service || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+                  tomorrowAppointments.length > 0 ? tomorrowAppointments.map((apt) => (
+                    <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
+                      <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">-</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-neutral-subtle" />
+                          <span className="text-sm text-neutral-text">{apt.time}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-neutral-text/70">{apt.service || '-'}</TableCell>
+                    </TableRow>
+                  )) : (
                     <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="text-center py-8 text-neutral-text/60"
-                      >
+                      <TableCell colSpan={6} className="text-center py-8 text-neutral-text/60">
                         Không có lịch hẹn nào vào ngày mai
                       </TableCell>
                     </TableRow>

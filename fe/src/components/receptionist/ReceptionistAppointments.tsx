@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
 import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
 import CheckinDialog from './CheckinDialog';
+import { patientController } from '../../controllers';
 
 interface Doctor {
   id: string;
@@ -178,54 +179,78 @@ export function ReceptionistAppointments({ refreshToken }: ReceptionistAppointme
       
       const data = await appointmentController.getByDate(currentDate);
       
-      const mapped: Appointment[] = data.map((apt: AppointmentDTO) => {
-        const start = new Date(apt.appointmentStartTime);
-        const end = new Date(apt.appointmentEndTime);
+const mapped: Appointment[] = await Promise.all(
+  data.map(async (apt: AppointmentDTO) => {
+    const start = new Date(apt.appointmentStartTime);
+    const end = new Date(apt.appointmentEndTime);
 
-        let durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
-        if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-          const servicesTime = apt.medicalServices?.reduce(
-            (sum, sv) => sum + (sv.serviceTime || 0),
-            0
-          ) ?? 0;
-          durationMinutes = servicesTime > 0 ? servicesTime : 60;
-        }
+    let durationMinutes = Math.round(
+      (end.getTime() - start.getTime()) / 60000
+    );
 
-        durationMinutes = Math.min(Math.max(durationMinutes, 15), 240);
+    if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+      const servicesTime =
+        apt.medicalServices?.reduce(
+          (sum, sv) => sum + (sv.serviceTime || 0),
+          0
+        ) ?? 0;
+      durationMinutes = servicesTime > 0 ? servicesTime : 60;
+    }
 
-        const startLabel = start.toLocaleTimeString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const endLabel = end.toLocaleTimeString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        
-        const serviceNames =
-          apt.medicalServices?.map((s) => s.serviceName).filter(Boolean) ?? [];
-        let serviceLabel = 'Khám tổng quát';
-        if (serviceNames.length > 0) {
-          const firstTwo = serviceNames.slice(0, 2).join(', ');
-          const moreCount = serviceNames.length - 2;
-          serviceLabel =
-            moreCount > 0
-              ? `${firstTwo} +${moreCount} dịch vụ khác`
-              : firstTwo;
-        }
+    durationMinutes = Math.min(Math.max(durationMinutes, 15), 240);
 
-        return {
-          id: apt.id,
-          patientId: apt.patientId,
-          patientName: `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`,
-          time: startLabel,
-          endTime: endLabel,
-          duration: durationMinutes,
-          doctorId: apt.doctorId,
-          status: mapStatus(apt.status),
-          service: serviceLabel,
-        };
-      });
+    const startLabel = start.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const endLabel = end.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const serviceNames =
+      apt.medicalServices?.map((s) => s.serviceName).filter(Boolean) ?? [];
+
+    let serviceLabel = 'Khám tổng quát';
+    if (serviceNames.length > 0) {
+      const firstTwo = serviceNames.slice(0, 2).join(', ');
+      const moreCount = serviceNames.length - 2;
+      serviceLabel =
+        moreCount > 0
+          ? `${firstTwo} +${moreCount} dịch vụ khác`
+          : firstTwo;
+    }
+
+    // ✅ Fetch patient name
+    let patientName = `Bệnh nhân ${apt.patientId?.slice(0, 8) || ''}`;
+    try {
+      const patientData = await patientController.getWithUserById(
+        apt.patientId
+      );
+      if (patientData.user?.fullName) {
+        patientName = patientData.user.fullName;
+      }
+    } catch (err) {
+      console.warn(
+        `Cannot fetch patient data for ${apt.patientId}:`,
+        err
+      );
+    }
+
+    return {
+      id: apt.id,
+      patientId: apt.patientId,
+      patientName,
+      time: startLabel,
+      endTime: endLabel,
+      duration: durationMinutes,
+      doctorId: apt.doctorId,
+      status: mapStatus(apt.status),
+      service: serviceLabel,
+    };
+  })
+);
+
       
       setAppointments(mapped);
     } catch (error) {

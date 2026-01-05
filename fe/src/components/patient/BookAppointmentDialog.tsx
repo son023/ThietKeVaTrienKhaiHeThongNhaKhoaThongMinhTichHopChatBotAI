@@ -138,9 +138,17 @@ export function BookAppointmentDialog({
                 .map(id => services.find(s => s.id === id)?.serviceTime || 30)
                 .reduce((a, b) => a + b, 0) || 30;
 
+            const now = new Date();
+
             const freeSlots = timeSlots.filter(time => {
                 const start = combineDateTime(date, time);
                 const end = new Date(start.getTime() + duration * 60 * 1000);
+
+                // ✅ Check if appointment time is in the past
+                if (start <= now) {
+                    return false;
+                }
+
                 const overlap = sameDayAppointments.some(appt => {
                     const apptStart = new Date(appt.appointmentStartTime);
                     const apptEnd = new Date(appt.appointmentEndTime);
@@ -178,6 +186,16 @@ export function BookAppointmentDialog({
         }
 
         const start = combineDateTime(formData.date, time);
+
+        // ✅ Check if appointment time is in the past
+        const now = new Date();
+        if (start <= now) {
+            toast.error('Không thể đặt lịch cho thời điểm trong quá khứ', {
+                description: 'Vui lòng chọn thời gian trong tương lai',
+            });
+            return;
+        }
+
         setHoldingSlot(true);
         try {
             await appointmentController.holdSlot({
@@ -240,6 +258,15 @@ export function BookAppointmentDialog({
         }
 
         const start = combineDateTime(formData.date, formData.time);
+
+        // ✅ Final check: prevent booking in the past
+        const now = new Date();
+        if (start <= now) {
+            toast.error('Không thể đặt lịch cho thời điểm trong quá khứ', {
+                description: 'Thời gian đã chọn đã qua. Vui lòng chọn thời gian khác.',
+            });
+            return;
+        }
 
         setSubmitting(true);
         appointmentController.create({
@@ -328,8 +355,8 @@ export function BookAppointmentDialog({
                                         key={service.id}
                                         onClick={() => handleSelectService(service.id)}
                                         className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${isSelected
-                                                ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
-                                                : 'border-border bg-card hover:shadow-sm'
+                                            ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
+                                            : 'border-border bg-card hover:shadow-sm'
                                             }`}
                                         aria-pressed={isSelected}
                                     >
@@ -373,8 +400,8 @@ export function BookAppointmentDialog({
                                     key={doctor.userId}
                                     onClick={() => handleSelectDoctor(doctor.userId)}
                                     className={`p-4 rounded-lg border-2 text-left transition-all hover:border-primary ${formData.doctor === doctor.userId
-                                            ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
-                                            : 'border-border bg-card hover:shadow-sm'
+                                        ? 'border-primary bg-accent shadow-md ring-2 ring-primary/40'
+                                        : 'border-border bg-card hover:shadow-sm'
                                         }`}
                                     aria-pressed={formData.doctor === doctor.userId}
                                 >
@@ -435,8 +462,8 @@ export function BookAppointmentDialog({
                                                 onClick={() => handleSelectTime(time)}
                                                 disabled={holdingSlot}
                                                 className={`p-2 rounded-lg border text-sm transition-all ${formData.time === time
-                                                        ? 'border-primary bg-primary text-primary-foreground shadow ring-2 ring-primary/50'
-                                                        : 'border-border bg-card text-foreground hover:border-primary hover:shadow-sm'
+                                                    ? 'border-primary bg-primary text-primary-foreground shadow ring-2 ring-primary/50'
+                                                    : 'border-border bg-card text-foreground hover:border-primary hover:shadow-sm'
                                                     }`}
                                                 aria-pressed={formData.time === time}
                                             >
