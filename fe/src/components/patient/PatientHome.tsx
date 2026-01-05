@@ -281,7 +281,7 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
               <div className="flex flex-wrap gap-[16px]">
                 <button
                   onClick={() => setShowBookingDialog(true)}
-                  className="px-[32px] py-[16px] bg-[#3fb5ff] text-white rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#1e8bc3] hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.4)] transition-all"
+                  className="px-[32px] py-[16px] bg-[#3fb5ff] text-[#01304e] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-[#1e8bc3] hover:shadow-[0px_8px_24px_0px_rgba(63,181,255,0.4)] transition-all"
                 >
                   Đặt lịch hẹn ngay
                 </button>
@@ -497,8 +497,8 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
                 key={doctor.id}
                 onClick={() => setSelectedDoctor(doctor)}
                 className={`bg-white rounded-[24px] overflow-hidden transition-all cursor-pointer group ${selectedDoctor.id === doctor.id
-                    ? "shadow-[0px_8px_32px_0px_rgba(63,181,255,0.3)] ring-2 ring-[#3fb5ff]"
-                    : "hover:shadow-[0px_8px_32px_0px_rgba(63,181,255,0.15)]"
+                  ? "shadow-[0px_8px_32px_0px_rgba(63,181,255,0.3)] ring-2 ring-[#3fb5ff]"
+                  : "hover:shadow-[0px_8px_32px_0px_rgba(63,181,255,0.15)]"
                   }`}
               >
                 <div className="relative h-[300px] overflow-hidden">
@@ -602,8 +602,8 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
                   key={index}
                   onClick={() => setCurrentTestimonialIndex(index)}
                   className={`w-[10px] h-[10px] rounded-full transition-all ${index === currentTestimonialIndex
-                      ? "bg-[#3fb5ff] w-[32px]"
-                      : "bg-[#d6edfa]"
+                    ? "bg-[#3fb5ff] w-[32px]"
+                    : "bg-[#d6edfa]"
                     }`}
                 />
               ))}
@@ -659,17 +659,16 @@ export function PatientHome({ onNavigate, onOpenChatbot }: PatientHomeProps) {
           <div className="flex flex-wrap gap-[16px] justify-center">
             <button
               onClick={() => setShowBookingDialog(true)}
-              className="px-[32px] py-[16px] bg-white text-[#3fb5ff] rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:shadow-[0px_8px_24px_0px_rgba(255,255,255,0.3)] transition-all"
+              className="px-[32px] py-[16px] bg-transparent border-2 border-white text-white rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:shadow-[0px_8px_24px_0px_rgba(255,255,255,0.3)] transition-all"
             >
               Đặt lịch hẹn ngay
             </button>
-            <a
-              href="tel:+84583891780"
-              className="px-[32px] py-[16px] bg-transparent border-2 border-white text-white rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] hover:bg-white/10 transition-all inline-flex items-center gap-[8px]"
+            <div
+              className="px-[32px] py-[16px] bg-transparent border-2 border-white text-white rounded-[12px] font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] inline-flex items-center gap-[8px]"
             >
               <Phone className="w-[20px] h-[20px]" />
               Gọi ngay: +84 583891780
-            </a>
+            </div>
           </div>
         </div>
       </section>

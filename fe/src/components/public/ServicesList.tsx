@@ -105,11 +105,8 @@ export function ServicesList({
       <div className="bg-gradient-to-r from-[#ebf6fc] to-[#d6edfa] py-[80px] px-[20px]">
         <div className="container mx-auto px-20 text-center space-y-[20px]">
           <h1 className="font-['Fz_Poppins:Bold',sans-serif] text-[#01304e] text-[48px] tracking-[0.5px]">
-            Dich vu cua chung toi
+            Dịch vụ của chúng tôi
           </h1>
-          <p className="font-['Fz_Poppins:Regular',sans-serif] text-[#333333] text-[20px] tracking-[0.5px] max-w-[800px] mx-auto">
-            Danh sach dich vu tu he thong appointment-service
-          </p>
         </div>
       </div>
 
@@ -132,11 +129,10 @@ export function ServicesList({
               key={filter.id}
               onClick={() => setSelectedFilter(filter.id)}
               variant={selectedFilter === filter.id ? "default" : "outline"}
-              className={`rounded-[20px] h-[42px] px-[24px] font-['Fz_Poppins:Medium',sans-serif] text-[15px] tracking-[0.5px] transition-all ${
-                selectedFilter === filter.id
-                  ? "bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 shadow-[0px_4px_8px_0px_rgba(63,181,255,0.3)]"
-                  : "bg-[#fcfeff] text-[#333333] border-[#d6edfa] hover:bg-[#ebf6fc] hover:border-[#3fb5ff]"
-              }`}
+              className={`rounded-[20px] h-[42px] px-[24px] font-['Fz_Poppins:Medium',sans-serif] text-[15px] tracking-[0.5px] transition-all ${selectedFilter === filter.id
+                ? "bg-[#3fb5ff] text-[#fcfeff] hover:bg-[#3fb5ff]/90 shadow-[0px_4px_8px_0px_rgba(63,181,255,0.3)]"
+                : "bg-[#fcfeff] text-[#333333] border-[#d6edfa] hover:bg-[#ebf6fc] hover:border-[#3fb5ff]"
+                }`}
             >
               {filter.label}
             </Button>

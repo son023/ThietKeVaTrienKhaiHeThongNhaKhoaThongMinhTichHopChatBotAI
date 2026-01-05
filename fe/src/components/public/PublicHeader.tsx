@@ -19,8 +19,6 @@ export function PublicHeader({
     { id: "home", label: "Trang chủ" },
     { id: "services", label: "Dịch vụ" },
     { id: "doctors", label: "Bác sĩ" },
-    { id: "about", label: "Về chúng tôi" },
-    { id: "contact", label: "Liên hệ" },
   ];
 
   const handleMenuClick = (id: string) => {
@@ -43,11 +41,10 @@ export function PublicHeader({
               key={item.id}
               variant="ghost"
               onClick={() => handleMenuClick(item.id)}
-              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${
-                activeMenu === item.id
+              className={`font-['Fz_Poppins:SemiBold',sans-serif] text-[16px] tracking-[0.5px] ${activeMenu === item.id
                   ? "text-primary hover:text-primary hover:bg-accent"
                   : ""
-              }`}
+                }`}
             >
               {item.label}
             </Button>

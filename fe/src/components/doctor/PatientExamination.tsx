@@ -95,6 +95,7 @@ export function PatientExamination({
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [appointmentStatus, setAppointmentStatus] = useState<string | null>(null);
   const [printData, setPrintData] = useState<{
     patient: PatientWithUser | null;
     appointmentId: string | null;
@@ -305,10 +306,10 @@ export function PatientExamination({
           try {
             // Load appointment để kiểm tra status
             const appointment = await appointmentController.getById(appointmentId);
-            const appointmentStatus = appointment.status?.toUpperCase();
+            const status = appointment.status?.toUpperCase() || appointment.status || null;
+            setAppointmentStatus(status);
 
-            // Nếu appointment đã hoàn thành (COMPLETED/COMPLETE), load từ server
-            if (appointmentStatus === "COMPLETED" || appointmentStatus === "COMPLETE") {
+            if (status === "COMPLETED" || status === "COMPLETED_INVOICE") {
               try {
                 const appointmentHistory = await medicalHistoryController.getByAppointmentId(appointmentId);
                 if (appointmentHistory && appointmentHistory.length > 0) {
@@ -359,11 +360,21 @@ export function PatientExamination({
     loadData();
   }, [patientId, appointmentId]);
 
+  // Kiểm tra xem có phải view-only mode không
+  const isViewOnly = useMemo(() => {
+    return appointmentStatus === "COMPLETED" || appointmentStatus === "COMPLETED_INVOICE";
+  }, [appointmentStatus]);
+
+  // Kiểm tra xem có phải COMPLETED_INVOICE không (để disable nút tạo đơn thuốc)
+  const isCompletedInvoice = useMemo(() => {
+    return appointmentStatus === "COMPLETED_INVOICE";
+  }, [appointmentStatus]);
+
   // Auto-save khi thay đổi internalNote, symptoms, hoặc conditions
   useEffect(() => {
-    if (!appointmentId || loading) return;
+    if (!appointmentId || loading || isViewOnly) return;
 
-    // Chỉ auto-save nếu có thay đổi thực sự
+    // Chỉ auto-save nếu có thay đổi thực sự và không phải view-only mode
     if (internalNote || symptoms || conditions.length > 0) {
       debouncedSaveDraft();
     }
@@ -468,9 +479,40 @@ export function PatientExamination({
 
       // Xóa draft từ localStorage sau khi hoàn tất
       clearDraftFromLocalStorage();
-      setSymptoms("");
-      setConditions([]);
-      setInternalNote("");
+      
+      // Reload lại data để cập nhật trạng thái và hiển thị disable
+      setLoading(true);
+      try {
+        // Load lại appointment để cập nhật status
+        const appointment = await appointmentController.getById(appointmentId);
+        const status = appointment.status?.toUpperCase() || appointment.status || null;
+        setAppointmentStatus(status);
+
+        // Load lại medical history từ server
+        const appointmentHistory = await medicalHistoryController.getByAppointmentId(appointmentId);
+        if (appointmentHistory && appointmentHistory.length > 0) {
+          const currentHistory = appointmentHistory[0];
+          if (currentHistory.symptoms !== undefined) {
+            setSymptoms(currentHistory.symptoms || "");
+          }
+          if (currentHistory.conditions !== undefined && Array.isArray(currentHistory.conditions)) {
+            const mappedConditions = currentHistory.conditions
+              .filter(c => c.name)
+              .map(c => ({
+                toothNumber: c.toothNumber,
+                name: c.name || "",
+                status: c.status,
+                treatment: c.treatment,
+                surface: c.surface,
+              }));
+            setConditions(mappedConditions);
+          }
+        }
+      } catch (reloadErr) {
+        console.warn("Lỗi khi reload data:", reloadErr);
+      } finally {
+        setLoading(false);
+      }
     } catch (err) {
       toast.error(
           err instanceof Error ? err.message : "Không thể lưu thông tin khám"
@@ -850,9 +892,16 @@ export function PatientExamination({
           <div className="col-span-12 lg:col-span-6 space-y-4">
             <Card className="rounded-xl border border-neutral-border/20 bg-neutral-surface shadow-sm min-h-[560px]">
               <CardHeader className="p-4 pb-0">
-                <CardTitle className="typo-h4 flex items-center gap-2">
-                  Khu vực khám bệnh
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="typo-h4 flex items-center gap-2">
+                    Khu vực khám bệnh
+                  </CardTitle>
+                  {isViewOnly && (
+                    <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50">
+                      Chế độ xem chỉ đọc
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-4">
                 <Tabs defaultValue="notes" className="flex flex-col gap-4">
@@ -869,7 +918,7 @@ export function PatientExamination({
                           <Label className="text-[#01304e] block">
                             Triệu chứng
                           </Label>
-                          {lastSavedTime && (
+                          {lastSavedTime && !isViewOnly && (
                             <span className="text-xs text-neutral-text/50">
                               Đã lưu: {lastSavedTime.toLocaleTimeString("vi-VN", {
                                 hour: "2-digit",
@@ -883,10 +932,14 @@ export function PatientExamination({
                             onChange={(e) => setSymptoms(e.target.value)}
                             placeholder="Nhập triệu chứng của bệnh nhân..."
                             className="rounded-[10px] h-[100px]"
+                            disabled={isViewOnly}
+                            readOnly={isViewOnly}
                         />
-                        <p className="text-xs text-neutral-text/50 mt-1">
-                          Tự động lưu nháp sau 1 giây không nhập
-                        </p>
+                        {!isViewOnly && (
+                          <p className="text-xs text-neutral-text/50 mt-1">
+                            Tự động lưu nháp sau 1 giây không nhập
+                          </p>
+                        )}
                       </div>
 
                       {/* Chuẩn đoán lâm sàng */}
@@ -901,6 +954,7 @@ export function PatientExamination({
                               size="sm"
                               onClick={() => setIsAddConditionDialogOpen(true)}
                               className="rounded-[10px]"
+                              disabled={isViewOnly}
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             Thêm chuẩn đoán
@@ -940,15 +994,17 @@ export function PatientExamination({
                                           <p className="text-xs text-[#666666] mt-1">Bề mặt: {condition.surface}</p>
                                       )}
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleRemoveCondition(index)}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </Button>
+                                    {!isViewOnly && (
+                                      <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleRemoveCondition(index)}
+                                          className="text-red-500 hover:text-red-700"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    )}
                                   </div>
                               ))}
                             </div>
@@ -980,8 +1036,9 @@ export function PatientExamination({
                             <Select
                                 value={labTestTypeId}
                                 onValueChange={setLabTestTypeId}
+                                disabled={isViewOnly}
                             >
-                              <SelectTrigger className="rounded-lg">
+                              <SelectTrigger className="rounded-lg" disabled={isViewOnly}>
                                 <SelectValue placeholder="Chọn loại lab test" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1002,12 +1059,14 @@ export function PatientExamination({
                                 onChange={(e) => setLabInstructions(e.target.value)}
                                 placeholder="Ví dụ: yêu cầu kết quả trong ngày, lưu ý dị ứng, ..."
                                 className="min-h-[100px]"
+                                disabled={isViewOnly}
+                                readOnly={isViewOnly}
                             />
                           </div>
                         </div>
                         <Button
                             onClick={handleSendLabRequest}
-                            disabled={requestingLab}
+                            disabled={requestingLab || isViewOnly}
                             className="bg-primary hover:bg-primary/90 rounded-lg"
                         >
                           <ThermometerSun className="w-4 h-4 mr-2" />
@@ -1090,7 +1149,7 @@ export function PatientExamination({
                     <CardTitle className="typo-h4 flex items-center gap-2">
                       Ghi chú nội bộ
                     </CardTitle>
-                    {lastSavedTime && (
+                    {lastSavedTime && !isViewOnly && (
                       <span className="text-xs text-neutral-text/50">
                         Đã lưu: {lastSavedTime.toLocaleTimeString("vi-VN", {
                           hour: "2-digit",
@@ -1106,10 +1165,14 @@ export function PatientExamination({
                       onChange={(e) => setInternalNote(e.target.value)}
                       placeholder="Ghi chú cho phụ tá..."
                       className="min-h-[100px] text-sm"
+                      disabled={isViewOnly}
+                      readOnly={isViewOnly}
                   />
-                  <p className="text-xs text-neutral-text/50 mt-2">
-                    Tự động lưu nháp sau 1 giây không nhập
-                  </p>
+                  {!isViewOnly && (
+                    <p className="text-xs text-neutral-text/50 mt-2">
+                      Tự động lưu nháp sau 1 giây không nhập
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1134,6 +1197,7 @@ export function PatientExamination({
                           }
                           onNavigateToCreatePrescription(appointmentId, medicalHistoryId);
                         }}
+                        disabled={isCompletedInvoice}
                     >
                       <Pill className="w-4 h-4 mr-2" />
                       Tạo đơn thuốc
@@ -1142,7 +1206,7 @@ export function PatientExamination({
                   <Button
                       className="w-full bg-primary hover:bg-primary/90 rounded-lg"
                       onClick={handleSaveComplete}
-                      disabled={saving}
+                      disabled={saving || isViewOnly}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? "Đang lưu..." : "Lưu & Hoàn tất khám"}
