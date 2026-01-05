@@ -12,6 +12,7 @@ import com.main_project.labtest_service.repository.LabTestRepository;
 import com.main_project.labtest_service.repository.LabTestTypeRepository;
 import com.main_project.labtest_service.util.EntityDTOMapper;
 import com.do_an.common.event.LabTestRequestedEvent;
+import com.do_an.common.event.LabTestCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -196,6 +197,20 @@ public class LabTestService implements ILabTest{
         labTestRepository.save(existing);
 
         publishLabTestCompletedEvents(existing);
+        
+        try {
+            LabTestCompletedEvent event = new LabTestCompletedEvent(
+                existing.getId(),
+                existing.getAppointmentId(),
+                existing.getDoctorId(),
+                existing.getPrice()
+            );
+            eventBus.publish(asEventMessage(event));
+            log.info("Published LabTestCompletedEvent for labTestId: {}, appointmentId: {}, doctorId: {}, price: {}", 
+                    existing.getId(), existing.getAppointmentId(), existing.getDoctorId(), existing.getPrice());
+        } catch (Exception e) {
+            log.error("Failed to publish LabTestCompletedEvent: {}", e.getMessage(), e);
+        }
         
         return mapper.toLabTestDTO(labTestRepository.findByIdWithRelations(id).orElseThrow());
     }

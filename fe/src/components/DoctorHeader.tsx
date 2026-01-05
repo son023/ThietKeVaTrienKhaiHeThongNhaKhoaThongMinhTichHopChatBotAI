@@ -1,8 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { Bell, LogOut, User, Settings, Home } from "lucide-react";
+import { Bell, LogOut, User, Settings, Home, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import type { DoctorWithUser } from "../controllers/DoctorController";
-import { notificationController, type NotificationDTO } from "../controllers/NotificationController";
-import { connectWebSocket, subscribeToDoctorNotifications } from "../services/websocketService";
+import { useNotifications } from "../contexts/NotificationContext";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -28,85 +25,56 @@ export function DoctorHeader({
   doctor,
   isLoading,
 }: HeaderProps = {}) {
-  const [notifications, setNotifications] = useState<NotificationDTO[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-  const loadNotifications = async (userId: string) => {
-    try {
-      console.log("Loading notifications for userId:", userId);
-      const [notifs, unread] = await Promise.all([
-        notificationController.getByUserId(userId),
-        notificationController.getUnreadCount(userId),
-      ]);
-      console.log("Notifications loaded:", notifs.length, "total,", unread, "unread");
-      setNotifications(notifs);
-      setUnreadCount(unread);
-    } catch (error) {
-      console.error("Failed to load notifications:", error);
-    }
-  };
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    refreshNotifications,
+  } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!doctor?.userId) {
-      console.log("Doctor userId not available yet, waiting...");
-      return;
-    }
-
-    const userId = doctor.userId;
-    console.log("Setting up notifications for doctor userId:", userId);
-
-    loadNotifications(userId);
-
-    console.log("Connecting to websocket...");
-    connectWebSocket();
-
-    const subscribeTimeout = setTimeout(() => {
-      console.log("Subscribing to websocket notifications for userId:", userId);
-      const unsubscribe = subscribeToDoctorNotifications(userId, (notification) => {
-        console.log("New notification received via websocket:", notification);
-        setTimeout(() => {
-          console.log("Reloading notifications after websocket message...");
-          loadNotifications(userId);
-        }, 1000);
-      });
-      unsubscribeRef.current = unsubscribe;
-    }, 1000);
-
-    return () => {
-      clearTimeout(subscribeTimeout);
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
-  }, [doctor?.userId]);
 
-  const handleNotificationClick = async (notification: NotificationDTO) => {
-    if (notification.status === "sent") {
-      try {
-        await notificationController.markAsRead(notification.id);
-        if (doctor?.userId) {
-          loadNotifications(doctor.userId);
-        }
-      } catch (error) {
-        console.error("Failed to mark notification as read:", error);
-      }
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+  }, [showNotifications]);
+
+  useEffect(() => {
+    if (showNotifications) {
+      refreshNotifications();
+    }
+  }, [showNotifications, refreshNotifications]);
+
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Vừa xong';
+    if (minutes < 60) return `${minutes} phút trước`;
+    if (hours < 24) return `${hours} giờ trước`;
+    if (days < 7) return `${days} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Vừa xong";
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    return date.toLocaleDateString("vi-VN");
+  const handleNotificationClick = async (notification: { id: string; read: boolean }) => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    setShowNotifications(false);
   };
   const displayName = useMemo(() => doctor?.user?.fullName, [doctor]);
   const subtitle = useMemo(() => {
@@ -139,34 +107,57 @@ export function DoctorHeader({
         </div>
 
         <div className="flex items-center gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="relative p-2 hover:bg-[#d8f0ff] rounded-[10px] transition-colors">
+          {/* Notifications */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-lg hover:bg-[#d8f0ff] transition-all duration-200"
+            >
                 <Bell className="w-6 h-6 text-[#333333]" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-5 h-5 bg-[#3FB5FF] text-white rounded-full flex items-center justify-center text-xs">
-                    {unreadCount}
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-semibold px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-96 p-0 rounded-[15px] border-[#e8e8e8]"
-              align="end"
-              onOpenAutoFocus={() => {
-                // Reload notifications when popover opens
-                if (doctor?.userId) {
-                  console.log("🔄 Popover opened, reloading notifications...");
-                  loadNotifications(doctor.userId);
-                }
-              }}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-[400px] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="font-semibold text-[#01304e] text-base">
+                    Thông báo {notifications.length > 0 && `(${notifications.length})`}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        disabled={unreadCount === 0}
+                        className={`text-xs font-medium whitespace-nowrap transition-colors ${
+                          unreadCount > 0
+                            ? 'text-[#3FB5FF] hover:text-[#3FB5FF]/80 cursor-pointer'
+                            : 'text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        Đánh dấu tất cả đã đọc
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 hover:bg-gray-100 rounded flex-shrink-0"
+                      aria-label="Đóng"
             >
-              <div className="p-4 border-b border-[#e8e8e8]">
-                <h3 className="text-[#01304e]">Thong bao</h3>
+                      <X className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+                {/* Notifications List */}
+                <div className="overflow-y-auto flex-1">
+                  {loading ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Đang tải thông báo...
               </div>
-              <div className="max-h-96 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-[#333333]/60 text-sm">
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
                     Không có thông báo
                   </div>
                 ) : (
@@ -174,25 +165,31 @@ export function DoctorHeader({
                     <div
                       key={notif.id}
                       onClick={() => handleNotificationClick(notif)}
-                      className={`p-4 border-b border-[#e8e8e8] hover:bg-[#d8f0ff]/30 transition-colors cursor-pointer ${
-                        notif.status === "sent" ? "bg-[#d8f0ff]/50" : ""
+                        className={`p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer ${
+                          !notif.read ? 'bg-blue-50' : ''
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm text-[#333333]">{notif.message}</p>
-                        {notif.status === "sent" && (
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm text-[#01304e] mb-1">
+                              {notif.title}
+                            </p>
+                            <p className="text-sm text-gray-700">{notif.message}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTime(notif.timestamp)}
+                            </p>
+                          </div>
+                          {!notif.read && (
                           <div className="w-2 h-2 bg-[#3FB5FF] rounded-full flex-shrink-0 mt-1" />
                         )}
                       </div>
-                      <p className="text-xs text-[#333333]/60 mt-1">
-                        {formatTime(notif.createdAt)}
-                      </p>
                     </div>
                   ))
                 )}
               </div>
-            </PopoverContent>
-          </Popover>
+              </div>
+            )}
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
