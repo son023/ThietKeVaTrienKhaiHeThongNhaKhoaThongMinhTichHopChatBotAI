@@ -558,25 +558,35 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
         </div>
 
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="w-full">
+            <colgroup>
+              <col style={{ width: '5%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '14%' }} />
+            </colgroup>
             <TableHeader>
               <TableRow className="bg-neutral-muted/30">
-                <TableHead className="w-[50px] font-semibold text-neutral-heading">STT</TableHead>
-                <TableHead className="font-semibold text-neutral-heading">Loại</TableHead>
-                <TableHead className="font-semibold text-neutral-heading">Tên Dịch vụ/Vật tư</TableHead>
-                <TableHead className="text-center w-[100px] font-semibold text-neutral-heading">Số lượng</TableHead>
-                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">Đơn giá</TableHead>
-                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">Thành tiền</TableHead>
-                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">
+                <TableHead className="font-semibold text-neutral-heading px-3">STT</TableHead>
+                <TableHead className="font-semibold text-neutral-heading px-3">Loại</TableHead>
+                <TableHead className="font-semibold text-neutral-heading px-3">Tên Dịch vụ/Vật tư</TableHead>
+                <TableHead className="text-center font-semibold text-neutral-heading px-3">SL</TableHead>
+                <TableHead className="text-right font-semibold text-neutral-heading px-3">Đơn giá</TableHead>
+                <TableHead className="text-right font-semibold text-neutral-heading px-3">Thành tiền</TableHead>
+                <TableHead className="text-right font-semibold text-neutral-heading px-3">
                   <span className="flex items-center justify-end gap-1">
-                    <Shield className="w-4 h-4 text-green-600" />
-                    BH chi trả
+                    <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="truncate">BH chi trả</span>
                   </span>
                 </TableHead>
-                <TableHead className="text-right w-[130px] font-semibold text-neutral-heading">
+                <TableHead className="text-right font-semibold text-neutral-heading px-3">
                   <span className="flex items-center justify-end gap-1">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    BN thanh toán
+                    <Wallet className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="truncate">BN thanh toán</span>
                   </span>
                 </TableHead>
               </TableRow>
@@ -584,29 +594,29 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             <TableBody>
               {items.map((item, index) => (
                 <TableRow key={item.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                  <TableCell className="font-medium text-neutral-text">{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{getServiceIcon(item.serviceType)}</span>
-                      <span className="text-xs font-medium text-neutral-text/70">{item.serviceType}</span>
+                  <TableCell className="font-medium text-neutral-text align-top px-3 py-3">{index + 1}</TableCell>
+                  <TableCell className="align-top px-3 py-3">
+                    <div className="flex items-start gap-2 overflow-hidden">
+                      <span className="text-xl flex-shrink-0">{getServiceIcon(item.serviceType)}</span>
+                      <span className="text-xs font-medium text-neutral-text/70 break-words overflow-hidden">{item.serviceType}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs">
-                      <p className="text-sm font-medium text-neutral-heading">{item.name}</p>
+                  <TableCell className="align-top px-3 py-3">
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-medium text-neutral-heading leading-relaxed break-all">{item.name}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-medium text-neutral-text">{item.quantity}</TableCell>
-                  <TableCell className="text-right text-neutral-text">
+                  <TableCell className="text-center font-medium text-neutral-text align-top px-3 py-3">{item.quantity}</TableCell>
+                  <TableCell className="text-right text-neutral-text align-top whitespace-nowrap px-3 py-3">
                     {item.unitPrice.toLocaleString('vi-VN')}đ
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-neutral-heading">
+                  <TableCell className="text-right font-semibold text-neutral-heading align-top whitespace-nowrap px-3 py-3">
                     {(item.quantity * item.unitPrice).toLocaleString('vi-VN')}đ
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-green-600">
+                  <TableCell className="text-right font-semibold text-green-600 align-top whitespace-nowrap px-3 py-3">
                     {(item.insurancePayAmount ?? 0).toLocaleString('vi-VN')}đ
                   </TableCell>
-                  <TableCell className="text-right font-bold text-primary">
+                  <TableCell className="text-right font-bold text-primary align-top whitespace-nowrap px-3 py-3">
                     {(item.patientPayAmount ?? 0).toLocaleString('vi-VN')}đ
                   </TableCell>
                 </TableRow>

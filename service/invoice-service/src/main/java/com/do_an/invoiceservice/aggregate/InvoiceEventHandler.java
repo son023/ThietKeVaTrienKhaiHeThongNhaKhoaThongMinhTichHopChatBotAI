@@ -66,45 +66,45 @@ public class InvoiceEventHandler {
     @Transactional
     public void on(InsuranceDiscountUpdatedEvent event) {
         //BỎ COMMENT NÀY ĐỂ TEST LUỒNG ROLLBACK FULL
-        eventBus.publish(GenericEventMessage.asEventMessage(
-                new InvoiceDiscountAppliedFailedEvent(
-                        event.getPrescriptionId(),
-                        event.getInvoiceId(),
-                        "Lỗi cơ sở dữ liệu: "
-                )
-        ));
+        // eventBus.publish(GenericEventMessage.asEventMessage(
+        //         new InvoiceDiscountAppliedFailedEvent(
+        //                 event.getPrescriptionId(),
+        //                 event.getInvoiceId(),
+        //                 "Lỗi cơ sở dữ liệu: "
+        //         )
+        // ));
 
-//        try {
-//            // Sử dụng service để áp dụng insurance discount
-//            InvoiceResponseDTO invoiceResponseDTO = invoiceService.applyInsuranceDiscount(
-//                    event.getInvoiceId(),
-//                    event.getInsuranceClaimId(),
-//                    event.getDiscountAmount(),
-//                    event.getItems()
-//            );
-//
-//            eventBus.publish(asEventMessage(
-//                    new InvoiceDiscountAppliedSuccessEvent(
-//                            event.getPrescriptionId(),
-//                            event.getInvoiceId()
-//                    )
-//            ));
-//
-//            log.info("Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}",
-//                    invoiceResponseDTO.getInsuranceTotalPay(), invoiceResponseDTO.getPatientTotalPay());
-//        } catch (Exception e) {
-//            log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
-//            // COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
-//            eventBus.publish(asEventMessage(
-//                    new InvoiceDiscountAppliedFailedEvent(
-//                            event.getPrescriptionId(),
-//                            event.getInvoiceId(),
-//                            "Lỗi cơ sở dữ liệu: " + e.getMessage()
-//                    )
-//            ));
-//
-//            throw new RuntimeException("Hoàn tác Cập nhật Giảm giá", e);
-//        }
+       try {
+           // Sử dụng service để áp dụng insurance discount
+           InvoiceResponseDTO invoiceResponseDTO = invoiceService.applyInsuranceDiscount(
+                   event.getInvoiceId(),
+                   event.getInsuranceClaimId(),
+                   event.getDiscountAmount(),
+                   event.getItems()
+           );
+
+           eventBus.publish(asEventMessage(
+                   new InvoiceDiscountAppliedSuccessEvent(
+                           event.getPrescriptionId(),
+                           event.getInvoiceId()
+                   )
+           ));
+
+           log.info("Đã cập nhật giảm giá thành công. Bảo hiểm trả: {}, Bệnh nhân trả: {}",
+                   invoiceResponseDTO.getInsuranceTotalPay(), invoiceResponseDTO.getPatientTotalPay());
+       } catch (Exception e) {
+           log.error("LỖI KỸ THUẬT khi cập nhật giảm giá: {}", e.getMessage());
+           // COMPENSATION: Nếu lỗi DB, báo Saga biết để Rollback bước trước
+           eventBus.publish(asEventMessage(
+                   new InvoiceDiscountAppliedFailedEvent(
+                           event.getPrescriptionId(),
+                           event.getInvoiceId(),
+                           "Lỗi cơ sở dữ liệu: " + e.getMessage()
+                   )
+           ));
+
+           throw new RuntimeException("Hoàn tác Cập nhật Giảm giá", e);
+       }
     }
 
     // --- XỬ LÝ ROLLBACK: HỦY GIẢM GIÁ ---(TẠM THỜI CHƯA DÙNG ĐỂ PHỤC VỤ CHO PAYMENT SAU NÀY)
