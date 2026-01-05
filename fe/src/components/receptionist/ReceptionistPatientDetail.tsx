@@ -20,6 +20,7 @@ import { appointmentController, AppointmentDTO } from '../../controllers/Appoint
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
 import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
 import { PatientWithUser } from '../../models';
+import { userController } from '../../controllers';
 
 interface ReceptionistPatientDetailProps {
   patientId: string;
@@ -34,7 +35,18 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
   const [invoices, setInvoices] = useState<InvoiceDTO[]>([]);
   const [doctors, setDoctors] = useState<Record<string, string>>({}); // Map: doctorId -> Doctor Name
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    birthDate: '',
+    gender: '',
+    address: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +71,15 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
         setAppointments(appointmentList || []);
         setInvoices(invoiceList || []);
 
+        setFormData({
+          fullName: patientData.user?.fullName || '',
+          phone: patientData.user?.phone || patientData.contactPhone || '',
+          email: patientData.user?.email || '',
+          birthDate: patientData.dob ? new Date(patientData.dob).toISOString().split('T')[0] : '',
+          gender: patientData.gender || '',
+          address: patientData.address || ''
+        });
+
         // Create doctor map for easy lookup
         const docMap: Record<string, string> = {};
         doctorList.forEach(d => {
@@ -78,6 +99,69 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
       fetchData();
     }
   }, [patientId]);
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!patient || !patient.user?.id) return;
+
+    try {
+      setSaving(true);
+
+      // Update User Info
+      await userController.update(patient.user.id, {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email
+      });
+
+      // Update Patient Info - preserving other fields
+      await patientController.updateProfile(patientId, {
+        userId: patient.userId,
+        dob: formData.birthDate ? new Date(formData.birthDate).toISOString() : undefined,
+        gender: formData.gender,
+        address: formData.address,
+        contactPhone: formData.phone, // Sync contact phone
+        // Preserve existing deeply nested structures if needed, though strictly 
+        // updateProfile replaces fields present in payload.
+        // Assuming backend handles partial updates or we accept losing what we don't send if we don't have it.
+        // But for PatientProfileRequest, we can send what we have.
+        patientAllergies: patient.patientAllergies?.map(a => ({
+          allergyId: a.allergyId,
+          severity: a.severity,
+          reaction: a.reaction,
+          note: a.note
+        })),
+        underlyingDiseases: patient.underlyingDiseases?.map(d => ({
+          name: d.name,
+          status: d.status,
+          severity: d.severity,
+          isVerified: d.isVerified,
+          note: d.note
+        })),
+        toothIssues: patient.toothIssues?.map(t => ({
+          toothNumber: t.toothNumber,
+          status: t.status,
+          description: t.description,
+          diagnosedDate: t.diagnosedDate,
+          note: t.note
+        }))
+      });
+
+      // Refetch to ensure consistency
+      const updatedPatient = await patientController.getWithUserById(patientId);
+      setPatient(updatedPatient);
+      // Wait a bit to show success state if we had a toast, but here just button state
+
+    } catch (err) {
+      console.error("Error saving patient:", err);
+      // specific error handling could go here
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -155,17 +239,33 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-neutral-text font-medium">Họ và tên *</Label>
-                <Input id="name" defaultValue={patient.user?.fullName} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input
+                  id="name"
+                  value={formData.fullName}
+                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-neutral-text font-medium">Số điện thoại *</Label>
-                <Input id="phone" defaultValue={patient.user?.phone || patient.contactPhone} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-neutral-text font-medium">Email</Label>
-                <Input id="email" type="email" defaultValue={patient.user?.email} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
+                />
               </div>
 
               <div className="space-y-2">
@@ -173,36 +273,44 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
                 <Input
                   id="birthDate"
                   type="date"
-                  defaultValue={patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : ''}
+                  value={formData.birthDate}
+                  onChange={(e) => handleInputChange('birthDate', e.target.value)}
                   className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="gender" className="text-neutral-text font-medium">Giới tính</Label>
-                <Input id="gender" defaultValue={patient.gender === 'MALE' ? 'Nam' : patient.gender === 'FEMALE' ? 'Nữ' : patient.gender} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <select
+                  id="gender"
+                  className="flex h-10 w-full rounded-md border border-neutral-border bg-neutral-surface px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.gender}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
+                >
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
               </div>
 
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="address" className="text-neutral-text font-medium">Địa chỉ</Label>
-                <Input id="address" defaultValue={patient.address} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
-              </div>
-
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="notes" className="text-neutral-text font-medium">Ghi chú (Dị ứng/Bệnh nền)</Label>
-                <Textarea
-                  id="notes"
-                  defaultValue={patient.allergy}
-                  placeholder="Ví dụ: Dị ứng thuốc tê..."
-                  rows={3}
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
                 />
               </div>
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200">
-                Lưu thay đổi
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-primary hover:bg-primary-strong shadow-sm transition-all duration-200"
+              >
+                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
               </Button>
             </div>
           </Card>
@@ -262,22 +370,36 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
               <Table>
                 <TableHeader>
                   <TableRow className="bg-neutral-muted/30">
+                    <TableHead className="w-1/3 font-semibold text-neutral-text">
+                      Ngày
+                    </TableHead>
 
-                    <TableHead className="font-semibold text-neutral-text">Ngày</TableHead>
-                    <TableHead className="font-semibold text-neutral-text">Số tiền</TableHead>
-                    <TableHead className="font-semibold text-neutral-text">Trạng thái</TableHead>
-                    <TableHead className="font-semibold text-neutral-text">Thao tác</TableHead>
+                    {/* Thêm pr-12 để đẩy số tiền lùi vào trong, tránh sát mép phải */}
+                    <TableHead className="w-1/3 font-semibold text-neutral-text text-right pr-12">
+                      Số tiền
+                    </TableHead>
+
+                    {/* Thêm pl-12 để đẩy Trạng thái lùi sang phải, xa khỏi cột Số tiền */}
+                    <TableHead className="w-1/3 font-semibold text-neutral-text pl-12">
+                      Trạng thái
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map((invoice) => (
-                    <TableRow key={invoice.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                    <TableRow key={invoice.id} className="...">
 
-                      <TableCell className="text-neutral-text">{new Date(invoice.issueAt).toLocaleDateString("vi-VN")}</TableCell>
-                      <TableCell className="text-right text-neutral-text font-semibold">
+                      <TableCell className="text-neutral-text">
+                        {new Date(invoice.issueAt).toLocaleDateString("vi-VN")}
+                      </TableCell>
+
+                      {/* Đồng bộ: text-right và pr-12 giống header */}
+                      <TableCell className="text-right text-neutral-text font-semibold pr-12">
                         {invoice.totalAmount.toLocaleString('vi-VN')}đ
                       </TableCell>
-                      <TableCell>
+
+                      {/* Đồng bộ: pl-12 giống header */}
+                      <TableCell className="pl-12">
                         <Badge
                           variant={invoice.status === 'PAID' ? 'default' : 'destructive'}
                           className={invoice.status === 'PAID' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
@@ -285,11 +407,7 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
                           {invoice.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="outline" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
-                          Xem
-                        </Button>
-                      </TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
@@ -297,7 +415,6 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
             )}
           </Card>
         </TabsContent>
-        {/* Removed Treatment Tab */}
       </Tabs>
     </div>
   );
