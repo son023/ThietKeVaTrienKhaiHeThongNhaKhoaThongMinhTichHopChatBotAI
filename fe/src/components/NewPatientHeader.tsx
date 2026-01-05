@@ -134,6 +134,65 @@ export function NewPatientHeader({
     }
   };
 
+  // Helper functions cho dismissed reminders
+  const getDismissedReminders = (): Set<string> => {
+    try {
+      const stored = localStorage.getItem('dismissed_appointment_reminders');
+      if (stored) {
+        const dismissed = JSON.parse(stored);
+        return new Set(dismissed.map((d: any) => d.reminderId));
+      }
+    } catch (error) {
+      console.error("Failed to parse dismissed reminders:", error);
+    }
+    return new Set();
+  };
+
+  const saveDismissedReminder = (reminderId: string, appointmentId: string, appointmentStartTime: string) => {
+    try {
+      const stored = localStorage.getItem('dismissed_appointment_reminders');
+      const dismissed = stored ? JSON.parse(stored) : [];
+
+      // Thêm vào list nếu chưa có
+      if (!dismissed.find((d: any) => d.reminderId === reminderId)) {
+        dismissed.push({
+          reminderId,
+          appointmentId,
+          dismissedAt: Date.now(),
+          appointmentStartTime
+        });
+
+        localStorage.setItem('dismissed_appointment_reminders', JSON.stringify(dismissed));
+        console.log(`Dismissed reminder saved: ${reminderId}`);
+      }
+    } catch (error) {
+      console.error("Failed to save dismissed reminder:", error);
+    }
+  };
+
+  const cleanupDismissedReminders = () => {
+    try {
+      const stored = localStorage.getItem('dismissed_appointment_reminders');
+      if (!stored) return;
+
+      const dismissed = JSON.parse(stored);
+      const now = new Date();
+
+      // Giữ lại những dismissed reminders cho appointments chưa diễn ra
+      const active = dismissed.filter((d: any) => {
+        const appointmentTime = new Date(d.appointmentStartTime);
+        return appointmentTime > now;
+      });
+
+      if (active.length !== dismissed.length) {
+        localStorage.setItem('dismissed_appointment_reminders', JSON.stringify(active));
+        console.log(`Cleaned up ${dismissed.length - active.length} old dismissed reminders`);
+      }
+    } catch (error) {
+      console.error("Failed to cleanup dismissed reminders:", error);
+    }
+  };
+
   const formatTimeAgo = (date: Date): string => {
     const now = new Date();
     const diffMs = date.getTime() - now.getTime();
@@ -184,6 +243,10 @@ export function NewPatientHeader({
         // Lấy reminders hiện có từ localStorage
         const storedReminders = getStoredReminders();
 
+        // Lấy dismissed list và cleanup cũ
+        const dismissedSet = getDismissedReminders();
+        cleanupDismissedReminders();
+
         // Tạo map để cập nhật reminders hiện có
         const remindersMap = new Map<string, Notification>();
 
@@ -227,7 +290,8 @@ export function NewPatientHeader({
             // Tạo reminder 24 giờ trước (trong khoảng 23.5 - 24 giờ)
             if (hoursUntilAppointment <= 24 && hoursUntilAppointment > 1) {
               const reminderId = `reminder-24h-${appointment.id}`;
-              if (!remindersMap.has(reminderId)) {
+              // ✅ CHECK: Bỏ qua nếu đã bị dismissed
+              if (!dismissedSet.has(reminderId) && !remindersMap.has(reminderId)) {
                 remindersMap.set(reminderId, {
                   id: reminderId,
                   type: "reminder",
@@ -245,7 +309,8 @@ export function NewPatientHeader({
             // Tạo reminder 1 giờ trước (trong khoảng 0 - 1 giờ, bao gồm cả 30 phút)
             if (hoursUntilAppointment <= 1 && hoursUntilAppointment > 0) {
               const reminderId = `reminder-1h-${appointment.id}`;
-              if (!remindersMap.has(reminderId)) {
+              // ✅ CHECK: Bỏ qua nếu đã bị dismissed
+              if (!dismissedSet.has(reminderId) && !remindersMap.has(reminderId)) {
                 remindersMap.set(reminderId, {
                   id: reminderId,
                   type: "reminder",
@@ -281,8 +346,8 @@ export function NewPatientHeader({
     // Load reminders khi component mount
     loadAppointmentReminders();
 
-    // Load reminders mỗi 1 phút để cập nhật thời gian
-    const interval = setInterval(loadAppointmentReminders, 1 * 60 * 1000);
+    // Load reminders mỗi 60 phút để cập nhật thời gian
+    const interval = setInterval(loadAppointmentReminders, 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -353,7 +418,15 @@ export function NewPatientHeader({
       // Context có thể không có delete function, chỉ đánh dấu đã đọc
       markAsReadContext(id);
     } else {
-      // Xóa từ localStorage
+      // Tìm reminder để lấy appointmentId
+      const reminder = appointmentReminders.find(notif => notif.id === id);
+
+      if (reminder && reminder.appointmentId && reminder.appointmentStartTime) {
+        // ✅ LƯU VÀO DISMISSED LIST
+        saveDismissedReminder(id, reminder.appointmentId, reminder.appointmentStartTime);
+      }
+
+      // Xóa từ localStorage và state
       const updated = appointmentReminders.filter((notif) => notif.id !== id);
       setAppointmentReminders(updated);
       saveStoredReminders(updated);

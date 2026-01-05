@@ -60,6 +60,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const parseTimestamp = useCallback((dateString: string): number => {
+    if (!dateString) return Date.now();
+    
+    let normalizedDate = dateString.trim();
+    const hasTimezone = normalizedDate.includes('Z') || 
+                        normalizedDate.match(/[+-]\d{2}:\d{2}$/) !== null;
+    
+    if (!hasTimezone) {
+       normalizedDate = normalizedDate + 'Z';
+    }
+    
+    const date = new Date(normalizedDate);
+
+    if (!isNaN(date.getTime())) {
+      return date.getTime();
+    }
+
+    console.warn('[NotificationContext] Failed to parse date as UTC, trying local time:', dateString);
+    return new Date(dateString).getTime();
+  }, []);
+
   // Convert NotificationDTO từ backend sang Notification frontend
   const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
     // ✅ Xử lý các loại notification khác nhau
@@ -70,6 +91,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       title = '📅 Lịch hẹn mới';
     } else if (dto.templateId === 'LAB_TEST_REQUESTED') {
       title = '🧪 Yêu cầu xét nghiệm mới';
+    } else if (dto.templateId === 'LAB_TEST_COMPLETED') {
+      title = '✅ Xét nghiệm đã hoàn thành';
     }
 
     return {
@@ -77,14 +100,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       type: dto.templateId ?? 'INVOICE_PAID',
       title,
       message: dto.message,
-      timestamp: new Date(dto.createdAt).getTime(),
+      timestamp: parseTimestamp(dto.createdAt),
       read: dto.status === 'read',
       invoiceId: dto.invoiceId,
       dispenseOrderId: dto.dispenseOrderId,
       appointmentId: dto.appointmentId,
       userId: dto.userId, // Thêm mapping userId
     };
-  }, []);
+  }, [parseTimestamp]);
 
 
   // Load notifications từ cho user
@@ -131,8 +154,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       );
 
       uniqueDtos.sort((a, b) => {
-        const timeA = new Date(a.createdAt).getTime();
-        const timeB = new Date(b.createdAt).getTime();
+        const timeA = parseTimestamp(a.createdAt);
+        const timeB = parseTimestamp(b.createdAt);
         return timeB - timeA;
       });
 
@@ -145,7 +168,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     } finally {
       setLoading(false);
     }
-  }, [userId, mapDTOToNotification]);
+  }, [userId, mapDTOToNotification, parseTimestamp]);
 
   // Load notifications của user + lab test requested template (chỉ cho lab technician)
   const loadLabTechnicianNotifications = useCallback(async () => {
@@ -161,8 +184,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       const allNotifications = [...labTestRequestedNotifications, ...dtos];
       allNotifications.sort((a, b) => {
-        const timeA = new Date(a.createdAt).getTime();
-        const timeB = new Date(b.createdAt).getTime();
+        const timeA = parseTimestamp(a.createdAt);
+        const timeB = parseTimestamp(b.createdAt);
         return timeB - timeA;
       });
       const mappedNotifications = allNotifications.map(mapDTOToNotification);
@@ -174,7 +197,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     } finally {
       setLoading(false);
     }
-  }, [userId, mapDTOToNotification]);
+  }, [userId, mapDTOToNotification, parseTimestamp]);
 
   // Load notifications từ backend
   const loadNotifications = useCallback(async () => {
@@ -317,35 +340,40 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
     );
 
-    const unsubscribeLabTestRequested = subscribeToLabTestRequested(
-      userId,
-      (notification: LabTestRequestedNotification) => {
-        console.log('[NotificationContext] 🧪 Lab test requested notification received:', notification);
+    const userRole = authController.getPrimaryRole();
+    let unsubscribeLabTestRequested: (() => void) | undefined;
 
-        const tempNotification: Notification = {
-          id: `ws-labtest-${Date.now()}-${Math.random()}`,
-          type: 'LAB_TEST_REQUESTED',
-          title: '🧪 Yêu cầu xét nghiệm mới',
-          message: notification.message || 'Yêu cầu xét nghiệm mới đã được tạo',
-          timestamp: notification.timestamp || Date.now(),
-          read: false,
-          appointmentId: notification.appointmentId,
-        };
+    if (userRole === UserRole.LAB_TECHNICIAN) {
+      unsubscribeLabTestRequested = subscribeToLabTestRequested(
+        userId,
+        (notification: LabTestRequestedNotification) => {
+          console.log('[NotificationContext] 🧪 Lab test requested notification received:', notification);
 
-        setNotifications(prev => [tempNotification, ...prev]);
+          const tempNotification: Notification = {
+            id: `ws-labtest-${Date.now()}-${Math.random()}`,
+            type: 'LAB_TEST_REQUESTED',
+            title: '🧪 Yêu cầu xét nghiệm mới',
+            message: notification.message || 'Yêu cầu xét nghiệm mới đã được tạo',
+            timestamp: notification.timestamp || Date.now(),
+            read: false,
+            appointmentId: notification.appointmentId,
+          };
 
-        toast.success(
-          <div>
-            <p className="font-semibold">🧪 Yêu cầu xét nghiệm mới</p>
-            <p className="text-sm">{notification.message}</p>
-          </div>,
-          {
-            duration: 5000,
-            icon: <CheckCircle className="w-5 h-5 text-purple-500" />,
-          }
-        );
-      }
-    );
+          setNotifications(prev => [tempNotification, ...prev]);
+
+          toast.success(
+            <div>
+              <p className="font-semibold">🧪 Yêu cầu xét nghiệm mới</p>
+              <p className="text-sm">{notification.message}</p>
+            </div>,
+            {
+              duration: 5000,
+              icon: <CheckCircle className="w-5 h-5 text-purple-500" />,
+            }
+          );
+        }
+      );
+    }
 
     // Sync lại DB sau 1–2s
     setTimeout(loadNotifications, 1500);
@@ -354,7 +382,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       unsubscribeInvoicePaid();
       unsubscribePrescriptionDispensed();
       unsubscribeAppointmentCreated();
-      unsubscribeLabTestRequested();
+      if (unsubscribeLabTestRequested) {
+        unsubscribeLabTestRequested();
+      }
     };
   }, [userId, loadNotifications]);
 

@@ -5,6 +5,7 @@ import type { DoctorWithUser } from './controllers/DoctorController';
 import { PrescriptionManagement } from './components/doctor/PrescriptionManagement';
 import { CreatePrescriptionEnhanced } from './components/doctor/CreatePrescription';
 import { ViewPrescription } from './components/doctor/ViewPrescription';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Doctor Dashboard
 import { DoctorSidebar } from './components/DoctorSidebar';
@@ -223,16 +224,19 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
   }
 
 
+  const doctorUserId = doctor?.userId || doctorId;
+
   return (
-    <div className="flex h-screen">
-      <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DoctorHeader
-          onLogout={onLogout}
-          onGoHome={onGoHome}
-          doctor={doctor || undefined}
-          isLoading={isLoadingDoctor}
-        />
+    <NotificationProvider userId={doctorUserId}>
+      <div className="flex h-screen">
+        <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <DoctorHeader
+            onLogout={onLogout}
+            onGoHome={onGoHome}
+            doctor={doctor || undefined}
+            isLoading={isLoadingDoctor}
+          />
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route
@@ -293,5 +297,6 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
         </main>
       </div>
     </div>
+    </NotificationProvider>
   );
 }

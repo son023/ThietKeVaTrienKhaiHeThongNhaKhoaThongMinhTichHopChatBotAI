@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -5,7 +6,7 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
-import { ArrowLeft, Calendar, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -14,6 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
+import { patientController } from '../../controllers/PatientController';
+import { appointmentController, AppointmentDTO } from '../../controllers/AppointmentController';
+import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
+import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
+import { PatientWithUser } from '../../models';
 
 interface ReceptionistPatientDetailProps {
   patientId: string;
@@ -23,44 +29,75 @@ interface ReceptionistPatientDetailProps {
 }
 
 export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment, onCreateInvoice }: ReceptionistPatientDetailProps) {
-  // Mock data
-  const patient = {
-    id: patientId,
-    code: 'BN001',
-    name: 'Nguyễn Văn A',
-    phone: '0901234567',
-    email: 'nguyenvana@gmail.com',
-    birthDate: '15/03/1985',
-    age: 40,
-    gender: 'Nam',
-    address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
-    source: 'Facebook',
-    notes: 'Khách hàng VIP, ưu tiên phục vụ',
-  };
+  const [patient, setPatient] = useState<PatientWithUser | null>(null);
+  const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceDTO[]>([]);
+  const [doctors, setDoctors] = useState<Record<string, string>>({}); // Map: doctorId -> Doctor Name
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const appointments = [
-    { id: '1', date: '20/10/2025', time: '09:00', doctor: 'BS. Phạm Mai', service: 'Khám tổng quát', status: 'completed' },
-    { id: '2', date: '15/10/2025', time: '14:00', doctor: 'BS. Lê Anh', service: 'Trám răng', status: 'completed' },
-    { id: '3', date: '30/10/2025', time: '10:00', doctor: 'BS. Phạm Mai', service: 'Tái khám', status: 'confirmed' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const invoices = [
-    { id: '1', date: '20/10/2025', amount: 500000, status: 'paid', services: 'Khám tổng quát' },
-    { id: '2', date: '15/10/2025', amount: 800000, status: 'paid', services: 'Trám răng Composite' },
-    { id: '3', date: '10/10/2025', amount: 300000, status: 'unpaid', services: 'Cạo vôi răng' },
-  ];
+        // Fetch all required data in parallel
+        const [
+          patientData,
+          appointmentList,
+          invoiceList,
+          doctorList
+        ] = await Promise.all([
+          patientController.getWithUserById(patientId),
+          appointmentController.getByPatientId(patientId),
+          invoiceController.getInvoicesByPatient(patientId),
+          doctorController.getWithUserDetails()
+        ]);
 
-  const treatmentPlans = [
-    {
-      id: '1',
-      name: 'Kế hoạch chỉnh nha',
-      doctor: 'BS. Phạm Thị Ngọc Mai',
-      startDate: '15/10/2025',
-      status: 'in_progress',
-      totalCost: 25000000,
-      paidAmount: 10000000,
-    },
-  ];
+        setPatient(patientData);
+        setAppointments(appointmentList || []);
+        setInvoices(invoiceList || []);
+
+        // Create doctor map for easy lookup
+        const docMap: Record<string, string> = {};
+        doctorList.forEach(d => {
+          docMap[d.userId] = d.user?.fullName || 'Bác sĩ';
+        });
+        setDoctors(docMap);
+
+      } catch (err) {
+        console.error("Error fetching patient detail:", err);
+        setError("Không thể tải thông tin chi tiết bệnh nhân");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (patientId) {
+      fetchData();
+    }
+  }, [patientId]);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-neutral-text/60">Đang tải thông tin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !patient) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-screen gap-4">
+        <p className="text-red-500">{error || "Không tìm thấy bệnh nhân"}</p>
+        <Button onClick={onBack} variant="outline">Quay lại</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-6 bg-neutral-background min-h-screen">
@@ -72,11 +109,15 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
           </Button>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-neutral-text tracking-tight">{patient.name}</h1>
-              <Badge variant="outline" className="border-neutral-border bg-neutral-muted text-neutral-text font-medium">{patient.age} tuổi</Badge>
-              <Badge variant="outline" className="font-mono border-primary bg-primary/10 text-primary font-medium">{patient.code}</Badge>
+              <h1 className="text-3xl font-bold text-neutral-text tracking-tight">{patient.user?.fullName || 'Chưa cập nhật tên'}</h1>
+              {patient.dob && (
+                <Badge variant="outline" className="border-neutral-border bg-neutral-muted text-neutral-text font-medium">
+                  {new Date().getFullYear() - new Date(patient.dob).getFullYear()} tuổi
+                </Badge>
+              )}
+
             </div>
-            <p className="text-neutral-text/70 font-medium">{patient.phone} • {patient.email}</p>
+            <p className="text-neutral-text/70 font-medium">{patient.user?.phone || patient.contactPhone || 'SĐT: --'} • {patient.user?.email || 'Email: --'}</p>
           </div>
         </div>
 
@@ -102,10 +143,9 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
 
       {/* Tabs */}
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Thông tin Hành chính</TabsTrigger>
           <TabsTrigger value="history">Lịch sử Hẹn & Thanh toán</TabsTrigger>
-          <TabsTrigger value="treatment">Kế hoạch điều trị</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Admin Info */}
@@ -115,32 +155,32 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-neutral-text font-medium">Họ và tên *</Label>
-                <Input id="name" defaultValue={patient.name} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input id="name" defaultValue={patient.user?.fullName} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-neutral-text font-medium">Số điện thoại *</Label>
-                <Input id="phone" defaultValue={patient.phone} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input id="phone" defaultValue={patient.user?.phone || patient.contactPhone} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-neutral-text font-medium">Email</Label>
-                <Input id="email" type="email" defaultValue={patient.email} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input id="email" type="email" defaultValue={patient.user?.email} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="birthDate" className="text-neutral-text font-medium">Ngày sinh</Label>
-                <Input id="birthDate" defaultValue={patient.birthDate} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input
+                  id="birthDate"
+                  type="date"
+                  defaultValue={patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : ''}
+                  className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="gender" className="text-neutral-text font-medium">Giới tính</Label>
-                <Input id="gender" defaultValue={patient.gender} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="source" className="text-neutral-text font-medium">Nguồn biết đến phòng khám</Label>
-                <Input id="source" defaultValue={patient.source} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
+                <Input id="gender" defaultValue={patient.gender === 'MALE' ? 'Nam' : patient.gender === 'FEMALE' ? 'Nữ' : patient.gender} className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface" />
               </div>
 
               <div className="space-y-2 col-span-2">
@@ -149,11 +189,11 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
               </div>
 
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="notes" className="text-neutral-text font-medium">Ghi chú (của Lễ tân)</Label>
+                <Label htmlFor="notes" className="text-neutral-text font-medium">Ghi chú (Dị ứng/Bệnh nền)</Label>
                 <Textarea
                   id="notes"
-                  defaultValue={patient.notes}
-                  placeholder="Ví dụ: Bệnh nhân khó tính, Gọi nhắc trước 2 ngày..."
+                  defaultValue={patient.allergy}
+                  placeholder="Ví dụ: Dị ứng thuốc tê..."
                   rows={3}
                   className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface"
                 />
@@ -173,145 +213,91 @@ export function ReceptionistPatientDetail({ patientId, onBack, onNewAppointment,
           {/* Appointments History */}
           <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
             <h3 className="text-lg font-semibold text-neutral-text mb-5">Lịch sử Lịch hẹn</h3>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-text">Ngày</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Giờ</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Bác sĩ</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Dịch vụ</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Trạng thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {appointments.map((apt) => (
-                  <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                    <TableCell className="text-neutral-text">{apt.date}</TableCell>
-                    <TableCell className="text-neutral-text">{apt.time}</TableCell>
-                    <TableCell className="text-neutral-text">{apt.doctor}</TableCell>
-                    <TableCell className="text-neutral-text">{apt.service}</TableCell>
-                    <TableCell>
-                      <Badge variant={apt.status === 'completed' ? 'default' : 'outline'} className={apt.status === 'completed' ? 'bg-green-600 hover:bg-green-700' : 'border-neutral-border'}>
-                        {apt.status === 'completed' ? 'Hoàn tất' : 'Đã xác nhận'}
-                      </Badge>
-                    </TableCell>
+            {appointments.length === 0 ? (
+              <p className="text-neutral-text/60 italic">Chưa có lịch hẹn nào.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-neutral-muted/30">
+                    <TableHead className="font-semibold text-neutral-text">Ngày</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Giờ</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Bác sĩ</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Dịch vụ</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Trạng thái</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {appointments.map((apt) => {
+                    const aptDate = new Date(apt.appointmentStartTime);
+                    const dateStr = aptDate.toLocaleDateString('vi-VN');
+                    const timeStr = aptDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    const doctorName = doctors[apt.doctorId] || 'Unknown';
+                    const servicesStr = apt.medicalServices?.map(s => s.serviceName).join(', ') || 'Khám';
+
+                    return (
+                      <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+                        <TableCell className="text-neutral-text">{dateStr}</TableCell>
+                        <TableCell className="text-neutral-text">{timeStr}</TableCell>
+                        <TableCell className="text-neutral-text">{doctorName}</TableCell>
+                        <TableCell className="text-neutral-text">{servicesStr}</TableCell>
+                        <TableCell>
+                          <Badge variant={apt.status === 'COMPLETED' ? 'default' : 'outline'} className={apt.status === 'COMPLETED' ? 'bg-green-600 hover:bg-green-700' : 'border-neutral-border'}>
+                            {apt.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </Card>
 
           {/* Invoices History */}
           <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
             <h3 className="text-lg font-semibold text-neutral-text mb-5">Lịch sử Thanh toán</h3>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-text">Mã HĐ</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Ngày</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Dịch vụ</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Số tiền</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Trạng thái</TableHead>
-                  <TableHead className="font-semibold text-neutral-text">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                    <TableCell className="font-mono text-neutral-text">HD{invoice.id.padStart(4, '0')}</TableCell>
-                    <TableCell className="text-neutral-text">{invoice.date}</TableCell>
-                    <TableCell className="text-neutral-text">{invoice.services}</TableCell>
-                    <TableCell className="text-right text-neutral-text font-semibold">
-                      {invoice.amount.toLocaleString('vi-VN')}đ
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={invoice.status === 'paid' ? 'default' : 'destructive'}
-                        className={invoice.status === 'paid' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
-                      >
-                        {invoice.status === 'paid' ? 'Đã thanh toán' : 'Còn nợ'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
-                        Xem
-                      </Button>
-                    </TableCell>
+            {invoices.length === 0 ? (
+              <p className="text-neutral-text/60 italic">Chưa có hóa đơn nào.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-neutral-muted/30">
+
+                    <TableHead className="font-semibold text-neutral-text">Ngày</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Số tiền</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Trạng thái</TableHead>
+                    <TableHead className="font-semibold text-neutral-text">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice) => (
+                    <TableRow key={invoice.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
+
+                      <TableCell className="text-neutral-text">{new Date(invoice.issueAt).toLocaleDateString("vi-VN")}</TableCell>
+                      <TableCell className="text-right text-neutral-text font-semibold">
+                        {invoice.totalAmount.toLocaleString('vi-VN')}đ
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={invoice.status === 'PAID' ? 'default' : 'destructive'}
+                          className={invoice.status === 'PAID' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                        >
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline" className="border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all">
+                          Xem
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </Card>
         </TabsContent>
-
-        {/* Tab 3: Treatment Plans (Read-only) */}
-        <TabsContent value="treatment" className="space-y-6">
-          <Card className="p-6 border-neutral-border bg-neutral-surface shadow-sm">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-neutral-text">Kế hoạch điều trị</h3>
-              <Badge variant="outline" className="text-xs border-neutral-border bg-neutral-muted text-neutral-text">Chỉ xem</Badge>
-            </div>
-
-            {treatmentPlans.map((plan) => (
-              <Card key={plan.id} className="p-5 bg-neutral-muted/30 border-neutral-border hover:shadow-md transition-all duration-200">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-neutral-text font-semibold">{plan.name}</h4>
-                      <p className="text-sm text-neutral-text/70 mt-1.5">
-                        Bác sĩ phụ trách: {plan.doctor}
-                      </p>
-                    </div>
-                    <Badge className="bg-primary hover:bg-primary-strong">Đang thực hiện</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 pt-3 border-t border-neutral-border">
-                    <div>
-                      <p className="text-xs text-neutral-text/60 mb-1.5 font-medium">Ngày bắt đầu</p>
-                      <p className="text-sm text-neutral-text font-semibold">{plan.startDate}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-text/60 mb-1.5 font-medium">Tổng chi phí</p>
-                      <p className="text-sm text-neutral-text font-semibold">
-                        {plan.totalCost.toLocaleString('vi-VN')}đ
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-text/60 mb-1.5 font-medium">Đã thanh toán</p>
-                      <p className="text-sm text-green-600 font-semibold">
-                        {plan.paidAmount.toLocaleString('vi-VN')}đ
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="text-neutral-text/70 font-medium">Tiến độ thanh toán</span>
-                      <span className="text-neutral-text font-semibold">
-                        {Math.round((plan.paidAmount / plan.totalCost) * 100)}%
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-neutral-tint rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${(plan.paidAmount / plan.totalCost) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2 border-neutral-border hover:bg-neutral-muted hover:border-primary transition-all"
-                  >
-                    <FileText className="w-3 h-3 mr-2" />
-                    Xem chi tiết kế hoạch
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </Card>
-        </TabsContent>
+        {/* Removed Treatment Tab */}
       </Tabs>
     </div>
   );
