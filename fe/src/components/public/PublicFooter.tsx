@@ -39,86 +39,42 @@ export function PublicFooter() {
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Address */}
           <div className="space-y-6">
-            <div className="space-y-6">
-              <h3 className="typo-h4 text-[var(--text-strong)]">
-                Địa chỉ
-              </h3>
-              <div className="space-y-3">
-                <p className="text-sm text-[var(--text-regular)] leading-6">
-                  Tầng 2, TTTM Mandarin Garden 2, Phường Tân Mai, Quận Hoàng Mai, Hà Nội
-                </p>
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block text-sm text-[var(--accent-light)] font-medium hover:text-[var(--accent)] underline transition-colors"
-                >
-                  View on Maps
-                </a>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="typo-h4 text-[var(--text-strong)]">
-                Liên hệ
-              </h3>
-              <div className="space-y-2">
-                <a
-                  href="tel:+84583891780"
-                  className="block font-medium text-[var(--text-regular)] text-base hover:text-[var(--accent-light)] transition-colors"
-                >
-                  +84 583891780
-                </a>
-                <a
-                  href="mailto:info@dentalcareX.com"
-                  className="block text-sm text-[var(--text-regular)] hover:text-[var(--accent-light)] transition-colors"
-                >
-                  info@dentalcareX.com
-                </a>
-              </div>
+            <h3 className="typo-h4 text-[var(--text-strong)]">
+              Địa chỉ
+            </h3>
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--text-regular)] leading-6">
+                Tầng 2, TTTM Mandarin Garden 2, Phường Tân Mai, Quận Hoàng Mai, Hà Nội
+              </p>
+              <a
+                href="https://www.google.com/maps/place/T%C3%B2a+Nh%C3%A0+Mandarin+Garden+2+T%C3%A2n+Mai/@20.9845849,105.8475139,782m/data=!3m2!1e3!4b1!4m6!3m5!1s0x3135ad0c54a2faf1:0x3ccf8b6f3e067dd1!8m2!3d20.9845849!4d105.8475139!16s%2Fg%2F11sf7n3trh?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoKLDEwMDc5MjA3MUgBUAM%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-sm text-[var(--accent-light)] font-medium hover:text-[var(--accent)] underline transition-colors"
+              >
+                View on Maps
+              </a>
             </div>
           </div>
 
-          {/* Newsletter & Social */}
-          <div className="space-y-12">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <p className="text-base text-[var(--text-strong)] font-medium">
-                  Nhận thông tin mới nhất
-                </p>
-              </div>
-
-              <div className="relative">
-                <Input
-                  placeholder="Email của bạn"
-                  className="h-14 rounded-full border-[var(--border-soft)] pl-5 pr-20 text-base"
-                />
-                <Button className="absolute right-2 top-2 h-10 w-16 bg-[var(--accent-light)] hover:bg-[var(--accent)] rounded-full transition-colors">
-                  <svg width="20" height="20" viewBox="0 0 24 20" fill="none">
-                    <path d="M18.7329 14.75L18.7785 12.0917L38.7442 12.434L32.6385 6.11526L34.5562 4.26231L43.8213 13.8506L34.233 23.1157L32.38 21.198L38.6987 15.0923L18.7329 14.75Z" fill="white" />
-                  </svg>
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="typo-h5 text-[var(--text-strong)] text-center md:text-left">
-                Theo dõi
-              </h3>
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://facebook.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 text-[var(--text-strong)] hover:text-[var(--accent-light)] transition-colors cursor-pointer"
-                >
-                  <svg viewBox="0 0 32 32" fill="currentColor">
-                    <path d="M13.3333 0C6 0 0 5.98667 0 13.36C0 20.0267 4.88 25.56 11.2533 26.56V17.2267H7.86667V13.36H11.2533V10.4133C11.2533 7.06667 13.24 5.22667 16.2933 5.22667C17.7467 5.22667 19.2667 5.48 19.2667 5.48V8.77333H17.5867C15.9333 8.77333 15.4133 9.8 15.4133 10.8533V13.36H19.12L18.52 17.2267H15.4133V26.56C18.5553 26.0638 21.4163 24.4607 23.4799 22.0401C25.5435 19.6195 26.6738 16.5409 26.6667 13.36C26.6667 5.98667 20.6667 0 13.3333 0Z" />
-                  </svg>
-                </a>
-              </div>
+          {/* Contact */}
+          <div className="space-y-6">
+            <h3 className="typo-h4 text-[var(--text-strong)]">
+              Liên hệ
+            </h3>
+            <div className="space-y-2">
+              <p
+                className="block font-medium text-[var(--text-regular)] text-base"
+              >
+                +84 583891780
+              </p>
+              <p
+                className="block text-sm text-[var(--text-regular)]"
+              >
+                info@dentalcareX.com
+              </p>
             </div>
           </div>
         </div>
