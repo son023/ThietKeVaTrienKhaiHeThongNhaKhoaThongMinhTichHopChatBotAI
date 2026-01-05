@@ -283,39 +283,49 @@ export default function PatientChatbot({
         >
           <Card className="w-full h-full flex flex-col shadow-[0px_8px_32px_0px_rgba(0,0,0,0.12)] border-[#ebf6fc] overflow-hidden">
             {/* HEADER */}
-            <div className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] p-[20px] flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-[12px]">
-                <div className="w-[40px] h-[40px] bg-white/20 rounded-[10px] flex items-center justify-center">
-                  <Bot className="w-[24px] h-[24px] text-white" />
+            {/* MERGED HEADER & FAQ SECTION */}
+            <div className="bg-gradient-to-r from-[#3fb5ff] to-[#1e8bc3] p-[12px] flex flex-col gap-[8px] flex-shrink-0">
+              {/* Row 1: Title & Close */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-[8px]">
+                  <div className="w-[32px] h-[32px] bg-white/20 rounded-[8px] flex items-center justify-center">
+                    <Bot className="w-[18px] h-[18px] text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-white text-[14px] leading-tight">
+                      Trợ lý Nha Khoa
+                    </h3>
+                    <p className="font-['Fz_Poppins:Regular',sans-serif] text-white/80 text-[10px]">
+                      Hỗ trợ chuyên môn 24/7
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-['Fz_Poppins:SemiBold',sans-serif] text-white text-[16px]">
-                    Trợ lý Nha Khoa
-                  </h3>
-                  <p className="font-['Fz_Poppins:Regular',sans-serif] text-white/80 text-[12px]">
-                    Hỗ trợ chuyên môn 24/7
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onToggle}
-                className="w-[32px] h-[32px] bg-white/20 hover:bg-white/30 rounded-[8px] flex items-center justify-center transition-colors"
-              >
-                <X className="w-[20px] h-[20px] text-white" />
-              </button>
-            </div>
-            {/* PHẦN GHIM CÂU HỎI THƯỜNG GẶP */}
-            <div className="px-[20px] py-[10px] bg-white border-b border-[#ebf6fc] flex gap-[8px] overflow-x-auto no-scrollbar flex-shrink-0">
-              {["Giờ làm việc", "Địa chỉ", "Đặt lịch hẹn"].map((item) => (
                 <button
-                  key={item}
-                  onClick={() => handleFAQClick(item)}
-                  className="whitespace-nowrap px-[12px] py-[6px] bg-[#f0f9ff] text-[#1e8bc3] rounded-full text-[12px] font-medium border border-[#3fb5ff]/20 hover:bg-[#3fb5ff] hover:text-white transition-all"
+                  onClick={onToggle}
+                  className="w-[28px] h-[28px] bg-white/20 hover:bg-white/30 rounded-[6px] flex items-center justify-center transition-colors"
                 >
-                  {item}
+                  <X className="w-[16px] h-[16px] text-white" />
                 </button>
-              ))}
+              </div>
+
+              {/* Row 2: FAQ Buttons */}
+              <div className="flex gap-[8px] overflow-x-auto no-scrollbar items-center">
+                {["Giờ làm việc", "Địa chỉ", "Đặt lịch hẹn"].map((item) => (
+                  <button
+                    key={item}
+                    disabled={isTyping}
+                    onClick={() => handleFAQClick(item)}
+                    className={`whitespace-nowrap flex-shrink-0 px-[12px] py-[4px] rounded-full text-[11px] font-medium border border-white/30 transition-all ${isTyping
+                      ? "bg-white/10 text-white/50 cursor-not-allowed"
+                      : "bg-white/20 text-white hover:bg-white hover:text-[#1e8bc3]"
+                      }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
+
             {/* CHAT BODY */}
             <div
               ref={scrollContainerRef}
@@ -405,8 +415,12 @@ export default function PatientChatbot({
                         {message.quickReplies.map((reply, index) => (
                           <button
                             key={index}
+                            disabled={isTyping}
                             onClick={() => handleSendMessage(reply)}
-                            className="px-[12px] py-[8px] bg-white border-2 border-[#3fb5ff] text-[#3fb5ff] rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px] hover:bg-[#ebf6fc] transition-colors"
+                            className={`px-[12px] py-[8px] border-2 rounded-[8px] font-['Fz_Poppins:Medium',sans-serif] text-[13px] transition-colors ${isTyping
+                              ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
+                              : "bg-white border-[#3fb5ff] text-[#3fb5ff] hover:bg-[#ebf6fc]"
+                              }`}
                           >
                             {reply}
                           </button>
