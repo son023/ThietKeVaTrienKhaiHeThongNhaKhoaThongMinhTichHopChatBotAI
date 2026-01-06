@@ -63,7 +63,7 @@ public class PrescriptionBillingSaga {
                 event.getMedicalHistoryId(),
                 event.getItems()
         )).exceptionally(exception -> {
-            log.error("❌ [SAGA STEP 1 FAILED] Lỗi kỹ thuật khi gọi Inventory Service: {}", exception.getMessage());
+            log.error(" [SAGA STEP 1 FAILED] Lỗi kỹ thuật khi gọi Inventory Service: {}", exception.getMessage());
             notifyUser(
                     event.getPrescriptionId(),
                     "INVENTORY",
@@ -78,14 +78,14 @@ public class PrescriptionBillingSaga {
     // BƯỚC 2: Thuốc đã giữ -> Cộng tiền vào hóa đơn
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineReservedEvent event) {
-        log.info("✅ STEP 1 OK: Thuốc đã giữ. -> STEP 2: Thêm phí thuốc vào Invoice: {}", this.invoiceId);
+        log.info(" STEP 1 OK: Thuốc đã giữ. -> STEP 2: Thêm phí thuốc vào Invoice: {}", this.invoiceId);
         commandGateway.send(new AddMedicineChargesCommand(
                 this.invoiceId,
                 event.getPrescriptionId(),
                 this.medicineItems
         )).exceptionally(exception -> {
             // LOGIC XỬ LÝ KHI INVOICE SERVICE BỊ TẮT HOẶC LỖI KẾT NỐI
-            log.error("❌ [SAGA STEP 2 FAILED] Lỗi kỹ thuật khi gọi Invoice Service: {}", exception.getMessage());
+            log.error(" [SAGA STEP 2 FAILED] Lỗi kỹ thuật khi gọi Invoice Service: {}", exception.getMessage());
 
             // ✅ Thông báo lỗi kỹ thuật cho người dùng
             notifyUser(
@@ -108,7 +108,7 @@ public class PrescriptionBillingSaga {
         this.insuranceClaimId = UUID.randomUUID();
         Set<InvoiceItemCheckerRequest> items = event.getInvoiceItemCheckerRequest().getItems();
         items.addAll(this.serviceItems);
-        log.info("✅ STEP 2 OK: Phí thuốc đã thêm. -> STEP 3: Gửi lệnh thẩm định bảo hiểm (ClaimId: {})", this.insuranceClaimId);
+        log.info(" STEP 2 OK: Phí thuốc đã thêm. -> STEP 3: Gửi lệnh thẩm định bảo hiểm (ClaimId: {})", this.insuranceClaimId);
         commandGateway.send(new ValidateInsuranceCommand(
                 this.insuranceClaimId,
                 event.getPrescriptionId(),
@@ -117,7 +117,7 @@ public class PrescriptionBillingSaga {
                 event.getInvoiceItemCheckerRequest()
         )).exceptionally(exception -> {
             // --- XỬ LÝ KHI INSURANCE SERVICE BỊ DOWN ---
-            log.error("❌ [SAGA STEP 3 FAILED] Lỗi kỹ thuật khi gọi Insurance Service: {}", exception.getMessage());
+            log.error(" [SAGA STEP 3 FAILED] Lỗi kỹ thuật khi gọi Insurance Service: {}", exception.getMessage());
             // ✅ Thông báo lỗi kỹ thuật cho người dùng
             notifyUser(
                     event.getPrescriptionId(),
@@ -135,7 +135,7 @@ public class PrescriptionBillingSaga {
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InsuranceValidatedEvent event) {
         this.discountAmount = event.getCoverageAmount();
-        log.info("✅ STEP 3 OK: Bảo hiểm hợp lệ. -> STEP 4: Cập nhật giảm giá vào Invoice.");
+        log.info(" STEP 3 OK: Bảo hiểm hợp lệ. -> STEP 4: Cập nhật giảm giá vào Invoice.");
         commandGateway.send(new ApplyInsuranceDiscountCommand(
                 this.insuranceClaimId,
                 this.invoiceId,
@@ -144,7 +144,7 @@ public class PrescriptionBillingSaga {
                 event.getItems()
         )).exceptionally(exception -> {
             // --- XỬ LÝ KHI INVOICE SERVICE BỊ DOWN (LẦN 2) ---
-            log.error("❌ [SAGA STEP 4 FAILED] Lỗi kỹ thuật khi cập nhật giảm giá Invoice: {}", exception.getMessage());
+            log.error(" [SAGA STEP 4 FAILED] Lỗi kỹ thuật khi cập nhật giảm giá Invoice: {}", exception.getMessage());
             // ✅ Thông báo lỗi kỹ thuật cho người dùng
             notifyUser(
                     event.getPrescriptionId(),
@@ -163,7 +163,7 @@ public class PrescriptionBillingSaga {
     @EndSaga
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InvoiceDiscountAppliedSuccessEvent event) {
-        log.info("🎉 [SAGA COMPLETED] PRE-BILLING HOÀN TẤT: Hóa đơn đã sẵn sàng để thanh toán.");
+        log.info(" [SAGA COMPLETED] PRE-BILLING HOÀN TẤT: Hóa đơn đã sẵn sàng để thanh toán.");
         commandGateway.send(new MarkPrescripAsReleaseCommand(
                 this.dispenseOrderId
         ));
@@ -171,7 +171,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "COMPLETED",
                 "SUCCESS",
-                "✅ Tạo đơn thuốc thành công! Hóa đơn đã được cập nhật với giảm giá bảo hiểm và sẵn sàng thanh toán."
+                "Tạo đơn thuốc thành công! Hóa đơn đã được cập nhật với giảm giá bảo hiểm và sẵn sàng thanh toán."
         );
     }
 
@@ -180,12 +180,12 @@ public class PrescriptionBillingSaga {
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineReservationFailedEvent event) {
         //Thông báo cho Notification Service
-        log.error("❌ [SAGA FAILED - STEP 1] Kiểm tra kho thất bại - Không đủ thuốc!");
+        log.error(" [SAGA FAILED - STEP 1] Kiểm tra kho thất bại - Không đủ thuốc!");
         notifyUser(
                 event.getPrescriptionId(),
                 "INVENTORY_CHECK",
                 "FAILED",
-                "❌ Không thể tạo đơn thuốc: Một số thuốc trong đơn không đủ số lượng tồn kho. Vui lòng điều chỉnh đơn thuốc hoặc liên hệ dược sĩ."
+                "Không thể tạo đơn thuốc: Một số thuốc trong đơn không đủ số lượng tồn kho. Vui lòng điều chỉnh đơn thuốc hoặc liên hệ dược sĩ."
         );
     }
 
@@ -193,24 +193,24 @@ public class PrescriptionBillingSaga {
     @EndSaga
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineReservationReturnEvent event) {
-        log.warn("⚠️ [SAGA ROLLED BACK] Đã hoàn tác toàn bộ: Thuốc đã được trả về kho.");
+        log.warn(" [SAGA ROLLED BACK] Đã hoàn tác toàn bộ: Thuốc đã được trả về kho.");
         notifyUser(
                 event.getPrescriptionId(),
                 "ROLLBACK_COMPLETED",
                 "CANCELLED",
-                "⚠️ Giao dịch đã được hoàn tác. Thuốc đã trả về kho. Vui lòng thử tạo đơn thuốc lại."
+                "Giao dịch đã được hoàn tác. Thuốc đã trả về kho. Vui lòng thử tạo đơn thuốc lại."
         );
     }
 
     // ❌ DATABASE FAILURE: Lỗi lưu chi tiết hóa đơn
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(ChargesAdditionFailedEvent event) {
-        log.error("❌ [SAGA STEP 2 DB FAILED] Lỗi lưu database Invoice. Lý do: {}. -> Bắt đầu Rollback Inventory.", event.getReason());
+        log.error(" [SAGA STEP 2 DB FAILED] Lỗi lưu database Invoice. Lý do: {}. -> Bắt đầu Rollback Inventory.", event.getReason());
         notifyUser(
                 event.getPrescriptionId(),
                 "INVOICE_DATABASE",
                 "FAILED",
-                "❌ Lỗi hệ thống: Không thể lưu chi tiết hóa đơn vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
+                "Lỗi hệ thống: Không thể lưu chi tiết hóa đơn vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
         );
 
         triggerRollbackInventory(event.getPrescriptionId());
@@ -219,7 +219,7 @@ public class PrescriptionBillingSaga {
     // 🔄 ROLLBACK IN PROGRESS: Phí thuốc đã xóa, tiếp tục trả thuốc về kho
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(MedicineChargesRemovedEvent event) {
-        log.info("🔄 [ROLLBACK STEP 2] Phí thuốc đã xóa khỏi hóa đơn. -> Tiếp tục: Trả thuốc về kho.");
+        log.info("[ROLLBACK STEP 2] Phí thuốc đã xóa khỏi hóa đơn. -> Tiếp tục: Trả thuốc về kho.");
         triggerRollbackInventory(event.getPrescriptionId());
     }
 
@@ -239,7 +239,7 @@ public class PrescriptionBillingSaga {
 
         //Thay đổi: Xác minh bảo hiểm lỗi thì không cập nhật hoá đơn và tiếp tục sang thanh toán
 
-        log.warn("⚠️ [SAGA STEP 3 SKIPPED] Bảo hiểm không hợp lệ: {}. Tiếp tục với thanh toán không bảo hiểm.", event.getReason());
+        log.warn(" [SAGA STEP 3 SKIPPED] Bảo hiểm không hợp lệ: {}. Tiếp tục với thanh toán không bảo hiểm.", event.getReason());
         commandGateway.send(new MarkPrescripAsReleaseCommand(
                 this.dispenseOrderId
         ));
@@ -248,14 +248,14 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "COMPLETED",
                 "SUCCESS",
-                "✅ Tạo đơn thuốc thành công! \n⚠️ Lưu ý: " + event.getReason() + "\nHóa đơn sẽ được thanh toán toàn bộ không có giảm giá bảo hiểm."
+                "Tạo đơn thuốc thành công! \n Lưu ý: " + event.getReason() + "\nHóa đơn sẽ được thanh toán toàn bộ không có giảm giá bảo hiểm."
         );
     }
 
     // 🔄 ROLLBACK IN PROGRESS: Hủy claim bảo hiểm, tiếp tục xóa phí thuốc
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InsuranceClaimCancelledEvent event) {
-        log.info("🔄 [ROLLBACK STEP 3] Đã hủy yêu cầu bảo hiểm. -> Tiếp tục: Xóa phí thuốc khỏi hóa đơn.");
+        log.info("[ROLLBACK STEP 3] Đã hủy yêu cầu bảo hiểm. -> Tiếp tục: Xóa phí thuốc khỏi hóa đơn.");
 
         triggerRollbackCharges(event.getPrescriptionId());
     }
@@ -263,13 +263,13 @@ public class PrescriptionBillingSaga {
     // ❌ DATABASE FAILURE: Lỗi cập nhật giảm giá vào hóa đơn
     @SagaEventHandler(associationProperty = "prescriptionId")
     public void on(InvoiceDiscountAppliedFailedEvent event) {
-        log.error("❌ [SAGA STEP 4 DB FAILED] Lỗi cập nhật giảm giá vào database Invoice. Lý do: {}. -> Bắt đầu Rollback: Hủy Claim.", event.getReason());
+        log.error("[SAGA STEP 4 DB FAILED] Lỗi cập nhật giảm giá vào database Invoice. Lý do: {}. -> Bắt đầu Rollback: Hủy Claim.", event.getReason());
 
         notifyUser(
                 event.getPrescriptionId(),
                 "INVOICE_DISCOUNT_DATABASE",
                 "FAILED",
-                "❌ Lỗi hệ thống: Không thể cập nhật giảm giá bảo hiểm vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
+                "Lỗi hệ thống: Không thể cập nhật giảm giá bảo hiểm vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
         );
         triggerRollbackInsuranceClaim(event.getPrescriptionId());
     }

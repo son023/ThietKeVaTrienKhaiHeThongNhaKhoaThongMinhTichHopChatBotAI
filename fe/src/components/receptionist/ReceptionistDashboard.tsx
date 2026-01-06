@@ -262,7 +262,7 @@ export function ReceptionistDashboard({
 
   const handleAction = async (appointmentId: string, action: string) => {
     try {
-      if (action === "checkin") {
+      if (action === "checkin" || action === "view") {
         const target = appointments.find((apt) => apt.id === appointmentId);
         if (!target) return;
         setSelectedAppointment(target);
@@ -452,6 +452,7 @@ export function ReceptionistDashboard({
             }
             : null
         }
+        isReadOnly={selectedAppointment?.status !== 'waiting_checkin'}
         onCheckedIn={() => {
           if (!selectedAppointment) return;
           setAppointments((prev) =>
