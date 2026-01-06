@@ -531,7 +531,10 @@ export default function App() {
   if (userRole === "admin") {
     return (
       <>
-        <AdminApp onLogout={handleLogout} onGoHome={handleGoHome} />
+        <Routes>
+          <Route path="/admin/*" element={<AdminApp onLogout={handleLogout} onGoHome={handleGoHome} />} />
+          <Route path="*" element={<Navigate to="/admin/patients" replace />} />
+        </Routes>
         <Toaster position="top-center" />
       </>
     );

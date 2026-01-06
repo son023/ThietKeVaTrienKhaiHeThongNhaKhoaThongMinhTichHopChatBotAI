@@ -44,7 +44,7 @@ INSERT INTO role (id, role_name) VALUES
 
 -- ADMIN (1 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES
-('00000000-0000-0000-0000-000000000001', '$2a$10$N9qo8uLOickgx2ZMRZoMy.bIynm67a/NYMX4KcPVqAqXsVvTLKaGa', 'admin@clinic.com', '0900000000', 'System Admin', true, '2025-01-01 08:00:00+07', '2025-01-01 08:00:00+07');
+('00000000-0000-0000-0000-000000000001', '$2a$10$vHh.DyKjPQA91ezeURsIEOtY5RjLnJyEsWwMPV8I/tie6NT64m8AS', 'admin@clinic.com', '0900000000', 'System Admin', true, '2025-01-01 08:00:00+07', '2025-01-01 08:00:00+07');
 
 -- RECEPTIONIST (3 người)
 INSERT INTO users (id, password, email, phone, full_name, is_active, create_at, update_at) VALUES

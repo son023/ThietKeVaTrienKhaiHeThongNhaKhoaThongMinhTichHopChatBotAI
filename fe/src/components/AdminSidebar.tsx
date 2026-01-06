@@ -8,12 +8,12 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   const menuItems = [
-    { id: 'admin-patients', label: 'Quản lý Bệnh nhân', icon: Users },
-    { id: 'admin-staff', label: 'Quản lý Nhân viên', icon: UserCog },
-    { id: 'admin-services', label: 'Quản lý Dịch vụ', icon: Briefcase },
-    { id: 'admin-finance', label: 'Quản lý Tài chính', icon: Receipt },
-    { id: 'admin-reports', label: 'Báo cáo & Thống kê', icon: BarChart3 },
-    { id: 'admin-settings', label: 'Cài đặt Hệ thống', icon: Settings },
+    { id: 'patients', label: 'Quản lý Bệnh nhân', icon: Users },
+    { id: 'staff', label: 'Quản lý Nhân viên', icon: UserCog },
+    { id: 'services', label: 'Quản lý Dịch vụ', icon: Briefcase },
+    { id: 'finance', label: 'Quản lý Tài chính', icon: Receipt },
+    { id: 'reports', label: 'Báo cáo & Thống kê', icon: BarChart3 },
+    { id: 'settings', label: 'Cài đặt Hệ thống', icon: Settings },
   ];
 
   return (
