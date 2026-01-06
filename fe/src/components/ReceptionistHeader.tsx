@@ -14,6 +14,7 @@ import { useNotifications } from "../contexts/NotificationContext";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { authController } from "../controllers/AuthController";
 import type { UserDTO } from "../models/User";
+import { AddPatientDialog } from "./shared/AddPatientDialog";
 
 interface ReceptionistHeaderProps {
   onLogout: () => void;
@@ -43,6 +44,7 @@ export function ReceptionistHeader({
   const notificationRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<UserDTO | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showAddPatientDialog, setShowAddPatientDialog] = useState(false);
 
   // Load user data and avatar from localStorage
   useEffect(() => {
@@ -165,14 +167,20 @@ export function ReceptionistHeader({
         </Button>
 
         {/* New Patient Button */}
-        <Button
-          onClick={onNewPatient}
-          variant="outline"
-          className="gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm Bệnh nhân
-        </Button>
+        <AddPatientDialog
+          open={showAddPatientDialog}
+          onOpenChange={setShowAddPatientDialog}
+          triggerButton={
+            <Button
+              onClick={() => setShowAddPatientDialog(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm Bệnh nhân
+            </Button>
+          }
+        />
 
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>
