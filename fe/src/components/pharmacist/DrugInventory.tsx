@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Package, AlertTriangle, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { inventoryController, MedicineWithStock, CreateMedicineRequest } from '../../controllers/InventoryController';
 import { toast } from 'sonner';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../ui/pagination';
 
 interface DrugInventoryProps {
   onViewDrugProfile: (id: string) => void;
@@ -34,6 +42,10 @@ export function DrugInventory({ onViewDrugProfile }: DrugInventoryProps) {
     expiring: 0,
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const loadDrugs = async () => {
     setLoading(true);
     try {
@@ -57,7 +69,7 @@ export function DrugInventory({ onViewDrugProfile }: DrugInventoryProps) {
 
         return {
           ...medicine,
-          code: medicine.id.substring(0, 8).toUpperCase(),
+          code: medicine.id.slice(-8).toUpperCase(),
           activeIngredient,
           threshold,
           status,
@@ -137,6 +149,23 @@ export function DrugInventory({ onViewDrugProfile }: DrugInventoryProps) {
 
     return matchesTab && matchesSearch;
   });
+
+  // Sắp xếp theo tên thuốc
+  const sortedDrugs = [...filteredDrugs].sort((a, b) =>
+    a.name.localeCompare(b.name, 'vi')
+  );
+
+  // Pagination calculations
+  const totalItems = sortedDrugs.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDrugs = sortedDrugs.slice(startIndex, endIndex);
+
+  // Reset trang khi đổi tab hoặc search
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
 
   const getStatusBadge = (drug: DrugItem) => {
     if (drug.status === 'out-of-stock') {
@@ -267,8 +296,8 @@ export function DrugInventory({ onViewDrugProfile }: DrugInventoryProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-gray-100">
-                {filteredDrugs.length > 0 ? (
-                  filteredDrugs.map((drug) => (
+                {paginatedDrugs.length > 0 ? (
+                  paginatedDrugs.map((drug) => (
                     <tr
                       key={drug.id}
                       className="hover:bg-neutral-gray-50 transition-colors cursor-pointer group"
@@ -319,6 +348,65 @@ export function DrugInventory({ onViewDrugProfile }: DrugInventoryProps) {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Count Display */}
+        {totalItems > 0 && (
+          <div className="px-6 py-3 border-t border-neutral-gray-200 text-sm text-neutral-gray-500">
+            Hiển thị <span className="font-medium text-neutral-text">{startIndex + 1}</span> đến{" "}
+            <span className="font-medium text-neutral-text">{Math.min(endIndex, totalItems)}</span> trong tổng số{" "}
+            <span className="font-medium text-neutral-text">{totalItems}</span> thuốc
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center px-6 py-4 border-t border-neutral-gray-200">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <PaginationItem key={page}>
+                        <span className="px-2">...</span>
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

@@ -84,15 +84,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Convert NotificationDTO từ backend sang Notification frontend
   const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
     // ✅ Xử lý các loại notification khác nhau
-    let title = '💰 Hóa đơn đã được thanh toán';
+    let title = 'Hóa đơn đã được thanh toán';
     if (dto.templateId === 'PRESCRIPTION_DISPENSED') {
-      title = '✅ Đơn thuốc đã được cấp phát';
+      title = 'Đơn thuốc đã được cấp phát';
     } else if (dto.templateId === 'APPOINTMENT_CREATED') {
-      title = '📅 Lịch hẹn mới';
+      title = 'Lịch hẹn mới';
     } else if (dto.templateId === 'LAB_TEST_REQUESTED') {
-      title = '🧪 Yêu cầu xét nghiệm mới';
+      title = 'Yêu cầu xét nghiệm mới';
     } else if (dto.templateId === 'LAB_TEST_COMPLETED') {
-      title = '✅ Xét nghiệm đã hoàn thành';
+      title = 'Xét nghiệm đã hoàn thành';
     }
 
     return {

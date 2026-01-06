@@ -6,6 +6,14 @@ import { medicalHistoryController } from '../../controllers/MedicalHistoryContro
 import { doctorController } from '../../controllers/DoctorController';
 import { userController } from '../../controllers/UserController';
 import { toast } from 'sonner';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '../ui/pagination';
 
 interface PrescriptionQueueProps {
   onViewDetail: (id: string) => void;
@@ -31,6 +39,10 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
     dispensed: 0,
     cancelled: 0,
   });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadPrescriptions = async () => {
     setLoading(true);
@@ -118,7 +130,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
       // 6. Map lại orders với thông tin đã fetch
       const enriched = orders.map((order) => {
         const mh = medicalHistoryMap[order.medicalHistoryId];
-        let patientName = `Bệnh nhân ${order.medicalHistoryId.substring(0, 8)}`;
+        let patientName = `Bệnh nhân ${order.medicalHistoryId.slice(-8)}`;
 
         if (mh?.patientId) {
           const patient = patientMap[mh.patientId];
@@ -181,6 +193,23 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
       p.patientName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Sắp xếp theo thời gian (mới nhất trước)
+  const sortedPrescriptions = [...filteredPrescriptions].sort((a, b) =>
+    new Date(b.createAt).getTime() - new Date(a.createAt).getTime()
+  );
+
+  // Pagination calculations
+  const totalItems = sortedPrescriptions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPrescriptions = sortedPrescriptions.slice(startIndex, endIndex);
+
+  // Reset trang khi đổi tab hoặc search
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
+
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
       RELEASED: {
@@ -203,7 +232,7 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
 
     const statusInfo = statusMap[status] || statusMap.RELEASED
 
-    ;
+      ;
     return (
       <span className={`${statusInfo.className} text-xs font-semibold`}>
         {statusInfo.label}
@@ -303,15 +332,15 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-gray-100">
-                {filteredPrescriptions.length > 0 ? (
-                  filteredPrescriptions.map((prescription) => (
+                {paginatedPrescriptions.length > 0 ? (
+                  paginatedPrescriptions.map((prescription) => (
                     <tr
                       key={prescription.id}
                       className="hover:bg-neutral-gray-50 transition-colors cursor-pointer group"
                       onClick={() => onViewDetail(prescription.id)}
                     >
                       <td className="px-6 py-4 text-sm font-semibold text-primary">
-                        {prescription.id.substring(0, 8)}...
+                        {prescription.id.slice(-8)}
                       </td>
                       <td className="px-6 py-4 text-sm text-neutral-text font-medium">
                         {prescription.patientName}
@@ -354,6 +383,65 @@ export function PrescriptionQueue({ onViewDetail }: PrescriptionQueueProps) {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Count Display */}
+        {totalItems > 0 && (
+          <div className="px-6 py-3 border-t border-neutral-gray-200 text-sm text-neutral-gray-500">
+            Hiển thị <span className="font-medium text-neutral-text">{startIndex + 1}</span> đến{" "}
+            <span className="font-medium text-neutral-text">{Math.min(endIndex, totalItems)}</span> trong tổng số{" "}
+            <span className="font-medium text-neutral-text">{totalItems}</span> đơn thuốc
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center px-6 py-4 border-t border-neutral-gray-200">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <PaginationItem key={page}>
+                        <span className="px-2">...</span>
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

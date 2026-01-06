@@ -2,7 +2,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Search, Plus, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
+import { Search, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
@@ -41,6 +41,7 @@ interface Invoice {
   patientName: string;
   patientCode: string;
   date: string;
+  issueAt: string; // ISO date string for filtering
   doctor: string;
   amount: number;
   status: 'unpaid' | 'paid' | 'cancelled';
@@ -49,10 +50,9 @@ interface Invoice {
 
 interface ReceptionistInvoiceListProps {
   onViewInvoice: (invoiceId: string, mode?: 'view' | 'payment') => void;
-  onCreateInvoice: () => void;
 }
 
-export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: ReceptionistInvoiceListProps) {
+export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('today');
@@ -224,7 +224,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
       const mappedInvoice = {
         id: invoice.id,
-        code: invoice.id.substring(0, 8).toUpperCase(),
+        code: invoice.id.slice(-8).toUpperCase(),
         patientName: patientUser?.fullName || 'Bệnh nhân',
         patientCode: patientUser?.id
           ? `BN${patientUser.id.slice(-6).toUpperCase()}`
@@ -236,6 +236,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           hour: '2-digit',
           minute: '2-digit',
         }),
+        issueAt: invoice.issueAt, // Keep original for date filtering
         doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
         amount: invoice.patientTotalPay ?? 0,
         status: mapStatusToFrontend(invoice.status),
@@ -249,7 +250,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
       // Return a basic invoice even if mapping fails partially
       return {
         id: invoice.id,
-        code: invoice.id.substring(0, 8).toUpperCase(),
+        code: invoice.id.slice(-8).toUpperCase(),
         patientName: 'Bệnh nhân',
         patientCode: '—',
         date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
@@ -259,6 +260,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
           hour: '2-digit',
           minute: '2-digit',
         }),
+        issueAt: invoice.issueAt, // Keep original for date filtering
         doctor: 'BS. Đang cập nhật',
         amount: invoice.patientTotalPay ?? 0,
         status: mapStatusToFrontend(invoice.status),
@@ -281,6 +283,39 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
     }
   };
 
+  // Date filter helper function
+  // issueAt is timestamp without timezone (stored as UTC), need to add +7 hours for Vietnam timezone
+  const matchesDateFilter = (invoiceIssueAt: string, filter: string): boolean => {
+    if (filter === 'all') return true;
+
+    // Parse timestamp and add 7 hours for Vietnam timezone (UTC+7)
+    const invoiceDateUTC = new Date(invoiceIssueAt);
+    const invoiceDate = new Date(invoiceDateUTC.getTime() + 7 * 60 * 60 * 1000);
+
+    const now = new Date();
+
+    // Reset time to start of day for comparison (Vietnam time)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const invoiceDateOnly = new Date(invoiceDate.getFullYear(), invoiceDate.getMonth(), invoiceDate.getDate());
+
+    switch (filter) {
+      case 'today':
+        return invoiceDateOnly.getTime() === today.getTime();
+      case 'week': {
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday as start of week
+        return invoiceDateOnly >= startOfWeek && invoiceDateOnly <= today;
+      }
+      case 'month': {
+        // Lấy tất cả hóa đơn trong tháng hiện tại (cùng tháng và năm)
+        return invoiceDate.getMonth() === now.getMonth() &&
+          invoiceDate.getFullYear() === now.getFullYear();
+      }
+      default:
+        return true;
+    }
+  };
+
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
       invoice.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,7 +324,9 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesDate = matchesDateFilter(invoice.issueAt, dateFilter);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const unpaidInvoices = filteredInvoices.filter(inv => inv.status === 'unpaid');
@@ -358,18 +395,11 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
             )}
             Làm mới
           </Button>
-          <Button
-            onClick={onCreateInvoice}
-            className="bg-primary hover:bg-primary-strong rounded-[15px] shadow-lg transition-all duration-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Tạo Hóa đơn mới
-          </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-neutral-text/70 font-medium">Chờ thanh toán</span>

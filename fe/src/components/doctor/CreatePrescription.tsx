@@ -176,6 +176,14 @@ export function CreatePrescriptionEnhanced({
         setItems(items.map((item, i) => i === index ? { ...item, [field]: value } : item));
     };
 
+    // Validate số lượng khi rời khỏi ô nhập (onBlur)
+    const validateQuantity = (index: number, value: any) => {
+        const numValue = Number(value);
+        if (isNaN(numValue) || numValue < 1) {
+            updateItem(index, 'quantity', 1);
+        }
+    };
+
     const applyDosageTemplate = (index: number, template: typeof dosageTemplates[0]) => {
         setItems(items.map((item, i) =>
             i === index
@@ -556,8 +564,9 @@ export function CreatePrescriptionEnhanced({
                                                                     type="number"
                                                                     min={1}
                                                                     max={item.stockQuantity}
-                                                                    value={item.quantity}
-                                                                    onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value))}
+                                                                    value={item.quantity || ''}
+                                                                    onChange={(e) => updateItem(idx, 'quantity', e.target.value === '' ? '' : Number(e.target.value))}
+                                                                    onBlur={(e) => validateQuantity(idx, e.target.value)}
                                                                     className="rounded-lg border-neutral-border/30 focus:border-primary"
                                                                 />
                                                             </div>
