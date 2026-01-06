@@ -41,6 +41,7 @@ interface Invoice {
   patientName: string;
   patientCode: string;
   date: string;
+  issueAt: string; // ISO date string for filtering
   doctor: string;
   amount: number;
   status: 'unpaid' | 'paid' | 'cancelled';
@@ -235,6 +236,7 @@ export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceLi
           hour: '2-digit',
           minute: '2-digit',
         }),
+        issueAt: invoice.issueAt, // Keep original for date filtering
         doctor: doctorUser?.fullName || 'BS. Đang cập nhật',
         amount: invoice.patientTotalPay ?? 0,
         status: mapStatusToFrontend(invoice.status),
@@ -258,6 +260,7 @@ export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceLi
           hour: '2-digit',
           minute: '2-digit',
         }),
+        issueAt: invoice.issueAt, // Keep original for date filtering
         doctor: 'BS. Đang cập nhật',
         amount: invoice.patientTotalPay ?? 0,
         status: mapStatusToFrontend(invoice.status),
@@ -280,6 +283,39 @@ export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceLi
     }
   };
 
+  // Date filter helper function
+  // issueAt is timestamp without timezone (stored as UTC), need to add +7 hours for Vietnam timezone
+  const matchesDateFilter = (invoiceIssueAt: string, filter: string): boolean => {
+    if (filter === 'all') return true;
+
+    // Parse timestamp and add 7 hours for Vietnam timezone (UTC+7)
+    const invoiceDateUTC = new Date(invoiceIssueAt);
+    const invoiceDate = new Date(invoiceDateUTC.getTime() + 7 * 60 * 60 * 1000);
+
+    const now = new Date();
+
+    // Reset time to start of day for comparison (Vietnam time)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const invoiceDateOnly = new Date(invoiceDate.getFullYear(), invoiceDate.getMonth(), invoiceDate.getDate());
+
+    switch (filter) {
+      case 'today':
+        return invoiceDateOnly.getTime() === today.getTime();
+      case 'week': {
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday as start of week
+        return invoiceDateOnly >= startOfWeek && invoiceDateOnly <= today;
+      }
+      case 'month': {
+        // Lấy tất cả hóa đơn trong tháng hiện tại (cùng tháng và năm)
+        return invoiceDate.getMonth() === now.getMonth() &&
+          invoiceDate.getFullYear() === now.getFullYear();
+      }
+      default:
+        return true;
+    }
+  };
+
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
       invoice.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -288,7 +324,9 @@ export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceLi
 
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesDate = matchesDateFilter(invoice.issueAt, dateFilter);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const unpaidInvoices = filteredInvoices.filter(inv => inv.status === 'unpaid');
