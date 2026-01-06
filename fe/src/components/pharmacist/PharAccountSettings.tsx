@@ -7,7 +7,7 @@ import { Camera, Loader2, User, Lock } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { authController } from '../../controllers/AuthController';
 import { userController, UpdateUserRequestDTO } from '../../controllers/UserController';
-import { pharmacistController, PharmacistRequest } from '../../controllers/PharmacistController';
+import { pharmacistController } from '../../controllers/PharmacistController';
 import { UserDTO } from '../../models/User';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -101,21 +101,6 @@ export function PharAccountSettings() {
       
       setUser(mergedUser);
       localStorage.setItem('currentUser', JSON.stringify(mergedUser));
-      
-      // Update pharmacist data
-      if (pharmacistData) {
-        const pharmacistUpdate: PharmacistRequest = {
-          userId: user.id,
-          degree: degree || '',
-          certificate: certificate || '',
-        };
-        
-        try {
-          await pharmacistController.update(user.id, pharmacistUpdate);
-        } catch (error) {
-          console.error('Error updating pharmacist data:', error);
-        }
-      }
       
       toast.success('Cập nhật thông tin thành công');
     } catch (error) {
@@ -371,9 +356,9 @@ export function PharAccountSettings() {
                   <Input 
                     id="degree" 
                     value={degree}
-                    onChange={(e) => setDegree(e.target.value)}
+                    disabled
                     placeholder="Nhập bằng cấp"
-                    className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                    className="rounded-xl border-neutral-border/30 bg-neutral-muted" 
                   />
                 </div>
 
@@ -382,9 +367,9 @@ export function PharAccountSettings() {
                   <Input 
                     id="certificate" 
                     value={certificate}
-                    onChange={(e) => setCertificate(e.target.value)}
+                    disabled
                     placeholder="Nhập chứng chỉ"
-                    className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                    className="rounded-xl border-neutral-border/30 bg-neutral-muted" 
                   />
                 </div>
 

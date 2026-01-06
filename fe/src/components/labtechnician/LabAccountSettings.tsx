@@ -7,7 +7,7 @@ import { Camera, Loader2, User, Lock } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { authController } from '../../controllers/AuthController';
 import { userController, UpdateUserRequestDTO } from '../../controllers/UserController';
-import { labTechnicianController, LabTechnicianRequest } from '../../controllers/LabTechnicianController';
+import { labTechnicianController } from '../../controllers/LabTechnicianController';
 import { UserDTO } from '../../models/User';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -98,20 +98,6 @@ export function LabAccountSettings() {
       
       setUser(mergedUser);
       localStorage.setItem('currentUser', JSON.stringify(mergedUser));
-      
-      // Update lab technician data
-      if (labTechnicianData) {
-        const labTechUpdate: LabTechnicianRequest = {
-          userId: user.id,
-          licenseNumber: licenseNumber || undefined,
-        };
-        
-        try {
-          await labTechnicianController.update(user.id, labTechUpdate);
-        } catch (error) {
-          console.error('Error updating lab technician data:', error);
-        }
-      }
       
       toast.success('Cập nhật thông tin thành công');
     } catch (error) {
@@ -367,9 +353,9 @@ export function LabAccountSettings() {
                   <Input 
                     id="license" 
                     value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
+                    disabled
                     placeholder="Nhập số giấy phép"
-                    className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                    className="rounded-xl border-neutral-border/30 bg-neutral-muted" 
                   />
                 </div>
 
