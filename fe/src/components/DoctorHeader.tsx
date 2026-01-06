@@ -174,14 +174,10 @@ export function DoctorHeader({
                   <div className="flex items-center gap-2">
                     {notifications.length > 0 && (
                       <button
-                        onClick={markAllAsRead}
-                        disabled={unreadCount === 0}
-                        className={`text-xs font-medium whitespace-nowrap transition-colors ${
-                          unreadCount > 0
-                            ? 'text-[#3FB5FF] hover:text-[#3FB5FF]/80 cursor-pointer'
-                            : 'text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
+                          onClick={markAllAsRead}
+                          disabled={unreadCount === 0}
+                          className={`px-4 py-2 border-r font-['Fz_Poppins:Medium',sans-serif] text-[13px] whitespace-nowrap transition-none bg-[#3fb5ff] text-white cursor-pointer`}
+                        >
                         Đánh dấu tất cả đã đọc
                       </button>
                     )}

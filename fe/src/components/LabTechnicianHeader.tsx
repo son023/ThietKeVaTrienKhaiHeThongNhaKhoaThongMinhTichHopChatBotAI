@@ -169,14 +169,10 @@ export function LabTechnicianHeader({ onLogout, onGoHome }: LabTechnicianHeaderP
                                         <button
                                             onClick={markAllAsRead}
                                             disabled={unreadCount === 0}
-                                            className={`text-xs font-medium whitespace-nowrap transition-colors ${
-                                                unreadCount > 0
-                                                    ? 'text-primary hover:text-primary/80 cursor-pointer'
-                                                    : 'text-gray-400 cursor-not-allowed'
-                                            }`}
-                                        >
-                                            Đánh dấu tất cả đã đọc
-                                        </button>
+                                            className={`px-4 py-2 border-r font-['Fz_Poppins:Medium',sans-serif] text-[13px] whitespace-nowrap transition-none bg-[#3fb5ff] text-white cursor-pointer`}
+                                            >
+                                        Đánh dấu tất cả đã đọc
+                                        </button> 
                                     )}
                                     <button
                                         onClick={() => setShowNotifications(false)}
