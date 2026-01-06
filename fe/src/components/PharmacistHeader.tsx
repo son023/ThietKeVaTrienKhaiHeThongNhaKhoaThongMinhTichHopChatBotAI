@@ -179,7 +179,8 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="font-['Fz_Poppins:Regular',sans-serif] text-[12px] text-[#3fb5ff] hover:text-[#05619a]"
+                   disabled={unreadCount === 0}
+                   className={`px-4 py-2 border-r font-['Fz_Poppins:Medium',sans-serif] text-[13px] whitespace-nowrap transition-none bg-[#3fb5ff] text-white cursor-pointer`}
                     >
                       Đánh dấu tất cả đã đọc
                     </button>
