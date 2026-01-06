@@ -88,13 +88,13 @@ export default function PharmacistApp({ onLogout, onGoHome }: PharmacistAppProps
 
   return (
       <NotificationProvider userId={pharmacistId}>
-        <div className="flex h-screen">
-          <PharmacistSidebar
-              currentPage={currentPage}
-              onPageChange={handleSidebarChange}
-          />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <PharmacistHeader onLogout={onLogout} onGoHome={onGoHome} />
+        <div className="flex flex-col h-screen">
+          <PharmacistHeader onLogout={onLogout} onGoHome={onGoHome} />
+          <div className="flex flex-1 overflow-hidden">
+            <PharmacistSidebar
+                currentPage={currentPage}
+                onPageChange={handleSidebarChange}
+            />
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route

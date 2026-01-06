@@ -70,15 +70,15 @@ export default function LabTechnicianApp({
 
   return (
     <NotificationProvider userId={labTechnicianId}>
-      <div className="flex h-screen bg-neutral-background">
-        <LabTechnicianSidebar
-          currentPage={currentPage}
-          onNavigate={handleSidebarNavigate}
-        />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
-        <main className="flex-1 overflow-y-auto bg-neutral-background">
-          <Routes>
+      <div className="flex flex-col h-screen bg-neutral-background">
+        <LabTechnicianHeader onLogout={onLogout} onGoHome={onGoHome} />
+        <div className="flex flex-1 overflow-hidden">
+          <LabTechnicianSidebar
+            currentPage={currentPage}
+            onNavigate={handleSidebarNavigate}
+          />
+          <main className="flex-1 overflow-y-auto bg-neutral-background">
+            <Routes>
             <Route
               path="/lab"
               element={
@@ -111,9 +111,9 @@ export default function LabTechnicianApp({
 
             <Route path="*" element={<Navigate to="/lab" replace />} />
           </Routes>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
     </NotificationProvider>
   );
 }

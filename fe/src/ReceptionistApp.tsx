@@ -271,7 +271,7 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
 
   return (
     <NotificationProvider userId={receptionistId}>
-      <div className="min-h-screen bg-[#f8f9fa]">
+      <div className="flex flex-col h-screen bg-[#f8f9fa]">
         <ReceptionistHeader
           onLogout={onLogout}
           onGoHome={onGoHome}
@@ -279,9 +279,10 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
           onNewPatient={handleNewPatient}
           onSearch={handleSearch}
         />
-        <ReceptionistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
-      <div className="ml-[260px] mt-[80px]">
-        <Routes>
+        <div className="flex flex-1 overflow-hidden">
+          <ReceptionistSidebar currentPage={currentPage} onPageChange={handleSidebarChange} />
+          <div className="flex-1 overflow-y-auto">
+            <Routes>
           <Route
             path="/receptionist"
             element={
@@ -364,9 +365,9 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
             element={<ReceptionistAccountSettings />}
           />
           <Route path="*" element={<Navigate to="/receptionist" replace />} />
-        </Routes>
+            </Routes>
 
-        <Dialog open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+            <Dialog open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
           <DialogContent className="w-[90vw] max-w-none bg-white">
             <DialogHeader>
               <DialogTitle>Chọn bệnh nhân để đặt lịch hẹn</DialogTitle>
@@ -455,7 +456,8 @@ export function ReceptionistApp({ onLogout, onGoHome }: ReceptionistAppProps) {
             patientEmail={selectedPatient.user?.email}
           />
         )}
-      </div>
+          </div>
+        </div>
       </div>
     </NotificationProvider>
   );

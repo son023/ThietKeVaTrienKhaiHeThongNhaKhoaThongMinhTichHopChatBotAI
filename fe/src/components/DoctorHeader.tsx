@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Logo } from "./ui/logo";
 import type { DoctorWithUser } from "../controllers/DoctorController";
 import { useNotifications } from "../contexts/NotificationContext";
 import { authController } from "../controllers/AuthController";
@@ -132,18 +133,21 @@ export function DoctorHeader({
     <header className="bg-white border-b border-[#e8e8e8] px-6 py-4 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
       <div className="flex items-center justify-between">
         <div
-          className="cursor-pointer hover:opacity-80 transition-opacity"
+          className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-20"
           onClick={onGoHome}
         >
-          <h2 className="text-[#01304e]">Phong kham Nha khoa DentalCareX</h2>
-          <p className="text-[#333333]/60 text-sm mt-1">
-            {new Date().toLocaleDateString("vi-VN", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+          <Logo />
+          <div>
+            <h2 className="text-[#01304e]">Phòng khám Nha khoa DentalCareX</h2>
+            <p className="text-[#333333]/60 text-sm mt-1">
+              {new Date().toLocaleDateString("vi-VN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
