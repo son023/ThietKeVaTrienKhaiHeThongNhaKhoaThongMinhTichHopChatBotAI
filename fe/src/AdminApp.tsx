@@ -103,10 +103,10 @@ export default function AdminApp({ onLogout, onGoHome }: AdminAppProps = {}) {
   };
 
   return (
-    <div className="flex h-screen bg-[#fcfeff]">
-      <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader onLogout={onLogout} onGoHome={onGoHome} />
+    <div className="flex flex-col h-screen bg-[#fcfeff]">
+      <AdminHeader onLogout={onLogout} onGoHome={onGoHome} />
+      <div className="flex flex-1 overflow-hidden">
+        <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
         <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
           {renderPage()}
         </main>

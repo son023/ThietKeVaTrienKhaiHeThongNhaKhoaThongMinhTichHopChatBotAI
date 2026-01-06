@@ -1,5 +1,4 @@
 import { LayoutDashboard, FileText, Package, TruckIcon, BarChart3, Settings } from 'lucide-react';
-import { Logo } from './ui/logo';
 
 interface PharmacistSidebarProps {
   currentPage: string;
@@ -9,19 +8,16 @@ interface PharmacistSidebarProps {
 export function PharmacistSidebar({ currentPage, onPageChange }: PharmacistSidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển', icon: LayoutDashboard },
-    { id: 'prescriptions', label: 'Đơn thuốc', icon: FileText },
-    { id: 'inventory', label: 'Kho thuốc', icon: Package },
+    { id: 'prescriptions', label: 'Quản lý đơn thuốc', icon: FileText },
+    { id: 'inventory', label: 'Quản lý kho thuốc', icon: Package },
     { id: 'import-export', label: 'Nhập/Xuất thuốc', icon: TruckIcon },
-    { id: 'reports', label: 'Báo cáo', icon: BarChart3 },
+    { id: 'reports', label: 'Báo cáo thống kê', icon: BarChart3 },
     { id: 'account', label: 'Tài khoản của tôi', icon: Settings },
   ];
 
   return (
     <aside className="w-64 bg-white border-r border-[#e8e8e8] flex flex-col">
-      <div className="p-6 border-b border-[#e8e8e8]">
-        <Logo />
-      </div>
-      <nav className="flex-1 px-4 py-4">
+      <nav className="flex-1 px-4 py-4 pt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;

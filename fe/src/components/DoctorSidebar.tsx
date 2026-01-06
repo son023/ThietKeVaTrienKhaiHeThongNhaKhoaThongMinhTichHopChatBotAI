@@ -6,7 +6,6 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { Logo } from "./ui/logo";
 
 interface SidebarProps {
   currentPage: string;
@@ -25,10 +24,7 @@ export function DoctorSidebar({ currentPage, onNavigate }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-white border-r border-[#e8e8e8] flex flex-col">
-      <div className="p-6 border-b border-[#e8e8e8]">
-        <Logo />
-      </div>
-      <nav className="flex-1 px-4 py-4">
+      <nav className="flex-1 px-4 py-4 pt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;

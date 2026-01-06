@@ -233,9 +233,9 @@ export function MyAppointments({
     <div className="p-6 bg-[var(--page-bg)]">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[#01304e] mb-2">Lich hen cua toi</h1>
+          <h1 className="text-[#01304e] mb-2">Lịch hẹn của tôi </h1>
           <p className="text-regular">
-            Theo doi cac cuoc hen gan day va sap toi
+            Theo dõi các lịch hẹn gần đây và sắp tới
           </p>
         </div>
         <div className="relative w-full max-w-md">

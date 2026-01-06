@@ -136,22 +136,25 @@ export function PharmacistHeader({ onLogout, onGoHome }: PharmacistHeaderProps) 
   return (
     <header className="bg-white border-b border-[#e8e8e8] px-6 py-4 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
       <div className="flex items-center justify-between">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-xl mr-8">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm thuốc, hoạt chất, đơn thuốc..."
-            className="w-full pl-10 bg-[#f8f9fa] border-gray-200 h-10 px-4 rounded-md border focus:outline-none focus:ring-2 focus:ring-[#3fb5ff] focus:border-transparent transition-all"
-          />
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-20"
+          onClick={onGoHome}
+        >
+          <Logo />
+          <div>
+            <h2 className="text-[#01304e]">Phòng khám Nha khoa DentalCareX</h2>
+            <p className="text-[#333333]/60 text-sm mt-1">
+              {new Date().toLocaleDateString("vi-VN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button

@@ -3,6 +3,7 @@ import { Bell, Search, LogOut, User, Settings, Home } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Input } from './ui/input';
+import { Logo } from './ui/logo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,16 +54,22 @@ export function AdminHeader({ onLogout, onGoHome }: AdminHeaderProps = {}) {
 
   return (
     <header className="bg-white border-b border-[#e8e8e8] px-6 py-4 shadow-[0px_4px_12px_0px_rgba(159,166,175,0.08)]">
-      <div className="flex items-center justify-between gap-4">
-        {/* Search Bar */}
-        <div className="flex-1 max-w-2xl">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#333333]/40" />
-            <Input
-              type="text"
-              placeholder="Tìm kiếm bệnh nhân, nhân viên, dịch vụ..."
-              className="pl-10 rounded-[10px] border-[#e8e8e8] w-full"
-            />
+      <div className="flex items-center justify-between">
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-20"
+          onClick={onGoHome}
+        >
+          <Logo />
+          <div>
+            <h2 className="text-[#01304e]">Phòng khám Nha khoa DentalCareX</h2>
+            <p className="text-[#333333]/60 text-sm mt-1">
+              {new Date().toLocaleDateString("vi-VN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
         </div>
         

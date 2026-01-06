@@ -228,17 +228,17 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
 
   return (
     <NotificationProvider userId={doctorUserId}>
-      <div className="flex h-screen">
-        <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <DoctorHeader
-            onLogout={onLogout}
-            onGoHome={onGoHome}
-            doctor={doctor || undefined}
-            isLoading={isLoadingDoctor}
-          />
-        <main className="flex-1 overflow-y-auto">
-          <Routes>
+      <div className="flex flex-col h-screen">
+        <DoctorHeader
+          onLogout={onLogout}
+          onGoHome={onGoHome}
+          doctor={doctor || undefined}
+          isLoading={isLoadingDoctor}
+        />
+        <div className="flex flex-1 overflow-hidden">
+          <DoctorSidebar currentPage={currentPage} onNavigate={handleSidebarNavigate} />
+          <main className="flex-1 overflow-y-auto">
+            <Routes>
             <Route
               path="/doctor"
               element={
@@ -294,9 +294,9 @@ export default function DoctorApp({ onLogout, onGoHome }: DoctorAppProps) {
             {/* fallback trong DoctorApp */}
             <Route path="*" element={<Navigate to="/doctor" replace />} />
           </Routes>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
     </NotificationProvider>
   );
 }

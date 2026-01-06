@@ -1,5 +1,4 @@
 import { Home, Calendar, Users, UserCog, Briefcase, Package, Receipt, BarChart3, Settings, LogOut } from 'lucide-react';
-import { Logo } from './ui/logo';
 
 interface AdminSidebarProps {
   currentPage: string;
@@ -18,11 +17,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
 
   return (
     <aside className="w-64 bg-white border-r border-[#e8e8e8] flex flex-col">
-      <div className="p-6 border-b border-[#e8e8e8]">
-        <Logo />
-      </div>
-      
-      <nav className="flex-1 px-4 py-4 overflow-y-auto">
+      <nav className="flex-1 px-4 py-4 pt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -38,7 +33,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-sm">{item.label}</span>
+              <span>{item.label}</span>
             </button>
           );
         })}
