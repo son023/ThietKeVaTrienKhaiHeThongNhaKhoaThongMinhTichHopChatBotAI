@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AdminSidebar } from './components/AdminSidebar';
 import { AdminHeader } from './components/AdminHeader';
-import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminAppointments } from './components/admin/AdminAppointments';
 import { AdminStaff } from './components/admin/AdminStaff';
 import { AdminStaffDetail } from './components/admin/AdminStaffDetail';
@@ -19,54 +19,92 @@ interface AdminAppProps {
 }
 
 export default function AdminApp({ onLogout, onGoHome }: AdminAppProps = {}) {
-  const [currentPage, setCurrentPage] = useState('admin-dashboard');
-  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract current page from URL
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path === '/admin' || path === '/admin/') {
+      return 'patients';
+    }
+    return path.replace('/admin/', '');
+  };
+
+  const currentPage = getCurrentPage();
+
+  // Redirect to patients if on admin root
+  useEffect(() => {
+    if (location.pathname === '/admin' || location.pathname === '/admin/') {
+      navigate('/admin/patients', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  const handleNavigate = (page: string) => {
+    navigate(`/admin/${page}`);
+  };
+
+  const handleNavigateToStaffDetail = (id: string) => {
+    navigate(`/admin/staff/${id}`);
+  };
+
+  const handleNavigateToPatientDetail = (id: string) => {
+    navigate(`/admin/patients/${id}`);
+  };
+
+  const handleBackToStaff = () => {
+    navigate('/admin/staff');
+  };
+
+  const handleBackToPatients = () => {
+    navigate('/admin/patients');
+  };
 
   const renderPage = () => {
-    switch (currentPage) {
-      case 'admin-dashboard':
-        return <AdminDashboard />;
-      case 'admin-appointments':
-        return <AdminAppointments />;
-      case 'admin-patients':
-        return <AdminPatients onNavigateToPatientDetail={(id) => {
-          setSelectedPatientId(id);
-          setCurrentPage('admin-patient-detail');
-        }} />;
-      case 'admin-patient-detail':
-        return <AdminPatientDetail 
-          patientId={selectedPatientId}
-          onBack={() => setCurrentPage('admin-patients')}
-        />;
-      case 'admin-staff':
-        return <AdminStaff onNavigateToStaffDetail={(id) => {
-          setSelectedStaffId(id);
-          setCurrentPage('admin-staff-detail');
-        }} />;
-      case 'admin-staff-detail':
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    
+    // Handle detail pages
+    if (pathParts.length === 3 && pathParts[0] === 'admin') {
+      if (pathParts[1] === 'staff') {
         return <AdminStaffDetail 
-          staffId={selectedStaffId}
-          onBack={() => setCurrentPage('admin-staff')}
+          staffId={pathParts[2]}
+          onBack={handleBackToStaff}
         />;
-      case 'admin-services':
+      }
+      if (pathParts[1] === 'patients') {
+        return <AdminPatientDetail 
+          patientId={pathParts[2]}
+          onBack={handleBackToPatients}
+        />;
+      }
+    }
+
+    // Handle main pages
+    switch (currentPage) {
+      case 'appointments':
+        return <AdminAppointments />;
+      case 'patients':
+        return <AdminPatients onNavigateToPatientDetail={handleNavigateToPatientDetail} />;
+      case 'staff':
+        return <AdminStaff onNavigateToStaffDetail={handleNavigateToStaffDetail} />;
+      case 'services':
         return <AdminServices />;
-      case 'admin-inventory':
+      case 'inventory':
         return <AdminInventory />;
-      case 'admin-finance':
+      case 'finance':
         return <AdminFinance />;
-      case 'admin-reports':
+      case 'reports':
         return <AdminReports />;
-      case 'admin-settings':
+      case 'settings':
         return <AdminSettings />;
       default:
-        return <AdminDashboard />;
+        return <AdminPatients onNavigateToPatientDetail={handleNavigateToPatientDetail} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-[#fcfeff]">
-      <AdminSidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminHeader onLogout={onLogout} onGoHome={onGoHome} />
         <main className="flex-1 overflow-y-auto bg-[#fcfeff]">
