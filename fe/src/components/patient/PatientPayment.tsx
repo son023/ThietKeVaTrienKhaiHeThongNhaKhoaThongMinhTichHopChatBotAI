@@ -262,7 +262,7 @@ export function PatientPayment() {
       document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
-      toast.success('✅ Đã tải file PDF thành công!', {
+      toast.success('Đã tải file PDF thành công!', {
         description: `File: ${fileName}`,
         duration: 3000,
       });
