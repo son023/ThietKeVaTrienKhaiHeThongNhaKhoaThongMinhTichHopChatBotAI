@@ -199,12 +199,8 @@ export function ReceptionistHeader({
                     <button
                       onClick={markAllAsRead}
                       disabled={unreadCount === 0}
-                      className={`text-xs font-medium whitespace-nowrap transition-colors ${
-                        unreadCount > 0
-                          ? 'text-[#3fb5ff] hover:text-[#05619a] cursor-pointer'
-                          : 'text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
+                   className={`px-4 py-2 border-r font-['Fz_Poppins:Medium',sans-serif] text-[13px] whitespace-nowrap transition-none bg-[#3fb5ff] text-white cursor-pointer`}
+                   >
                       Đánh dấu tất cả đã đọc
                     </button>
                   )}

@@ -540,10 +540,8 @@ export function ReceptionistDashboard({
             <Table>
               <TableHeader>
                 <TableRow className="bg-neutral-muted/30">
-                  <TableHead className="font-semibold text-neutral-heading">Mã BN</TableHead>
                   <TableHead className="font-semibold text-neutral-heading">Họ tên</TableHead>
                   <TableHead className="font-semibold text-neutral-heading">Số điện thoại</TableHead>
-                  <TableHead className="font-semibold text-neutral-heading">Email</TableHead>
                   <TableHead className="font-semibold text-neutral-heading">Thời gian hẹn</TableHead>
                   <TableHead className="font-semibold text-neutral-heading">Ghi chú</TableHead>
                 </TableRow>
@@ -553,18 +551,11 @@ export function ReceptionistDashboard({
                   // Real data for tomorrow's appointments
                   tomorrowAppointments.length > 0 ? tomorrowAppointments.map((apt) => (
                     <TableRow key={apt.id} className="hover:bg-neutral-muted/20 transition-colors border-b border-neutral-border">
-                      <TableCell className="font-mono text-sm text-neutral-text">{apt.patientId.substring(0, 8).toUpperCase()}</TableCell>
                       <TableCell className="text-sm text-neutral-heading font-medium">{apt.patientName}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Phone className="w-3.5 h-3.5 text-neutral-subtle" />
                           <span className="text-sm text-neutral-text">{apt.phone || 'N/A'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-neutral-subtle" />
-                          <span className="text-sm text-neutral-text">-</span>
                         </div>
                       </TableCell>
                       <TableCell>

@@ -262,10 +262,10 @@ export function CheckinDialog({ open, onOpenChange, appointment, isReadOnly = fa
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, bloodType: value }))}
                 disabled={loadingProfile || isReadOnly}
               >
-                <SelectTrigger className="bg-neutral-surface border-neutral-border">
+                <SelectTrigger className="bg-white border-neutral-border">
                   <SelectValue placeholder="Chọn nhóm máu" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-neutral-border">
                   {[
                     'A_POSITIVE',
                     'A_NEGATIVE',
@@ -277,9 +277,13 @@ export function CheckinDialog({ open, onOpenChange, appointment, isReadOnly = fa
                     'O_NEGATIVE',
                     'UNKNOWN',
                   ].map((bt) => (
-                    <SelectItem key={bt} value={bt}>
-                      {bt.replace('_', ' ')}
-                    </SelectItem>
+                      <SelectItem
+                          key={bt}
+                          value={bt}
+                          className="bg-white text-black focus:bg-neutral-100"
+                      >
+                        {bt.replace('_', ' ')}
+                      </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -291,7 +295,7 @@ export function CheckinDialog({ open, onOpenChange, appointment, isReadOnly = fa
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, insuranceNumber: e.target.value }))
                 }
-                placeholder="Số thẻ BHYT (nếu có)"
+                placeholder="Số thẻ BHYT"
                 disabled={loadingProfile || isReadOnly}
                 className="border-neutral-border focus:border-primary focus:ring-primary/20 bg-neutral-surface disabled:bg-neutral-muted"
               />
