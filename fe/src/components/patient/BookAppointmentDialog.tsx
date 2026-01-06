@@ -26,6 +26,8 @@ const timeSlots = [
     '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
 ];
 
+const WORKING_END_TIME = '17:30';
+
 export function BookAppointmentDialog({
     isOpen,
     onClose,
@@ -139,6 +141,8 @@ export function BookAppointmentDialog({
                 .reduce((a, b) => a + b, 0) || 30;
 
             const now = new Date();
+            
+            const workingEndTime = combineDateTime(date, WORKING_END_TIME);
 
             const freeSlots = timeSlots.filter(time => {
                 const start = combineDateTime(date, time);
@@ -146,6 +150,10 @@ export function BookAppointmentDialog({
 
                 // ✅ Check if appointment time is in the past
                 if (start <= now) {
+                    return false;
+                }
+
+                if (end > workingEndTime) {
                     return false;
                 }
 
