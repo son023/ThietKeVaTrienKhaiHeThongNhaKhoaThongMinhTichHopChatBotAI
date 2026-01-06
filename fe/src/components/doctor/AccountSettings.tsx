@@ -7,7 +7,7 @@ import { Camera, Loader2, User, Lock } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { authController } from '../../controllers/AuthController';
 import { userController, UpdateUserRequestDTO } from '../../controllers/UserController';
-import { doctorController, UpsertDoctorRequest } from '../../controllers/DoctorController';
+import { doctorController } from '../../controllers/DoctorController';
 import { UserDTO } from '../../models/User';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -130,23 +130,6 @@ export function AccountSettings() {
       
       setUser(mergedUser);
       localStorage.setItem('currentUser', JSON.stringify(mergedUser));
-      
-      // Update doctor data
-      if (doctorData) {
-        const doctorUpdate: UpsertDoctorRequest = {
-          userId: user.id,
-          specializationCodeIds: specialization ? [specialization] : [],
-          workingHospital: workingHospital || undefined,
-          licenseNumber: licenseNumber || undefined,
-          consultationFeeAmount: doctorData.consultationFeeAmount,
-        };
-        
-        try {
-          await doctorController.update(user.id, doctorUpdate);
-        } catch (error) {
-          console.error('Error updating doctor data:', error);
-        }
-      }
       
       toast.success('Cập nhật thông tin thành công');
     } catch (error) {
@@ -401,10 +384,11 @@ export function AccountSettings() {
                   <Select 
                     value={specialization} 
                     onValueChange={setSpecialization}
+                    disabled
                   >
                     <SelectTrigger 
                       id="specialization"
-                      className="rounded-xl border-neutral-border/30 focus:border-primary"
+                      className="rounded-xl border-neutral-border/30 bg-neutral-muted"
                     >
                       <SelectValue placeholder="Chọn chuyên môn" />
                     </SelectTrigger>
@@ -424,9 +408,9 @@ export function AccountSettings() {
                     <Input 
                       id="license" 
                       value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      disabled
                       placeholder="Nhập số giấy phép"
-                      className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                      className="rounded-xl border-neutral-border/30 bg-neutral-muted" 
                     />
                   </div>
                   <div>
@@ -434,9 +418,9 @@ export function AccountSettings() {
                     <Input 
                       id="hospital" 
                       value={workingHospital}
-                      onChange={(e) => setWorkingHospital(e.target.value)}
+                      disabled
                       placeholder="Nhập tên bệnh viện"
-                      className="rounded-xl border-neutral-border/30 focus:border-primary" 
+                      className="rounded-xl border-neutral-border/30 bg-neutral-muted" 
                     />
                   </div>
                 </div>
