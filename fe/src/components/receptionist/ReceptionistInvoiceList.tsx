@@ -2,7 +2,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Search, Plus, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
+import { Search, DollarSign, FileText, Calendar, User, Filter, Loader2, RefreshCw } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { invoiceController, InvoiceDTO } from '../../controllers/InvoiceController';
@@ -49,10 +49,9 @@ interface Invoice {
 
 interface ReceptionistInvoiceListProps {
   onViewInvoice: (invoiceId: string, mode?: 'view' | 'payment') => void;
-  onCreateInvoice: () => void;
 }
 
-export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: ReceptionistInvoiceListProps) {
+export function ReceptionistInvoiceList({ onViewInvoice }: ReceptionistInvoiceListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('today');
@@ -224,7 +223,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
 
       const mappedInvoice = {
         id: invoice.id,
-        code: invoice.id.substring(0, 8).toUpperCase(),
+        code: invoice.id.slice(-8).toUpperCase(),
         patientName: patientUser?.fullName || 'Bệnh nhân',
         patientCode: patientUser?.id
           ? `BN${patientUser.id.slice(-6).toUpperCase()}`
@@ -249,7 +248,7 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
       // Return a basic invoice even if mapping fails partially
       return {
         id: invoice.id,
-        code: invoice.id.substring(0, 8).toUpperCase(),
+        code: invoice.id.slice(-8).toUpperCase(),
         patientName: 'Bệnh nhân',
         patientCode: '—',
         date: new Date(invoice.issueAt).toLocaleString('vi-VN', {
@@ -358,18 +357,11 @@ export function ReceptionistInvoiceList({ onViewInvoice, onCreateInvoice }: Rece
             )}
             Làm mới
           </Button>
-          <Button
-            onClick={onCreateInvoice}
-            className="bg-primary hover:bg-primary-strong rounded-[15px] shadow-lg transition-all duration-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Tạo Hóa đơn mới
-          </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card className="p-4 border-neutral-border bg-neutral-surface hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-neutral-text/70 font-medium">Chờ thanh toán</span>

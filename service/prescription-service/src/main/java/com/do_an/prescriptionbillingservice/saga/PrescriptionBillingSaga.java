@@ -171,7 +171,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "COMPLETED",
                 "SUCCESS",
-                "✅ Tạo đơn thuốc thành công! Hóa đơn đã được cập nhật với giảm giá bảo hiểm và sẵn sàng thanh toán."
+                "Tạo đơn thuốc thành công! Hóa đơn đã được cập nhật với giảm giá bảo hiểm và sẵn sàng thanh toán."
         );
     }
 
@@ -185,7 +185,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "INVENTORY_CHECK",
                 "FAILED",
-                "❌ Không thể tạo đơn thuốc: Một số thuốc trong đơn không đủ số lượng tồn kho. Vui lòng điều chỉnh đơn thuốc hoặc liên hệ dược sĩ."
+                "Không thể tạo đơn thuốc: Một số thuốc trong đơn không đủ số lượng tồn kho. Vui lòng điều chỉnh đơn thuốc hoặc liên hệ dược sĩ."
         );
     }
 
@@ -198,7 +198,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "ROLLBACK_COMPLETED",
                 "CANCELLED",
-                "⚠️ Giao dịch đã được hoàn tác. Thuốc đã trả về kho. Vui lòng thử tạo đơn thuốc lại."
+                "Giao dịch đã được hoàn tác. Thuốc đã trả về kho. Vui lòng thử tạo đơn thuốc lại."
         );
     }
 
@@ -248,7 +248,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "COMPLETED",
                 "SUCCESS",
-                "✅ Tạo đơn thuốc thành công! \n⚠️ Lưu ý: " + event.getReason() + "\nHóa đơn sẽ được thanh toán toàn bộ không có giảm giá bảo hiểm."
+                "Tạo đơn thuốc thành công! \nLưu ý: " + event.getReason() + "\nHóa đơn sẽ được thanh toán toàn bộ không có giảm giá bảo hiểm."
         );
     }
 
@@ -269,7 +269,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "INVOICE_DISCOUNT_DATABASE",
                 "FAILED",
-                "❌ Lỗi hệ thống: Không thể cập nhật giảm giá bảo hiểm vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
+                "Lỗi hệ thống: Không thể cập nhật giảm giá bảo hiểm vào cơ sở dữ liệu. Đang hoàn tác giao dịch..."
         );
         triggerRollbackInsuranceClaim(event.getPrescriptionId());
     }

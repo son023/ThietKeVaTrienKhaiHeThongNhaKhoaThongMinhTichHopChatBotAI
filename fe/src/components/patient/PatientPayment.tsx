@@ -49,7 +49,7 @@ const mapInvoiceFromBackend = (invoice: InvoiceDTO, doctorName?: string): Invoic
         : "pending";
 
   return {
-    id: invoice.id.substring(0, 8).toUpperCase(),
+    id: invoice.id.slice(-8).toUpperCase(),
     invoiceId: invoice.id, // Store original invoice ID
     date: new Date(invoice.issueAt).toLocaleDateString("vi-VN"),
     service: invoice.items
@@ -254,7 +254,7 @@ export function PatientPayment() {
 
       const a = document.createElement('a');
       a.href = url;
-      const displayInvoiceCode = invoiceData.id.substring(0, 8).toUpperCase();
+      const displayInvoiceCode = invoiceData.id.slice(-8).toUpperCase();
       const fileName = `HoaDon_${displayInvoiceCode}_${new Date().toISOString().split('T')[0]}.pdf`;
       a.download = fileName;
       document.body.appendChild(a);
