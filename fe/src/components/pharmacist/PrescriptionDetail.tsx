@@ -193,7 +193,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
             } catch (e) { }
 
             history.push({
-              id: po.id.substring(0, 8),
+              id: po.id.slice(-8),
               date: new Date(po.createAt).toLocaleDateString('vi-VN'),
               doctor: docName,
               medications: medNames,
@@ -214,10 +214,10 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
         setIsCheckingPayment(true);
         console.log(prescriptionId);
         const paymentStatus = await inventoryController.getPaymentStatusOfPrescription(prescriptionId);
-        
-        
+
+
         setIsInvoicePaid(paymentStatus.isPaid || false);
-        
+
         if (paymentStatus.isPaid) {
           //toast.success('✅ Hóa đơn đã được thanh toán. Có thể cấp phát đơn thuốc.');
         } else {
@@ -229,7 +229,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
       } finally {
         setIsCheckingPayment(false);
       }
-    } 
+    }
     catch (error) {
       console.error('Load prescription detail error:', error);
       toast.error('Không thể tải chi tiết đơn thuốc');
@@ -259,7 +259,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   // useEffect(() => {
   //   const currentUser = authController.getCurrentUser();
   //   if (!currentUser || !prescriptionId) return;
-  
+
   //   const unsubscribe = subscribeToInvoicePaid(currentUser.id, (notification: InvoicePaidNotification) => {
   //     // Kiểm tra xem notification có liên quan đến đơn thuốc hiện tại không
   //     // (có thể so sánh qua appointmentId hoặc dispenseOrderId)
@@ -269,7 +269,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
   //       loadData();
   //     }
   //   });
-  
+
   //   return () => {
   //     unsubscribe();
   //   };
@@ -296,10 +296,10 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
       await inventoryController.markAsSold(prescriptionId, currentUser.id);
       toast.success('Đơn thuốc đã được cấp phát thành công!');
-      
+
       // ✅ Reload data để cập nhật status
       await loadData();
-      
+
       // Không tự động quay lại nữa, để người dùng thấy nút đã bị disable
       // setTimeout(() => onBack(), 1500);
     } catch (error) {
@@ -321,7 +321,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
 
   // Computed values
   const patientName = patient?.user?.fullName || patient?.user?.username || 'N/A';
-  const patientId = patient?.userId?.substring(0, 8) || '---';
+  const patientId = patient?.userId?.slice(-8) || '---';
   const patientPhone = patient?.contactPhone || '---';
   const patientGender = patient?.gender === 'MALE' ? 'Nam' : patient?.gender === 'FEMALE' ? 'Nữ' : '---';
   const patientAge = patient?.dob
@@ -340,7 +340,7 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
             ← Quay lại danh sách
           </button>
           <h1 className="typo-h2 text-neutral-heading mb-1">
-            Đơn thuốc #{prescriptionId.substring(0, 8)}...
+            Đơn thuốc #{prescriptionId.slice(-8)}
           </h1>
           <p className="text-base text-neutral-gray-500">
             {doctorName} • {dispenseOrder?.createAt ? new Date(dispenseOrder.createAt).toLocaleString('vi-VN') : '---'}
@@ -410,8 +410,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                 Ghi chú của Bác sĩ:
               </p>
               <div className="space-y-1 text-sm text-neutral-text whitespace-pre-line">
-                 {doctorNotes || 'Không có ghi chú'}
-            </div>
+                {doctorNotes || 'Không có ghi chú'}
+              </div>
             </div>
           </div>
 
@@ -452,8 +452,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 rounded-t-lg ${activeTab === tab.id
-                      ? 'border-primary text-primary bg-neutral-muted'
-                      : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
+                    ? 'border-primary text-primary bg-neutral-muted'
+                    : 'border-transparent text-neutral-gray-500 hover:text-primary hover:bg-neutral-gray-50'
                     }`}
                 >
                   {tab.label}
@@ -564,8 +564,8 @@ export function PrescriptionDetail({ prescriptionId, onBack }: PrescriptionDetai
               onClick={handleDispense}
               disabled={!isInvoicePaid || isCheckingPayment || dispenseOrder?.status === 'SOLD'}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 shadow-sm ${isInvoicePaid && !isCheckingPayment && dispenseOrder?.status !== 'SOLD'
-                  ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
-                  : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow'
+                : 'bg-neutral-gray-300 text-neutral-gray-500 cursor-not-allowed'
                 }`}
             >
               <CheckCircle className="w-5 h-5" />

@@ -211,7 +211,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
 
           let note = '';
           if (ledger.referenceType === 'DISPENSE_ORDER' || ledger.referenceType === 'AUTO_DISPENSE') {
-            note = `Đơn thuốc ${ledger.referenceId.substring(0, 8)}`;
+            note = `Đơn thuốc ${ledger.referenceId.slice(-8)}`;
           } else if (ledger.referenceType?.startsWith('MANUAL_EXPORT')) {
             note = `Xuất kho thủ công`;
           } else if (ledger.referenceType === 'INVENTORY_LOT' || ledger.referenceType === 'MANUAL_IMPORT') {
@@ -221,7 +221,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
           }
 
           return {
-            date: new Date(ledger.createAt || '').toLocaleString('vi-VN') ,
+            date: new Date(ledger.createAt || '').toLocaleString('vi-VN'),
             action,
             quantity: ledger.type === 'IN' ? ledger.quantity : -ledger.quantity,
             person: `DS. ${pharmacistName}`,
@@ -409,7 +409,7 @@ export function DrugProfile({ drugId, onBack }: DrugProfileProps) {
               </p>
               <span className="text-neutral-gray-300">|</span>
               <p className="text-sm">
-                Mã thuốc: {drug.id.substring(0, 8).toUpperCase()}
+                Mã thuốc: {drug.id.slice(-8).toUpperCase()}
               </p>
             </div>
           </div>
