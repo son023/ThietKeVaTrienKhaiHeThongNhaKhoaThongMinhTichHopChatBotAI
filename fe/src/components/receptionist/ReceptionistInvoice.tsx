@@ -148,7 +148,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
               setIsPaid(true);
               await loadInvoiceData();
             } else if (paymentStatus.status === PaymentStatus.CANCELLED) {
-              toast.info('ℹThanh toán đã bị hủy');
+              toast.info('Thanh toán đã bị hủy');
             } else if (paymentStatus.status === PaymentStatus.TIMEOUT) {
               toast.error('Hết thời gian thanh toán', {
                 description: 'Mã QR đã hết hạn. Vui lòng thử lại.',
@@ -286,7 +286,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
   const change = amountReceived ? Math.max(0, parseInt(amountReceived) - patientPays) : 0;
 
   // Display values
-  const displayInvoiceCode = invoiceData?.id.substring(0, 8).toUpperCase() || 'N/A';
+  const displayInvoiceCode = invoiceData?.id.slice(-8).toUpperCase() || 'N/A';
   const displayDate = invoiceData?.issueAt
     ? new Date(invoiceData.issueAt).toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -472,7 +472,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
               <Badge
                 className={isPaid ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'}
               >
-                {isPaid ? '✓ ĐÃ THANH TOÁN' : '⏳ CHƯA THANH TOÁN'}
+                {isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'}
               </Badge>
             </div>
             <div className="flex items-center gap-3 text-sm text-neutral-text/70">
@@ -742,7 +742,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
                     placeholder="Nhập số tiền khách đưa"
-                    className="rounded-[10px] text-lg h-12 pr-24"
+                    className="rounded-[10px] text-lg h-12 pr-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Button
@@ -798,7 +798,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Ghi chú về thanh toán (tùy chọn)..."
+                placeholder="Ghi chú thanh toán"
                 className="rounded-[10px]"
               />
             </div>

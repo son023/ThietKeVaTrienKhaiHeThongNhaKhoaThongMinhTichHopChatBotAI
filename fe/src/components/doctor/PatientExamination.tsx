@@ -1277,9 +1277,9 @@ export function PatientExamination({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                    <SelectItem value="TREATED">TREATED</SelectItem>
-                    <SelectItem value="PENDING">PENDING</SelectItem>
+                    <SelectItem value="ACTIVE" className="bg-white">ACTIVE</SelectItem>
+                    <SelectItem value="TREATED" className="bg-white">TREATED</SelectItem>
+                    <SelectItem value="PENDING" className="bg-white">PENDING</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

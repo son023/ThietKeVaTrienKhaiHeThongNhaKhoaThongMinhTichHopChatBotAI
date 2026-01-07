@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Phone, Calendar, User, Save } from 'lucide-react';
+import { Search, Phone, Calendar, User } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../ui/dialog';
 import {
   Table,
   TableBody,
@@ -23,8 +13,9 @@ import {
   TableRow,
 } from '../ui/table';
 import { patientController } from '../../controllers/PatientController';
-import { userController, CreateUserRequestDTO } from '../../controllers/UserController';
+import { userController } from '../../controllers/UserController';
 import { PatientWithUser } from '../../models/Patient';
+import { AddPatientDialog } from '../shared/AddPatientDialog';
 
 interface AdminPatientsProps {
   onNavigateToPatientDetail: (id: string) => void;
@@ -32,25 +23,9 @@ interface AdminPatientsProps {
 
 export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [patients, setPatients] = useState<PatientWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    password: '',
-    dob: '',
-    gender: '',
-    address: '',
-    insuranceNumber: '',
-    emergencyContact: '',
-    medicalHistory: '',
-    notes: '',
-  });
 
   useEffect(() => {
     loadPatients();
@@ -80,68 +55,6 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
       setError(err.message || 'Không thể tải danh sách bệnh nhân');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreatePatient = async () => {
-    try {
-      if (!formData.fullName || !formData.phone || !formData.password) {
-        alert('Vui lòng điền đầy đủ các trường bắt buộc (Họ tên, Số điện thoại, Mật khẩu)');
-        return;
-      }
-
-      setSaving(true);
-      
-      // Create user with PATIENT role
-      const createUserRequest: CreateUserRequestDTO = {
-        fullName: formData.fullName,
-        email: formData.email || `${formData.phone}@temp.com`, // Fallback email if not provided
-        phone: formData.phone,
-        password: formData.password,
-        roleNames: ['PATIENT'], // Only PATIENT role
-        isActive: true,
-      };
-
-      const user = await userController.create(createUserRequest);
-      
-      // Patient record is automatically created by backend
-      // But we can update it with additional info if needed
-      if (formData.dob || formData.gender || formData.address || formData.insuranceNumber) {
-        await patientController.updateProfile(user.id, {
-          userId: user.id,
-          dob: formData.dob || undefined,
-          gender: formData.gender || undefined,
-          address: formData.address || undefined,
-          contactPhone: formData.phone,
-          insuranceNumber: formData.insuranceNumber || undefined,
-        });
-      }
-      
-      // Reload patients list
-      await loadPatients();
-      
-      // Reset form and close dialog
-      setFormData({
-        fullName: '',
-        phone: '',
-        email: '',
-        password: '',
-        dob: '',
-        gender: '',
-        address: '',
-        insuranceNumber: '',
-        emergencyContact: '',
-        medicalHistory: '',
-        notes: '',
-      });
-      setIsAddDialogOpen(false);
-      
-      alert('Thêm bệnh nhân thành công!');
-    } catch (err: any) {
-      console.error('Failed to create patient:', err);
-      alert(err.message || 'Không thể thêm bệnh nhân');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -179,172 +92,7 @@ export function AdminPatients({ onNavigateToPatientDetail }: AdminPatientsProps)
             <h1 className="text-[#01304e] mb-1">Quản lý Bệnh nhân</h1>
             <p className="text-sm text-[#333333]/60">Cơ sở dữ liệu bệnh nhân toàn phòng khám</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm bệnh nhân mới
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[15px] max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-              <DialogHeader>
-                <DialogTitle className="text-[#01304e]">Thêm bệnh nhân mới</DialogTitle>
-                <DialogDescription>
-                  Nhập thông tin để thêm bệnh nhân mới vào hệ thống
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-name">Họ và tên <span className="text-red-500">*</span></Label>
-                    <Input 
-                      id="patient-name" 
-                      placeholder="Nhập họ và tên bệnh nhân" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="patient-phone">Số điện thoại <span className="text-red-500">*</span></Label>
-                    <Input 
-                      id="patient-phone" 
-                      type="tel"
-                      placeholder="0901234567" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="patient-email">Email</Label>
-                    <Input 
-                      id="patient-email" 
-                      type="email"
-                      placeholder="email@example.com" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-password">Mật khẩu <span className="text-red-500">*</span></Label>
-                    <Input 
-                      id="patient-password" 
-                      type="password"
-                      placeholder="Nhập mật khẩu" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="patient-dob">Ngày sinh</Label>
-                    <Input 
-                      id="patient-dob" 
-                      type="date"
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.dob}
-                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="patient-gender">Giới tính</Label>
-                    <select 
-                      id="patient-gender"
-                      className="flex h-10 w-full rounded-[10px] border border-[#e8e8e8] bg-white px-3 py-2 text-sm"
-                      value={formData.gender}
-                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    >
-                      <option value="">Chọn giới tính</option>
-                      <option value="MALE">Nam</option>
-                      <option value="FEMALE">Nữ</option>
-                      <option value="OTHER">Khác</option>
-                    </select>
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-address">Địa chỉ</Label>
-                    <Input 
-                      id="patient-address" 
-                      placeholder="Nhập địa chỉ" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-insurance">Số bảo hiểm y tế</Label>
-                    <Input 
-                      id="patient-insurance" 
-                      placeholder="Nhập mã số BHYT (nếu có)" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.insuranceNumber}
-                      onChange={(e) => setFormData({ ...formData, insuranceNumber: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-emergency">Người liên hệ khẩn cấp</Label>
-                    <Input 
-                      id="patient-emergency" 
-                      placeholder="Tên và số điện thoại người nhà" 
-                      className="rounded-[10px] border-[#e8e8e8]"
-                      value={formData.emergencyContact}
-                      onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-medical-history">Tiền sử bệnh</Label>
-                    <Textarea 
-                      id="patient-medical-history" 
-                      placeholder="Ghi chú về tiền sử bệnh, dị ứng thuốc..."
-                      className="rounded-[10px] border-[#e8e8e8] min-h-[80px]"
-                      value={formData.medicalHistory}
-                      onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <Label htmlFor="patient-notes">Ghi chú</Label>
-                    <Textarea 
-                      id="patient-notes" 
-                      placeholder="Ghi chú khác về bệnh nhân..."
-                      className="rounded-[10px] border-[#e8e8e8] min-h-[60px]"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex justify-end gap-2 pt-4 border-t border-[#e8e8e8]">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsAddDialogOpen(false)} 
-                    className="rounded-[10px]"
-                    disabled={saving}
-                  >
-                    Hủy
-                  </Button>
-                  <Button 
-                    className="bg-[#3FB5FF] hover:bg-[#3FB5FF]/90 rounded-[15px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]"
-                    onClick={handleCreatePatient}
-                    disabled={saving}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {saving ? 'Đang lưu...' : 'Lưu bệnh nhân'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <AddPatientDialog onPatientAdded={loadPatients} />
         </div>
 
         <div className="relative max-w-md">

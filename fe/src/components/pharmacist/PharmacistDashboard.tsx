@@ -101,15 +101,22 @@ export function PharmacistDashboard({ onNavigate }: PharmacistDashboardProps) {
         .slice(0, 10); // Lấy 10 lô gần hết hạn nhất
       setExpiringDrugs(expiring);
 
-      // 4. Tính toán stats
+      // 4. Tính toán stats - Đếm đơn đã cấp hôm nay (status = SOLD)
+      // Backend lưu UTC, cần cộng 7 giờ để chuyển sang múi giờ VN
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
 
       const dispensedToday = soldOrders.filter(order => {
-        const orderDate = new Date(order.createAt);
-        return orderDate >= todayStart && orderDate <= todayEnd;
+        // Chỉ đếm đơn có status = SOLD
+        if (order.status !== 'SOLD') return false;
+
+        // Sử dụng updatedAt và cộng thêm 7 giờ (UTC+7)
+        const utcDate = new Date(order.updateAt);
+        const vnDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+
+        return vnDate >= todayStart && vnDate <= todayEnd;
       }).length;
 
       setStats({
