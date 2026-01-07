@@ -103,7 +103,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
 
       onSuccess: (event) => {
         console.log('✅ Payment success:', event);
-        toast.success('🎉 Thanh toán thành công!', {
+        toast.success('Thanh toán thành công!', {
           description: 'Hóa đơn đã được thanh toán qua PayOS',
           duration: 5000,
         });
@@ -121,7 +121,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
         setShowPayOS(false);
         setIsProcessing(false);
 
-        toast.warning('⚠️ Đã hủy thanh toán', {
+        toast.warning('Đã hủy thanh toán', {
           description: 'Bạn đã hủy giao dịch thanh toán',
           duration: 4000,
         });
@@ -144,18 +144,18 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
             const paymentStatus = await paymentController.getPaymentStatus(invoiceId);
 
             if (paymentStatus.status === PaymentStatus.SUCCESSFUL) {
-              toast.success('✅ Thanh toán thành công!');
+              toast.success('Thanh toán thành công!');
               setIsPaid(true);
               await loadInvoiceData();
             } else if (paymentStatus.status === PaymentStatus.CANCELLED) {
-              toast.info('ℹ️ Thanh toán đã bị hủy');
+              toast.info('ℹThanh toán đã bị hủy');
             } else if (paymentStatus.status === PaymentStatus.TIMEOUT) {
-              toast.error('⏰ Hết thời gian thanh toán', {
+              toast.error('Hết thời gian thanh toán', {
                 description: 'Mã QR đã hết hạn. Vui lòng thử lại.',
                 duration: 5000,
               });
             } else if (paymentStatus.status === PaymentStatus.FAILED) {
-              toast.error('❌ Thanh toán thất bại', {
+              toast.error('Thanh toán thất bại', {
                 description: 'Giao dịch không thành công. Vui lòng thử lại.',
                 duration: 5000,
               });
@@ -426,7 +426,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
       document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
-      toast.success('✅ Đã tải file PDF thành công!', {
+      toast.success('Đã tải file PDF thành công!', {
         description: `File: ${fileName}`,
         duration: 3000,
       });
@@ -1013,7 +1013,7 @@ export function ReceptionistInvoice({ invoiceId, patientId, onBack, mode = 'view
                       cancelReason.trim()
                     );
 
-                    toast.success('✅ Đã hủy hóa đơn thành công');
+                    toast.success('Đã hủy hóa đơn thành công');
                     setShowCancelDialog(false);
 
                     setTimeout(() => onBack(), 1500);

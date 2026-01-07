@@ -84,15 +84,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Convert NotificationDTO từ backend sang Notification frontend
   const mapDTOToNotification = useCallback((dto: NotificationDTO): Notification => {
     // ✅ Xử lý các loại notification khác nhau
-    let title = '💰 Hóa đơn đã được thanh toán';
+    let title = 'Hóa đơn đã được thanh toán';
     if (dto.templateId === 'PRESCRIPTION_DISPENSED') {
-      title = '✅ Đơn thuốc đã được cấp phát';
+      title = 'Đơn thuốc đã được cấp phát';
     } else if (dto.templateId === 'APPOINTMENT_CREATED') {
-      title = '📅 Lịch hẹn mới';
+      title = 'Lịch hẹn mới';
     } else if (dto.templateId === 'LAB_TEST_REQUESTED') {
-      title = '🧪 Yêu cầu xét nghiệm mới';
+      title = 'Yêu cầu xét nghiệm mới';
     } else if (dto.templateId === 'LAB_TEST_COMPLETED') {
-      title = '✅ Xét nghiệm đã hoàn thành';
+      title = 'Xét nghiệm đã hoàn thành';
     }
 
     return {
@@ -246,7 +246,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       const tempNotification: Notification = {
         id: `ws-invoice-${Date.now()}-${Math.random()}`,
         type: 'INVOICE_PAID',
-        title: '💰 Hóa đơn đã được thanh toán',
+        title: 'Hóa đơn đã được thanh toán',
         message: notification.message,
         timestamp: notification.timestamp || Date.now(),
         read: false,
@@ -261,7 +261,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       // ✅ Hiển thị popup toast
       toast.success(
         <div>
-          <p className="font-semibold">💰 Hóa đơn đã được thanh toán</p>
+          <p className="font-semibold">Hóa đơn đã được thanh toán</p>
           <p className="text-sm">{notification.message}</p>
         </div>,
         {
@@ -281,7 +281,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         const tempNotification: Notification = {
           id: `ws-prescription-${Date.now()}-${Math.random()}`,
           type: 'PRESCRIPTION_DISPENSED',
-          title: '✅ Đơn thuốc đã được cấp phát',
+          title: 'Đơn thuốc đã được cấp phát',
           message: notification.message || `Đơn thuốc đã được dược sĩ ${notification.pharmacistName || 'dược sĩ'} cấp phát thành công`,
           timestamp: notification.timestamp || Date.now(),
           read: false,
@@ -295,7 +295,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         // ✅ Hiển thị toast với thông tin từ DTO
         toast.success(
           <div>
-            <p className="font-semibold">✅ Đơn thuốc đã được cấp phát</p>
+            <p className="font-semibold">Đơn thuốc đã được cấp phát</p>
             <p className="text-sm">{notification.message}</p>
             {notification.pharmacistName && (
               <p className="text-xs text-gray-500">Dược sĩ: {notification.pharmacistName}</p>
@@ -317,7 +317,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         const tempNotification: Notification = {
           id: `ws-appointment-${Date.now()}-${Math.random()}`,
           type: 'APPOINTMENT_CREATED',
-          title: '📅 Lịch hẹn mới',
+          title: 'Lịch hẹn mới',
           message: notification.message || 'Lịch hẹn mới đã được đăng ký',
           timestamp: notification.timestamp || Date.now(),
           read: false,
@@ -329,7 +329,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
         toast.success(
           <div>
-            <p className="font-semibold">📅 Lịch hẹn mới</p>
+            <p className="font-semibold">Lịch hẹn mới</p>
             <p className="text-sm">{notification.message}</p>
           </div>,
           {
@@ -352,7 +352,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           const tempNotification: Notification = {
             id: `ws-labtest-${Date.now()}-${Math.random()}`,
             type: 'LAB_TEST_REQUESTED',
-            title: '🧪 Yêu cầu xét nghiệm mới',
+            title: 'Yêu cầu xét nghiệm mới',
             message: notification.message || 'Yêu cầu xét nghiệm mới đã được tạo',
             timestamp: notification.timestamp || Date.now(),
             read: false,
@@ -363,7 +363,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
           toast.success(
             <div>
-              <p className="font-semibold">🧪 Yêu cầu xét nghiệm mới</p>
+              <p className="font-semibold">Yêu cầu xét nghiệm mới</p>
               <p className="text-sm">{notification.message}</p>
             </div>,
             {
