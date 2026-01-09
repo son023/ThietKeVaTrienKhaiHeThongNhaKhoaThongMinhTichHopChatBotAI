@@ -21,3 +21,9 @@ intent_model/
 ner_model_final/
 
 .env
+service/chatbot-service/evaluation/README.md
+service/chatbot-service/evaluation/GOOGLE_API_SETUP.md
+service/chatbot-service/evaluation/FIX_DEPENDENCIES.md
+service/chatbot-service/evaluation/EMBEDDING_CONSISTENCY_FIX.md
+.gitignore
+service/chatbot-service/evaluation/__init__.py

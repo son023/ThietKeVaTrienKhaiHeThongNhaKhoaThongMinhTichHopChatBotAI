@@ -1,0 +1,62 @@
+[
+  {
+    "question": "Sâu răng được điều trị bằng cách nào?",
+    "ground_truth": "Sâu răng có thể được điều trị bằng các phương pháp như trám răng, lấy tủy, hoặc nhổ răng tùy theo mức độ nghiêm trọng. Trám răng được sử dụng khi sâu răng còn nhỏ, lấy tủy khi vi khuẩn đã xâm nhập vào tủy răng, và nhổ răng khi răng hư hỏng quá nặng không thể cứu được.",
+    "expected_entities": ["sâu răng"],
+    "expected_intent": "INTENT_TREATMENT"
+  },
+  {
+    "question": "Nguyên nhân gây viêm lợi là gì?",
+    "ground_truth": "Viêm lợi chủ yếu do vi khuẩn từ mảng bám và cao răng gây ra, kết hợp với vệ sinh răng miệng kém. Các yếu tố nguy cơ khác bao gồm hút thuốc, thay đổi nội tiết tố, thiếu vitamin C, và một số bệnh lý toàn thân.",
+    "expected_entities": ["viêm lợi"],
+    "expected_intent": "INTENT_CAUSE"
+  },
+  {
+    "question": "Triệu chứng của viêm tủy răng?",
+    "ground_truth": "Triệu chứng viêm tủy răng bao gồm đau răng dữ dội, đặc biệt khi ăn uống nóng lạnh, đau nhức kéo dài kể cả khi không có kích thích, nhạy cảm với nhiệt độ, sưng nướu, có thể có áp xe. Đau có thể lan ra má, thái dương hoặc tai.",
+    "expected_entities": ["viêm tủy răng"],
+    "expected_intent": "INTENT_DIAGNOSIS"
+  },
+  {
+    "question": "Làm thế nào để phòng ngừa sâu răng?",
+    "ground_truth": "Phòng ngừa sâu răng bằng cách đánh răng đúng cách ít nhất 2 lần/ngày với kem đánh răng có fluoride, sử dụng chỉ nha khoa hàng ngày, hạn chế thực phẩm có đường và axit, khám răng định kỳ 6 tháng/lần, vệ sinh răng miệng sau mỗi bữa ăn.",
+    "expected_entities": ["sâu răng"],
+    "expected_intent": "INTENT_ADVICE"
+  },
+  {
+    "question": "Chảy máu chân răng là dấu hiệu của bệnh gì?",
+    "ground_truth": "Chảy máu chân răng là triệu chứng phổ biến của viêm lợi và viêm nha chu. Có thể do mảng bám, cao răng, vệ sinh răng miệng kém, hoặc các bệnh lý toàn thân như tiểu đường, rối loạn đông máu.",
+    "expected_entities": ["chảy máu chân răng", "viêm lợi", "viêm nha chu"],
+    "expected_intent": "INTENT_DIAGNOSIS"
+  },
+  {
+    "question": "Nhổ răng khôn cần chú ý những gì?",
+    "ground_truth": "Sau khi nhổ răng khôn cần chú ý: cắn gạc 30-45 phút, tránh súc miệng mạnh trong 24h đầu, không ăn nóng/cứng/cay, nghỉ ngơi đầy đủ, vệ sinh răng miệng nhẹ nhàng, dùng thuốc theo chỉ định bác sĩ, tái khám nếu có biến chứng.",
+    "expected_entities": ["răng khôn"],
+    "expected_intent": "INTENT_ADVICE"
+  },
+  {
+    "question": "Cao răng là gì và có hại không?",
+    "ground_truth": "Cao răng là mảng bám đã cứng lại và bám chặt vào bề mặt răng, không thể loại bỏ bằng đánh răng thông thường. Cao răng gây viêm lợi, viêm nha chu, hôi miệng, và làm tăng nguy cơ mất răng nếu không điều trị.",
+    "expected_entities": ["cao răng"],
+    "expected_intent": "INTENT_DIAGNOSIS"
+  },
+  {
+    "question": "Tại sao răng bị ê buốt?",
+    "ground_truth": "Răng ê buốt có thể do men răng bị mòn, lợi tụt làm lộ chân răng, sâu răng, răng bị nứt, hoặc sau khi tẩy trắng răng. Nguyên nhân phổ biến là đánh răng quá mạnh hoặc dùng bàn chải lông cứng.",
+    "expected_entities": ["răng ê buốt"],
+    "expected_intent": "INTENT_CAUSE"
+  },
+  {
+    "question": "Niềng răng mất bao lâu?",
+    "ground_truth": "Thời gian niềng răng thường từ 18-36 tháng tùy thuộc vào mức độ khớp cắn và vị trí răng. Trường hợp nhẹ có thể 12-18 tháng, trường hợp phức tạp có thể kéo dài đến 3 năm.",
+    "expected_entities": ["niềng răng"],
+    "expected_intent": "INTENT_TREATMENT"
+  },
+  {
+    "question": "Tẩy trắng răng có an toàn không?",
+    "ground_truth": "Tẩy trắng răng tại nha khoa an toàn nếu thực hiện đúng quy trình và phù hợp với tình trạng răng miệng. Có thể gây ê buốt tạm thời nhưng không làm hỏng men răng nếu được bác sĩ kiểm soát.",
+    "expected_entities": ["tẩy trắng răng"],
+    "expected_intent": "INTENT_ADVICE"
+  }
+]

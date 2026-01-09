@@ -37,12 +37,15 @@ class ChatService:
         if entities:
             for ent in entities:
                 results = self.repo.search_with_relations(ent['text'], target_relations, limit=2)
+                print("entity: ", ent)
+                print(f"🔍 [ENTITY] {ent['text']} -> Tìm thấy {len(results)} kết quả")
                 search_results.extend(results)
 
         if not search_results:
             print("⚠️ Fallback search cả câu...")
             search_results = self.repo.search_with_relations(user_msg, target_relations, limit=3)
 
+        print("search_results: ", search_results)
         unique_docs = {}
         for doc in search_results:
             if doc['text'] not in unique_docs:
@@ -55,6 +58,8 @@ class ChatService:
                 neighbors_str = "; ".join(doc['neighbors']) if doc['neighbors'] else "Không có thông tin liên quan theo Intent này."
                 context_parts.append(f"- Chủ đề: {doc['text']}\n  Chi tiết liên quan: {neighbors_str}")
             context_str = "\n".join(context_parts)
+
+        print("context_str: ", context_str)
 
         reply = self._generate_response_smart(user_msg, context_str, intent_label)
 
