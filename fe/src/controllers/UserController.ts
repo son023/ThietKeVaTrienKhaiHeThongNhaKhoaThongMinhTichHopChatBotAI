@@ -70,7 +70,7 @@ class UserController {
   async getById(id: string): Promise<UserDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
       method: "GET",
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(false),
     });
     const user = await this.handleResponse<RawUser>(res);
     return this.normalizeUser(user);

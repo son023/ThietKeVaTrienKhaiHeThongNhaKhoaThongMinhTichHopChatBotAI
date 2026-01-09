@@ -30,6 +30,8 @@ public class SecurityConfig {
                         .pathMatchers("/auth/**").permitAll()
                        .pathMatchers("/users/register").permitAll()
                         .pathMatchers("/chatbot-service/**").permitAll()
+                        .pathMatchers("/doctor-service/doctors/**").permitAll()
+                        .pathMatchers("/user-service/users/**").permitAll()
                         .anyExchange().permitAll()
                 )
                 .build();

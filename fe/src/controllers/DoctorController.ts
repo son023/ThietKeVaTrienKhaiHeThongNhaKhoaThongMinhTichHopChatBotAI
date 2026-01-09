@@ -2,17 +2,26 @@ import { API_CONFIG, createApiUrl, getApiHeaders } from "../config/api";
 import { UserDTO } from "../models";
 import { userController } from "./UserController";
 
+export interface DoctorDegreeDTO {
+  id: string;
+  degreeName: string;
+  institution?: string;
+  yearObtained?: number;
+  doctorId: string;
+}
+
 export interface DoctorDTO {
   userId: string;
-  specializationCodes?: string[];
+  specializationCode?: string;
   workingHospital?: string;
   licenseNumber?: string;
   consultationFeeAmount?: number;
+  degrees?: DoctorDegreeDTO[];
 }
 
 export interface UpsertDoctorRequest {
   userId: string;
-  specializationCodeIds: string[];
+  specializationCodeId: string;
   workingHospital?: string;
   licenseNumber?: string;
   consultationFeeAmount?: number;
@@ -42,7 +51,7 @@ class DoctorController {
   async getAll(): Promise<DoctorDTO[]> {
     const res = await fetch(createApiUrl(this.baseUrl), {
       method: "GET",
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(false),
     });
     return this.handleResponse<DoctorDTO[]>(res);
   }
@@ -50,7 +59,7 @@ class DoctorController {
   async getById(id: string): Promise<DoctorDTO> {
     const res = await fetch(createApiUrl(this.baseUrl, id), {
       method: "GET",
-      headers: getApiHeaders(true),
+      headers: getApiHeaders(false),
     });
     return this.handleResponse<DoctorDTO>(res);
   }
