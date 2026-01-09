@@ -59,6 +59,8 @@ public class InvoiceService implements IInvoiceService {
         int totalAmount = 0;
         for (InvoiceItem item : invoice.getItems()) {
             //item.setId(UUID.randomUUID());
+            item.setPatientPayAmount(item.getQuantity() * item.getUnitPrice());
+            item.setInsurancePayAmount(0);
             item.setInvoice(invoice);
             totalAmount += (item.getQuantity() * item.getUnitPrice());
         }

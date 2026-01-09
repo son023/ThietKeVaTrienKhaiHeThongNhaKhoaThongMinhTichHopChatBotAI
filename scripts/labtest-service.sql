@@ -34,7 +34,7 @@ CREATE TABLE lab_test (
     units              VARCHAR(50),
     reference_range    VARCHAR(255),
 
-    structure_json     VARCHAR(255),
+    structure_json     TEXT,
 
     created_at         TIMESTAMPTZ DEFAULT NOW(),
     updated_at         TIMESTAMPTZ DEFAULT NOW(),
