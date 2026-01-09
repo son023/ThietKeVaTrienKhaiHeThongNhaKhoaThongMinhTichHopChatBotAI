@@ -44,7 +44,7 @@ public class LabTest {
     @Column(length = 50)
     private String units;
 
-    @Column(length = 255, name = "structure_json")
+    @Column(name = "structure_json")
     private String structureJson;
 
     @Column(length = 255, name = "reference_range")

@@ -248,7 +248,7 @@ public class PrescriptionBillingSaga {
                 event.getPrescriptionId(),
                 "COMPLETED",
                 "SUCCESS",
-                "Tạo đơn thuốc thành công! \nLưu ý: " + event.getReason() + "\nHóa đơn sẽ được thanh toán toàn bộ không có giảm giá bảo hiểm."
+                "Tạo đơn thuốc thành công!"
         );
     }
 

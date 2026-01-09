@@ -222,7 +222,7 @@ public class LabTestService implements ILabTest{
             AddLabTestChargeRequestDTO request = new AddLabTestChargeRequestDTO(
                     labTest.getId(),
                     labTest.getAppointmentId(),
-                    labTest.getPrice(),
+                    200000,
                     "Phí xét nghiệm"
             );
             
