@@ -137,6 +137,19 @@ public class AppointmentController {
         return ResponseEntity.ok().build();
     }
 
+    //Dùng
+    @PostMapping("/slots/release")
+    @Operation(summary = "Nhả slot đã giữ khi người dùng thay đổi lựa chọn hoặc đóng dialog")
+    public ResponseEntity<?> releaseSlot(@RequestBody HoldSlotRequestDTO request) {
+        if (request.getDoctorId() == null || request.getAppointmentStartTime() == null) {
+            return ResponseEntity.badRequest().body("Thiếu thông tin doctorId hoặc appointmentStartTime");
+        }
+
+        slotService.unlockSlot(request.getDoctorId(), request.getAppointmentStartTime());
+        return ResponseEntity.ok().build();
+    }
+
+
 
     //Dùng
     @GetMapping

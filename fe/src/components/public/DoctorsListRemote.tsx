@@ -49,7 +49,11 @@ export function DoctorsListRemote({ onDoctorSelect, onBooking }: DoctorsListProp
 
   const specialtyFilters = useMemo(() => {
     const codes = new Set<string>();
-    doctors.forEach((doc) => doc.specializationCodes?.forEach((c) => c && codes.add(c)));
+    doctors.forEach((doc) => {
+      if (doc.specializationCode) {
+        codes.add(doc.specializationCode);
+      }
+    });
     const dynamic = Array.from(codes).map((code) => ({
       id: code,
       label: SPECIALIZATION_MAP[code] || code,
@@ -60,13 +64,13 @@ export function DoctorsListRemote({ onDoctorSelect, onBooking }: DoctorsListProp
   const filteredDoctors = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return doctors.filter((doctor) => {
-      const specs = doctor.specializationCodes || [];
+      const code = doctor.specializationCode || '';
       const matchesFilter =
         selectedFilter === 'all' ||
-        specs.map((s) => s.toLowerCase()).includes(selectedFilter.toLowerCase());
+        code.toLowerCase() === selectedFilter.toLowerCase();
       const name = doctor.user?.fullName || '';
       const specialtyLabel =
-        SPECIALIZATION_MAP[specs[0] || ''] || doctor.workingHospital || '';
+        SPECIALIZATION_MAP[code] || doctor.workingHospital || '';
       const matchesSearch =
         name.toLowerCase().includes(q) || specialtyLabel.toLowerCase().includes(q);
       return matchesFilter && matchesSearch;
@@ -74,7 +78,7 @@ export function DoctorsListRemote({ onDoctorSelect, onBooking }: DoctorsListProp
   }, [doctors, searchQuery, selectedFilter]);
 
   const getSpecialtyLabel = (doc: DoctorWithUser) => {
-    const code = doc.specializationCodes?.[0] || '';
+    const code = doc.specializationCode || '';
     return SPECIALIZATION_MAP[code] || doc.workingHospital || 'Nha khoa tổng quát';
   };
 

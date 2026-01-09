@@ -22,14 +22,16 @@ public class SecurityConfig {
         return http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/doctor-service/doctors/**").hasAnyRole("DOCTOR", "RECEPTIONIST", "ADMIN", "PATIENT")
+                        // Allow unauthenticated access to Swagger/API docs
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/doctor-service/doctors").permitAll()
+                        // Allow unauthenticated OPTIONS and GET requests to doctor endpoints (for public access)
+                        .requestMatchers(HttpMethod.OPTIONS, "/doctor-service/doctors/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/doctor-service/doctors/**").permitAll()
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(customRequestFilter, UsernamePasswordAuthenticationFilter.class)

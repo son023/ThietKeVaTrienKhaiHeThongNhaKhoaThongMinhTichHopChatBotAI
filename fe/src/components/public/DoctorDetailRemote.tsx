@@ -3,7 +3,6 @@ import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Button } from '../ui/button';
 import { Calendar, Award, Briefcase, GraduationCap, Clock } from 'lucide-react';
 import { doctorController, DoctorWithUser } from '../../controllers/DoctorController';
-import { doctorDegreeController, DoctorDegreeDTO } from '../../controllers/DoctorDegreeController';
 
 interface DoctorDetailProps {
   doctorId: string;
@@ -30,19 +29,15 @@ const doctorPlaceholder =
 
 export function DoctorDetailRemote({ doctorId, onBack, onBooking }: DoctorDetailProps) {
   const [doctor, setDoctor] = useState<DoctorWithUser | null>(null);
-  const [degrees, setDegrees] = useState<DoctorDegreeDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      doctorController.getWithUserById(doctorId),
-      doctorDegreeController.getByDoctor(doctorId).catch(() => []),
-    ])
-      .then(([doctorRes, degreeRes]) => {
+    doctorController
+      .getWithUserById(doctorId)
+      .then((doctorRes) => {
         setDoctor(doctorRes);
-        setDegrees(degreeRes);
         setError(null);
       })
       .catch((err) =>
@@ -52,7 +47,7 @@ export function DoctorDetailRemote({ doctorId, onBack, onBooking }: DoctorDetail
   }, [doctorId]);
 
   const getSpecialtyLabel = () => {
-    const code = doctor?.specializationCodes?.[0] || '';
+    const code = doctor?.specializationCode || '';
     return SPECIALIZATION_MAP[code] || doctor?.workingHospital || 'Nha khoa tổng quát';
   };
 
@@ -141,11 +136,11 @@ export function DoctorDetailRemote({ doctorId, onBack, onBooking }: DoctorDetail
                   Bằng cấp & chứng chỉ
                 </h2>
               </div>
-              {degrees.length === 0 ? (
+              {!doctor.degrees || doctor.degrees.length === 0 ? (
                 <p className="text-[#666]">Chưa có thông tin bằng cấp</p>
               ) : (
                 <ul className="space-y-[12px] list-disc list-inside text-[#333]">
-                  {degrees.map((deg) => (
+                  {doctor.degrees.map((deg) => (
                     <li key={deg.id}>
                       <span className="font-['Fz_Poppins:SemiBold',sans-serif] text-[#01304e]">
                         {deg.degreeName}
