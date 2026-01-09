@@ -31,6 +31,7 @@ class ChatService:
         target_relations = self.intent_to_relations.get(intent_label, self.intent_to_relations["DEFAULT"])
         
         print(f"🎯 [INTENT] {intent_label} -> Chỉ tìm quan hệ: {target_relations}")
+        print(f"🔍 Entities found: {entities}")
 
         search_results = []
         
@@ -47,7 +48,10 @@ class ChatService:
         for doc in search_results:
             if doc['text'] not in unique_docs:
                 unique_docs[doc['text']] = doc
-        
+
+        retrieved_nodes = list(unique_docs.keys())
+        print(f"📚 DB Retrieved Nodes: {retrieved_nodes}")
+
         context_str = ""
         if unique_docs:
             context_parts = []
