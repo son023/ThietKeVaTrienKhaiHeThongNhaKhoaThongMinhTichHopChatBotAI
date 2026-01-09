@@ -92,6 +92,15 @@ class AppointmentController {
     await this.handleResponse<void>(res);
   }
 
+  async releaseSlot(payload: { doctorId: string; appointmentStartTime: string }): Promise<void> {
+    const res = await fetch(createApiUrl(this.baseUrl, 'slots', 'release'), {
+      method: 'POST',
+      headers: getApiHeaders(true),
+      body: JSON.stringify(payload),
+    });
+    await this.handleResponse<void>(res);
+  }
+
   async getByDoctorId(doctorId: string): Promise<AppointmentDTO[]> {
     const res = await fetch(
       createApiUrl(this.baseUrl, 'doctor', doctorId),

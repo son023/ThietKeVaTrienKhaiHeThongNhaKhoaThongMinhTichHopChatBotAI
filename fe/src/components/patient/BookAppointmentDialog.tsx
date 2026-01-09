@@ -45,6 +45,7 @@ export function BookAppointmentDialog({
     const [submitting, setSubmitting] = useState(false);
     const [loadingTimes, setLoadingTimes] = useState(false);
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+    const [heldSlot, setHeldSlot] = useState<{ doctorId: string; appointmentStartTime: string } | null>(null);
     const [formData, setFormData] = useState({
         services: [] as string[],
         doctor: '',
@@ -55,6 +56,17 @@ export function BookAppointmentDialog({
         patientEmail: '',
         notes: ''
     });
+
+    const releaseHeldSlot = async () => {
+        if (heldSlot) {
+            try {
+                await appointmentController.releaseSlot(heldSlot);
+                setHeldSlot(null);
+            } catch (error) {
+                console.error('Failed to release slot:', error);
+            }
+        }
+    };
 
     const resetForm = () => {
         setCurrentStep(1);
@@ -96,6 +108,16 @@ export function BookAppointmentDialog({
         }
     }, [isOpen, patientId, patientName, patientPhone, patientEmail]);
 
+    // Cleanup: release slot when component unmounts or dialog closes
+    useEffect(() => {
+        return () => {
+            if (heldSlot) {
+                appointmentController.releaseSlot(heldSlot).catch(console.error);
+            }
+        };
+    }, [heldSlot]);
+
+
     const combineDateTime = (date: Date, time: string) => {
         const [hour, minute] = time.split(':').map(Number);
         const start = new Date(date);
@@ -119,7 +141,10 @@ export function BookAppointmentDialog({
         setAvailableTimes([]);
     };
 
-    const handleSelectDate = (date?: Date) => {
+    const handleSelectDate = async (date?: Date) => {
+        // Release held slot when changing date
+        await releaseHeldSlot();
+        
         setFormData(prev => ({ ...prev, date, time: '' }));
         setAvailableTimes([]);
         if (date && formData.doctor && formData.services.length) {
@@ -204,6 +229,9 @@ export function BookAppointmentDialog({
             return;
         }
 
+        // Release previous held slot before holding new one
+        await releaseHeldSlot();
+
         setHoldingSlot(true);
         try {
             await appointmentController.holdSlot({
@@ -212,6 +240,13 @@ export function BookAppointmentDialog({
                 appointmentStartTime: start.toISOString(),
                 medicalServiceIds: formData.services,
             });
+            
+            // Track the held slot
+            setHeldSlot({
+                doctorId: formData.doctor,
+                appointmentStartTime: start.toISOString(),
+            });
+            
             setFormData(prev => ({ ...prev, time }));
             toast.success('Đã giữ slot trong 15 phút');
         } catch (error) {
@@ -223,7 +258,9 @@ export function BookAppointmentDialog({
         }
     };
 
-    const handleClose = () => {
+    const handleClose = async () => {
+        // Release held slot when closing dialog
+        await releaseHeldSlot();
         resetForm();
         onClose();
     };
@@ -284,6 +321,8 @@ export function BookAppointmentDialog({
             medicalServiceIds: formData.services,
         })
             .then(() => {
+                // Clear held slot after successful booking (slot is consumed)
+                setHeldSlot(null);
                 // toast.success('Đặt lịch hẹn thành công!', {
                 //     description: `Bạn đã đặt lịch ${formData.services.length} dịch vụ vào ${formData.date?.toLocaleDateString('vi-VN')} lúc ${formData.time}`,
                 // });
@@ -442,6 +481,7 @@ export function BookAppointmentDialog({
                             <div>
                                 <Label className="text-foreground mb-3 block">Chọn ngày khám</Label>
                                 <Calendar
+                                    key={formData.date?.toISOString() || 'no-date'}
                                     mode="single"
                                     selected={formData.date}
                                     onSelect={handleSelectDate}
