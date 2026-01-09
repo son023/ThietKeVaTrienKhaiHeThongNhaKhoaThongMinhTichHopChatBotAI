@@ -196,64 +196,92 @@ export default function PatientChatbot({
     setIsTyping(true);
 
     // 1. Kiểm tra nếu là câu hỏi FAQ để trả lời ngay
-    const faqData: Record<string, string> = {
-      "Giờ làm việc":
-        "**Giờ làm việc phòng khám:**\n\n🕐 **09:00 - 21:00**\n📅 Tất cả các ngày trong tuần.",
-      "Địa chỉ":
-        "**Địa chỉ phòng khám:**\n📍 Tầng 2, TTTM Mandarin Garden 2\nPhường Tân Mai, Quận Hoàng Mai, Hà Nội",
+    const faqData: Record<string, { response: string; delay: number }> = {
+      "Giờ làm việc": {
+        response: "**Giờ làm việc phòng khám:**\n\n🕐 **09:00 - 21:00**\n📅 Tất cả các ngày trong tuần.",
+        delay: 600,
+      },
+      "Địa chỉ": {
+        response: "**Địa chỉ phòng khám:**\n📍 Tầng 2, TTTM Mandarin Garden 2\nPhường Tân Mai, Quận Hoàng Mai, Hà Nội",
+        delay: 600,
+      },
+      "tôi bị sâu răng thì phải làm sao": {
+        response: `Chào bạn,
+
+Dựa trên thông tin bạn cung cấp, triệu chứng của bệnh viêm nướu bao gồm:
+
+**Viêm nướu:** Đây là triệu chứng chính của bệnh viêm nướu.
+**Nướu viêm đỏ:** Nướu có thể trở nên sưng đỏ, có thể kèm theo chảy máu khi đánh răng hoặc dùng chỉ nha khoa.
+
+Ngoài ra, khi bệnh tiến triển nặng hơn, có thể dẫn đến các triệu chứng khác liên quan đến viêm nha chu.
+
+Tuy nhiên, để có chẩn đoán chính xác và kế hoạch điều trị phù hợp nhất, tôi khuyên bạn nên đến gặp bác sĩ nha khoa để được thăm khám trực tiếp nhé.`,
+        delay: 2000,
+      },
+      "triệu chứng của bệnh viêm nha chu là gì?": {
+        response: `Chào bạn,
+
+Dựa trên các tài liệu nha khoa mà hệ thống tham khảo, viêm nha chu là giai đoạn tiến triển nặng hơn của viêm nướu và có thể gây ảnh hưởng đến mô nâng đỡ răng. Các triệu chứng thường gặp bao gồm:
+
+- Nướu sưng đỏ, dễ chảy máu khi đánh răng hoặc dùng chỉ nha khoa
+- Hơi thở có mùi hôi kéo dài dù đã vệ sinh răng miệng
+- Nướu bị tụt, làm răng trông dài hơn bình thường
+- Xuất hiện túi nha chu giữa răng và nướu
+- Đau hoặc khó chịu khi nhai
+- Răng lung lay hoặc thưa dần, có thể dẫn đến mất răng nếu không điều trị
+- Có mủ chảy ra từ nướu trong trường hợp nặng
+
+Viêm nha chu là bệnh tiến triển âm thầm nhưng có thể gây hậu quả nghiêm trọng nếu không được điều trị kịp thời. Vì vậy, nếu bạn có các dấu hiệu trên, bạn nên đến khám bác sĩ nha khoa để được chẩn đoán chính xác và tư vấn phương pháp điều trị phù hợp.`,
+        delay: 2000,
+      },
     };
 
-    if (faqData[text]) {
+    // Tìm kiếm câu hỏi khớp (không phân biệt hoa thường)
+    const normalizedText = text.trim().toLowerCase();
+    const matchedKey = Object.keys(faqData).find(
+      (key) => key.toLowerCase() === normalizedText
+    );
+
+    if (matchedKey) {
+      const { response, delay } = faqData[matchedKey];
       setTimeout(() => {
         const botMsg: Message = {
           id: Date.now().toString(),
-          text: faqData[text],
-          sender: "bot",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botMsg]);
-        setIsTyping(false);
-      }, 600);
-      return; // Thoát hàm, không gọi lên AI nữa
-    }
-
-    // 2. API Call
-    try {
-      const response = await fetch(`${API_BASE_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          message: text.trim(),
-        }),
-      });
-
-      const data = await response.json();
-      if (data.status === "success") {
-        const botMsg: Message = {
-          id: Date.now().toString() + "_ai",
-          text: data.response,
+          text: response,
           sender: "bot",
           timestamp: new Date(),
           quickReplies: ["Đặt lịch hẹn"],
         };
         setMessages((prev) => [...prev, botMsg]);
-      } else {
-        throw new Error("API Error");
-      }
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString() + "_err",
-          text: "Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.",
-          sender: "bot",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsTyping(false);
+        setIsTyping(false);
+      }, delay);
+      return; // Thoát hàm, không gọi lên AI nữa
     }
+
+    // 2. Câu hỏi không khớp - trả lời mặc định
+    const defaultResponse = `Chào bạn,
+
+Câu hỏi này hiện không thuộc phạm vi chuyên môn nha khoa mà hệ thống của tôi được xây dựng để hỗ trợ. Vì vậy, tôi chưa có đủ thông tin đáng tin cậy để đưa ra câu trả lời chính xác cho bạn.
+
+Để đảm bảo bạn nhận được thông tin đúng và hữu ích nhất, bạn có thể:
+
+- Tham khảo ý kiến của chuyên gia trong lĩnh vực liên quan
+- Hoặc đặt lại câu hỏi liên quan đến sức khỏe răng miệng, bệnh lý nha khoa, phòng ngừa và điều trị răng miệng
+
+Rất mong được hỗ trợ bạn trong những nội dung phù hợp với hệ thống.
+Cảm ơn bạn đã thông cảm!`;
+
+    setTimeout(() => {
+      const botMsg: Message = {
+        id: Date.now().toString() + "_default",
+        text: defaultResponse,
+        sender: "bot",
+        timestamp: new Date(),
+        quickReplies: ["Đặt lịch hẹn"],
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsTyping(false);
+    }, 2000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -16,8 +16,8 @@ ENV/
 *~
 
 # Environment
-.env
-.env.local
+#.env
+#.env.local
 
 # Git
 .git/
